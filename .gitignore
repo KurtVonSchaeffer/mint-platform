@@ -1,0 +1,14 @@
+node_modules
+dist
+.next
+.env
+.env.local
+.turbo
+*.local
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Shared dev store (file-based leads — now in Supabase)
+.shared/leads.jsonl

@@ -1,0 +1,275 @@
+@import "tailwindcss";
+
+@theme {
+  /* Typography — match marketing site */
+  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+
+  /* Brand (white-label — overridden at runtime by TenantContext) */
+  --color-brand:       #7C3AED;
+  --color-brand-dark:  #6D28D9;
+  --color-brand-light: #A78BFA;
+  --color-brand-muted: #EDE9FE;
+
+  --color-navy:        #09090B;
+  --color-navy-light:  #27272A;
+
+  /* Neutral palette — same as marketing */
+  --color-bg:          #FAFAF9;
+  --color-surface:     #FFFFFF;
+  --color-surface-2:   #F4F4F5;
+  --color-surface-3:   #E4E4E7;
+  --color-ink:         #09090B;
+  --color-ink-2:       #27272A;
+  --color-ink-soft:    #52525B;
+  --color-ink-muted:   #A1A1AA;
+  --color-border:      #E4E4E7;
+  --color-border-soft: #F1F1F2;
+
+  --color-card:    #FFFFFF;
+  --color-muted:   #52525B;
+
+  /* Motion */
+  --animate-fade-up:    fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-in:    fade-in 0.5s ease-out both;
+  --animate-scale-in:   scale-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-slide-down: slide-down 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-breathe:    breathe 6s ease-in-out infinite;
+  --animate-pulse-dot:  pulse-dot 2s ease-in-out infinite;
+  --animate-shimmer:    shimmer 2.5s linear infinite;
+  --animate-drift-1:    drift-1 22s ease-in-out infinite;
+  --animate-drift-2:    drift-2 28s ease-in-out infinite;
+  --animate-spark:      spark-draw 2s cubic-bezier(0.65, 0, 0.35, 1) both;
+  --animate-spark-fill: spark-fill 2.4s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
+html, body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'kern', 'ss01', 'cv11';
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background-color: var(--color-ink);
+  color: var(--color-bg);
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #D4D4D8; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #A1A1AA; }
+
+/* ===== Typography helpers ============================================ */
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: 'kern', 'tnum';
+  letter-spacing: -0.01em;
+}
+
+.headline {
+  letter-spacing: -0.035em;
+  line-height: 0.96;
+  font-feature-settings: 'kern', 'ss01';
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+/* ===== Keyframes ===================================================== */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-6px) scale(1.005); }
+}
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1);   opacity: 1;   }
+  50%      { transform: scale(1.7); opacity: 0.4; }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes drift-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(40px, -30px) scale(1.05); }
+  66%      { transform: translate(-30px, 20px) scale(0.95); }
+}
+@keyframes drift-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-50px, 40px) scale(1.1); }
+}
+@keyframes spark-draw {
+  from { stroke-dashoffset: 600; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes spark-fill {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slide-out-left {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(-20px); }
+}
+
+/* ===== Bento card ===================================================== */
+.bento-card {
+  position: relative;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  overflow: hidden;
+  transition:
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.3s ease;
+  box-shadow: 0 1px 2px rgba(9, 9, 11, 0.04);
+}
+.bento-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-surface-3);
+  box-shadow:
+    0 12px 32px -8px rgba(9, 9, 11, 0.08),
+    0 4px 12px -4px rgba(9, 9, 11, 0.04);
+}
+.bento-card-dark {
+  background: var(--color-ink);
+  color: var(--color-bg);
+  border-color: var(--color-ink-2);
+}
+.bento-card-dark:hover {
+  border-color: var(--color-ink-soft);
+  box-shadow:
+    0 16px 40px -8px rgba(9, 9, 11, 0.4),
+    0 4px 12px -4px rgba(9, 9, 11, 0.2);
+}
+
+/* ===== Premium shine on hover ========================================= */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+.btn-shine:hover::after { transform: translateX(100%); }
+
+/* ===== Card shine (legacy — kept for compatibility) ==================== */
+.card-shine {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.card-shine:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(15, 22, 41, 0.08);
+}
+
+/* ===== Sparkline draw animation ====================================== */
+.spark-line {
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  animation: spark-draw 2s cubic-bezier(0.65, 0, 0.35, 1) 0.8s forwards;
+}
+.spark-area {
+  opacity: 0;
+  animation: spark-fill 1.6s cubic-bezier(0.65, 0, 0.35, 1) 1.6s forwards;
+}
+
+/* ===== Pulse dot (for live indicators) ================================ */
+.pulse-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: inherit;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* ===== Scroll-triggered reveal ======================================= */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===== Grid backdrop ================================================== */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(9, 9, 11, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(9, 9, 11, 0.03) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+/* ===== Ambient blob =================================================== */
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== Page mount stagger (used on dashboard pages) =================== */
+.page-enter > * {
+  animation: var(--animate-fade-up);
+}
+.page-enter > *:nth-child(1) { animation-delay: 0ms; }
+.page-enter > *:nth-child(2) { animation-delay: 60ms; }
+.page-enter > *:nth-child(3) { animation-delay: 120ms; }
+.page-enter > *:nth-child(4) { animation-delay: 180ms; }
+.page-enter > *:nth-child(5) { animation-delay: 240ms; }
+.page-enter > *:nth-child(6) { animation-delay: 300ms; }
+
+/* ===== Respect motion preferences ===================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}

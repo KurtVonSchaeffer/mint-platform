@@ -1,0 +1,11 @@
+{
+  "name": "@mint/features",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.js",
+  "types": "src/index.d.ts",
+  "files": ["src"],
+  "dependencies": {
+    "@supabase/supabase-js": "^2"
+  }
+}

@@ -1,0 +1,356 @@
+@import "tailwindcss";
+
+@theme {
+  /* Typography */
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Palette — confident monochrome with single accent */
+  --color-bg:          #FAFAF9;
+  --color-surface:     #FFFFFF;
+  --color-surface-2:   #F4F4F5;
+  --color-surface-3:   #E4E4E7;
+  --color-ink:         #09090B;
+  --color-ink-2:       #27272A;
+  --color-ink-soft:    #52525B;
+  --color-ink-muted:   #A1A1AA;
+  --color-border:      #E4E4E7;
+  --color-border-soft: #F1F1F2;
+
+  /* Brand accent — used sparingly */
+  --color-brand:        #7C3AED;
+  --color-brand-soft:   #F3EEFF;
+  --color-brand-deep:   #5B21B6;
+
+  /* Secondary accents — for bento variety */
+  --color-emerald:      #059669;
+  --color-emerald-soft: #ECFDF5;
+  --color-amber:        #D97706;
+  --color-amber-soft:   #FFFBEB;
+  --color-sky:          #0284C7;
+  --color-sky-soft:     #F0F9FF;
+
+  /* Motion */
+  --animate-fade-up:        fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-in:        fade-in 0.5s ease-out both;
+  --animate-scale-in:       scale-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-breathe:        breathe 6s ease-in-out infinite;
+  --animate-shimmer:        shimmer 2.5s linear infinite;
+  --animate-pulse-dot:      pulse-dot 2s ease-in-out infinite;
+  --animate-marquee:        marquee 30s linear infinite;
+  --animate-shine:          shine 1.2s ease-out;
+}
+
+html, body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'kern', 'ss01', 'cv11';
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background-color: var(--color-ink);
+  color: var(--color-bg);
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-surface-3); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-ink-muted); }
+
+/* ===== Typography helpers ============================================ */
+.mono {
+  font-family: var(--font-mono);
+  font-feature-settings: 'kern', 'tnum', 'zero';
+  letter-spacing: -0.01em;
+}
+
+.headline {
+  letter-spacing: -0.035em;
+  line-height: 0.96;
+  font-feature-settings: 'kern', 'ss01';
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-muted);
+}
+
+/* ===== Keyframes ===================================================== */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-6px) scale(1.005); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { transform: scale(1);   opacity: 1;   }
+  50%      { transform: scale(1.5); opacity: 0.5; }
+}
+
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes shine {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+/* ===== Scroll-triggered reveal ======================================= */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===== Bento card =================================================== */
+.bento-card {
+  position: relative;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 28px;
+  overflow: hidden;
+  transition:
+    transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.3s ease;
+  box-shadow: 0 1px 2px rgba(9, 9, 11, 0.04);
+}
+.bento-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-surface-3);
+  box-shadow:
+    0 12px 32px -8px rgba(9, 9, 11, 0.08),
+    0 4px 12px -4px rgba(9, 9, 11, 0.04);
+}
+
+.bento-card-dark {
+  background: var(--color-ink);
+  color: var(--color-bg);
+  border-color: var(--color-ink-2);
+}
+.bento-card-dark:hover {
+  border-color: var(--color-ink-soft);
+  box-shadow:
+    0 16px 40px -8px rgba(9, 9, 11, 0.4),
+    0 4px 12px -4px rgba(9, 9, 11, 0.2);
+}
+
+/* ===== Shine sweep (on premium CTAs) ================================= */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.2) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+.btn-shine:hover::after {
+  transform: translateX(100%);
+}
+
+/* ===== Glow pulse for live indicators ================================= */
+.pulse-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: inherit;
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* ===== Ambient gradient blob (used in hero only) ===================== */
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== Grid lines (subtle background pattern) ======================= */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(9, 9, 11, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(9, 9, 11, 0.025) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+}
+
+/* ===== Marquee (continuous scroll) =================================== */
+.marquee-track {
+  animation: marquee 30s linear infinite;
+  display: flex;
+  gap: 3rem;
+  white-space: nowrap;
+  width: max-content;
+}
+.marquee-track:hover { animation-play-state: paused; }
+
+/* ===== Premium link underline ======================================== */
+.link-fade {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 100% 1px;
+  transition: background-size 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.link-fade:hover { background-size: 0 1px; }
+
+/* ===== SPLASH PAGE ANIMATIONS ======================================== */
+
+/* Mesh gradient backdrop — three blobs rotating + drifting */
+@keyframes mesh-rotate {
+  0%   { transform: rotate(0deg) scale(1); }
+  50%  { transform: rotate(180deg) scale(1.1); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+@keyframes mesh-drift {
+  0%, 100% { transform: translate(0, 0); }
+  33%      { transform: translate(60px, -40px); }
+  66%      { transform: translate(-40px, 30px); }
+}
+
+/* Logo stroke draw — uses pathLength="1" on the path so 1 == full length */
+@keyframes logo-draw {
+  0%   { stroke-dashoffset: 1; opacity: 0; }
+  20%  { opacity: 1; }
+  100% { stroke-dashoffset: 0; opacity: 1; }
+}
+.logo-draw-path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: logo-draw 1.8s cubic-bezier(0.65, 0, 0.35, 1) 0.4s forwards;
+}
+
+/* Wordmark — letter-by-letter rise */
+@keyframes letter-rise {
+  from { opacity: 0; transform: translateY(40px) rotate(8deg); filter: blur(8px); }
+  to   { opacity: 1; transform: translateY(0)    rotate(0deg); filter: blur(0); }
+}
+.letter {
+  display: inline-block;
+  opacity: 0;
+  animation: letter-rise 1s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Underline draw under tagline */
+@keyframes underline-draw {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+.tagline-underline {
+  transform-origin: left center;
+  animation: underline-draw 1.2s cubic-bezier(0.65, 0, 0.35, 1) 2.8s forwards;
+  transform: scaleX(0);
+}
+
+/* Drifting particles */
+@keyframes particle {
+  0%   { transform: translate(0, 0); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translate(var(--dx, 0), var(--dy, -200px)); opacity: 0; }
+}
+.particle {
+  animation: particle var(--dur, 8s) linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+/* CTA glow pulse */
+@keyframes cta-glow {
+  0%, 100% { box-shadow: 0 0 0 0   rgba(167, 139, 250, 0.6), 0 12px 32px -8px rgba(124, 58, 237, 0.5); }
+  50%      { box-shadow: 0 0 0 12px rgba(167, 139, 250, 0),  0 16px 40px -8px rgba(124, 58, 237, 0.7); }
+}
+.cta-pulse { animation: cta-glow 2.5s ease-in-out infinite; }
+
+/* Splash exit (fade + zoom-in away) */
+@keyframes splash-exit {
+  to { opacity: 0; transform: scale(1.05); filter: blur(8px); }
+}
+.splash-exiting {
+  animation: splash-exit 0.8s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  pointer-events: none;
+}
+
+/* Vertical progress bar (left edge) */
+@keyframes progress-fill {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+.progress-fill {
+  transform-origin: top center;
+  animation: progress-fill var(--dur, 5s) linear forwards;
+}
+
+/* Scanline sweep across page */
+@keyframes scanline {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  10%  { opacity: 1; }
+  90%  { opacity: 1; }
+  100% { transform: translateY(100vh);  opacity: 0; }
+}
+.scanline {
+  animation: scanline 3s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+  animation-delay: 1.5s;
+}
+
+/* Stat ticker — bumps each digit briefly */
+@keyframes digit-bump {
+  0%   { transform: translateY(0); }
+  50%  { transform: translateY(-2px); }
+  100% { transform: translateY(0); }
+}
+
+/* ===== Respect motion preferences ===================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal { opacity: 1; transform: none; }
+}

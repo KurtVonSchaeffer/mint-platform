@@ -1,0 +1,142 @@
+/**
+ * Thin Resend wrapper.
+ * All emails fall back to a console log if RESEND_API_KEY is not set,
+ * so the app works locally without Resend credentials.
+ */
+import { Resend } from 'resend';
+
+const FROM    = process.env.RESEND_FROM_EMAIL ?? 'AlgoLend <noreply@mintplatforms.co.za>';
+const KEY     = process.env.RESEND_API_KEY;
+const resend  = KEY ? new Resend(KEY) : null;
+
+export interface EmailPayload {
+  to:      string | string[];
+  subject: string;
+  html:    string;
+  replyTo?: string;
+}
+
+export async function sendEmail(payload: EmailPayload): Promise<{ ok: boolean; id?: string; error?: string }> {
+  if (!resend) {
+    console.log('[email] RESEND_API_KEY not set — would have sent:', payload.subject, '→', payload.to);
+    return { ok: true, id: 'simulated' };
+  }
+  const { data, error } = await resend.emails.send({ from: FROM, ...payload });
+  if (error) {
+    console.error('[email] send failed:', error);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true, id: data?.id };
+}
+
+// ── Email templates ───────────────────────────────────────────────────
+
+export function quoteEmail(q: {
+  id: string; client: string; contact: string;
+  setupFee: number; monthlyFee: number; addOns: string[];
+  validUntil: string;
+}) {
+  const fmt = (n: number) =>
+    new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', maximumFractionDigits: 0 }).format(n);
+  const year1 = q.setupFee + q.monthlyFee * 12;
+
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:32px;text-align:center">
+    <p style="color:#fff;font-size:24px;font-weight:700;margin:0">AlgoLend</p>
+    <p style="color:rgba(255,255,255,0.7);font-size:12px;letter-spacing:3px;text-transform:uppercase;margin:4px 0 0">Platform Quote</p>
+  </div>
+  <div style="padding:32px">
+    <p style="font-size:16px;margin:0 0 8px">Hi ${q.contact},</p>
+    <p style="color:#555;line-height:1.6;margin:0 0 24px">
+      Thank you for your interest in AlgoLend. Please find your custom proposal for <strong>${q.client}</strong> below.
+    </p>
+    <div style="background:#f9f7ff;border:1px solid #e5e0ff;border-radius:12px;padding:20px;margin-bottom:24px">
+      <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#7C3AED;margin:0 0 12px">Quote ${q.id}</p>
+      <table style="width:100%;border-collapse:collapse">
+        <tr><td style="padding:6px 0;color:#555">One-off implementation fee</td><td style="text-align:right;font-weight:600">${fmt(q.setupFee)}</td></tr>
+        <tr><td style="padding:6px 0;color:#555">Monthly platform licence</td><td style="text-align:right;font-weight:600">${fmt(q.monthlyFee)}/mo</td></tr>
+        ${q.addOns.length ? `<tr><td style="padding:6px 0;color:#555">Add-ons</td><td style="text-align:right;font-size:13px;color:#888">${q.addOns.join(', ')}</td></tr>` : ''}
+        <tr style="border-top:2px solid #7C3AED"><td style="padding:12px 0 0;font-weight:700;font-size:16px">Year-one total</td><td style="text-align:right;font-weight:700;font-size:18px;color:#7C3AED;padding-top:12px">${fmt(year1)}</td></tr>
+      </table>
+    </div>
+    <p style="color:#888;font-size:13px;margin-bottom:24px">This proposal is valid until <strong>${q.validUntil}</strong>.</p>
+    <p style="color:#555;font-size:14px;line-height:1.6">
+      To proceed, simply reply to this email or contact your AlgoLend account manager. We'll have you live within days.
+    </p>
+  </div>
+  <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
+    AlgoLend · Mint Platforms (Pty) Ltd · <a href="https://mintplatforms.co.za" style="color:#7C3AED">mintplatforms.co.za</a>
+  </div>
+</div>
+</body></html>`;
+}
+
+export function invoiceReminderEmail(inv: {
+  reference: string; clientName: string; contact: string;
+  totalCents: number; dueDate: string; daysOverdue: number;
+}) {
+  const fmt = (c: number) =>
+    new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 2 }).format(c / 100);
+  const isOverdue = inv.daysOverdue > 0;
+
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:${isOverdue ? '#dc2626' : '#7C3AED'};padding:24px 32px">
+    <p style="color:#fff;font-size:18px;font-weight:700;margin:0">${isOverdue ? `⚠ Invoice Overdue — ${inv.daysOverdue} days` : 'Invoice Payment Reminder'}</p>
+    <p style="color:rgba(255,255,255,0.8);font-size:13px;margin:4px 0 0">${inv.reference}</p>
+  </div>
+  <div style="padding:32px">
+    <p>Hi ${inv.contact},</p>
+    <p style="color:#555;line-height:1.6">
+      ${isOverdue
+        ? `Your invoice <strong>${inv.reference}</strong> for <strong>${fmt(inv.totalCents)}</strong> was due on <strong>${inv.dueDate}</strong> and is now <strong>${inv.daysOverdue} days overdue</strong>.`
+        : `This is a friendly reminder that invoice <strong>${inv.reference}</strong> for <strong>${fmt(inv.totalCents)}</strong> is due on <strong>${inv.dueDate}</strong>.`
+      }
+    </p>
+    <div style="background:#f9f7ff;border-radius:12px;padding:20px;margin:20px 0;text-align:center">
+      <p style="font-size:28px;font-weight:700;color:#7C3AED;margin:0">${fmt(inv.totalCents)}</p>
+      <p style="color:#888;font-size:13px;margin:4px 0 0">Amount due</p>
+    </div>
+    <p style="color:#555;font-size:14px">Please arrange payment at your earliest convenience. If you have already paid, please disregard this message.</p>
+  </div>
+  <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
+    AlgoLend · Mint Platforms (Pty) Ltd
+  </div>
+</div>
+</body></html>`;
+}
+
+export function welcomeClientEmail(client: {
+  name: string; contact: string; slug: string; portalUrl: string;
+}) {
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:40px 32px;text-align:center">
+    <p style="color:#fff;font-size:28px;font-weight:700;margin:0">Welcome to AlgoLend!</p>
+    <p style="color:rgba(255,255,255,0.8);margin:8px 0 0">Your lending platform is ready</p>
+  </div>
+  <div style="padding:32px">
+    <p style="font-size:16px">Hi ${client.contact},</p>
+    <p style="color:#555;line-height:1.6">
+      We're excited to welcome <strong>${client.name}</strong> to the AlgoLend platform. Your deployment is live and ready to use.
+    </p>
+    <div style="text-align:center;margin:28px 0">
+      <a href="${client.portalUrl}" style="background:#7C3AED;color:#fff;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px">
+        Access Your Portal →
+      </a>
+    </div>
+    <p style="color:#888;font-size:13px">Your portal URL: <a href="${client.portalUrl}" style="color:#7C3AED">${client.portalUrl}</a></p>
+    <p style="color:#555;line-height:1.6;margin-top:20px">
+      Your dedicated account manager will be in touch shortly to walk you through the platform. In the meantime, feel free to reach out to <a href="mailto:support@mintplatforms.co.za" style="color:#7C3AED">support@mintplatforms.co.za</a>.
+    </p>
+  </div>
+  <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
+    AlgoLend · Mint Platforms (Pty) Ltd
+  </div>
+</div>
+</body></html>`;
+}
