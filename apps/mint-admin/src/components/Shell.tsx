@@ -6,7 +6,7 @@ import { useState } from 'react';
 import {
   LayoutDashboard, Users, CreditCard, Zap, BarChart3,
   Settings, LogOut, TrendingUp, FileText, Receipt, ArrowDownToLine,
-  ChevronRight, Sun, Moon, Calculator, UserCog,
+  ChevronRight, Sun, Moon, Calculator, UserCog, Store,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { useRouter } from 'next/navigation';
@@ -19,6 +19,7 @@ const nav = [
   { label: 'Quotes',     href: '/quotes',    icon: FileText },
   { label: 'Invoices',   href: '/invoices',  icon: Receipt },
   { label: 'Billing',    href: '/billing',   icon: CreditCard },
+  { label: 'Marketplace', href: '/marketplace', icon: Store },
   { label: 'Features',   href: '/features',  icon: Zap },
   { label: 'API Usage',  href: '/usage',     icon: BarChart3 },
   { label: 'Migration',  href: '/migration', icon: ArrowDownToLine },

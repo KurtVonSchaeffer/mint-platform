@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@paper-design/shaders-react": "^0.0.76",
+    "@supabase/supabase-js": "^2.106.2",
     "clsx": "^2",
     "framer-motion": "^12.40.0",
     "lucide-react": "^0.475.0",

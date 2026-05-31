@@ -13,32 +13,32 @@ import {
 /* ─── Per-card shader configs ────────────────────────────────────────── */
 const CARD_CONFIGS = {
   creditEngine: {
-    colors: ['hsl(265,90%,18%)', 'hsl(275,100%,45%)', 'hsl(300,80%,30%)', 'hsl(255,100%,65%)'],
+    colors: ['hsl(0,0%,97%)', 'hsl(275,100%,45%)', 'hsl(0,0%,78%)', 'hsl(255,100%,65%)'],
     proportion: 0.38, softness: 1.0, distortion: 0.18, swirl: 0.7,
     swirlIterations: 10, shape: 'checks' as const, shapeScale: 0.09, speed: 0.6,
   },
   kyc: {
-    colors: ['hsl(155,80%,14%)', 'hsl(145,100%,38%)', 'hsl(170,90%,22%)', 'hsl(140,100%,60%)'],
+    colors: ['hsl(0,0%,96%)', 'hsl(145,100%,38%)', 'hsl(0,0%,80%)', 'hsl(140,100%,60%)'],
     proportion: 0.35, softness: 1.1, distortion: 0.16, swirl: 0.8,
     swirlIterations: 8, shape: 'stripes' as const, shapeScale: 0.11, speed: 0.7,
   },
   openBanking: {
-    colors: ['hsl(200,90%,14%)', 'hsl(195,100%,42%)', 'hsl(215,90%,25%)', 'hsl(190,100%,62%)'],
+    colors: ['hsl(0,0%,97%)', 'hsl(195,100%,42%)', 'hsl(0,0%,76%)', 'hsl(190,100%,62%)'],
     proportion: 0.40, softness: 0.9, distortion: 0.20, swirl: 0.65,
     swirlIterations: 12, shape: 'checks' as const, shapeScale: 0.10, speed: 0.55,
   },
   eContracts: {
-    colors: ['hsl(32,90%,18%)', 'hsl(42,100%,50%)', 'hsl(28,85%,28%)', 'hsl(48,100%,68%)'],
+    colors: ['hsl(0,0%,97%)', 'hsl(42,100%,50%)', 'hsl(0,0%,79%)', 'hsl(48,100%,68%)'],
     proportion: 0.36, softness: 1.0, distortion: 0.17, swirl: 0.75,
     swirlIterations: 9, shape: 'edge' as const, shapeScale: 0.12, speed: 0.65,
   },
   portfolio: {
-    colors: ['hsl(220,90%,16%)', 'hsl(215,100%,48%)', 'hsl(235,85%,28%)', 'hsl(210,100%,65%)'],
+    colors: ['hsl(0,0%,96%)', 'hsl(215,100%,48%)', 'hsl(0,0%,77%)', 'hsl(210,100%,65%)'],
     proportion: 0.42, softness: 0.95, distortion: 0.19, swirl: 0.85,
     swirlIterations: 11, shape: 'checks' as const, shapeScale: 0.08, speed: 0.6,
   },
   portal: {
-    colors: ['hsl(330,80%,16%)', 'hsl(345,100%,52%)', 'hsl(315,80%,25%)', 'hsl(350,100%,68%)'],
+    colors: ['hsl(0,0%,97%)', 'hsl(345,100%,52%)', 'hsl(0,0%,80%)', 'hsl(350,100%,68%)'],
     proportion: 0.37, softness: 1.05, distortion: 0.15, swirl: 0.9,
     swirlIterations: 10, shape: 'stripes' as const, shapeScale: 0.13, speed: 0.7,
   },

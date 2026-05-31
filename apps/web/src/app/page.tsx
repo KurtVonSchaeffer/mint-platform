@@ -15,6 +15,8 @@ import { HeroVisual } from '@/components/HeroVisual';
 import { DualViewShowcase } from '@/components/DualViewShowcase';
 import { ContainerScroll } from '@/components/ContainerScroll';
 import { HeroDashboard } from '@/components/HeroDashboard';
+import { MobileNav } from '@/components/MobileNav';
+import { AnimatedStat } from '@/components/AnimatedStat';
 
 /* ─── Content ─────────────────────────────────────────────────────── */
 
@@ -124,15 +126,19 @@ export default function HomePage() {
             <Link href="#process"    className="hover:text-[var(--color-ink)] transition-colors">How it works</Link>
             <Link href="#compliance" className="hover:text-[var(--color-ink)] transition-colors">Compliance</Link>
             <Link href="#pricing"    className="hover:text-[var(--color-ink)] transition-colors">Pricing</Link>
+            <Link href="#faq"        className="hover:text-[var(--color-ink)] transition-colors">FAQ</Link>
           </nav>
 
-          <Link
-            href="#enquire"
-            className="btn-shine inline-flex items-center gap-1.5 bg-[var(--color-ink)] text-[var(--color-bg)] text-[13px] font-semibold px-4 py-2 rounded-full transition-transform hover:-translate-y-px"
-          >
-            Book a demo
-            <ArrowRight size={13} />
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="#enquire"
+              className="btn-shine hidden md:inline-flex items-center gap-1.5 bg-[var(--color-ink)] text-[var(--color-bg)] text-[13px] font-semibold px-4 py-2 rounded-full transition-transform hover:-translate-y-px"
+            >
+              Book a demo
+              <ArrowRight size={13} />
+            </Link>
+            <MobileNav />
+          </div>
         </div>
       </header>
 
@@ -220,18 +226,13 @@ export default function HomePage() {
       </section>
 
       {/* ── STATS ───────────────────────────────────────────────────── */}
-      <Reveal as="section" className="bg-[var(--color-bg)]">
+      <section className="bg-[var(--color-bg)]">
         <div className="max-w-[1200px] mx-auto px-6 py-20 grid grid-cols-2 lg:grid-cols-4 gap-8">
           {stats.map((s) => (
-            <div key={s.label} className="group">
-              <p className="headline text-5xl lg:text-6xl font-semibold mb-2 group-hover:text-[var(--color-brand)] transition-colors">
-                {s.value}
-              </p>
-              <p className="text-sm text-[var(--color-ink-soft)]">{s.label}</p>
-            </div>
+            <AnimatedStat key={s.label} value={s.value} label={s.label} />
           ))}
         </div>
-      </Reveal>
+      </section>
 
       {/* ── DUAL-DEVICE SHOWCASE — "See it in action" ────────────────── */}
       <section className="relative bg-[var(--color-ink)] text-white py-28 overflow-hidden">
@@ -566,6 +567,73 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── FAQ ─────────────────────────────────────────────────────── */}
+      <section id="faq" className="bg-[var(--color-bg)] py-24">
+        <div className="max-w-[860px] mx-auto px-6">
+          <Reveal>
+            <div className="text-center mb-14">
+              <p className="eyebrow mb-4">Common questions</p>
+              <h2 className="headline text-5xl lg:text-6xl font-semibold">
+                Everything you need<br />to know.
+              </h2>
+            </div>
+          </Reveal>
+          <Reveal delay={80}>
+            <div className="space-y-3">
+              {[
+                {
+                  q: 'How long does implementation take?',
+                  a: 'Typically 4–8 weeks from signed agreement to go-live, depending on the complexity of your credit policy and the number of integrations required. Simple deployments have gone live in under three weeks.',
+                },
+                {
+                  q: 'Do I own my data?',
+                  a: 'Absolutely. Your data lives in a dedicated Supabase instance — entirely isolated from other AlgoLend clients. Mint Platforms has no access to your borrower data unless you explicitly grant it for support purposes.',
+                },
+                {
+                  q: 'What happens if Experian or SureSystems goes down?',
+                  a: 'The platform is built to degrade gracefully. If a bureau is unavailable, the credit engine continues with the data it has, flagging the missing component for manual review. You never lose an application.',
+                },
+                {
+                  q: 'Can I configure my own credit scorecard?',
+                  a: 'Yes — this is the core of what we do. Your scorecard, rate bands, product rules, and affordability parameters are all configured per your credit policy. Nothing is shared with other lenders on the platform.',
+                },
+                {
+                  q: 'Is the platform NCA compliant?',
+                  a: 'Yes. Affordability calculations, pre-agreement quotations, fee disclosure, and cooling-off rules are all architected into the credit engine. SACRRA bureau reporting runs automatically on the 28th of each month.',
+                },
+                {
+                  q: 'What does the monthly fee cover?',
+                  a: 'Hosting and infrastructure, all security patches, regulatory updates (including SACRRA layout changes), new platform features, and priority support. There are no surprise charges — pass-through API costs (Experian, TruID, DocuSeal) are billed at cost with no markup.',
+                },
+                {
+                  q: 'Can we white-label it completely?',
+                  a: 'Yes — your logo, your colours, your domain. Borrowers never see any AlgoLend or Mint Platforms branding. Even the transactional emails come from your domain.',
+                },
+                {
+                  q: 'Do you support multi-branch lending?',
+                  a: 'Yes. Branch management, consultant assignment, and branch-scoped portfolio views are available as an add-on feature. Each branch can have its own manager and team with appropriate access controls.',
+                },
+              ].map((item, i) => (
+                <details key={i} className="group bento-card overflow-hidden">
+                  <summary className="flex items-center justify-between gap-4 px-6 py-5 cursor-pointer list-none">
+                    <span className="font-semibold text-[15px] text-[var(--color-ink)]">{item.q}</span>
+                    <span
+                      className="shrink-0 w-6 h-6 rounded-full border border-[var(--color-border)] flex items-center justify-center text-[var(--color-ink-soft)] text-xs transition-transform group-open:rotate-45"
+                      aria-hidden
+                    >
+                      +
+                    </span>
+                  </summary>
+                  <div className="px-6 pb-5">
+                    <p className="text-[var(--color-ink-soft)] leading-relaxed text-[15px]">{item.a}</p>
+                  </div>
+                </details>
+              ))}
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
       {/* ── CTA / ENQUIRE ──────────────────────────────────────────── */}
       <section id="enquire" className="bg-[var(--color-bg)] pb-24">
         <div className="max-w-[1200px] mx-auto px-6">
@@ -748,12 +816,11 @@ export default function HomePage() {
           <div className="max-w-[1200px] mx-auto px-6 py-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-xs text-white/40">
             <span>© 2026 Mint Platforms (Pty) Ltd. All rights reserved.</span>
             <nav className="flex flex-wrap gap-x-6 gap-y-2">
-              <Link href="#"   className="hover:text-white transition-colors">Privacy Policy</Link>
-              <Link href="#"   className="hover:text-white transition-colors">Terms of Service</Link>
-              <Link href="#"   className="hover:text-white transition-colors">Complaints Policy</Link>
-              <Link href="#"   className="hover:text-white transition-colors">Risk Policy</Link>
-              <Link href="#"   className="hover:text-white transition-colors">AML Policy</Link>
-              <Link href="#"   className="hover:text-white transition-colors">POPIA</Link>
+              <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+              <Link href="/terms"   className="hover:text-white transition-colors">Terms of Service</Link>
+              <Link href="#"        className="hover:text-white transition-colors">Complaints Policy</Link>
+              <Link href="#"        className="hover:text-white transition-colors">AML Policy</Link>
+              <Link href="/privacy" className="hover:text-white transition-colors">POPIA</Link>
             </nav>
           </div>
         </div>
