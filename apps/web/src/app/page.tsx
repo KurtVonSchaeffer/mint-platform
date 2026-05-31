@@ -15,7 +15,8 @@ import { HeroVisual } from '@/components/HeroVisual';
 import { DualViewShowcase } from '@/components/DualViewShowcase';
 import { ContainerScroll } from '@/components/ContainerScroll';
 import { HeroDashboard } from '@/components/HeroDashboard';
-import { MobileNav } from '@/components/MobileNav';
+import { NavBar } from '@/components/NavBar';
+import { FaqSection } from '@/components/FaqSection';
 import { AnimatedStat } from '@/components/AnimatedStat';
 
 /* ─── Content ─────────────────────────────────────────────────────── */
@@ -113,34 +114,7 @@ export default function HomePage() {
   return (
     <div className="relative overflow-x-hidden">
 
-      {/* ── NAV ─────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-[var(--color-border-soft)] backdrop-blur-xl bg-[var(--color-bg)]/80">
-        <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <Logo size={28} />
-            <span className="font-semibold tracking-tight text-[15px]">AlgoLend</span>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-9 text-[13px] text-[var(--color-ink-soft)] font-medium">
-            <Link href="#platform"   className="hover:text-[var(--color-ink)] transition-colors">Platform</Link>
-            <Link href="#process"    className="hover:text-[var(--color-ink)] transition-colors">How it works</Link>
-            <Link href="#compliance" className="hover:text-[var(--color-ink)] transition-colors">Compliance</Link>
-            <Link href="#pricing"    className="hover:text-[var(--color-ink)] transition-colors">Pricing</Link>
-            <Link href="#faq"        className="hover:text-[var(--color-ink)] transition-colors">FAQ</Link>
-          </nav>
-
-          <div className="flex items-center gap-2">
-            <Link
-              href="#enquire"
-              className="btn-shine hidden md:inline-flex items-center gap-1.5 bg-[var(--color-ink)] text-[var(--color-bg)] text-[13px] font-semibold px-4 py-2 rounded-full transition-transform hover:-translate-y-px"
-            >
-              Book a demo
-              <ArrowRight size={13} />
-            </Link>
-            <MobileNav />
-          </div>
-        </div>
-      </header>
+      <NavBar />
 
       {/* ── HERO ────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
@@ -152,7 +126,7 @@ export default function HomePage() {
 
         <ContainerScroll
           titleComponent={
-            <div className="relative pt-24 text-center">
+            <div className="relative pt-32 text-center">
               {/* Eyebrow badge */}
               <div
                 className="inline-flex items-center gap-2 text-[12px] font-medium px-3 py-1.5 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] mb-8"
@@ -266,7 +240,7 @@ export default function HomePage() {
               <p className="eyebrow mb-4" style={{ color: '#A78BFA' }}>See it in action</p>
               <h2 className="headline text-5xl lg:text-6xl font-semibold mb-5">
                 One platform.<br />
-                <span style={{ background: 'linear-gradient(90deg, #C4B5FD, #7C3AED)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                <span style={{ backgroundImage: 'linear-gradient(90deg, #C4B5FD, #7C3AED)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                   Two experiences.
                 </span>
               </h2>
@@ -308,15 +282,69 @@ export default function HomePage() {
             </div>
           </Reveal>
 
-          {/* Quiet lender list — was the customer logos band, now condensed */}
+          {/* Trust / credential strip */}
           <Reveal delay={400}>
-            <div className="mt-20 pt-10 border-t border-white/10 text-center">
-              <p className="text-[11px] mono uppercase tracking-[0.18em] text-white/40 mb-5">Used by 14 South African credit providers</p>
-              <div className="flex items-center justify-center gap-x-8 gap-y-4 flex-wrap">
-                {lenders.map((name) => (
-                  <span key={name} className="text-sm font-semibold text-white/45 hover:text-white transition-colors cursor-default">
-                    {name}
-                  </span>
+            <div className="mt-20 pt-10 border-t border-white/10">
+              <div className="flex flex-wrap items-center justify-center gap-4">
+                {[
+                  {
+                    label: 'NCR Registered',
+                    sub:   'NCRCP 22892',
+                    icon:  (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                      </svg>
+                    ),
+                  },
+                  {
+                    label: 'FSP Licensed',
+                    sub:   'FSP 55118',
+                    icon:  (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="m9 12 2 2 4-4"/>
+                      </svg>
+                    ),
+                  },
+                  {
+                    label: 'POPIA Compliant',
+                    sub:   'Tenant-isolated data',
+                    icon:  (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                      </svg>
+                    ),
+                  },
+                  {
+                    label: 'SACRRA Bureau',
+                    sub:   'Layout 700 reporting',
+                    icon:  (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                      </svg>
+                    ),
+                  },
+                  {
+                    label: 'NCA Compliant',
+                    sub:   'Affordability & disclosure',
+                    icon:  (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                      </svg>
+                    ),
+                  },
+                ].map((badge, i) => (
+                  <div
+                    key={badge.label}
+                    className="trust-badge flex items-center gap-3 px-5 py-3 rounded-2xl border border-white/10 bg-white/4 backdrop-blur-sm cursor-default"
+                    style={{ animationDelay: `${i * 80}ms` }}
+                  >
+                    <span className="badge-icon text-white/50">{badge.icon}</span>
+                    <div>
+                      <p className="text-sm font-semibold text-white/90 leading-tight">{badge.label}</p>
+                      <p className="text-[11px] text-white/40 leading-tight mt-0.5">{badge.sub}</p>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -567,72 +595,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── FAQ ─────────────────────────────────────────────────────── */}
-      <section id="faq" className="bg-[var(--color-bg)] py-24">
-        <div className="max-w-[860px] mx-auto px-6">
-          <Reveal>
-            <div className="text-center mb-14">
-              <p className="eyebrow mb-4">Common questions</p>
-              <h2 className="headline text-5xl lg:text-6xl font-semibold">
-                Everything you need<br />to know.
-              </h2>
-            </div>
-          </Reveal>
-          <Reveal delay={80}>
-            <div className="space-y-3">
-              {[
-                {
-                  q: 'How long does implementation take?',
-                  a: 'Typically 4–8 weeks from signed agreement to go-live, depending on the complexity of your credit policy and the number of integrations required. Simple deployments have gone live in under three weeks.',
-                },
-                {
-                  q: 'Do I own my data?',
-                  a: 'Absolutely. Your data lives in a dedicated Supabase instance — entirely isolated from other AlgoLend clients. Mint Platforms has no access to your borrower data unless you explicitly grant it for support purposes.',
-                },
-                {
-                  q: 'What happens if Experian or SureSystems goes down?',
-                  a: 'The platform is built to degrade gracefully. If a bureau is unavailable, the credit engine continues with the data it has, flagging the missing component for manual review. You never lose an application.',
-                },
-                {
-                  q: 'Can I configure my own credit scorecard?',
-                  a: 'Yes — this is the core of what we do. Your scorecard, rate bands, product rules, and affordability parameters are all configured per your credit policy. Nothing is shared with other lenders on the platform.',
-                },
-                {
-                  q: 'Is the platform NCA compliant?',
-                  a: 'Yes. Affordability calculations, pre-agreement quotations, fee disclosure, and cooling-off rules are all architected into the credit engine. SACRRA bureau reporting runs automatically on the 28th of each month.',
-                },
-                {
-                  q: 'What does the monthly fee cover?',
-                  a: 'Hosting and infrastructure, all security patches, regulatory updates (including SACRRA layout changes), new platform features, and priority support. There are no surprise charges — pass-through API costs (Experian, TruID, DocuSeal) are billed at cost with no markup.',
-                },
-                {
-                  q: 'Can we white-label it completely?',
-                  a: 'Yes — your logo, your colours, your domain. Borrowers never see any AlgoLend or Mint Platforms branding. Even the transactional emails come from your domain.',
-                },
-                {
-                  q: 'Do you support multi-branch lending?',
-                  a: 'Yes. Branch management, consultant assignment, and branch-scoped portfolio views are available as an add-on feature. Each branch can have its own manager and team with appropriate access controls.',
-                },
-              ].map((item, i) => (
-                <details key={i} className="group bento-card overflow-hidden">
-                  <summary className="flex items-center justify-between gap-4 px-6 py-5 cursor-pointer list-none">
-                    <span className="font-semibold text-[15px] text-[var(--color-ink)]">{item.q}</span>
-                    <span
-                      className="shrink-0 w-6 h-6 rounded-full border border-[var(--color-border)] flex items-center justify-center text-[var(--color-ink-soft)] text-xs transition-transform group-open:rotate-45"
-                      aria-hidden
-                    >
-                      +
-                    </span>
-                  </summary>
-                  <div className="px-6 pb-5">
-                    <p className="text-[var(--color-ink-soft)] leading-relaxed text-[15px]">{item.a}</p>
-                  </div>
-                </details>
-              ))}
-            </div>
-          </Reveal>
-        </div>
-      </section>
+      <FaqSection />
 
       {/* ── CTA / ENQUIRE ──────────────────────────────────────────── */}
       <section id="enquire" className="bg-[var(--color-bg)] pb-24">

@@ -104,7 +104,7 @@ export default function LoginPage() {
               <p
                 className="text-lg font-bold tracking-tight"
                 style={{
-                  background: 'linear-gradient(135deg, #EEF0FF 0%, #C4B5FD 100%)',
+                  backgroundImage: 'linear-gradient(135deg, #EEF0FF 0%, #C4B5FD 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',

@@ -344,6 +344,58 @@ html, body {
   100% { transform: translateY(0); }
 }
 
+/* ===== Trust / credential badges ====================================== */
+.trust-badge {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    border-color 0.35s ease,
+    box-shadow   0.35s ease,
+    transform    0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    background   0.35s ease;
+  animation: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Shimmer sweep on hover */
+.trust-badge::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 20%,
+    rgba(255,255,255,0.07) 50%,
+    transparent 80%
+  );
+  transform: translateX(-110%);
+  transition: transform 0.65s ease;
+  pointer-events: none;
+}
+.trust-badge:hover::after {
+  transform: translateX(110%);
+}
+
+/* Glow border + lift on hover */
+.trust-badge:hover {
+  border-color: rgba(167, 139, 250, 0.35) !important;
+  box-shadow:
+    0 0 0 1px rgba(124, 58, 237, 0.15),
+    0 8px 32px -4px rgba(124, 58, 237, 0.22),
+    inset 0 0 16px rgba(124, 58, 237, 0.06);
+  transform: translateY(-3px);
+  background: rgba(255,255,255,0.06) !important;
+}
+
+/* Icon colour shift + glow on hover */
+.trust-badge .badge-icon {
+  transition: color 0.3s ease, filter 0.3s ease;
+}
+.trust-badge:hover .badge-icon {
+  color: rgba(167, 139, 250, 0.9) !important;
+  filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.6));
+}
+
 /* ===== Respect motion preferences ===================================== */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

@@ -118,7 +118,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <p
               className="text-sm font-bold leading-tight tracking-tight"
               style={{
-                background: navColors.wordmarkGrad,
+                backgroundImage: navColors.wordmarkGrad,
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',

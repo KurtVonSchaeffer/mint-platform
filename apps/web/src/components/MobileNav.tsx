@@ -12,7 +12,7 @@ const links = [
   { label: 'FAQ',          href: '#faq'         },
 ];
 
-export function MobileNav() {
+export function MobileNav({ scrolled = true }: { scrolled?: boolean }) {
   const [open, setOpen] = useState(false);
 
   // Close on route change / hash click
@@ -30,7 +30,7 @@ export function MobileNav() {
         onClick={() => setOpen(o => !o)}
         aria-label={open ? 'Close menu' : 'Open menu'}
         className="p-2 rounded-xl transition-colors"
-        style={{ color: 'var(--color-ink)' }}
+        style={{ color: scrolled ? 'var(--color-ink)' : '#ffffff' }}
       >
         {open ? <X size={20} /> : <Menu size={20} />}
       </button>
