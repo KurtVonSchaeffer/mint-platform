@@ -181,10 +181,10 @@ export default function DashboardPage() {
   const mrrK          = totalMRR >= 1000 ? `R ${Math.round(totalMRR / 1000)}k` : `R ${totalMRR}`;
 
   const KPI_STATS = [
-    { label: 'Active clients',  value: String(activeClients), sub: `${trialClients} on trial`,         icon: Users,      accent: '#A78BFA', rgb: '167,139,250', trend: `+${activeClients}` },
-    { label: 'Monthly MRR',     value: mrrK,                  sub: `${clients.length} deployments`,    icon: DollarSign, accent: '#34D399', rgb: '52,211,153',  trend: '+0%' },
-    { label: 'API calls (May)', value: '—',                   sub: 'Wire telemetry to activate',       icon: Zap,        accent: '#60A5FA', rgb: '96,165,250',  trend: '—'   },
-    { label: 'Pipeline MRR',    value: 'R 0',                 sub: 'From leads page',                  icon: TrendingUp, accent: '#FBBF24', rgb: '251,191,36',  trend: '—'   },
+    { label: 'Active clients',  value: String(activeClients), sub: trialClients > 0 ? `${trialClients} on trial` : 'All active',  icon: Users,      accent: '#A78BFA', rgb: '167,139,250', trend: null },
+    { label: 'Monthly MRR',     value: mrrK,                  sub: `${clients.length} deployment${clients.length !== 1 ? 's' : ''}`, icon: DollarSign, accent: '#34D399', rgb: '52,211,153',  trend: null },
+    { label: 'API calls',       value: '—',                   sub: 'Wire telemetry to activate',       icon: Zap,        accent: '#60A5FA', rgb: '96,165,250',  trend: null  },
+    { label: 'Pipeline MRR',    value: 'R 0',                 sub: 'No active leads',                  icon: TrendingUp, accent: '#FBBF24', rgb: '251,191,36',  trend: null  },
   ];
 
   return (
@@ -235,41 +235,30 @@ export default function DashboardPage() {
             aria-hidden
           />
 
-          <div className="relative grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-            {/* ARR number */}
-            <div className="md:col-span-1">
-              <p className="eyebrow mb-3">Annual Recurring Revenue</p>
-              <p
-                className="text-5xl font-bold tracking-tight stat-value"
-                style={{ color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }}
-              >
-                {fmt(totalMRR * 12)}
-              </p>
-              <div className="flex items-center gap-3 mt-3 flex-wrap">
-                <span
-                  className="text-xs font-bold px-2.5 py-1 rounded-full"
-                  style={{
-                    background: 'rgba(52,211,153,0.1)',
-                    color: '#34D399',
-                    border: '1px solid rgba(52,211,153,0.2)',
-                    fontFamily: 'var(--font-mono)',
-                  }}
+          <div className="relative space-y-5">
+            {/* ARR number row */}
+            <div className="flex items-end justify-between flex-wrap gap-4">
+              <div>
+                <p className="eyebrow mb-2">Annual Recurring Revenue</p>
+                <p
+                  className="text-5xl font-bold tracking-tight stat-value"
+                  style={{ color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }}
                 >
-                  ↗ +42% YoY
-                </span>
-                <span className="text-xs" style={{ color: 'var(--color-text3)' }}>vs R 1.56M last year</span>
+                  {fmt(totalMRR * 12)}
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs mb-1" style={{ color: 'var(--color-text3)' }}>Monthly run rate</p>
+                <p className="text-2xl font-bold font-mono" style={{ color: 'var(--color-violet)' }}>{fmt(totalMRR)} / mo</p>
               </div>
             </div>
 
             {/* MRR breakdown by client */}
-            <div className="md:col-span-2">
-              <div className="flex items-center justify-between mb-3">
+            <div>
+              <div className="mb-2">
                 <p className="text-xs font-semibold" style={{ color: 'var(--color-text3)' }}>
-                  MRR breakdown — {clients.filter(c => c.status !== 'suspended' && c.status !== 'churned').length} active deployments
+                  Revenue by client
                 </p>
-                <span className="font-mono text-xs font-semibold" style={{ color: 'var(--color-violet)' }}>
-                  {fmt(totalMRR)} / mo
-                </span>
               </div>
               <div className="space-y-2">
                 {clients
@@ -323,12 +312,14 @@ export default function DashboardPage() {
                 >
                   <s.icon size={16} />
                 </div>
-                <span
-                  className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: `rgba(${s.rgb},0.1)`, color: s.accent, fontFamily: 'var(--font-mono)' }}
-                >
-                  {s.trend}
-                </span>
+                {s.trend && (
+                  <span
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                    style={{ background: `rgba(${s.rgb},0.1)`, color: s.accent, fontFamily: 'var(--font-mono)' }}
+                  >
+                    {s.trend}
+                  </span>
+                )}
               </div>
 
               <p
