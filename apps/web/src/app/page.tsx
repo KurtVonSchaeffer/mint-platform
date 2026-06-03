@@ -16,6 +16,7 @@ import { DualViewShowcase } from '@/components/DualViewShowcase';
 import { ContainerScroll } from '@/components/ContainerScroll';
 import { HeroDashboard } from '@/components/HeroDashboard';
 import { NavBar } from '@/components/NavBar';
+import { SeeItWorkButton } from '@/components/SeeItWorkButton';
 import { FaqSection } from '@/components/FaqSection';
 import { AnimatedStat } from '@/components/AnimatedStat';
 
@@ -161,12 +162,7 @@ export default function HomePage() {
                   Book a demo
                   <ArrowRight size={15} />
                 </Link>
-                <Link
-                  href="/intro"
-                  className="inline-flex items-center gap-2 text-[var(--color-ink)] font-medium text-[14px] px-5 py-3 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] transition-colors"
-                >
-                  See it work
-                </Link>
+                <SeeItWorkButton />
               </div>
             </div>
           }
@@ -539,58 +535,150 @@ export default function HomePage() {
             <div className="text-center mb-14 max-w-2xl mx-auto">
               <p className="eyebrow mb-4">Pricing</p>
               <h2 className="headline text-5xl lg:text-6xl font-semibold mb-5">
-                Quoted to your scope.<br />
-                Not a tier.
+                Three tiers.<br />
+                One platform.
               </h2>
               <p className="text-lg text-[var(--color-ink-soft)]">
-                Every credit provider operates differently. We price each deployment on what we build, not on a generic plan.
+                Every deployment is quoted on scope — choose the tier that fits your credit operation, then we build it to spec.
               </p>
             </div>
           </Reveal>
 
-          <Reveal delay={120}>
-            <div className="grid lg:grid-cols-2 gap-5 max-w-5xl mx-auto">
-              {/* Implementation */}
-              <div className="bento-card p-8 group">
-                <p className="eyebrow mb-3">i. One-off implementation</p>
-                <p className="text-2xl font-semibold mb-3 tracking-tight">Quoted on scope</p>
-                <p className="text-sm text-[var(--color-ink-soft)] mb-6 leading-relaxed">
-                  Branding, scorecard configuration, integrations, training, and go-live support.
-                </p>
-                <ul className="space-y-2">
-                  {['Discovery & policy mapping', 'Custom credit engine setup', 'Integration provisioning', 'UAT & training'].map((t) => (
-                    <li key={t} className="flex items-start gap-2 text-sm text-[var(--color-ink-soft)]">
-                      <Check size={14} className="text-[var(--color-brand)] mt-0.5 shrink-0" />
-                      {t}
+          <Reveal delay={100}>
+            <div className="grid lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
+
+              {/* Core */}
+              <div className="bento-card p-8 flex flex-col">
+                <div className="mb-6">
+                  <p className="eyebrow mb-2">Core</p>
+                  <p className="text-2xl font-semibold tracking-tight mb-2">Get started</p>
+                  <p className="text-sm text-[var(--color-ink-soft)] leading-relaxed">
+                    Everything a registered credit provider needs to start lending digitally.
+                  </p>
+                </div>
+                <ul className="space-y-2.5 flex-1 mb-8">
+                  {[
+                    'Credit scoring engine',
+                    'Borrower application portal',
+                    'Term loans & working capital',
+                    'SACRRA bureau reporting',
+                    'NCA-compliant quotations',
+                    'Loan book & repayment tracking',
+                    'NCR audit trail',
+                    '1 branch',
+                  ].map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-sm text-[var(--color-ink-soft)]">
+                      <Check size={13} className="text-[var(--color-brand)] mt-0.5 shrink-0" />
+                      {f}
                     </li>
                   ))}
                 </ul>
+                <Link
+                  href="#enquire"
+                  className="inline-flex items-center justify-center gap-2 text-sm font-semibold px-5 py-3 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] transition-colors"
+                >
+                  Get a quote <ArrowRight size={13} />
+                </Link>
               </div>
 
-              {/* Monthly */}
-              <div className="bento-card bento-card-dark p-8 group">
-                <p className="eyebrow mb-3" style={{ color: '#A78BFA' }}>ii. Monthly platform licence</p>
-                <p className="text-2xl font-semibold mb-3 tracking-tight">Flat monthly fee</p>
-                <p className="text-sm text-white/60 mb-6 leading-relaxed">
-                  Hosting, integrations, security patches, regulatory updates, and ongoing platform management by Mint.
-                </p>
-                <ul className="space-y-2">
-                  {['Hosting & infrastructure', 'Security & regulatory updates', 'Platform feature releases', 'Priority support'].map((t) => (
-                    <li key={t} className="flex items-start gap-2 text-sm text-white/70">
-                      <Check size={14} className="text-[#A78BFA] mt-0.5 shrink-0" />
-                      {t}
+              {/* Growth — highlighted */}
+              <div className="bento-card bento-card-dark p-8 flex flex-col relative overflow-hidden">
+                <div
+                  className="absolute -top-20 -right-20 w-56 h-56 rounded-full pointer-events-none"
+                  style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.25) 0%, transparent 70%)' }}
+                  aria-hidden
+                />
+                <div className="relative mb-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="eyebrow" style={{ color: '#A78BFA' }}>Growth</p>
+                    <span className="text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: 'rgba(167,139,250,0.15)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.25)' }}>
+                      Most popular
+                    </span>
+                  </div>
+                  <p className="text-2xl font-semibold tracking-tight mb-2 text-white">Scale your operation</p>
+                  <p className="text-sm text-white/60 leading-relaxed">
+                    Multi-branch operations, open banking, e-contracts, and automated compliance.
+                  </p>
+                </div>
+                <ul className="space-y-2.5 flex-1 mb-8 relative">
+                  {[
+                    'Everything in Core',
+                    'Open banking — TruID affordability',
+                    'E-contracts via DocuSeal',
+                    'Multi-branch management',
+                    'WhatsApp loan notifications',
+                    'Invoice finance product',
+                    'Sure Systems EFT integration',
+                    'Unlimited branches',
+                  ].map((f, i) => (
+                    <li key={f} className="flex items-start gap-2 text-sm text-white/80">
+                      <Check size={13} className="mt-0.5 shrink-0" style={{ color: i === 0 ? '#A78BFA' : '#A78BFA' }} />
+                      {f}
                     </li>
                   ))}
                 </ul>
+                <Link
+                  href="#enquire"
+                  className="relative inline-flex items-center justify-center gap-2 text-sm font-semibold px-5 py-3 rounded-full text-white transition-all hover:-translate-y-0.5"
+                  style={{ background: 'linear-gradient(135deg, #7C3AED, #9B5CF6)', boxShadow: '0 8px 24px rgba(124,58,237,0.4)' }}
+                >
+                  Get a quote <ArrowRight size={13} />
+                </Link>
+              </div>
+
+              {/* Enterprise */}
+              <div className="bento-card p-8 flex flex-col">
+                <div className="mb-6">
+                  <p className="eyebrow mb-2">Enterprise</p>
+                  <p className="text-2xl font-semibold tracking-tight mb-2">Full platform</p>
+                  <p className="text-sm text-[var(--color-ink-soft)] leading-relaxed">
+                    The complete suite for high-volume lenders with complex risk frameworks.
+                  </p>
+                </div>
+                <ul className="space-y-2.5 flex-1 mb-8">
+                  {[
+                    'Everything in Growth',
+                    'Biometric KYC (liveness + DHA)',
+                    'Advanced analytics dashboard',
+                    'Custom credit scorecard builder',
+                    'PEPs & sanctions screening',
+                    'Dedicated implementation team',
+                    'SLA-backed support',
+                    'White-glove onboarding',
+                  ].map((f) => (
+                    <li key={f} className="flex items-start gap-2 text-sm text-[var(--color-ink-soft)]">
+                      <Check size={13} className="text-[var(--color-brand)] mt-0.5 shrink-0" />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="#enquire"
+                  className="inline-flex items-center justify-center gap-2 text-sm font-semibold px-5 py-3 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] transition-colors"
+                >
+                  Get a quote <ArrowRight size={13} />
+                </Link>
               </div>
             </div>
           </Reveal>
 
           <Reveal delay={200}>
-            <p className="text-center mt-10 text-sm text-[var(--color-ink-muted)]">
-              <Sparkles size={12} className="inline mr-1" />
-              Pass-through API costs (Experian, TruID, DocuSeal) billed at cost. No markup.
-            </p>
+            <div className="mt-10 max-w-5xl mx-auto grid sm:grid-cols-2 gap-4">
+              <div className="bento-card p-6">
+                <p className="eyebrow mb-2">i. One-off implementation</p>
+                <p className="text-base font-semibold mb-2 tracking-tight">Quoted on scope</p>
+                <p className="text-sm text-[var(--color-ink-soft)]">
+                  Branding, scorecard configuration, integrations, UAT, and go-live support. Priced on what we build.
+                </p>
+              </div>
+              <div className="bento-card p-6">
+                <p className="eyebrow mb-2">ii. Pass-through API costs</p>
+                <p className="text-base font-semibold mb-2 tracking-tight">At cost, no markup</p>
+                <p className="text-sm text-[var(--color-ink-soft)]">
+                  Experian, TruID, DocuSeal, and SACRRA charges are passed through at provider cost. Transparent billing.
+                </p>
+              </div>
+            </div>
           </Reveal>
         </div>
       </section>

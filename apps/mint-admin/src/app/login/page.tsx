@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
@@ -27,6 +27,14 @@ function AlgoLendMark() {
 }
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router      = useRouter();
   const params      = useSearchParams();
   const next        = params.get('next') ?? '/';

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
 import Link from 'next/link';
@@ -25,26 +25,8 @@ interface ClientRow {
   users:    number;
 }
 
-// ─── Static data ──────────────────────────────────────────────────────
-const INITIAL_CLIENTS: ClientRow[] = [
-  { name: 'BridgeCapital Finance',  slug: 'bridgecap', tier: 'enterprise', status: 'active',    mrr: 45000, apiCalls: 41200, quota: 50000, users: 38 },
-  { name: 'Apex Credit Solutions',  slug: 'apex',      tier: 'growth',     status: 'active',    mrr: 22000, apiCalls: 18420, quota: 25000, users: 14 },
-  { name: 'Nexus Business Finance', slug: 'nexus',     tier: 'growth',     status: 'active',    mrr: 22000, apiCalls: 19800, quota: 25000, users: 11 },
-  { name: 'Elevate Capital',        slug: 'elevate',   tier: 'growth',     status: 'suspended', mrr: 0,     apiCalls: 0,     quota: 25000, users: 0  },
-  { name: 'Summit Lending',         slug: 'summit',    tier: 'core',       status: 'trial',     mrr: 8000,  apiCalls: 2100,  quota: 5000,  users: 4  },
-];
-
-const MRR_TREND  = [112000, 128000, 135000, 148000, 162000, 184000];
-const MRR_LABELS = ['Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May'];
-const ARR_VALUE  = 184000 * 12;
-
-const ACTIVITY = [
-  { icon: Users,         color: '#A78BFA', rgb: '167,139,250', text: 'Summit Lending went live on portal',  time: '2h ago' },
-  { icon: AlertTriangle, color: '#FBBF24', rgb: '251,191,36',  text: 'Elevate Capital kill switch triggered', time: '5h ago' },
-  { icon: DollarSign,    color: '#34D399', rgb: '52,211,153',  text: 'Invoice INV-0041 paid — R 22,000',    time: '1d ago' },
-  { icon: Zap,           color: '#60A5FA', rgb: '96,165,250',  text: 'BridgeCapital >80% API quota',        time: '1d ago' },
-  { icon: Users,         color: '#A78BFA', rgb: '167,139,250', text: 'New lead: Prosper Microfinance',      time: '2d ago' },
-];
+// ─── Static fallback (shown only while Supabase loads) ────────────────
+const INITIAL_CLIENTS: ClientRow[] = [];
 
 const SYSTEM_HEALTH = [
   { name: 'Supabase',    status: 'ok',   detail: '14ms avg query',  icon: Database },
@@ -118,15 +100,33 @@ function Sparkline({ accent, rgb }: { accent: string; rgb: string }) {
   );
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────
+function formatDate(d: Date) {
+  return d.toLocaleDateString('en-ZA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+function timeAgo(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const [clients, setClients] = useState<ClientRow[]>(INITIAL_CLIENTS);
-  const [loading, setLoading] = useState(true);
-  const [toast, setToast]     = useState<{ kind: ToastKind; message: string } | null>(null);
+  const [clients,  setClients]  = useState<ClientRow[]>(INITIAL_CLIENTS);
+  const [activity, setActivity] = useState<{ icon: typeof Users; color: string; rgb: string; text: string; time: string }[]>([]);
+  const [loading,  setLoading]  = useState(true);
+  const [toast,    setToast]    = useState<{ kind: ToastKind; message: string } | null>(null);
+  const [today,    setToday]    = useState('');
 
-  // Load real clients from Supabase
+  useEffect(() => { setToday(formatDate(new Date())); }, []);
+
+  // Load real clients + leads from Supabase
   useEffect(() => {
-    fetch('/api/clients')
+    const loadClients = fetch('/api/clients')
       .then(r => r.json())
       .then(({ clients: raw }) => {
         if (Array.isArray(raw) && raw.length > 0) {
@@ -141,9 +141,24 @@ export default function DashboardPage() {
             users:    0,
           })));
         }
+      });
+
+    const loadLeads = fetch('/api/leads')
+      .then(r => r.json())
+      .then(({ leads }) => {
+        if (Array.isArray(leads) && leads.length > 0) {
+          setActivity(leads.slice(0, 5).map((l: Record<string, unknown>) => ({
+            icon:  Users,
+            color: '#A78BFA',
+            rgb:   '167,139,250',
+            text:  `New lead: ${String(l.company ?? l.name ?? 'Unknown')}`,
+            time:  timeAgo(String(l.created_at ?? '')),
+          })));
+        }
       })
-      .catch(() => {/* keep seed data */})
-      .finally(() => setLoading(false));
+      .catch(() => {});
+
+    Promise.allSettled([loadClients, loadLeads]).finally(() => setLoading(false));
   }, []);
 
   function toggleKill(c: ClientRow) {
@@ -186,7 +201,7 @@ export default function DashboardPage() {
               Command Centre
             </h1>
             <p className="text-sm mt-1.5" style={{ color: 'var(--color-text3)' }}>
-              Friday, 29 May 2026 · All deployments monitored
+              {today} · All deployments monitored
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -228,7 +243,7 @@ export default function DashboardPage() {
                 className="text-5xl font-bold tracking-tight stat-value"
                 style={{ color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }}
               >
-                {fmt(ARR_VALUE)}
+                {fmt(totalMRR * 12)}
               </p>
               <div className="flex items-center gap-3 mt-3 flex-wrap">
                 <span
@@ -246,30 +261,34 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* MRR trend area chart */}
+            {/* MRR breakdown by client */}
             <div className="md:col-span-2">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-semibold" style={{ color: 'var(--color-text3)' }}>
-                  MRR — Dec 2025 → May 2026
+                  MRR breakdown — {clients.filter(c => c.status !== 'suspended' && c.status !== 'churned').length} active deployments
                 </p>
-                <span
-                  className="font-mono text-xs font-semibold"
-                  style={{ color: 'var(--color-violet)' }}
-                >
-                  {fmt(184000)} / mo
+                <span className="font-mono text-xs font-semibold" style={{ color: 'var(--color-violet)' }}>
+                  {fmt(totalMRR)} / mo
                 </span>
               </div>
-              <AreaChart data={MRR_TREND} color="#7C3AED" gradId="arrGrad" />
-              <div className="flex justify-between mt-2">
-                {MRR_LABELS.map(l => (
-                  <span
-                    key={l}
-                    className="text-[10px]"
-                    style={{ color: 'var(--color-text3)', fontFamily: 'var(--font-mono)' }}
-                  >
-                    {l}
-                  </span>
-                ))}
+              <div className="space-y-2">
+                {clients
+                  .filter(c => c.status !== 'churned' && c.mrr > 0)
+                  .sort((a, b) => b.mrr - a.mrr)
+                  .slice(0, 5)
+                  .map(c => {
+                    const pct = totalMRR > 0 ? Math.round((c.mrr / totalMRR) * 100) : 0;
+                    return (
+                      <div key={c.slug} className="flex items-center gap-2">
+                        <span className="text-[11px] w-28 truncate shrink-0" style={{ color: 'var(--color-text2)' }}>{c.name}</span>
+                        <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(124,58,237,0.1)' }}>
+                          <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'linear-gradient(90deg, #7C3AED, #A78BFA)' }} />
+                        </div>
+                        <span className="text-[11px] font-mono w-16 text-right shrink-0" style={{ color: 'var(--color-text3)' }}>{fmt(c.mrr)}</span>
+                      </div>
+                    );
+                  })}
+                {loading && <p className="text-[11px]" style={{ color: 'var(--color-text3)' }}>Loading…</p>}
               </div>
             </div>
           </div>
@@ -352,11 +371,14 @@ export default function DashboardPage() {
               </Link>
             </div>
             <div>
-              {ACTIVITY.map((a, i) => (
+              {activity.length === 0 && !loading && (
+                <p className="text-sm py-4 text-center" style={{ color: 'var(--color-text3)' }}>No recent activity</p>
+              )}
+              {activity.map((a, i) => (
                 <div
                   key={i}
                   className="flex items-center gap-3 py-2.5 px-3 rounded-xl transition-colors cursor-default"
-                  style={{ borderBottom: i < ACTIVITY.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}
+                  style={{ borderBottom: i < activity.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.04)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                 >

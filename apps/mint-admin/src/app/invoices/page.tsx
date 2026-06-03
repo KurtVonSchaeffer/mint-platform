@@ -46,15 +46,6 @@ interface Invoice {
   invoice_line_items: LineItem[];
 }
 
-/* ─── Seed data ─────────────────────────────────────────────────────── */
-const SEED_INVOICES: Invoice[] = [
-  { id: 's1', reference: 'INV-2026-05-bridgecapital-LIC', type: 'monthly_licence', status: 'paid',    subtotal_cents: 3913000, vat_cents: 586950, total_cents: 4500000, period_start: '2026-05-01', period_end: '2026-05-31', issued_at: '2026-05-01T06:00:00Z', due_at: '2026-05-16T06:00:00Z', paid_at: '2026-05-08T10:00:00Z', void_at: null, notes: null, clients: { id: 'c1', name: 'BridgeCapital Finance', slug: 'bridgecapital' }, invoice_line_items: [{ id: 'li1', description: 'Monthly licence fee — enterprise tier', quantity: 1, unit_price_cents: 3913000, total_cents: 3913000, service: null }, { id: 'li2', description: 'TruID affordability lookups', quantity: 128, unit_price_cents: 2500, total_cents: 320000, service: 'trueid_lookup' }] },
-  { id: 's2', reference: 'INV-2026-05-apexcredit-LIC',     type: 'monthly_licence', status: 'paid',    subtotal_cents: 1913000, vat_cents: 286950, total_cents: 2200000, period_start: '2026-05-01', period_end: '2026-05-31', issued_at: '2026-05-01T06:00:00Z', due_at: '2026-05-16T06:00:00Z', paid_at: '2026-05-05T08:00:00Z', void_at: null, notes: null, clients: { id: 'c2', name: 'Apex Credit Solutions', slug: 'apexcredit' }, invoice_line_items: [{ id: 'li3', description: 'Monthly licence fee — growth tier', quantity: 1, unit_price_cents: 1913000, total_cents: 1913000, service: null }] },
-  { id: 's3', reference: 'INV-2026-05-nexusbiz-LIC',       type: 'monthly_licence', status: 'paid',    subtotal_cents: 1913000, vat_cents: 286950, total_cents: 2200000, period_start: '2026-05-01', period_end: '2026-05-31', issued_at: '2026-05-01T06:00:00Z', due_at: '2026-05-16T06:00:00Z', paid_at: '2026-05-12T09:00:00Z', void_at: null, notes: null, clients: { id: 'c3', name: 'Nexus Business Finance', slug: 'nexusbiz' }, invoice_line_items: [{ id: 'li4', description: 'Monthly licence fee — growth tier', quantity: 1, unit_price_cents: 1913000, total_cents: 1913000, service: null }] },
-  { id: 's4', reference: 'INV-2026-05-elevatecap-LIC',     type: 'monthly_licence', status: 'overdue', subtotal_cents: 1913000, vat_cents: 286950, total_cents: 2200000, period_start: '2026-05-01', period_end: '2026-05-31', issued_at: '2026-05-01T06:00:00Z', due_at: '2026-05-16T06:00:00Z', paid_at: null, void_at: null, notes: null, clients: { id: 'c4', name: 'Elevate Capital', slug: 'elevatecap' }, invoice_line_items: [{ id: 'li5', description: 'Monthly licence fee — growth tier', quantity: 1, unit_price_cents: 1913000, total_cents: 1913000, service: null }] },
-  { id: 's5', reference: 'INV-2026-05-summit-LIC',         type: 'monthly_licence', status: 'sent',    subtotal_cents: 695652,  vat_cents: 104348, total_cents: 800000,  period_start: '2026-05-15', period_end: '2026-05-31', issued_at: '2026-05-15T06:00:00Z', due_at: '2026-05-30T06:00:00Z', paid_at: null, void_at: null, notes: 'Pro-rated 17/31 days — onboarded mid-month.', clients: { id: 'c5', name: 'Summit Lending', slug: 'summit' }, invoice_line_items: [{ id: 'li6', description: 'Monthly licence fee — core tier (pro-rated 17/31 days)', quantity: 1, unit_price_cents: 695652, total_cents: 695652, service: null }] },
-  { id: 's6', reference: 'INV-2026-05-bridgecapital-USG',  type: 'usage',           status: 'draft',   subtotal_cents: 730435,  vat_cents: 109565, total_cents: 840000,  period_start: '2026-05-01', period_end: '2026-05-31', issued_at: null, due_at: null, paid_at: null, void_at: null, notes: 'Pass-through API costs (Experian + TruID)', clients: { id: 'c1', name: 'BridgeCapital Finance', slug: 'bridgecapital' }, invoice_line_items: [{ id: 'li7', description: 'Experian credit scores', quantity: 128, unit_price_cents: 3500, total_cents: 448000, service: 'experian_score' }, { id: 'li8', description: 'DocuSeal e-contract envelopes', quantity: 41, unit_price_cents: 1500, total_cents: 61500, service: 'docuseal_envelope' }, { id: 'li9', description: 'Outbound SMS notifications', quantity: 2734, unit_price_cents: 80, total_cents: 218720, service: 'sms_outbound' }] },
-];
 
 /* ─── Helpers ────────────────────────────────────────────────────────── */
 const statusStyle: Record<InvoiceStatus, { label: string; bg: string; border: string; color: string; icon: typeof Clock }> = {
@@ -233,7 +224,7 @@ function GenerateModal({ onClose, onGenerated }: {
 
 /* ─── Page ──────────────────────────────────────────────────────────── */
 export default function InvoicesPage() {
-  const [invoices, setInvoices]           = useState<Invoice[]>(SEED_INVOICES);
+  const [invoices, setInvoices]           = useState<Invoice[]>([]);
   const [loading, setLoading]             = useState(true);
   const [supaConnected, setSupaConnected] = useState(false);
   const [filter, setFilter]               = useState<'all' | InvoiceStatus>('all');
@@ -249,7 +240,7 @@ export default function InvoicesPage() {
       const res = await fetch('/api/invoices');
       if (!res.ok) throw new Error('fetch failed');
       const { invoices: raw } = await res.json();
-      if (Array.isArray(raw) && raw.length > 0) { setInvoices(raw as Invoice[]); setSupaConnected(true); }
+      if (Array.isArray(raw)) { setInvoices(raw as Invoice[]); setSupaConnected(true); }
     } catch {
       pushToast('error', 'Showing demo data — Supabase env vars may not be set.');
     } finally {

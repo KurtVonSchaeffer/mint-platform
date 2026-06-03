@@ -3595,6 +3595,64 @@ app.get('/api/cron/flag-defaults', async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+app.get('/api/cron/usage-rollup', async (req, res) => {
+    if (process.env.VERCEL && req.headers.authorization !== `Bearer ${process.env.CRON_SECRET || ''}`) {
+        return res.status(401).json({ error: 'Unauthorized' });
+    }
+    try {
+        const { supabaseService } = require('./config/supabaseServer');
+        const { CLIENT_ID, resetAlertFlags } = require('./services/apiUsageLogger');
+
+        const now = new Date();
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+        const monthStr   = monthStart.toISOString().slice(0, 10); // YYYY-MM-DD
+
+        // Aggregate api_usage_log for the current month
+        const { data: rows, error } = await supabaseService
+            .from('api_usage_log')
+            .select('service, status')
+            .eq('client_id', CLIENT_ID)
+            .gte('created_at', monthStart.toISOString());
+
+        if (error) throw error;
+
+        // Group by service
+        const totals = {};
+        for (const row of rows || []) {
+            if (!totals[row.service]) totals[row.service] = { qty: 0, cost: 0 };
+            totals[row.service].qty += 1;
+        }
+
+        // Upsert into usage_monthly_rollup
+        const SERVICE_COST_CENTS = {
+            trueid_lookup: 2500, experian_score: 3500, docuseal_envelope: 1500,
+            sacrra_submission: 500, sure_systems_pull: 800, sms_outbound: 80,
+            email_outbound: 20, api_call: 5,
+        };
+
+        const upserts = Object.entries(totals).map(([service, v]) => ({
+            client_id:        CLIENT_ID,
+            month:            monthStr,
+            service,
+            total_quantity:   v.qty,
+            total_cost_cents: v.qty * (SERVICE_COST_CENTS[service] ?? 0),
+        }));
+
+        if (upserts.length > 0) {
+            const { error: upsertErr } = await supabaseService
+                .from('usage_monthly_rollup')
+                .upsert(upserts, { onConflict: 'client_id,month,service' });
+            if (upsertErr) throw upsertErr;
+        }
+
+        // Reset quota alert flags at the start of a new month
+        const isMonthStart = now.getDate() === 1;
+        if (isMonthStart) resetAlertFlags();
+
+        res.json({ ok: true, month: monthStr, servicesUpdated: upserts.length });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
 // --- 8. Start Server ---
 // On Vercel, the module is imported directly — no listen() needed.
 // Locally, listen() starts the server and the scheduler.

@@ -6,6 +6,7 @@ import { Toast, type ToastKind } from '@/components/Toast';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
 import { ImportFromVercelModal } from '@/components/ImportFromVercelModal';
 import { ALL_FEATURES, FEATURE_LABELS } from '@/lib/features';
+import Link from 'next/link';
 import {
   Power, Settings2, ExternalLink, X, Search, Plus, Zap, Building2, Mail, Loader2, Download,
 } from 'lucide-react';
@@ -359,10 +360,11 @@ export default function ClientsPage() {
             {filtered.map((c, i) => (
               <article
                 key={c.id}
-                className="bento-card p-6"
+                className="bento-card p-6 relative"
                 style={{ animation: 'fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both', animationDelay: `${i * 60}ms` }}
               >
-                <div className="grid grid-cols-[1fr_auto] gap-6 items-start">
+                <Link href={`/clients/${c.id}`} className="absolute inset-0 z-0 rounded-2xl" aria-label={`View ${c.name}`} />
+                <div className="relative grid grid-cols-[1fr_auto] gap-6 items-start">
                   <div className="min-w-0">
                     <div className="flex items-center gap-3 flex-wrap mb-2">
                       <h2 className="text-lg font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>{c.name}</h2>
@@ -414,7 +416,19 @@ export default function ClientsPage() {
                       ))}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="relative z-10 flex items-center gap-2 shrink-0">
+                    <a
+                      href={`https://vercel.com/mint-platforms/${c.slug}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      title="Vercel project"
+                      className="p-2 rounded-xl transition-colors"
+                      style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.3)'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border2)'; }}
+                    >
+                      <svg width="13" height="13" viewBox="0 0 76 65" fill="currentColor"><path d="M37.5274 0L75.0548 65H0L37.5274 0Z" /></svg>
+                    </a>
                     <a
                       href={`https://${c.domain ?? `${c.subdomain}.algolend.co.za`}`}
                       target="_blank"
@@ -428,9 +442,9 @@ export default function ClientsPage() {
                       <ExternalLink size={15} />
                     </a>
                     <button
-                      onClick={() => openClient(c)}
+                      onClick={e => { e.preventDefault(); openClient(c); }}
                       title="Manage features"
-                      className="p-2 rounded-xl transition-colors"
+                      className="relative z-10 p-2 rounded-xl transition-colors"
                       style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
                       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.3)'; }}
                       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border2)'; }}
@@ -438,8 +452,8 @@ export default function ClientsPage() {
                       <Settings2 size={15} />
                     </button>
                     <button
-                      onClick={() => toggleKillRequest(c)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+                      onClick={e => { e.preventDefault(); toggleKillRequest(c); }}
+                      className="relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
                       style={c.status === 'active' ? {
                         background: 'rgba(248,113,113,0.1)',
                         color: 'var(--color-red)',

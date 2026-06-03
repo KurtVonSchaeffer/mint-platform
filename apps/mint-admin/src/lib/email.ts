@@ -109,6 +109,76 @@ export function invoiceReminderEmail(inv: {
 </body></html>`;
 }
 
+export function quotaWarningEmail(q: {
+  clientName: string; contact: string; slug: string;
+  used: number; limit: number; pct: number;
+}) {
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:#d97706;padding:28px 32px">
+    <p style="color:#fff;font-size:20px;font-weight:700;margin:0">⚠️ API Quota Warning</p>
+    <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:4px 0 0">${q.clientName} · AlgoLend Platform</p>
+  </div>
+  <div style="padding:28px 32px">
+    <p>Hi ${q.contact},</p>
+    <p style="color:#555;line-height:1.6">Your AlgoLend deployment has used <strong>${q.pct}%</strong> of its monthly API quota.</p>
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:20px;text-align:center;margin:20px 0">
+      <p style="font-size:36px;font-weight:700;color:#d97706;margin:0">${q.pct}%</p>
+      <p style="color:#666;font-size:13px;margin:4px 0 0">${q.used.toLocaleString()} of ${q.limit.toLocaleString()} calls used this month</p>
+    </div>
+    <p style="color:#555;font-size:14px;line-height:1.6">
+      At current usage, you may reach your limit before the end of the month. Contact your AlgoLend account manager to top up your quota and avoid any service interruption.
+    </p>
+    <p style="color:#888;font-size:13px;margin-top:16px">
+      Email <a href="mailto:support@mintplatforms.co.za" style="color:#7C3AED">support@mintplatforms.co.za</a> to arrange a top-up.
+    </p>
+  </div>
+  <div style="background:#f5f6fa;padding:16px;text-align:center;font-size:11px;color:#aaa">
+    AlgoLend · Mint Platforms (Pty) Ltd
+  </div>
+</div>
+</body></html>`;
+}
+
+export function quotaExceededEmail(q: {
+  clientName: string; contact: string; slug: string;
+  used: number; limit: number;
+}) {
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:#dc2626;padding:28px 32px">
+    <p style="color:#fff;font-size:20px;font-weight:700;margin:0">🚨 API Quota Exhausted — Service Paused</p>
+    <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:4px 0 0">${q.clientName} · AlgoLend Platform</p>
+  </div>
+  <div style="padding:28px 32px">
+    <p>Hi ${q.contact},</p>
+    <p style="color:#555;line-height:1.6">
+      Your AlgoLend deployment has reached its monthly API quota of <strong>${q.limit.toLocaleString()} calls</strong>.
+      External API calls (Experian, TruID, DocuSeal, SureSystems) are <strong>blocked</strong> until your quota is topped up or the month resets.
+    </p>
+    <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:20px;text-align:center;margin:20px 0">
+      <p style="font-size:36px;font-weight:700;color:#dc2626;margin:0">100%</p>
+      <p style="color:#666;font-size:13px;margin:4px 0 0">${q.used.toLocaleString()} calls — monthly limit reached</p>
+    </div>
+    <p style="color:#555;font-size:14px;line-height:1.6">
+      <strong>To restore service immediately</strong>, contact your AlgoLend account manager to purchase additional quota. Your manager can add units within minutes.
+    </p>
+    <div style="margin-top:24px;text-align:center">
+      <a href="mailto:support@mintplatforms.co.za?subject=Quota%20Top-Up%20Request%20—%20${encodeURIComponent(q.slug)}" style="background:#7C3AED;color:#fff;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px">
+        Request Top-Up →
+      </a>
+    </div>
+    <p style="color:#888;font-size:13px;margin-top:20px">Quota resets automatically on the 1st of next month.</p>
+  </div>
+  <div style="background:#f5f6fa;padding:16px;text-align:center;font-size:11px;color:#aaa">
+    AlgoLend · Mint Platforms (Pty) Ltd
+  </div>
+</div>
+</body></html>`;
+}
+
 export function welcomeClientEmail(client: {
   name: string; contact: string; slug: string; portalUrl: string;
 }) {
