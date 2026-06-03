@@ -28,8 +28,8 @@ export function ClientDashboard() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Good morning, {firstName}</h1>
-          <p className="text-slate-500 mt-1 text-sm">Here's an overview of your account.</p>
+          <h1 className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">Good morning, {firstName}</h1>
+          <p className="text-[var(--color-ink-soft)] mt-1 text-sm">Here's an overview of your account.</p>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={() => navigate('/client/calculator')} variant="outline" size="md">
@@ -79,7 +79,7 @@ export function ClientDashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="font-semibold text-[var(--color-brand)] text-sm">Connect your bank account</p>
-              <p className="text-sm text-slate-600 mt-0.5">Speed up your application with real-time bank verification via TruID.</p>
+              <p className="text-sm text-[var(--color-ink-soft)] mt-0.5">Speed up your application with real-time bank verification via TruID.</p>
             </div>
             <Button variant="outline" size="sm">Connect Bank</Button>
           </div>
@@ -89,21 +89,21 @@ export function ClientDashboard() {
       {/* Recent applications */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-slate-900">Recent applications</h2>
+          <h2 className="text-base font-semibold text-[var(--color-ink)]">Recent applications</h2>
           <button
             onClick={() => navigate('/client/loans')}
-            className="text-xs font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+            className="text-xs font-semibold text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] transition-colors"
           >
             View all →
           </button>
         </div>
         {applications.length === 0 ? (
           <Card className="p-10 text-center">
-            <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-slate-100 flex items-center justify-center">
-              <CreditCard size={18} className="text-slate-400" />
+            <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-[var(--color-surface-3)] flex items-center justify-center">
+              <CreditCard size={18} className="text-[var(--color-ink-muted)]" />
             </div>
-            <p className="text-sm font-semibold text-slate-700 mb-1">No applications yet</p>
-            <p className="text-xs text-slate-500 mb-4">Apply for your first loan to get started.</p>
+            <p className="text-sm font-semibold text-[var(--color-ink-2)] mb-1">No applications yet</p>
+            <p className="text-xs text-[var(--color-ink-soft)] mb-4">Apply for your first loan to get started.</p>
             <Button onClick={() => navigate('/client/apply')} size="sm">
               Apply now <ArrowRight size={13} />
             </Button>
@@ -115,7 +115,7 @@ export function ClientDashboard() {
                 <button
                   key={a.id}
                   onClick={() => navigate('/client/loans')}
-                  className="w-full text-left px-6 py-4 flex items-center justify-between hover:bg-slate-50/60 transition-colors"
+                  className="w-full text-left px-6 py-4 flex items-center justify-between hover:bg-[var(--color-surface-2)]/60 transition-colors"
                 >
                   <div className="flex items-center gap-4">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
@@ -127,17 +127,17 @@ export function ClientDashboard() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2 mb-0.5">
-                        <p className="font-mono text-xs font-bold text-slate-700">{a.id}</p>
+                        <p className="font-mono text-xs font-bold text-[var(--color-ink-2)]">{a.id}</p>
                         <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${statusBadgeClass[a.status]}`}>
                           {statusLabel[a.status]}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400">{a.purpose} · {a.termMonths} months</p>
+                      <p className="text-xs text-[var(--color-ink-muted)]">{a.purpose} · {a.termMonths} months</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-bold text-slate-900">{formatCurrency(a.amount)}</p>
-                    <p className="text-[10px] text-slate-400">{formatDate(a.submittedAt)}</p>
+                    <p className="text-sm font-bold text-[var(--color-ink)]">{formatCurrency(a.amount)}</p>
+                    <p className="text-[10px] text-[var(--color-ink-muted)]">{formatDate(a.submittedAt)}</p>
                   </div>
                 </button>
               ))}

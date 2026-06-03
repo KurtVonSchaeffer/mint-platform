@@ -92,7 +92,7 @@ export function RegisterPage() {
   if (success) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-[var(--color-bg)]">
-        <div className="relative max-w-md w-full bg-white border border-[var(--color-border)] rounded-3xl p-10 text-center shadow-sm" style={{ animation: 'scale-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
+        <div className="relative max-w-md w-full bg-[var(--color-surface)] border border-[var(--color-border)] rounded-3xl p-10 text-center shadow-sm" style={{ animation: 'scale-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
           <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-emerald-100 flex items-center justify-center">
             <Check size={26} className="text-emerald-600" />
           </div>
@@ -174,8 +174,8 @@ export function RegisterPage() {
               { icon: ShieldCheck, title: 'Secure & compliant',   desc: 'NCA & POPIA aligned, bank-grade encryption.' },
               { icon: Cpu,         title: 'No paperwork',          desc: 'Open banking pulls statements automatically.' },
             ].map((f) => (
-              <div key={f.title} className="flex items-start gap-3 p-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur">
-                <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+              <div key={f.title} className="flex items-start gap-3 p-3 rounded-2xl border border-white/10 bg-[var(--color-surface)]/5 backdrop-blur">
+                <div className="w-9 h-9 rounded-xl bg-[var(--color-surface)]/10 flex items-center justify-center shrink-0">
                   <f.icon size={15} className="text-[#A78BFA]" />
                 </div>
                 <div>
@@ -202,7 +202,7 @@ export function RegisterPage() {
           to="/auth/login"
           aria-label="Back to sign in"
           title="Back to sign in"
-          className="absolute top-6 left-6 lg:top-8 lg:left-8 z-20 inline-flex items-center justify-center w-10 h-10 rounded-full bg-white border border-[var(--color-border)] text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:border-[var(--color-ink)] hover:-translate-x-0.5 transition-all shadow-sm group"
+          className="absolute top-6 left-6 lg:top-8 lg:left-8 z-20 inline-flex items-center justify-center w-10 h-10 rounded-full bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] hover:border-[var(--color-ink)] hover:-translate-x-0.5 transition-all shadow-sm group"
         >
           <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-0.5" />
         </Link>
@@ -258,7 +258,7 @@ export function RegisterPage() {
                     placeholder={f.placeholder}
                     value={form[f.key]}
                     onChange={(e) => update(f.key, e.target.value)}
-                    className={`w-full px-4 py-3 rounded-2xl bg-white border text-[15px] outline-none transition-all focus:ring-4 focus:ring-[var(--color-ink)]/8 placeholder:text-[var(--color-ink-muted)] ${
+                    className={`w-full px-4 py-3 rounded-2xl bg-[var(--color-surface)] border text-[15px] outline-none transition-all focus:ring-4 focus:ring-[var(--color-ink)]/8 placeholder:text-[var(--color-ink-muted)] ${
                       errors[f.key] ? 'border-red-400 focus:border-red-500' : 'border-[var(--color-border)] focus:border-[var(--color-ink)]'
                     }`}
                   />
@@ -277,7 +277,7 @@ export function RegisterPage() {
                 placeholder="sipho@bridgecapital.co.za"
                 value={form.email}
                 onChange={(e) => update('email', e.target.value)}
-                className={`w-full px-4 py-3 rounded-2xl bg-white border text-[15px] outline-none transition-all focus:ring-4 focus:ring-[var(--color-ink)]/8 placeholder:text-[var(--color-ink-muted)] ${
+                className={`w-full px-4 py-3 rounded-2xl bg-[var(--color-surface)] border text-[15px] outline-none transition-all focus:ring-4 focus:ring-[var(--color-ink)]/8 placeholder:text-[var(--color-ink-muted)] ${
                   errors.email ? 'border-red-400 focus:border-red-500' : 'border-[var(--color-border)] focus:border-[var(--color-ink)]'
                 }`}
               />
@@ -298,7 +298,7 @@ export function RegisterPage() {
                   placeholder={f.placeholder}
                   value={form[f.key]}
                   onChange={(e) => update(f.key, e.target.value)}
-                  className={`w-full px-4 py-3 rounded-2xl bg-white border text-[15px] outline-none transition-all focus:ring-4 focus:ring-[var(--color-ink)]/8 placeholder:text-[var(--color-ink-muted)] ${
+                  className={`w-full px-4 py-3 rounded-2xl bg-[var(--color-surface)] border text-[15px] outline-none transition-all focus:ring-4 focus:ring-[var(--color-ink)]/8 placeholder:text-[var(--color-ink-muted)] ${
                     errors[f.key] ? 'border-red-400 focus:border-red-500' : 'border-[var(--color-border)] focus:border-[var(--color-ink)]'
                   }`}
                 />
@@ -322,7 +322,7 @@ export function RegisterPage() {
                       placeholder="••••••••"
                       value={form[f.key]}
                       onChange={(e) => update(f.key, e.target.value)}
-                      className={`w-full px-4 py-3 pr-10 rounded-2xl bg-white border text-[15px] outline-none transition-all focus:ring-4 focus:ring-[var(--color-ink)]/8 placeholder:text-[var(--color-ink-muted)] ${
+                      className={`w-full px-4 py-3 pr-10 rounded-2xl bg-[var(--color-surface)] border text-[15px] outline-none transition-all focus:ring-4 focus:ring-[var(--color-ink)]/8 placeholder:text-[var(--color-ink-muted)] ${
                         errors[f.key] ? 'border-red-400 focus:border-red-500' : 'border-[var(--color-border)] focus:border-[var(--color-ink)]'
                       }`}
                     />

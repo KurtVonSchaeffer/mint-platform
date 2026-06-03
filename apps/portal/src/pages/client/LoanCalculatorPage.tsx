@@ -31,23 +31,23 @@ export function LoanCalculatorPage() {
   return (
     <div className="space-y-6 max-w-4xl">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Loan Calculator</h1>
-        <p className="text-slate-500 text-sm mt-1">Estimate your monthly repayment before applying. Rates shown are indicative — your final rate is risk-based.</p>
+        <h1 className="text-2xl font-bold text-[var(--color-ink)]">Loan Calculator</h1>
+        <p className="text-[var(--color-ink-soft)] text-sm mt-1">Estimate your monthly repayment before applying. Rates shown are indicative — your final rate is risk-based.</p>
       </div>
 
       <div className="grid lg:grid-cols-[1.2fr_1fr] gap-6">
         {/* Inputs */}
         <Card className="p-6 space-y-7">
-          <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+          <div className="flex items-center gap-2 pb-2 border-b border-[var(--color-border-soft)]">
             <Calculator size={16} className="text-[var(--color-brand)]" />
-            <h2 className="text-sm font-semibold text-slate-900">Loan terms</h2>
+            <h2 className="text-sm font-semibold text-[var(--color-ink)]">Loan terms</h2>
           </div>
 
           {/* Amount */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <label className="text-sm font-medium text-slate-700">Loan amount</label>
-              <span className="text-lg font-bold text-slate-900">{formatCurrency(amount)}</span>
+              <label className="text-sm font-medium text-[var(--color-ink-2)]">Loan amount</label>
+              <span className="text-lg font-bold text-[var(--color-ink)]">{formatCurrency(amount)}</span>
             </div>
             <input
               type="range"
@@ -58,7 +58,7 @@ export function LoanCalculatorPage() {
               onChange={(e) => setAmount(Number(e.target.value))}
               className="w-full accent-[var(--color-brand)]"
             />
-            <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+            <div className="flex justify-between text-[10px] text-[var(--color-ink-muted)] mt-1">
               <span>R 10,000</span>
               <span>R 500,000</span>
             </div>
@@ -67,8 +67,8 @@ export function LoanCalculatorPage() {
           {/* Term */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <label className="text-sm font-medium text-slate-700">Repayment term</label>
-              <span className="text-lg font-bold text-slate-900">{term} months</span>
+              <label className="text-sm font-medium text-[var(--color-ink-2)]">Repayment term</label>
+              <span className="text-lg font-bold text-[var(--color-ink)]">{term} months</span>
             </div>
             <input
               type="range"
@@ -79,7 +79,7 @@ export function LoanCalculatorPage() {
               onChange={(e) => setTerm(Number(e.target.value))}
               className="w-full accent-[var(--color-brand)]"
             />
-            <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+            <div className="flex justify-between text-[10px] text-[var(--color-ink-muted)] mt-1">
               <span>3 months</span>
               <span>60 months</span>
             </div>
@@ -88,8 +88,8 @@ export function LoanCalculatorPage() {
           {/* Rate */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <label className="text-sm font-medium text-slate-700">Annual interest rate</label>
-              <span className="text-lg font-bold text-slate-900">{rate}%</span>
+              <label className="text-sm font-medium text-[var(--color-ink-2)]">Annual interest rate</label>
+              <span className="text-lg font-bold text-[var(--color-ink)]">{rate}%</span>
             </div>
             <input
               type="range"
@@ -100,42 +100,42 @@ export function LoanCalculatorPage() {
               onChange={(e) => setRate(Number(e.target.value))}
               className="w-full accent-[var(--color-brand)]"
             />
-            <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+            <div className="flex justify-between text-[10px] text-[var(--color-ink-muted)] mt-1">
               <span>10% (lowest risk)</span>
               <span>35% (highest risk)</span>
             </div>
           </div>
 
-          <div className="bg-slate-50 rounded-xl p-4 text-xs text-slate-500 leading-relaxed">
-            <strong className="text-slate-700">Note:</strong> This is an estimate using a fixed-rate amortising schedule.
+          <div className="bg-[var(--color-surface-2)] rounded-xl p-4 text-xs text-[var(--color-ink-soft)] leading-relaxed">
+            <strong className="text-[var(--color-ink-2)]">Note:</strong> This is an estimate using a fixed-rate amortising schedule.
             Your actual rate is determined after credit assessment and may differ. NCA-compliant initiation and admin fees are added on approval.
           </div>
         </Card>
 
         {/* Output */}
         <Card className="p-6 flex flex-col">
-          <div className="text-xs uppercase tracking-widest text-slate-400 mb-2">Monthly instalment</div>
+          <div className="text-xs uppercase tracking-widest text-[var(--color-ink-muted)] mb-2">Monthly instalment</div>
           <div className="text-4xl font-extrabold text-[var(--color-brand)] mb-1">{formatCurrency(installment)}</div>
-          <div className="text-xs text-slate-400 mb-6">× {term} months</div>
+          <div className="text-xs text-[var(--color-ink-muted)] mb-6">× {term} months</div>
 
-          <div className="space-y-3 mb-6 pb-6 border-b border-slate-100">
+          <div className="space-y-3 mb-6 pb-6 border-b border-[var(--color-border-soft)]">
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2 text-sm text-slate-500">
+              <span className="flex items-center gap-2 text-sm text-[var(--color-ink-soft)]">
                 <TrendingUp size={13} /> Total to repay
               </span>
-              <span className="font-semibold text-slate-800">{formatCurrency(totalPaid)}</span>
+              <span className="font-semibold text-[var(--color-ink)]">{formatCurrency(totalPaid)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2 text-sm text-slate-500">
+              <span className="flex items-center gap-2 text-sm text-[var(--color-ink-soft)]">
                 <Percent size={13} /> Total interest
               </span>
-              <span className="font-semibold text-slate-800">{formatCurrency(totalInterest)}</span>
+              <span className="font-semibold text-[var(--color-ink)]">{formatCurrency(totalInterest)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-2 text-sm text-slate-500">
+              <span className="flex items-center gap-2 text-sm text-[var(--color-ink-soft)]">
                 <Calendar size={13} /> Final payment
               </span>
-              <span className="font-semibold text-slate-800">
+              <span className="font-semibold text-[var(--color-ink)]">
                 {new Date(Date.now() + term * 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-ZA', { month: 'short', year: 'numeric' })}
               </span>
             </div>
@@ -144,7 +144,7 @@ export function LoanCalculatorPage() {
           {hasOpenBanking && (
             <div className="mb-5 p-3 rounded-xl bg-[var(--color-brand-muted)]/40 border border-[var(--color-brand-light)]/30">
               <p className="text-xs font-semibold text-[var(--color-brand)]">Pre-qualify instantly</p>
-              <p className="text-[11px] text-slate-600 mt-0.5">Connect your bank account via TruID to get a personalised rate in under 60 seconds.</p>
+              <p className="text-[11px] text-[var(--color-ink-soft)] mt-0.5">Connect your bank account via TruID to get a personalised rate in under 60 seconds.</p>
             </div>
           )}
 
@@ -156,10 +156,10 @@ export function LoanCalculatorPage() {
 
       {/* Amortisation preview */}
       <Card className="p-6">
-        <h2 className="text-sm font-semibold text-slate-900 mb-4">Repayment breakdown (first 6 months)</h2>
+        <h2 className="text-sm font-semibold text-[var(--color-ink)] mb-4">Repayment breakdown (first 6 months)</h2>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-100 text-left text-xs text-slate-400 font-semibold uppercase tracking-wide">
+            <tr className="border-b border-[var(--color-border-soft)] text-left text-xs text-[var(--color-ink-muted)] font-semibold uppercase tracking-wide">
               <th className="pb-3 pr-4">Month</th>
               <th className="pb-3 pr-4">Instalment</th>
               <th className="pb-3 pr-4">Interest</th>
@@ -177,11 +177,11 @@ export function LoanCalculatorPage() {
                 balance -= principalPortion;
                 return (
                   <tr key={i} className="border-b border-slate-50 last:border-0">
-                    <td className="py-2.5 pr-4 text-slate-500">{i + 1}</td>
-                    <td className="py-2.5 pr-4 font-medium text-slate-800">{formatCurrency(installment)}</td>
-                    <td className="py-2.5 pr-4 text-slate-500">{formatCurrency(interestPortion)}</td>
+                    <td className="py-2.5 pr-4 text-[var(--color-ink-soft)]">{i + 1}</td>
+                    <td className="py-2.5 pr-4 font-medium text-[var(--color-ink)]">{formatCurrency(installment)}</td>
+                    <td className="py-2.5 pr-4 text-[var(--color-ink-soft)]">{formatCurrency(interestPortion)}</td>
                     <td className="py-2.5 pr-4 text-emerald-600">{formatCurrency(principalPortion)}</td>
-                    <td className="py-2.5 font-semibold text-slate-900">{formatCurrency(Math.max(0, balance))}</td>
+                    <td className="py-2.5 font-semibold text-[var(--color-ink)]">{formatCurrency(Math.max(0, balance))}</td>
                   </tr>
                 );
               });

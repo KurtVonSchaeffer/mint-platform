@@ -67,19 +67,19 @@ export function MessagesPage() {
   return (
     <div className="space-y-6 page-enter max-w-4xl">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Messages</h1>
-        <p className="text-slate-500 text-sm mt-1">Direct line to your assigned consultant.</p>
+        <h1 className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">Messages</h1>
+        <p className="text-[var(--color-ink-soft)] text-sm mt-1">Direct line to your assigned consultant.</p>
       </div>
 
       <Card className="flex flex-col p-0 overflow-hidden" style={{ height: '70vh' }}>
         {/* Conversation header */}
-        <div className="flex items-center gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-center gap-3 px-6 py-4 border-b border-[var(--color-border-soft)] bg-[var(--color-surface-2)]/50">
           <div className="relative w-10 h-10 rounded-full bg-[var(--color-brand)] text-white flex items-center justify-center text-sm font-bold shrink-0">
             NK
             <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-slate-900">Nomvula Khumalo</p>
+            <p className="text-sm font-semibold text-[var(--color-ink)]">Nomvula Khumalo</p>
             <p className="text-[11px] text-emerald-600 font-semibold">● Online · usually replies within 15 min</p>
           </div>
         </div>
@@ -95,17 +95,17 @@ export function MessagesPage() {
               <div className={`max-w-md px-4 py-2.5 rounded-2xl text-sm ${
                 msg.from === 'me'
                   ? 'bg-[var(--color-brand)] text-white rounded-br-sm'
-                  : 'bg-slate-100 text-slate-800 rounded-bl-sm'
+                  : 'bg-[var(--color-surface-3)] text-[var(--color-ink)] rounded-bl-sm'
               }`}>
                 <p className="leading-relaxed">{msg.text}</p>
-                <p className={`text-[10px] mt-1 ${msg.from === 'me' ? 'text-white/60' : 'text-slate-400'}`}>{msg.time}</p>
+                <p className={`text-[10px] mt-1 ${msg.from === 'me' ? 'text-white/60' : 'text-[var(--color-ink-muted)]'}`}>{msg.time}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* Input */}
-        <div className="px-4 py-4 border-t border-slate-100 flex gap-3">
+        <div className="px-4 py-4 border-t border-[var(--color-border-soft)] flex gap-3">
           <Input
             placeholder="Type a message…"
             value={draft}
@@ -119,7 +119,7 @@ export function MessagesPage() {
         </div>
       </Card>
 
-      <p className="text-xs text-slate-400 text-center">
+      <p className="text-xs text-[var(--color-ink-muted)] text-center">
         Messages are end-to-end encrypted. Consultant responses typically arrive within one business hour.
       </p>
     </div>

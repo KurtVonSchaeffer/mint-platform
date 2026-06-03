@@ -77,8 +77,8 @@ export function PortfolioPage() {
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Loan Book</h1>
-          <p className="text-sm text-slate-500 mt-1">All active facilities and their repayment state.</p>
+          <h1 className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">Loan Book</h1>
+          <p className="text-sm text-[var(--color-ink-soft)] mt-1">All active facilities and their repayment state.</p>
         </div>
         <Button size="md" variant="outline" onClick={exportCSV}>
           <Download size={14} /> Export book
@@ -95,12 +95,12 @@ export function PortfolioPage() {
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 max-w-xs">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-ink-muted)]" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by borrower or loan ID…"
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-4 focus:ring-slate-100 focus:border-slate-400 transition-all"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[var(--color-border)] text-sm focus:outline-none focus:ring-4 focus:ring-slate-100 focus:border-slate-400 transition-all"
           />
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -109,7 +109,7 @@ export function PortfolioPage() {
               key={f}
               onClick={() => setFilter(f)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-colors ${
-                filter === f ? 'bg-[var(--color-brand)] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                filter === f ? 'bg-[var(--color-brand)] text-white' : 'bg-[var(--color-surface-3)] text-[var(--color-ink-soft)] hover:bg-slate-200'
               }`}
             >
               {f}
@@ -123,15 +123,15 @@ export function PortfolioPage() {
       <Card className="overflow-hidden p-0">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/50">
+            <tr className="border-b border-[var(--color-border-soft)] bg-[var(--color-surface-2)]/50">
               {['Loan ID', 'Borrower', 'Purpose', 'Original', 'Balance', 'Next due', 'Days overdue', 'Status', ''].map((h) => (
-                <th key={h} className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">{h}</th>
+                <th key={h} className="px-6 py-3 text-left text-[10px] font-bold text-[var(--color-ink-soft)] uppercase tracking-wider">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={9} className="px-6 py-12 text-center text-sm text-slate-500">
+              <tr><td colSpan={9} className="px-6 py-12 text-center text-sm text-[var(--color-ink-soft)]">
                 {loans.length === 0
                   ? 'No approved loans yet. Approve an application to add it to the book.'
                   : 'No loans match the current filters.'}
@@ -139,20 +139,20 @@ export function PortfolioPage() {
             ) : filtered.map((loan, i) => (
               <tr
                 key={loan.id}
-                className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors"
+                className="border-b border-slate-50 last:border-0 hover:bg-[var(--color-surface-2)] transition-colors"
                 style={{ animation: 'fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both', animationDelay: `${i * 40}ms` }}
               >
-                <td className="px-6 py-4 font-mono text-xs text-slate-500">{loan.id}</td>
+                <td className="px-6 py-4 font-mono text-xs text-[var(--color-ink-soft)]">{loan.id}</td>
                 <td className="px-6 py-4">
-                  <p className="font-semibold text-slate-900">{loan.client}</p>
-                  <p className="text-xs text-slate-400">{loan.company}</p>
+                  <p className="font-semibold text-[var(--color-ink)]">{loan.client}</p>
+                  <p className="text-xs text-[var(--color-ink-muted)]">{loan.company}</p>
                 </td>
-                <td className="px-6 py-4 text-xs text-slate-500">{loan.purpose}</td>
-                <td className="px-6 py-4 text-slate-700">{formatCurrency(loan.amount)}</td>
-                <td className="px-6 py-4 font-bold text-slate-900">{formatCurrency(loan.balance)}</td>
-                <td className="px-6 py-4 text-slate-500 text-xs">{loan.nextDue ? formatDate(loan.nextDue) : '—'}</td>
+                <td className="px-6 py-4 text-xs text-[var(--color-ink-soft)]">{loan.purpose}</td>
+                <td className="px-6 py-4 text-[var(--color-ink-2)]">{formatCurrency(loan.amount)}</td>
+                <td className="px-6 py-4 font-bold text-[var(--color-ink)]">{formatCurrency(loan.balance)}</td>
+                <td className="px-6 py-4 text-[var(--color-ink-soft)] text-xs">{loan.nextDue ? formatDate(loan.nextDue) : '—'}</td>
                 <td className="px-6 py-4">
-                  <span className={loan.daysOverdue > 0 ? 'text-red-600 font-bold text-sm' : 'text-slate-400 text-sm'}>
+                  <span className={loan.daysOverdue > 0 ? 'text-red-600 font-bold text-sm' : 'text-[var(--color-ink-muted)] text-sm'}>
                     {loan.daysOverdue > 0 ? `${loan.daysOverdue}d` : '—'}
                   </span>
                 </td>

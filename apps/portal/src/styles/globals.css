@@ -14,17 +14,17 @@
   --color-navy:        #09090B;
   --color-navy-light:  #27272A;
 
-  /* Neutral palette — same as marketing */
-  --color-bg:          #FAFAF9;
-  --color-surface:     #FFFFFF;
-  --color-surface-2:   #F4F4F5;
-  --color-surface-3:   #E4E4E7;
-  --color-ink:         #09090B;
-  --color-ink-2:       #27272A;
-  --color-ink-soft:    #52525B;
-  --color-ink-muted:   #A1A1AA;
-  --color-border:      #E4E4E7;
-  --color-border-soft: #F1F1F2;
+  /* Neutral palette — matches ZwaneOfficial AlgoLend instance */
+  --color-bg:          #f8fafc;
+  --color-surface:     #ffffff;
+  --color-surface-2:   #f1f5f9;
+  --color-surface-3:   #e2e8f0;
+  --color-ink:         #0f172a;
+  --color-ink-2:       #1e293b;
+  --color-ink-soft:    #475569;
+  --color-ink-muted:   #94a3b8;
+  --color-border:      #e2e8f0;
+  --color-border-soft: #f1f5f9;
 
   --color-card:    #FFFFFF;
   --color-muted:   #52525B;
@@ -44,13 +44,35 @@
 }
 
 html, body {
-  background: var(--color-bg);
+  background-color: var(--color-bg);
+  /* Radial mesh gradient — brand colour bleeds subtly from corners */
+  background-image:
+    radial-gradient(ellipse 80% 60% at 10% 0%,   rgba(124,58,237,0.05) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 90% 100%,  rgba(124,58,237,0.03) 0%, transparent 55%);
+  background-attachment: fixed;
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: 'kern', 'ss01', 'cv11';
   scroll-behavior: smooth;
+}
+
+/* Cards use shadow lift instead of border — matches ZwaneOfficial */
+.card-shine {
+  box-shadow:
+    0 1px 2px rgba(0,0,0,0.04),
+    0 6px 20px rgba(0,0,0,0.07),
+    0 0 0 1px rgba(0,0,0,0.04) !important;
+  border: none !important;
+  transition: transform 0.25s cubic-bezier(0.22,1,0.36,1), box-shadow 0.25s cubic-bezier(0.22,1,0.36,1);
+}
+.card-shine:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 4px 8px rgba(0,0,0,0.05),
+    0 12px 28px rgba(0,0,0,0.10),
+    0 0 0 1px rgba(0,0,0,0.04) !important;
 }
 
 ::selection {

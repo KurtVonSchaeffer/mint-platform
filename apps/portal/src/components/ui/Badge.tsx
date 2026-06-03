@@ -8,7 +8,7 @@ const variants: Record<BadgeVariant, string> = {
   warning: 'bg-amber-50 text-amber-700',
   danger: 'bg-red-50 text-red-700',
   info: 'bg-blue-50 text-blue-700',
-  muted: 'bg-slate-100 text-slate-600',
+  muted: 'bg-[var(--color-surface-3)] text-[var(--color-ink-soft)]',
 };
 
 export function Badge({

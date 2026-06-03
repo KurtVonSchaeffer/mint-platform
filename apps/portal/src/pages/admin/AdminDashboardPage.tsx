@@ -32,8 +32,8 @@ export function AdminDashboard() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Dashboard</h1>
-          <p className="text-slate-500 text-sm mt-1 capitalize">
+          <h1 className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">Dashboard</h1>
+          <p className="text-[var(--color-ink-soft)] text-sm mt-1 capitalize">
             {profile?.role?.replace('_', ' ') ?? 'Staff'} view · {formatDate(new Date())}
           </p>
         </div>
@@ -94,29 +94,29 @@ export function AdminDashboard() {
       {/* Recent applications — live */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-slate-900">Recent applications</h2>
+          <h2 className="text-base font-semibold text-[var(--color-ink)]">Recent applications</h2>
           <Button variant="ghost" size="sm" onClick={() => navigate('/admin/applications')}>
             View all <ArrowRight size={14} />
           </Button>
         </div>
         {applications.length === 0 ? (
           <Card className="p-12 text-center">
-            <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-slate-100 flex items-center justify-center">
-              <Inbox size={18} className="text-slate-400" />
+            <div className="w-12 h-12 mx-auto mb-3 rounded-2xl bg-[var(--color-surface-3)] flex items-center justify-center">
+              <Inbox size={18} className="text-[var(--color-ink-muted)]" />
             </div>
-            <p className="text-sm font-semibold text-slate-700 mb-1">No applications yet</p>
-            <p className="text-xs text-slate-500">When borrowers submit, they'll appear here.</p>
+            <p className="text-sm font-semibold text-[var(--color-ink-2)] mb-1">No applications yet</p>
+            <p className="text-xs text-[var(--color-ink-soft)]">When borrowers submit, they'll appear here.</p>
           </Card>
         ) : (
           <Card className="overflow-hidden p-0">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/50">
-                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Applicant</th>
-                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Purpose</th>
-                  <th className="px-6 py-3 text-right text-[10px] font-bold text-slate-500 uppercase tracking-wider">Amount</th>
-                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Submitted</th>
-                  <th className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                <tr className="border-b border-[var(--color-border-soft)] bg-[var(--color-surface-2)]/50">
+                  <th className="px-6 py-3 text-left text-[10px] font-bold text-[var(--color-ink-soft)] uppercase tracking-wider">Applicant</th>
+                  <th className="px-6 py-3 text-left text-[10px] font-bold text-[var(--color-ink-soft)] uppercase tracking-wider">Purpose</th>
+                  <th className="px-6 py-3 text-right text-[10px] font-bold text-[var(--color-ink-soft)] uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-3 text-left text-[10px] font-bold text-[var(--color-ink-soft)] uppercase tracking-wider">Submitted</th>
+                  <th className="px-6 py-3 text-left text-[10px] font-bold text-[var(--color-ink-soft)] uppercase tracking-wider">Status</th>
                   <th className="px-6 py-3" />
                 </tr>
               </thead>
@@ -124,17 +124,17 @@ export function AdminDashboard() {
                 {applications.slice(0, 5).map((app, i) => (
                   <tr
                     key={app.id}
-                    className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors cursor-pointer"
+                    className="border-b border-slate-50 last:border-0 hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
                     onClick={() => navigate('/admin/applications')}
                     style={{ animation: 'fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both', animationDelay: `${i * 40}ms` }}
                   >
                     <td className="px-6 py-4">
-                      <p className="font-semibold text-slate-900">{app.applicantName}</p>
-                      <p className="text-xs text-slate-400 font-mono">{app.id}</p>
+                      <p className="font-semibold text-[var(--color-ink)]">{app.applicantName}</p>
+                      <p className="text-xs text-[var(--color-ink-muted)] font-mono">{app.id}</p>
                     </td>
-                    <td className="px-6 py-4 text-slate-600 text-xs">{app.purpose}</td>
-                    <td className="px-6 py-4 text-right font-bold text-slate-900">{formatCurrency(app.amount)}</td>
-                    <td className="px-6 py-4 text-slate-500 text-xs">{formatDate(app.submittedAt)}</td>
+                    <td className="px-6 py-4 text-[var(--color-ink-soft)] text-xs">{app.purpose}</td>
+                    <td className="px-6 py-4 text-right font-bold text-[var(--color-ink)]">{formatCurrency(app.amount)}</td>
+                    <td className="px-6 py-4 text-[var(--color-ink-soft)] text-xs">{formatDate(app.submittedAt)}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusBadgeClass[app.status]}`}>
                         {statusLabel[app.status]}
@@ -156,7 +156,7 @@ export function AdminDashboard() {
         <Card className="p-6 lg:col-span-2">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp size={18} className="text-[var(--color-brand)]" />
-            <h3 className="font-semibold text-slate-900">Disbursements (last 6 months)</h3>
+            <h3 className="font-semibold text-[var(--color-ink)]">Disbursements (last 6 months)</h3>
           </div>
           <div className="h-40 flex items-end gap-3">
             {[820000, 1050000, 960000, 1320000, 1180000, 1450000].map((v, i) => (
@@ -166,18 +166,18 @@ export function AdminDashboard() {
                   style={{ height: `${(v / 1500000) * 100}%` }}
                   title={formatCurrency(v)}
                 />
-                <span className="text-[10px] text-slate-400">{['Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May'][i]}</span>
+                <span className="text-[10px] text-[var(--color-ink-muted)]">{['Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May'][i]}</span>
               </div>
             ))}
           </div>
         </Card>
 
         <Card className="p-6">
-          <h3 className="font-semibold text-slate-900 mb-4">Approval rate</h3>
+          <h3 className="font-semibold text-[var(--color-ink)] mb-4">Approval rate</h3>
           <div className="flex items-center justify-center h-32">
             <div className="text-center">
               <p className="text-5xl font-bold text-[var(--color-brand)] tracking-tight">{approvalRate}%</p>
-              <p className="text-sm text-slate-400 mt-1">{decidedCount} decided</p>
+              <p className="text-sm text-[var(--color-ink-muted)] mt-1">{decidedCount} decided</p>
               <p className="text-xs text-emerald-600 mt-1">↑ 3% vs prior month</p>
             </div>
           </div>

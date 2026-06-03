@@ -38,7 +38,7 @@ export function ActivityTicker({ interval = 3200 }: { interval?: number }) {
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-3"
+      className="relative overflow-hidden rounded-2xl border border-white/10 bg-[var(--color-surface)]/5 backdrop-blur p-3"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -50,7 +50,7 @@ export function ActivityTicker({ interval = 3200 }: { interval?: number }) {
       </div>
 
       <div key={idx} className="flex items-center gap-3" style={{ animation: 'slide-in-right 0.5s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
-        <div className={`w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0 ${a.color}`}>
+        <div className={`w-7 h-7 rounded-lg bg-[var(--color-surface)]/5 border border-white/10 flex items-center justify-center shrink-0 ${a.color}`}>
           <Icon size={13} />
         </div>
         <div className="flex-1 min-w-0">
@@ -64,7 +64,7 @@ export function ActivityTicker({ interval = 3200 }: { interval?: number }) {
         {ACTIVITIES.map((_, i) => (
           <span
             key={i}
-            className={`h-0.5 rounded-full transition-all duration-500 ${i === idx ? 'w-5 bg-white/70' : 'w-1.5 bg-white/15'}`}
+            className={`h-0.5 rounded-full transition-all duration-500 ${i === idx ? 'w-5 bg-[var(--color-surface)]/70' : 'w-1.5 bg-[var(--color-surface)]/15'}`}
           />
         ))}
       </div>

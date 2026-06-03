@@ -162,7 +162,7 @@ export default function HomePage() {
                   <ArrowRight size={15} />
                 </Link>
                 <Link
-                  href="#platform"
+                  href="/intro"
                   className="inline-flex items-center gap-2 text-[var(--color-ink)] font-medium text-[14px] px-5 py-3 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] transition-colors"
                 >
                   See it work

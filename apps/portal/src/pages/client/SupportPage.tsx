@@ -14,7 +14,7 @@ export function SupportPage() {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <h1 className="text-2xl font-bold text-slate-900">Support</h1>
+      <h1 className="text-2xl font-bold text-[var(--color-ink)]">Support</h1>
 
       <div className="grid grid-cols-2 gap-4">
         <Card className="p-5 flex items-center gap-4">
@@ -22,8 +22,8 @@ export function SupportPage() {
             <Mail size={18} className="text-[var(--color-brand)]" />
           </div>
           <div>
-            <p className="text-xs text-slate-400">Email Us</p>
-            <p className="text-sm font-semibold text-slate-800">info@algolend.co.za</p>
+            <p className="text-xs text-[var(--color-ink-muted)]">Email Us</p>
+            <p className="text-sm font-semibold text-[var(--color-ink)]">info@algolend.co.za</p>
           </div>
         </Card>
         <Card className="p-5 flex items-center gap-4">
@@ -31,8 +31,8 @@ export function SupportPage() {
             <Phone size={18} className="text-[var(--color-brand)]" />
           </div>
           <div>
-            <p className="text-xs text-slate-400">Call Us</p>
-            <p className="text-sm font-semibold text-slate-800">Use in-app messaging</p>
+            <p className="text-xs text-[var(--color-ink-muted)]">Call Us</p>
+            <p className="text-sm font-semibold text-[var(--color-ink)]">Use in-app messaging</p>
           </div>
         </Card>
       </div>
@@ -41,21 +41,21 @@ export function SupportPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <HelpCircle size={18} className="text-[var(--color-brand)]" />
-            <h3 className="font-semibold text-slate-900">Frequently Asked Questions</h3>
+            <h3 className="font-semibold text-[var(--color-ink)]">Frequently Asked Questions</h3>
           </div>
         </CardHeader>
         <CardBody className="p-0">
           {faqs.map((faq, i) => (
-            <div key={i} className="border-b border-slate-100 last:border-0">
+            <div key={i} className="border-b border-[var(--color-border-soft)] last:border-0">
               <button
-                className="flex items-center justify-between w-full px-6 py-4 text-left text-sm font-medium text-slate-800 hover:bg-slate-50"
+                className="flex items-center justify-between w-full px-6 py-4 text-left text-sm font-medium text-[var(--color-ink)] hover:bg-[var(--color-surface-2)]"
                 onClick={() => setOpen(open === i ? null : i)}
               >
                 {faq.q}
-                <ChevronDown size={16} className={`text-slate-400 transition-transform ${open === i ? 'rotate-180' : ''}`} />
+                <ChevronDown size={16} className={`text-[var(--color-ink-muted)] transition-transform ${open === i ? 'rotate-180' : ''}`} />
               </button>
               {open === i && (
-                <p className="px-6 pb-4 text-sm text-slate-500">{faq.a}</p>
+                <p className="px-6 pb-4 text-sm text-[var(--color-ink-soft)]">{faq.a}</p>
               )}
             </div>
           ))}

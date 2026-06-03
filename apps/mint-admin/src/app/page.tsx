@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
 import Link from 'next/link';
@@ -53,12 +53,7 @@ const SYSTEM_HEALTH = [
   { name: 'Experian',    status: 'err',  detail: 'No credentials',  icon: Server   },
 ] as const;
 
-const KPI_STATS = [
-  { label: 'Active clients',  value: '12',      sub: '+2 this month',        icon: Users,      accent: '#A78BFA', rgb: '167,139,250', trend: '+19%' },
-  { label: 'Monthly MRR',     value: 'R 184k',  sub: '+R 24k vs last month', icon: DollarSign, accent: '#34D399', rgb: '52,211,153',  trend: '+15%' },
-  { label: 'API calls (May)', value: '142,830', sub: '↑ 18% month on month', icon: Zap,        accent: '#60A5FA', rgb: '96,165,250',  trend: '+18%' },
-  { label: 'Pipeline MRR',    value: 'R 96k',   sub: '5 leads in negotiation',icon: TrendingUp,accent: '#FBBF24', rgb: '251,191,36',  trend: '+3'   },
-];
+// KPI_STATS is now computed dynamically in the component from real client data
 
 const tierBadge: Record<Tier, string>     = { core: 'badge badge-core', growth: 'badge badge-growth', enterprise: 'badge badge-enterprise' };
 const statusBadge: Record<Status, string> = { active: 'badge badge-active', trial: 'badge badge-trial', suspended: 'badge badge-suspended', churned: 'badge badge-churned' };
@@ -126,7 +121,30 @@ function Sparkline({ accent, rgb }: { accent: string; rgb: string }) {
 // ─── Page ─────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const [clients, setClients] = useState<ClientRow[]>(INITIAL_CLIENTS);
+  const [loading, setLoading] = useState(true);
   const [toast, setToast]     = useState<{ kind: ToastKind; message: string } | null>(null);
+
+  // Load real clients from Supabase
+  useEffect(() => {
+    fetch('/api/clients')
+      .then(r => r.json())
+      .then(({ clients: raw }) => {
+        if (Array.isArray(raw) && raw.length > 0) {
+          setClients(raw.map((c: Record<string, unknown>) => ({
+            name:     String(c.name ?? ''),
+            slug:     String(c.slug ?? ''),
+            tier:     (c.tier as Tier) ?? 'core',
+            status:   (c.status as Status) ?? 'trial',
+            mrr:      Math.round(Number(c.monthly_fee_cents ?? 0) / 100),
+            apiCalls: 0,
+            quota:    Number(c.api_quota ?? 10000),
+            users:    0,
+          })));
+        }
+      })
+      .catch(() => {/* keep seed data */})
+      .finally(() => setLoading(false));
+  }, []);
 
   function toggleKill(c: ClientRow) {
     const next: Status = c.status === 'suspended' ? 'active' : 'suspended';
@@ -140,6 +158,19 @@ export default function DashboardPage() {
   }
 
   const suspended = clients.filter(c => c.status === 'suspended');
+
+  // Compute KPIs from real client data
+  const activeClients = clients.filter(c => c.status === 'active').length;
+  const trialClients  = clients.filter(c => c.status === 'trial').length;
+  const totalMRR      = clients.reduce((s, c) => s + (c.status !== 'suspended' ? c.mrr : 0), 0);
+  const mrrK          = totalMRR >= 1000 ? `R ${Math.round(totalMRR / 1000)}k` : `R ${totalMRR}`;
+
+  const KPI_STATS = [
+    { label: 'Active clients',  value: String(activeClients), sub: `${trialClients} on trial`,         icon: Users,      accent: '#A78BFA', rgb: '167,139,250', trend: `+${activeClients}` },
+    { label: 'Monthly MRR',     value: mrrK,                  sub: `${clients.length} deployments`,    icon: DollarSign, accent: '#34D399', rgb: '52,211,153',  trend: '+0%' },
+    { label: 'API calls (May)', value: '—',                   sub: 'Wire telemetry to activate',       icon: Zap,        accent: '#60A5FA', rgb: '96,165,250',  trend: '—'   },
+    { label: 'Pipeline MRR',    value: 'R 0',                 sub: 'From leads page',                  icon: TrendingUp, accent: '#FBBF24', rgb: '251,191,36',  trend: '—'   },
+  ];
 
   return (
     <Shell>

@@ -112,7 +112,7 @@ export function LoginPage() {
 
           {/* Live stat cards */}
           <div className="grid grid-cols-2 gap-3 max-w-md" style={{ animation: 'var(--animate-fade-up)', animationDelay: '200ms' }}>
-            <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4 transition-all hover:bg-white/10 hover:border-white/20">
+            <div className="rounded-2xl border border-white/10 bg-[var(--color-surface)]/5 backdrop-blur p-4 transition-all hover:bg-[var(--color-surface)]/10 hover:border-white/20">
               <div className="flex items-center gap-1.5 mb-2 text-emerald-300">
                 <TrendingUp size={12} />
                 <span className="text-[10px] mono uppercase tracking-wider">Today</span>
@@ -122,7 +122,7 @@ export function LoginPage() {
               </p>
               <p className="text-[11px] text-white/40 mt-0.5">disbursed across platform</p>
             </div>
-            <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4 transition-all hover:bg-white/10 hover:border-white/20">
+            <div className="rounded-2xl border border-white/10 bg-[var(--color-surface)]/5 backdrop-blur p-4 transition-all hover:bg-[var(--color-surface)]/10 hover:border-white/20">
               <div className="flex items-center gap-1.5 mb-2 text-[#A78BFA]">
                 <Check size={12} />
                 <span className="text-[10px] mono uppercase tracking-wider">Live</span>
@@ -133,7 +133,7 @@ export function LoginPage() {
               <p className="text-[11px] text-white/40 mt-0.5">applications in review</p>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4 col-span-2 transition-all hover:bg-white/10 hover:border-white/20">
+            <div className="rounded-2xl border border-white/10 bg-[var(--color-surface)]/5 backdrop-blur p-4 col-span-2 transition-all hover:bg-[var(--color-surface)]/10 hover:border-white/20">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-[10px] mono uppercase tracking-wider text-white/40">Avg decision time</span>
                 <span className="text-[10px] mono text-emerald-300 inline-flex items-center gap-1">
@@ -243,7 +243,7 @@ export function LoginPage() {
                 type="email"
                 autoComplete="email"
                 placeholder="sipho@bridgecapital.co.za"
-                className="w-full px-4 py-3 rounded-2xl bg-white border border-[var(--color-border)] text-[15px] outline-none transition-all focus:border-[var(--color-ink)] focus:ring-4 focus:ring-[var(--color-ink)]/8 placeholder:text-[var(--color-ink-muted)]"
+                className="w-full px-4 py-3 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] outline-none transition-all focus:border-[var(--color-ink)] focus:ring-4 focus:ring-[var(--color-ink)]/8 placeholder:text-[var(--color-ink-muted)]"
                 {...register('email')}
               />
               {errors.email ? (
@@ -267,7 +267,7 @@ export function LoginPage() {
                   type={showPw ? 'text' : 'password'}
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  className="w-full px-4 py-3 pr-12 rounded-2xl bg-white border border-[var(--color-border)] text-[15px] outline-none transition-all focus:border-[var(--color-ink)] focus:ring-4 focus:ring-[var(--color-ink)]/8 placeholder:text-[var(--color-ink-muted)]"
+                  className="w-full px-4 py-3 pr-12 rounded-2xl bg-[var(--color-surface)] border border-[var(--color-border)] text-[15px] outline-none transition-all focus:border-[var(--color-ink)] focus:ring-4 focus:ring-[var(--color-ink)]/8 placeholder:text-[var(--color-ink-muted)]"
                   {...register('password')}
                 />
                 <button

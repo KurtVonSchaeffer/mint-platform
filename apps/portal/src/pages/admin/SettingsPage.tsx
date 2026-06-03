@@ -65,8 +65,8 @@ export function SettingsPage() {
   return (
     <div className="space-y-6 page-enter max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Settings</h1>
-        <p className="text-sm text-slate-500 mt-1">Tenant configuration, branding, and notification preferences.</p>
+        <h1 className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">Settings</h1>
+        <p className="text-sm text-[var(--color-ink-soft)] mt-1">Tenant configuration, branding, and notification preferences.</p>
       </div>
 
       {/* Company */}
@@ -74,7 +74,7 @@ export function SettingsPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Building2 size={18} className="text-[var(--color-brand)]" />
-            <h3 className="font-semibold text-slate-900">Company details</h3>
+            <h3 className="font-semibold text-[var(--color-ink)]">Company details</h3>
           </div>
         </CardHeader>
         <CardBody className="space-y-4">
@@ -96,33 +96,33 @@ export function SettingsPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Palette size={18} className="text-[var(--color-brand)]" />
-            <h3 className="font-semibold text-slate-900">Branding</h3>
+            <h3 className="font-semibold text-[var(--color-ink)]">Branding</h3>
           </div>
         </CardHeader>
         <CardBody className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium text-slate-700 mb-1.5 block">Primary colour</label>
+              <label className="text-sm font-medium text-[var(--color-ink-2)] mb-1.5 block">Primary colour</label>
               <div className="flex items-center gap-3">
                 <input
                   type="color"
                   value={branding.primary}
                   onChange={(e) => setBranding((p) => ({ ...p, primary: e.target.value }))}
-                  className="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer"
+                  className="w-10 h-10 rounded-lg border border-[var(--color-border)] cursor-pointer"
                 />
-                <span className="text-sm text-slate-500 font-mono">{branding.primary}</span>
+                <span className="text-sm text-[var(--color-ink-soft)] font-mono">{branding.primary}</span>
               </div>
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700 mb-1.5 block">Secondary colour</label>
+              <label className="text-sm font-medium text-[var(--color-ink-2)] mb-1.5 block">Secondary colour</label>
               <div className="flex items-center gap-3">
                 <input
                   type="color"
                   value={branding.secondary}
                   onChange={(e) => setBranding((p) => ({ ...p, secondary: e.target.value }))}
-                  className="w-10 h-10 rounded-lg border border-slate-200 cursor-pointer"
+                  className="w-10 h-10 rounded-lg border border-[var(--color-border)] cursor-pointer"
                 />
-                <span className="text-sm text-slate-500 font-mono">{branding.secondary}</span>
+                <span className="text-sm text-[var(--color-ink-soft)] font-mono">{branding.secondary}</span>
               </div>
             </div>
           </div>
@@ -136,14 +136,14 @@ export function SettingsPage() {
           />
 
           {/* Live preview */}
-          <div className="border border-slate-200 rounded-2xl p-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-3">Live preview</p>
+          <div className="border border-[var(--color-border)] rounded-2xl p-4">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-ink-muted)] mb-3">Live preview</p>
             <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: `${branding.primary}15` }}>
               <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold" style={{ background: branding.primary }}>
                 {company.name.charAt(0).toUpperCase()}
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-900">{company.name}</p>
+                <p className="text-sm font-semibold text-[var(--color-ink)]">{company.name}</p>
                 <p className="text-xs" style={{ color: branding.primary }}>Primary CTA · 4640 ZAR</p>
               </div>
               <button className="ml-auto px-3 py-1.5 rounded-lg text-white text-xs font-semibold" style={{ background: branding.primary }}>
@@ -160,7 +160,7 @@ export function SettingsPage() {
             <Button size="md" onClick={saveBranding}>
               <Sparkles size={14} /> Save &amp; deploy
             </Button>
-            <p className="text-xs text-slate-400">Branding changes are applied on next deployment (~60s).</p>
+            <p className="text-xs text-[var(--color-ink-muted)]">Branding changes are applied on next deployment (~60s).</p>
           </div>
         </CardBody>
       </Card>
@@ -170,20 +170,20 @@ export function SettingsPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Bell size={18} className="text-[var(--color-brand)]" />
-            <h3 className="font-semibold text-slate-900">Notifications</h3>
+            <h3 className="font-semibold text-[var(--color-ink)]">Notifications</h3>
           </div>
         </CardHeader>
         <CardBody className="space-y-3">
           {Object.entries(notifications).map(([label, enabled]) => (
-            <label key={label} className="flex items-center justify-between cursor-pointer py-1.5 hover:bg-slate-50/60 rounded-lg px-2 -mx-2 transition-colors">
-              <span className="text-sm text-slate-700">{label}</span>
+            <label key={label} className="flex items-center justify-between cursor-pointer py-1.5 hover:bg-[var(--color-surface-2)]/60 rounded-lg px-2 -mx-2 transition-colors">
+              <span className="text-sm text-[var(--color-ink-2)]">{label}</span>
               <button
                 role="switch"
                 aria-checked={enabled}
                 onClick={() => toggleNotification(label)}
                 className={`relative w-10 h-5 rounded-full transition-colors ${enabled ? 'bg-[var(--color-brand)]' : 'bg-slate-200'}`}
               >
-                <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                <span className={`absolute top-0.5 w-4 h-4 bg-[var(--color-surface)] rounded-full shadow transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
               </button>
             </label>
           ))}

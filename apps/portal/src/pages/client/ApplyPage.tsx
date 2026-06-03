@@ -75,11 +75,11 @@ function AffordabilityCard({ data }: { data: TruIDAffordability }) {
       <div className={`flex items-center gap-4 p-4 rounded-xl border ${scoreBg}`}>
         <div className="shrink-0 text-center w-16">
           <p className={`text-3xl font-bold ${scoreColour}`}>{score}</p>
-          <p className="text-xs text-slate-500 mt-0.5">/ 100</p>
+          <p className="text-xs text-[var(--color-ink-soft)] mt-0.5">/ 100</p>
         </div>
         <div>
-          <p className="font-semibold text-slate-800 text-sm">Affordability Score</p>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <p className="font-semibold text-[var(--color-ink)] text-sm">Affordability Score</p>
+          <p className="text-xs text-[var(--color-ink-soft)] mt-0.5">
             {score >= 70 ? 'Strong affordability — low repayment risk' :
              score >= 40 ? 'Moderate affordability — may require security' :
                            'Low affordability — limited lending capacity'}
@@ -89,21 +89,21 @@ function AffordabilityCard({ data }: { data: TruIDAffordability }) {
 
       {/* Key figures */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+        <div className="p-3 rounded-xl bg-[var(--color-surface-2)] border border-[var(--color-border)]">
           <div className="flex items-center gap-2 mb-1">
-            <TrendingUp size={14} className="text-slate-400" />
-            <span className="text-xs text-slate-500 font-medium">Monthly Income</span>
+            <TrendingUp size={14} className="text-[var(--color-ink-muted)]" />
+            <span className="text-xs text-[var(--color-ink-soft)] font-medium">Monthly Income</span>
           </div>
-          <p className="text-base font-bold text-slate-900">
+          <p className="text-base font-bold text-[var(--color-ink)]">
             {data.monthlyIncome !== null ? fmt(data.monthlyIncome) : '—'}
           </p>
         </div>
-        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200">
+        <div className="p-3 rounded-xl bg-[var(--color-surface-2)] border border-[var(--color-border)]">
           <div className="flex items-center gap-2 mb-1">
-            <Wallet size={14} className="text-slate-400" />
-            <span className="text-xs text-slate-500 font-medium">Net Monthly</span>
+            <Wallet size={14} className="text-[var(--color-ink-muted)]" />
+            <span className="text-xs text-[var(--color-ink-soft)] font-medium">Net Monthly</span>
           </div>
-          <p className="text-base font-bold text-slate-900">
+          <p className="text-base font-bold text-[var(--color-ink)]">
             {data.netMonthlyIncome !== null ? fmt(data.netMonthlyIncome) : '—'}
           </p>
         </div>
@@ -111,14 +111,14 @@ function AffordabilityCard({ data }: { data: TruIDAffordability }) {
 
       {data.maxRecommendedLoan !== null ? (
         <div className="p-3 rounded-xl bg-[var(--color-brand-muted)] border border-[var(--color-brand)]/20">
-          <p className="text-xs text-slate-600 font-medium mb-0.5">Max Recommended Loan</p>
+          <p className="text-xs text-[var(--color-ink-soft)] font-medium mb-0.5">Max Recommended Loan</p>
           <p className="text-xl font-bold text-[var(--color-brand)]">{fmt(data.maxRecommendedLoan)}</p>
-          <p className="text-xs text-slate-500 mt-0.5">Based on 30% DSR over 24 months</p>
+          <p className="text-xs text-[var(--color-ink-soft)] mt-0.5">Based on 30% DSR over 24 months</p>
         </div>
       ) : null}
 
       {data.salaryDate !== null ? (
-        <p className="text-xs text-slate-400">Next salary / pay date: {data.salaryDate}</p>
+        <p className="text-xs text-[var(--color-ink-muted)]">Next salary / pay date: {data.salaryDate}</p>
       ) : null}
     </div>
   );
@@ -140,8 +140,8 @@ function TruIDPanel({ name, email }: { name?: string; email?: string }) {
           <Loader2 size={24} className="text-[var(--color-brand)] animate-spin" />
         </div>
         <div>
-          <p className="font-semibold text-slate-900">Waiting for your consent…</p>
-          <p className="text-sm text-slate-500 mt-1 max-w-xs mx-auto">
+          <p className="font-semibold text-[var(--color-ink)]">Waiting for your consent…</p>
+          <p className="text-sm text-[var(--color-ink-soft)] mt-1 max-w-xs mx-auto">
             Complete the bank authorisation in the tab that just opened. This page will update automatically.
           </p>
         </div>
@@ -165,8 +165,8 @@ function TruIDPanel({ name, email }: { name?: string; email?: string }) {
         )}
       </div>
       <div>
-        <p className="font-semibold text-slate-900 mb-1">Connect via TruID Open Banking</p>
-        <p className="text-sm text-slate-500 max-w-sm mx-auto">
+        <p className="font-semibold text-[var(--color-ink)] mb-1">Connect via TruID Open Banking</p>
+        <p className="text-sm text-[var(--color-ink-soft)] max-w-sm mx-auto">
           {isConnecting
             ? 'Initiating secure connection…'
             : 'Securely share your business bank account data for an instant affordability assessment. No credentials are stored.'}
@@ -196,7 +196,7 @@ function TruIDPanel({ name, email }: { name?: string; email?: string }) {
         </Button>
       </div>
 
-      <p className="text-xs text-slate-400">
+      <p className="text-xs text-[var(--color-ink-muted)]">
         You can skip this step — bank connection improves your approval chances.
       </p>
     </div>
@@ -247,9 +247,9 @@ export function ApplyPage() {
           </div>
           <p className="eyebrow mb-3">Application submitted</p>
           <h1 className="text-3xl font-bold tracking-tight mb-3">You're in the queue.</h1>
-          <p className="text-slate-500 mb-1">Your application reference</p>
-          <p className="text-xl font-mono font-bold text-slate-900 mb-6">{submittedId}</p>
-          <p className="text-sm text-slate-500 mb-8 max-w-md mx-auto leading-relaxed">
+          <p className="text-[var(--color-ink-soft)] mb-1">Your application reference</p>
+          <p className="text-xl font-mono font-bold text-[var(--color-ink)] mb-6">{submittedId}</p>
+          <p className="text-sm text-[var(--color-ink-soft)] mb-8 max-w-md mx-auto leading-relaxed">
             Our credit team will assess your application within 48 business hours. You'll receive an email and an in-app notification with the decision. Track progress at any time under My Loans.
           </p>
           <div className="flex items-center justify-center gap-3">
@@ -273,8 +273,8 @@ export function ApplyPage() {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Apply for Financing</h1>
-        <p className="text-slate-500 text-sm mt-1">Complete all steps to submit your application</p>
+        <h1 className="text-2xl font-bold text-[var(--color-ink)]">Apply for Financing</h1>
+        <p className="text-[var(--color-ink-soft)] text-sm mt-1">Complete all steps to submit your application</p>
       </div>
 
       {/* Progress */}
@@ -284,7 +284,7 @@ export function ApplyPage() {
             <div className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold transition-all ${
               i < step   ? 'bg-emerald-500 text-white'          :
               i === step ? 'bg-[var(--color-brand)] text-white' :
-                           'bg-slate-100 text-slate-400'
+                           'bg-[var(--color-surface-3)] text-[var(--color-ink-muted)]'
             }`}>
               {i < step ? <CheckCircle size={16} /> : i + 1}
             </div>
@@ -300,7 +300,7 @@ export function ApplyPage() {
           <div className="w-10 h-10 rounded-xl bg-[var(--color-brand-muted)] flex items-center justify-center">
             <StepIcon size={20} className="text-[var(--color-brand)]" />
           </div>
-          <h2 className="text-lg font-semibold text-slate-900">{STEPS[step]}</h2>
+          <h2 className="text-lg font-semibold text-[var(--color-ink)]">{STEPS[step]}</h2>
         </div>
 
         {step === 0 ? (
@@ -329,12 +329,12 @@ export function ApplyPage() {
 
         {step === 2 ? (
           <div className="space-y-4">
-            <p className="text-sm text-slate-500">Upload required documents. All files are stored securely.</p>
+            <p className="text-sm text-[var(--color-ink-soft)]">Upload required documents. All files are stored securely.</p>
             {['CIPC Certificate', 'ID Documents (Directors)', '3 Months Bank Statements', 'Latest Financial Statements'].map((doc) => (
-              <div key={doc} className="flex items-center justify-between p-4 border border-dashed border-slate-200 rounded-xl hover:border-[var(--color-brand)] transition-colors">
+              <div key={doc} className="flex items-center justify-between p-4 border border-dashed border-[var(--color-border)] rounded-xl hover:border-[var(--color-brand)] transition-colors">
                 <div className="flex items-center gap-3">
-                  <FileText size={18} className="text-slate-400" />
-                  <span className="text-sm font-medium text-slate-700">{doc}</span>
+                  <FileText size={18} className="text-[var(--color-ink-muted)]" />
+                  <span className="text-sm font-medium text-[var(--color-ink-2)]">{doc}</span>
                 </div>
                 <Button variant="outline" size="sm">Upload</Button>
               </div>
@@ -351,9 +351,9 @@ export function ApplyPage() {
               />
             ) : (
               <div className="space-y-4">
-                <p className="text-sm text-slate-500">Upload 3 months of bank statements for your primary business account.</p>
-                <div className="p-8 border-2 border-dashed border-slate-200 rounded-xl text-center">
-                  <p className="text-sm text-slate-400">Drag &amp; drop or click to upload</p>
+                <p className="text-sm text-[var(--color-ink-soft)]">Upload 3 months of bank statements for your primary business account.</p>
+                <div className="p-8 border-2 border-dashed border-[var(--color-border)] rounded-xl text-center">
+                  <p className="text-sm text-[var(--color-ink-muted)]">Drag &amp; drop or click to upload</p>
                 </div>
               </div>
             )}
@@ -363,19 +363,19 @@ export function ApplyPage() {
         {step === 4 ? (
           <div className="space-y-4">
             <p className="eyebrow mb-2">Review summary</p>
-            <div className="bg-slate-50 rounded-xl p-4 text-sm space-y-2">
-              <div className="flex justify-between"><span className="text-slate-500">Company</span>                    <span className="font-semibold">{form.company}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Loan amount</span>                <span className="font-semibold">{fmt(amountNum)}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Purpose</span>                    <span className="font-semibold">{form.purpose}</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Term</span>                       <span className="font-semibold">{termNum} months</span></div>
-              <div className="flex justify-between"><span className="text-slate-500">Indicative rate</span>            <span className="font-semibold">20% p.a.</span></div>
-              <div className="flex justify-between border-t border-slate-200 pt-2 mt-2">
-                <span className="text-slate-500">Estimated monthly instalment</span>
+            <div className="bg-[var(--color-surface-2)] rounded-xl p-4 text-sm space-y-2">
+              <div className="flex justify-between"><span className="text-[var(--color-ink-soft)]">Company</span>                    <span className="font-semibold">{form.company}</span></div>
+              <div className="flex justify-between"><span className="text-[var(--color-ink-soft)]">Loan amount</span>                <span className="font-semibold">{fmt(amountNum)}</span></div>
+              <div className="flex justify-between"><span className="text-[var(--color-ink-soft)]">Purpose</span>                    <span className="font-semibold">{form.purpose}</span></div>
+              <div className="flex justify-between"><span className="text-[var(--color-ink-soft)]">Term</span>                       <span className="font-semibold">{termNum} months</span></div>
+              <div className="flex justify-between"><span className="text-[var(--color-ink-soft)]">Indicative rate</span>            <span className="font-semibold">20% p.a.</span></div>
+              <div className="flex justify-between border-t border-[var(--color-border)] pt-2 mt-2">
+                <span className="text-[var(--color-ink-soft)]">Estimated monthly instalment</span>
                 <span className="font-bold text-[var(--color-brand)]">{fmt(installment)}</span>
               </div>
             </div>
             {hasEContracts ? (
-              <p className="text-xs text-slate-400">Upon approval, you'll receive a digital agreement to review and sign electronically via DocuSeal.</p>
+              <p className="text-xs text-[var(--color-ink-muted)]">Upon approval, you'll receive a digital agreement to review and sign electronically via DocuSeal.</p>
             ) : null}
           </div>
         ) : null}

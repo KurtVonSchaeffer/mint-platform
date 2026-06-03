@@ -88,8 +88,8 @@ export function DocumentsPage() {
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Documents</h1>
-          <p className="text-slate-500 text-sm mt-1">All files securely stored. Encrypted at rest.</p>
+          <h1 className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">Documents</h1>
+          <p className="text-[var(--color-ink-soft)] text-sm mt-1">All files securely stored. Encrypted at rest.</p>
         </div>
         <Button onClick={() => inputRef.current?.click()}>
           <Upload size={14} /> Upload
@@ -103,7 +103,7 @@ export function DocumentsPage() {
             key={f}
             onClick={() => setFilter(f)}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-colors ${
-              filter === f ? 'bg-[var(--color-brand)] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+              filter === f ? 'bg-[var(--color-brand)] text-white' : 'bg-[var(--color-surface-3)] text-[var(--color-ink-soft)] hover:bg-slate-200'
             }`}
           >
             {f === 'all' ? 'All' : categoryLabel[f]}
@@ -114,9 +114,9 @@ export function DocumentsPage() {
 
       {filtered.length === 0 ? (
         <Card className="p-12 text-center">
-          <FileText size={28} className="mx-auto text-slate-300 mb-3" />
-          <p className="text-sm font-semibold text-slate-700 mb-1">No documents</p>
-          <p className="text-xs text-slate-500 mb-5">Upload your first document to get started.</p>
+          <FileText size={28} className="mx-auto text-[var(--color-ink-muted)] mb-3" />
+          <p className="text-sm font-semibold text-[var(--color-ink-2)] mb-1">No documents</p>
+          <p className="text-xs text-[var(--color-ink-soft)] mb-5">Upload your first document to get started.</p>
           <Button onClick={() => inputRef.current?.click()}><Upload size={14} /> Upload</Button>
         </Card>
       ) : (
@@ -128,15 +128,15 @@ export function DocumentsPage() {
               return (
                 <div
                   key={doc.id}
-                  className="px-5 py-4 flex items-center gap-4 hover:bg-slate-50/60 transition-colors"
+                  className="px-5 py-4 flex items-center gap-4 hover:bg-[var(--color-surface-2)]/60 transition-colors"
                   style={{ animation: 'fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both', animationDelay: `${i * 40}ms` }}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-                    <FileText size={17} className="text-slate-500" />
+                  <div className="w-10 h-10 rounded-xl bg-[var(--color-surface-3)] flex items-center justify-center shrink-0">
+                    <FileText size={17} className="text-[var(--color-ink-soft)]" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 truncate">{doc.name}</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
+                    <p className="text-sm font-semibold text-[var(--color-ink)] truncate">{doc.name}</p>
+                    <p className="text-[11px] text-[var(--color-ink-muted)] mt-0.5">
                       {categoryLabel[doc.category]} · {fmtSize(doc.size)} · Uploaded {doc.uploaded}
                     </p>
                   </div>
@@ -145,10 +145,10 @@ export function DocumentsPage() {
                     {cfg.label}
                   </span>
                   <div className="flex items-center gap-1">
-                    <button title="Download" onClick={() => showToast(`${doc.name} download started.`)} className="p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+                    <button title="Download" onClick={() => showToast(`${doc.name} download started.`)} className="p-2 rounded-lg text-[var(--color-ink-muted)] hover:text-[var(--color-ink-2)] hover:bg-[var(--color-surface-3)] transition-colors">
                       <Download size={14} />
                     </button>
-                    <button title="Remove" onClick={() => remove(doc.id)} className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors">
+                    <button title="Remove" onClick={() => remove(doc.id)} className="p-2 rounded-lg text-[var(--color-ink-muted)] hover:text-red-600 hover:bg-red-50 transition-colors">
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -159,10 +159,10 @@ export function DocumentsPage() {
         </Card>
       )}
 
-      <div className="border-2 border-dashed border-slate-200 rounded-2xl p-8 text-center hover:border-[var(--color-brand)] hover:bg-[var(--color-brand-muted)]/20 transition-colors cursor-pointer" onClick={() => inputRef.current?.click()}>
-        <Upload size={20} className="mx-auto text-slate-400 mb-2" />
-        <p className="text-sm font-semibold text-slate-700">Drop files here or click to upload</p>
-        <p className="text-xs text-slate-400 mt-1">PDF, JPG, PNG up to 10 MB each</p>
+      <div className="border-2 border-dashed border-[var(--color-border)] rounded-2xl p-8 text-center hover:border-[var(--color-brand)] hover:bg-[var(--color-brand-muted)]/20 transition-colors cursor-pointer" onClick={() => inputRef.current?.click()}>
+        <Upload size={20} className="mx-auto text-[var(--color-ink-muted)] mb-2" />
+        <p className="text-sm font-semibold text-[var(--color-ink-2)]">Drop files here or click to upload</p>
+        <p className="text-xs text-[var(--color-ink-muted)] mt-1">PDF, JPG, PNG up to 10 MB each</p>
       </div>
     </div>
   );

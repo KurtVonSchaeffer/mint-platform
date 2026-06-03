@@ -396,6 +396,16 @@ html, body {
   filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.6));
 }
 
+/* ===== Scroll offset for fixed nav (64px height + 16px breathing room) */
+#platform,
+#process,
+#compliance,
+#pricing,
+#faq,
+#enquire {
+  scroll-margin-top: 80px;
+}
+
 /* ===== Respect motion preferences ===================================== */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

@@ -117,15 +117,15 @@ export function ReportsPage() {
 
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Reports</h1>
-          <p className="text-sm text-slate-500 mt-1">Pre-built reports + live data sourced from your loan book.</p>
+          <h1 className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">Reports</h1>
+          <p className="text-sm text-[var(--color-ink-soft)] mt-1">Pre-built reports + live data sourced from your loan book.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Calendar size={14} className="text-slate-400" />
+          <Calendar size={14} className="text-[var(--color-ink-muted)]" />
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="px-3 py-2 rounded-xl border border-slate-200 text-sm font-medium bg-white focus:outline-none focus:ring-4 focus:ring-slate-100 focus:border-slate-400 cursor-pointer"
+            className="px-3 py-2 rounded-xl border border-[var(--color-border)] text-sm font-medium bg-[var(--color-surface)] focus:outline-none focus:ring-4 focus:ring-slate-100 focus:border-slate-400 cursor-pointer"
           >
             {PERIODS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
           </select>
@@ -135,19 +135,19 @@ export function ReportsPage() {
       {/* Live stats */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="p-5">
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Approved (period)</p>
-          <p className="text-2xl font-bold text-slate-900 tracking-tight">{formatCurrency(approvedThisPeriod)}</p>
+          <p className="text-[10px] font-bold text-[var(--color-ink-soft)] uppercase tracking-wider mb-1">Approved (period)</p>
+          <p className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">{formatCurrency(approvedThisPeriod)}</p>
           <p className="text-xs text-emerald-600 mt-1 font-semibold">{apps.filter((a) => a.status === 'approved').length} loans</p>
         </Card>
         <Card className="p-5">
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Collections (est.)</p>
-          <p className="text-2xl font-bold text-slate-900 tracking-tight">{formatCurrency(collectionsEstimate)}</p>
-          <p className="text-xs text-slate-500 mt-1">~38% of approved principal</p>
+          <p className="text-[10px] font-bold text-[var(--color-ink-soft)] uppercase tracking-wider mb-1">Collections (est.)</p>
+          <p className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">{formatCurrency(collectionsEstimate)}</p>
+          <p className="text-xs text-[var(--color-ink-soft)] mt-1">~38% of approved principal</p>
         </Card>
         <Card className="p-5">
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Approval rate</p>
-          <p className="text-2xl font-bold text-slate-900 tracking-tight">{approvalRate}%</p>
-          <p className="text-xs text-slate-500 mt-1">{totalApps} applications decided</p>
+          <p className="text-[10px] font-bold text-[var(--color-ink-soft)] uppercase tracking-wider mb-1">Approval rate</p>
+          <p className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">{approvalRate}%</p>
+          <p className="text-xs text-[var(--color-ink-soft)] mt-1">{totalApps} applications decided</p>
         </Card>
       </div>
 
@@ -157,7 +157,7 @@ export function ReportsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <BarChart3 size={18} className="text-[var(--color-brand)]" />
-              <h3 className="font-semibold text-slate-900">Available reports</h3>
+              <h3 className="font-semibold text-[var(--color-ink)]">Available reports</h3>
             </div>
             <Button size="sm" variant="outline">
               <Sparkles size={13} /> Generate custom
@@ -168,16 +168,16 @@ export function ReportsPage() {
           {REPORTS.map((r, i) => (
             <div
               key={r.id}
-              className="flex items-center justify-between gap-4 px-6 py-4 border-b border-slate-50 last:border-0 hover:bg-slate-50/60 transition-colors"
+              className="flex items-center justify-between gap-4 px-6 py-4 border-b border-slate-50 last:border-0 hover:bg-[var(--color-surface-2)]/60 transition-colors"
               style={{ animation: 'fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both', animationDelay: `${i * 50}ms` }}
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
-                  <FileText size={16} className="text-slate-500" />
+                <div className="w-10 h-10 rounded-xl bg-[var(--color-surface-3)] flex items-center justify-center shrink-0">
+                  <FileText size={16} className="text-[var(--color-ink-soft)]" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900">{r.name}</p>
-                  <p className="text-xs text-slate-400 mt-0.5">{r.desc} · {r.size}</p>
+                  <p className="text-sm font-semibold text-[var(--color-ink)]">{r.name}</p>
+                  <p className="text-xs text-[var(--color-ink-muted)] mt-0.5">{r.desc} · {r.size}</p>
                 </div>
               </div>
               <Button variant="ghost" size="sm" onClick={() => download(r)} loading={generating === r.id}>

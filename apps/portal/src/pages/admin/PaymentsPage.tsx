@@ -51,7 +51,7 @@ function RetryModal({ pull, onConfirm, onClose }: {
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-7"
+        className="bg-[var(--color-surface)] rounded-2xl shadow-2xl w-full max-w-sm p-7"
         style={{ animation: 'scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both' }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -61,10 +61,10 @@ function RetryModal({ pull, onConfirm, onClose }: {
           </div>
           <div>
             <p className="font-bold text-sm">{pull.borrowerName}</p>
-            <p className="text-xs text-slate-400 font-mono">{pull.loanRef}</p>
+            <p className="text-xs text-[var(--color-ink-muted)] font-mono">{pull.loanRef}</p>
           </div>
         </div>
-        <p className="text-sm text-slate-600 mb-4 leading-relaxed">
+        <p className="text-sm text-[var(--color-ink-soft)] mb-4 leading-relaxed">
           Schedule a retry debit order for <strong>{formatCurrency(pull.amount)}</strong>.
           The borrower will receive a new T-3 reminder automatically.
         </p>
@@ -73,13 +73,13 @@ function RetryModal({ pull, onConfirm, onClose }: {
             Previous failure: {pull.returnReason}
           </div>
         )}
-        <label className="block text-xs font-semibold text-slate-600 mb-1.5">New collection date</label>
+        <label className="block text-xs font-semibold text-[var(--color-ink-soft)] mb-1.5">New collection date</label>
         <input
           type="date"
           value={newDate}
           min={dateOffset(TODAY, 1)}
           onChange={(e) => setNewDate(e.target.value)}
-          className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100 mb-5"
+          className="w-full px-3 py-2 rounded-xl border border-[var(--color-border)] text-sm outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100 mb-5"
         />
         <div className="flex gap-2">
           <button
@@ -88,7 +88,7 @@ function RetryModal({ pull, onConfirm, onClose }: {
           >
             Schedule retry
           </button>
-          <button onClick={onClose} className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm text-slate-600 hover:bg-slate-50">
+          <button onClick={onClose} className="px-4 py-2.5 rounded-xl border border-[var(--color-border)] text-sm text-[var(--color-ink-soft)] hover:bg-[var(--color-surface-2)]">
             Cancel
           </button>
         </div>
@@ -116,7 +116,7 @@ function PullRow({ pull, today, onAction }: {
 
   return (
     <div
-      className={`flex items-center gap-4 px-6 py-4 border-b border-slate-50 last:border-0 hover:bg-slate-50/60 transition-colors ${
+      className={`flex items-center gap-4 px-6 py-4 border-b border-slate-50 last:border-0 hover:bg-[var(--color-surface-2)]/60 transition-colors ${
         needsT3 ? 'bg-amber-50/30' : ''
       }`}
     >
@@ -127,15 +127,15 @@ function PullRow({ pull, today, onAction }: {
 
       {/* Borrower */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold text-slate-900 truncate">{pull.borrowerName}</p>
-        <p className="text-xs text-slate-400 truncate">{pull.company} · <span className="font-mono">{pull.loanRef}</span> · Instalment {pull.instalmentNo}</p>
+        <p className="text-sm font-semibold text-[var(--color-ink)] truncate">{pull.borrowerName}</p>
+        <p className="text-xs text-[var(--color-ink-muted)] truncate">{pull.company} · <span className="font-mono">{pull.loanRef}</span> · Instalment {pull.instalmentNo}</p>
       </div>
 
       {/* Amount */}
-      <p className="text-sm font-bold text-slate-900 tabular-nums shrink-0">{formatCurrency(pull.amount)}</p>
+      <p className="text-sm font-bold text-[var(--color-ink)] tabular-nums shrink-0">{formatCurrency(pull.amount)}</p>
 
       {/* Method */}
-      <p className="text-xs text-slate-500 w-24 shrink-0 hidden sm:block">{methodLabel[pull.method]}</p>
+      <p className="text-xs text-[var(--color-ink-soft)] w-24 shrink-0 hidden sm:block">{methodLabel[pull.method]}</p>
 
       {/* Status badge */}
       <div className="shrink-0">
@@ -196,7 +196,7 @@ function PullRow({ pull, today, onAction }: {
           <button
             onClick={() => onAction('cancel', pull)}
             title="Cancel pull"
-            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors"
+            className="p-1.5 rounded-lg hover:bg-[var(--color-surface-3)] text-[var(--color-ink-muted)] hover:text-[var(--color-ink-2)] transition-colors"
           >
             <X size={14} />
           </button>
@@ -242,21 +242,21 @@ function CalendarStrip({ pulls, selectedDay, onSelectDay, today }: {
                 ? 'bg-[var(--color-brand)] text-white shadow-lg shadow-[var(--color-brand)]/20'
                 : count === 0
                 ? 'opacity-40 cursor-default'
-                : 'bg-white border border-slate-200 hover:border-slate-300 hover:shadow-sm cursor-pointer'
+                : 'bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-[var(--color-brand-light)] hover:shadow-sm cursor-pointer'
             } ${isToday && !isSelected ? 'ring-2 ring-[var(--color-brand)]/30' : ''}`}
           >
-            <span className={`text-[10px] font-semibold uppercase tracking-wide ${isSelected ? 'text-white/70' : isPast ? 'text-slate-400' : 'text-slate-500'}`}>
+            <span className={`text-[10px] font-semibold uppercase tracking-wide ${isSelected ? 'text-white/70' : isPast ? 'text-[var(--color-ink-muted)]' : 'text-[var(--color-ink-soft)]'}`}>
               {new Date(iso).toLocaleDateString('en-ZA', { weekday: 'short' })}
             </span>
-            <span className={`text-lg font-bold leading-none ${isSelected ? 'text-white' : isPast ? 'text-slate-400' : 'text-slate-900'}`}>
+            <span className={`text-lg font-bold leading-none ${isSelected ? 'text-white' : isPast ? 'text-[var(--color-ink-muted)]' : 'text-[var(--color-ink)]'}`}>
               {new Date(iso).getDate()}
             </span>
             {count > 0 ? (
               <>
-                <span className={`text-[10px] font-bold ${isSelected ? 'text-white' : isPast ? 'text-slate-400' : 'text-slate-700'}`}>
+                <span className={`text-[10px] font-bold ${isSelected ? 'text-white' : isPast ? 'text-[var(--color-ink-muted)]' : 'text-[var(--color-ink-2)]'}`}>
                   {count} pull{count > 1 ? 's' : ''}
                 </span>
-                <span className={`text-[9px] font-mono ${isSelected ? 'text-white/80' : 'text-slate-500'}`}>
+                <span className={`text-[9px] font-mono ${isSelected ? 'text-white/80' : 'text-[var(--color-ink-soft)]'}`}>
                   {formatCurrency(total).replace('ZAR', 'R')}
                 </span>
                 {(returned || needsT3) && !isSelected && (
@@ -264,7 +264,7 @@ function CalendarStrip({ pulls, selectedDay, onSelectDay, today }: {
                 )}
               </>
             ) : (
-              <span className="text-[9px] text-slate-300">—</span>
+              <span className="text-[9px] text-[var(--color-ink-muted)]">—</span>
             )}
           </button>
         );
@@ -343,7 +343,7 @@ function DebitOrdersTab({ pulls, today }: { pulls: Pull[]; today: string }) {
           style={{ animation: 'fade-in 0.2s ease-out both' }}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-7"
+            className="bg-[var(--color-surface)] rounded-2xl shadow-2xl w-full max-w-sm p-7"
             style={{ animation: 'scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both' }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -351,12 +351,12 @@ function DebitOrdersTab({ pulls, today }: { pulls: Pull[]; today: string }) {
               <XCircle size={16} className="text-red-600" />
             </div>
             <h3 className="font-bold text-base mb-1">Mark as returned</h3>
-            <p className="text-sm text-slate-500 mb-4">{returnTarget.borrowerName} · {formatCurrency(returnTarget.amount)}</p>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">Return reason</label>
+            <p className="text-sm text-[var(--color-ink-soft)] mb-4">{returnTarget.borrowerName} · {formatCurrency(returnTarget.amount)}</p>
+            <label className="block text-xs font-semibold text-[var(--color-ink-soft)] mb-1.5">Return reason</label>
             <select
               value={returnReason}
               onChange={(e) => setReturnReason(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100 mb-5"
+              className="w-full px-3 py-2 rounded-xl border border-[var(--color-border)] text-sm outline-none focus:border-slate-400 focus:ring-4 focus:ring-slate-100 mb-5"
             >
               <option value="Insufficient funds">Insufficient funds</option>
               <option value="Account closed">Account closed</option>
@@ -368,7 +368,7 @@ function DebitOrdersTab({ pulls, today }: { pulls: Pull[]; today: string }) {
               <button onClick={confirmReturn} className="flex-1 bg-red-600 text-white py-2.5 rounded-xl text-sm font-semibold hover:bg-red-700">
                 Confirm return
               </button>
-              <button onClick={() => setReturnTarget(null)} className="px-4 py-2.5 rounded-xl border border-slate-200 text-sm">Cancel</button>
+              <button onClick={() => setReturnTarget(null)} className="px-4 py-2.5 rounded-xl border border-[var(--color-border)] text-sm">Cancel</button>
             </div>
           </div>
         </div>
@@ -413,7 +413,7 @@ function DebitOrdersTab({ pulls, today }: { pulls: Pull[]; today: string }) {
             <span className="text-xs font-semibold uppercase tracking-wide">Next 7 days</span>
           </div>
           <p className="text-2xl font-bold tracking-tight">{formatCurrency(upcoming7value)}</p>
-          <p className="text-xs text-slate-400 mt-1">{upcoming7days.length} pull{upcoming7days.length !== 1 ? 's' : ''} scheduled</p>
+          <p className="text-xs text-[var(--color-ink-muted)] mt-1">{upcoming7days.length} pull{upcoming7days.length !== 1 ? 's' : ''} scheduled</p>
         </Card>
         <Card className="p-5">
           <div className="flex items-center gap-2 text-amber-600 mb-2">
@@ -421,7 +421,7 @@ function DebitOrdersTab({ pulls, today }: { pulls: Pull[]; today: string }) {
             <span className="text-xs font-semibold uppercase tracking-wide">Reminders due</span>
           </div>
           <p className="text-2xl font-bold tracking-tight">{needsReminder.length}</p>
-          <p className="text-xs text-slate-400 mt-1">T-3 not yet sent</p>
+          <p className="text-xs text-[var(--color-ink-muted)] mt-1">T-3 not yet sent</p>
         </Card>
         <Card className="p-5">
           <div className="flex items-center gap-2 text-red-600 mb-2">
@@ -429,15 +429,15 @@ function DebitOrdersTab({ pulls, today }: { pulls: Pull[]; today: string }) {
             <span className="text-xs font-semibold uppercase tracking-wide">Returns to action</span>
           </div>
           <p className="text-2xl font-bold tracking-tight">{returned.length}</p>
-          <p className="text-xs text-slate-400 mt-1">{returned.length === 0 ? 'No failures' : 'Retry or escalate'}</p>
+          <p className="text-xs text-[var(--color-ink-muted)] mt-1">{returned.length === 0 ? 'No failures' : 'Retry or escalate'}</p>
         </Card>
       </div>
 
       {/* Calendar strip */}
       <Card className="p-5">
         <div className="flex items-center gap-2 mb-4">
-          <CalendarDays size={14} className="text-slate-400" />
-          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Collection Calendar</span>
+          <CalendarDays size={14} className="text-[var(--color-ink-muted)]" />
+          <span className="text-xs font-semibold text-[var(--color-ink-soft)] uppercase tracking-wide">Collection Calendar</span>
         </div>
         <CalendarStrip
           pulls={activePulls}
@@ -449,28 +449,28 @@ function DebitOrdersTab({ pulls, today }: { pulls: Pull[]; today: string }) {
 
       {/* Day detail */}
       <Card className="overflow-hidden p-0">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--color-border-soft)] bg-[var(--color-surface-2)]/50">
           <div className="flex items-center gap-3">
-            <CalendarDays size={14} className="text-slate-400" />
-            <span className="text-sm font-bold text-slate-900">{dayLabel(selectedDay)}</span>
-            <span className="text-xs text-slate-400 font-mono">{shortDate(selectedDay)}</span>
+            <CalendarDays size={14} className="text-[var(--color-ink-muted)]" />
+            <span className="text-sm font-bold text-[var(--color-ink)]">{dayLabel(selectedDay)}</span>
+            <span className="text-xs text-[var(--color-ink-muted)] font-mono">{shortDate(selectedDay)}</span>
           </div>
           <div className="flex items-center gap-3">
             {dayPulls.length > 0 && (
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-[var(--color-ink-soft)]">
                 {formatCurrency(dayPulls.reduce((s, p) => s + p.amount, 0))} total
               </span>
             )}
-            <span className="text-xs font-semibold text-slate-500">{dayPulls.length} pull{dayPulls.length !== 1 ? 's' : ''}</span>
+            <span className="text-xs font-semibold text-[var(--color-ink-soft)]">{dayPulls.length} pull{dayPulls.length !== 1 ? 's' : ''}</span>
           </div>
         </div>
 
         {dayPulls.length === 0 ? (
           <div className="px-6 py-12 text-center">
-            <div className="w-10 h-10 mx-auto rounded-xl bg-slate-100 flex items-center justify-center mb-3">
-              <CalendarDays size={16} className="text-slate-400" />
+            <div className="w-10 h-10 mx-auto rounded-xl bg-[var(--color-surface-3)] flex items-center justify-center mb-3">
+              <CalendarDays size={16} className="text-[var(--color-ink-muted)]" />
             </div>
-            <p className="text-sm text-slate-500">No pulls scheduled for this day.</p>
+            <p className="text-sm text-[var(--color-ink-soft)]">No pulls scheduled for this day.</p>
           </div>
         ) : (
           dayPulls.map((pull, i) => (
@@ -597,8 +597,8 @@ export function PaymentsPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Payments</h1>
-          <p className="text-slate-500 text-sm mt-1">Debit-order calendar · instalment collections · loan disbursements.</p>
+          <h1 className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">Payments</h1>
+          <p className="text-[var(--color-ink-soft)] text-sm mt-1">Debit-order calendar · instalment collections · loan disbursements.</p>
         </div>
         <Button variant="outline" size="md" onClick={exportCSV}>
           <Download size={14} /> Export
@@ -613,40 +613,40 @@ export function PaymentsPage() {
               <ArrowDownLeft size={14} />
               <span className="text-xs font-semibold uppercase tracking-wide">Collected today</span>
             </div>
-            <p className="text-2xl font-bold text-slate-900 tracking-tight">{formatCurrency(totalIn)}</p>
-            <p className="text-xs text-slate-400 mt-1">{incoming.filter((i) => i.status === 'cleared').length} payments cleared</p>
+            <p className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">{formatCurrency(totalIn)}</p>
+            <p className="text-xs text-[var(--color-ink-muted)] mt-1">{incoming.filter((i) => i.status === 'cleared').length} payments cleared</p>
           </Card>
           <Card className="p-5">
             <div className="flex items-center gap-2 text-purple-600 mb-2">
               <ArrowUpRight size={14} />
               <span className="text-xs font-semibold uppercase tracking-wide">Disbursed today</span>
             </div>
-            <p className="text-2xl font-bold text-slate-900 tracking-tight">{formatCurrency(totalOut)}</p>
-            <p className="text-xs text-slate-400 mt-1">{outgoing.filter((i) => i.status === 'sent').length} loans funded</p>
+            <p className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">{formatCurrency(totalOut)}</p>
+            <p className="text-xs text-[var(--color-ink-muted)] mt-1">{outgoing.filter((i) => i.status === 'sent').length} loans funded</p>
           </Card>
           <Card className="p-5">
             <div className="flex items-center gap-2 text-red-600 mb-2">
               <AlertCircle size={14} />
               <span className="text-xs font-semibold uppercase tracking-wide">Returns to action</span>
             </div>
-            <p className="text-2xl font-bold text-slate-900 tracking-tight">{returns}</p>
-            <p className="text-xs text-slate-400 mt-1">{returns === 0 ? 'No failed debit orders' : 'Click Retry below'}</p>
+            <p className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">{returns}</p>
+            <p className="text-xs text-[var(--color-ink-muted)] mt-1">{returns === 0 ? 'No failed debit orders' : 'Click Retry below'}</p>
           </Card>
         </div>
       )}
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200">
+      <div className="flex items-center gap-2 border-b border-[var(--color-border)]">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             className={`relative px-4 py-2.5 text-sm font-medium transition-colors ${
-              tab === t.id ? 'text-[var(--color-brand)]' : 'text-slate-500 hover:text-slate-700'
+              tab === t.id ? 'text-[var(--color-brand)]' : 'text-[var(--color-ink-soft)] hover:text-[var(--color-ink-2)]'
             }`}
           >
             {t.label}
-            <span className="ml-1.5 text-xs text-slate-400">({t.count})</span>
+            <span className="ml-1.5 text-xs text-[var(--color-ink-muted)]">({t.count})</span>
             {tab === t.id && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-brand)] rounded-t" />}
           </button>
         ))}
@@ -660,9 +660,9 @@ export function PaymentsPage() {
         <Card className="overflow-hidden p-0">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/50">
+              <tr className="border-b border-[var(--color-border-soft)] bg-[var(--color-surface-2)]/50">
                 {['ID', 'Borrower', 'Loan', 'Amount', 'Method', 'Date', 'Status', ''].map((h) => (
-                  <th key={h} className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">{h}</th>
+                  <th key={h} className="px-6 py-3 text-left text-[10px] font-bold text-[var(--color-ink-soft)] uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -671,16 +671,16 @@ export function PaymentsPage() {
                 const cfg  = incomingStatusCfg[p.status];
                 const Icon = cfg.icon;
                 return (
-                  <tr key={p.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors" style={{ animation: 'fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both', animationDelay: `${i * 40}ms` }}>
-                    <td className="px-6 py-4 font-mono text-xs text-slate-400">{p.id}</td>
+                  <tr key={p.id} className="border-b border-slate-50 last:border-0 hover:bg-[var(--color-surface-2)] transition-colors" style={{ animation: 'fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both', animationDelay: `${i * 40}ms` }}>
+                    <td className="px-6 py-4 font-mono text-xs text-[var(--color-ink-muted)]">{p.id}</td>
                     <td className="px-6 py-4">
-                      <p className="font-semibold text-slate-900">{p.client}</p>
-                      <p className="text-xs text-slate-400">{p.company}</p>
+                      <p className="font-semibold text-[var(--color-ink)]">{p.client}</p>
+                      <p className="text-xs text-[var(--color-ink-muted)]">{p.company}</p>
                     </td>
-                    <td className="px-6 py-4 font-mono text-xs text-slate-500">{p.loan}</td>
+                    <td className="px-6 py-4 font-mono text-xs text-[var(--color-ink-soft)]">{p.loan}</td>
                     <td className="px-6 py-4 font-bold text-emerald-600">+{formatCurrency(p.amount)}</td>
-                    <td className="px-6 py-4 text-slate-500 text-xs">{p.method}</td>
-                    <td className="px-6 py-4 text-slate-500 text-xs">{formatDate(p.date)}</td>
+                    <td className="px-6 py-4 text-[var(--color-ink-soft)] text-xs">{p.method}</td>
+                    <td className="px-6 py-4 text-[var(--color-ink-soft)] text-xs">{formatDate(p.date)}</td>
                     <td className="px-6 py-4">
                       <Badge variant={cfg.variant}><Icon size={11} /> {cfg.label}</Badge>
                       {p.status === 'returned' && p.reason ? <p className="text-[10px] text-red-500 mt-1">{p.reason}</p> : null}
@@ -708,9 +708,9 @@ export function PaymentsPage() {
         <Card className="overflow-hidden p-0">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-100 bg-slate-50/50">
+              <tr className="border-b border-[var(--color-border-soft)] bg-[var(--color-surface-2)]/50">
                 {['ID', 'Beneficiary', 'Loan', 'Amount', 'Reference', 'Date', 'Status', ''].map((h) => (
-                  <th key={h} className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">{h}</th>
+                  <th key={h} className="px-6 py-3 text-left text-[10px] font-bold text-[var(--color-ink-soft)] uppercase tracking-wider">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -719,13 +719,13 @@ export function PaymentsPage() {
                 const cfg  = outgoingStatusCfg[p.status];
                 const Icon = cfg.icon;
                 return (
-                  <tr key={p.id} className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors" style={{ animation: 'fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both', animationDelay: `${i * 40}ms` }}>
-                    <td className="px-6 py-4 font-mono text-xs text-slate-400">{p.id}</td>
-                    <td className="px-6 py-4 font-semibold text-slate-900">{p.client}</td>
-                    <td className="px-6 py-4 font-mono text-xs text-slate-500">{p.loan}</td>
+                  <tr key={p.id} className="border-b border-slate-50 last:border-0 hover:bg-[var(--color-surface-2)] transition-colors" style={{ animation: 'fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both', animationDelay: `${i * 40}ms` }}>
+                    <td className="px-6 py-4 font-mono text-xs text-[var(--color-ink-muted)]">{p.id}</td>
+                    <td className="px-6 py-4 font-semibold text-[var(--color-ink)]">{p.client}</td>
+                    <td className="px-6 py-4 font-mono text-xs text-[var(--color-ink-soft)]">{p.loan}</td>
                     <td className="px-6 py-4 font-bold text-purple-600">-{formatCurrency(p.amount)}</td>
-                    <td className="px-6 py-4 text-xs text-slate-500">{p.ref}</td>
-                    <td className="px-6 py-4 text-slate-500 text-xs">{formatDate(p.date)}</td>
+                    <td className="px-6 py-4 text-xs text-[var(--color-ink-soft)]">{p.ref}</td>
+                    <td className="px-6 py-4 text-[var(--color-ink-soft)] text-xs">{formatDate(p.date)}</td>
                     <td className="px-6 py-4">
                       <Badge variant={cfg.variant}><Icon size={11} /> {cfg.label}</Badge>
                     </td>

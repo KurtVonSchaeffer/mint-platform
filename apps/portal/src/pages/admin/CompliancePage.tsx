@@ -87,22 +87,22 @@ export function CompliancePage() {
       ) : null}
 
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Compliance</h1>
-        <p className="text-sm text-slate-500 mt-1">KYC, AML, sanctions, and bureau reporting.</p>
+        <h1 className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">Compliance</h1>
+        <p className="text-sm text-[var(--color-ink-soft)] mt-1">KYC, AML, sanctions, and bureau reporting.</p>
       </div>
 
       {/* Counters */}
       <div className="grid grid-cols-3 gap-4">
         <Card className="p-5">
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Passed (today)</p>
+          <p className="text-[10px] font-bold text-[var(--color-ink-soft)] uppercase tracking-wider mb-1">Passed (today)</p>
           <p className="text-2xl font-bold text-emerald-600 tracking-tight">{passedCount}</p>
         </Card>
         <Card className="p-5">
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Flagged</p>
+          <p className="text-[10px] font-bold text-[var(--color-ink-soft)] uppercase tracking-wider mb-1">Flagged</p>
           <p className="text-2xl font-bold text-red-600 tracking-tight">{flaggedCount}</p>
         </Card>
         <Card className="p-5">
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Pending</p>
+          <p className="text-[10px] font-bold text-[var(--color-ink-soft)] uppercase tracking-wider mb-1">Pending</p>
           <p className="text-2xl font-bold text-amber-600 tracking-tight">{pendingCount}</p>
         </Card>
       </div>
@@ -113,7 +113,7 @@ export function CompliancePage() {
           <CardHeader>
             <div className="flex items-center gap-2">
               <ShieldCheck size={18} className="text-[var(--color-brand)]" />
-              <h3 className="font-semibold text-slate-900">Recent KYC / AML Checks</h3>
+              <h3 className="font-semibold text-[var(--color-ink)]">Recent KYC / AML Checks</h3>
             </div>
           </CardHeader>
           <CardBody className="p-0">
@@ -125,8 +125,8 @@ export function CompliancePage() {
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800">{c.label}</p>
-                    <p className="text-xs text-slate-400">{c.client} · {c.date}</p>
+                    <p className="text-sm font-semibold text-[var(--color-ink)]">{c.label}</p>
+                    <p className="text-xs text-[var(--color-ink-muted)]">{c.client} · {c.date}</p>
                   </div>
                   <Badge variant={c.status === 'passed' ? 'success' : c.status === 'flagged' ? 'danger' : 'warning'} className="capitalize">{c.status}</Badge>
                 </div>
@@ -142,7 +142,7 @@ export function CompliancePage() {
                 {c.status === 'pending' ? (
                   <div className="flex items-center gap-2 mt-2">
                     <span className="text-[11px] text-amber-600 font-semibold">Awaiting provider response · usually ~60s</span>
-                    <button onClick={() => rerun(c.id)} className="text-[11px] font-semibold text-slate-500 hover:text-slate-900 inline-flex items-center gap-1">
+                    <button onClick={() => rerun(c.id)} className="text-[11px] font-semibold text-[var(--color-ink-soft)] hover:text-[var(--color-ink)] inline-flex items-center gap-1">
                       <RefreshCw size={11} /> Re-run
                     </button>
                   </div>
@@ -158,7 +158,7 @@ export function CompliancePage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <FileText size={18} className="text-[var(--color-brand)]" />
-                <h3 className="font-semibold text-slate-900">SACRRA Bureau Reporting</h3>
+                <h3 className="font-semibold text-[var(--color-ink)]">SACRRA Bureau Reporting</h3>
               </div>
             </CardHeader>
             <CardBody className="space-y-4">
@@ -170,10 +170,10 @@ export function CompliancePage() {
                 </div>
               </div>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between text-slate-600"><span>Last submission</span><span className="font-medium">30 Apr 2026</span></div>
-                <div className="flex justify-between text-slate-600"><span>Bureau acceptance</span><span className="font-medium text-emerald-600">98.2%</span></div>
-                <div className="flex justify-between text-slate-600"><span>Records this month</span><span className="font-medium">268</span></div>
-                <div className="flex justify-between text-slate-600"><span>Last generated</span><span className="font-medium">{sacrraGenerated ? 'just now' : '—'}</span></div>
+                <div className="flex justify-between text-[var(--color-ink-soft)]"><span>Last submission</span><span className="font-medium">30 Apr 2026</span></div>
+                <div className="flex justify-between text-[var(--color-ink-soft)]"><span>Bureau acceptance</span><span className="font-medium text-emerald-600">98.2%</span></div>
+                <div className="flex justify-between text-[var(--color-ink-soft)]"><span>Records this month</span><span className="font-medium">268</span></div>
+                <div className="flex justify-between text-[var(--color-ink-soft)]"><span>Last generated</span><span className="font-medium">{sacrraGenerated ? 'just now' : '—'}</span></div>
               </div>
               <Button size="sm" onClick={generateSacrra} loading={sacrraGenerating}>
                 <Download size={14} /> {sacrraGenerated ? 'Re-generate' : 'Generate SACRRA file'}

@@ -81,8 +81,8 @@ export function ApplicationsPage() {
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Applications</h1>
-          <p className="text-sm text-slate-500 mt-1">Live queue — borrowers' submissions land here automatically.</p>
+          <h1 className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">Applications</h1>
+          <p className="text-sm text-[var(--color-ink-soft)] mt-1">Live queue — borrowers' submissions land here automatically.</p>
         </div>
         <Button size="md" variant="outline">
           <RefreshCw size={14} /> Refresh
@@ -91,12 +91,12 @@ export function ApplicationsPage() {
 
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative flex-1 max-w-xs">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-ink-muted)]" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, company, or ID…"
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-4 focus:ring-slate-100 focus:border-slate-400 transition-all"
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-[var(--color-border)] text-sm focus:outline-none focus:ring-4 focus:ring-slate-100 focus:border-slate-400 transition-all"
           />
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -105,7 +105,7 @@ export function ApplicationsPage() {
               key={s.id}
               onClick={() => setStatusFilter(s.id)}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-                statusFilter === s.id ? 'bg-[var(--color-brand)] text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                statusFilter === s.id ? 'bg-[var(--color-brand)] text-white' : 'bg-[var(--color-surface-3)] text-[var(--color-ink-soft)] hover:bg-slate-200'
               }`}
             >
               {s.label}
@@ -122,35 +122,35 @@ export function ApplicationsPage() {
       <Card className="overflow-hidden p-0">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-100 bg-slate-50/50">
+            <tr className="border-b border-[var(--color-border-soft)] bg-[var(--color-surface-2)]/50">
               {['ID', 'Applicant', 'Purpose', 'Amount', 'Score', 'Submitted', 'Status', ''].map((h) => (
-                <th key={h} className="px-6 py-3 text-left text-[10px] font-bold text-slate-500 uppercase tracking-wider">{h}</th>
+                <th key={h} className="px-6 py-3 text-left text-[10px] font-bold text-[var(--color-ink-soft)] uppercase tracking-wider">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr><td colSpan={8} className="px-6 py-12 text-center text-sm text-slate-500">No applications match your filters.</td></tr>
+              <tr><td colSpan={8} className="px-6 py-12 text-center text-sm text-[var(--color-ink-soft)]">No applications match your filters.</td></tr>
             ) : filtered.map((app, i) => (
               <tr
                 key={app.id}
-                className="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors cursor-pointer"
+                className="border-b border-slate-50 last:border-0 hover:bg-[var(--color-surface-2)] transition-colors cursor-pointer"
                 onClick={() => setSelected(app.id)}
                 style={{ animation: 'fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both', animationDelay: `${i * 40}ms` }}
               >
-                <td className="px-6 py-4 text-xs font-mono text-slate-500">{app.id}</td>
+                <td className="px-6 py-4 text-xs font-mono text-[var(--color-ink-soft)]">{app.id}</td>
                 <td className="px-6 py-4">
-                  <p className="font-semibold text-slate-900">{app.applicantName}</p>
-                  <p className="text-xs text-slate-400">{app.company}</p>
+                  <p className="font-semibold text-[var(--color-ink)]">{app.applicantName}</p>
+                  <p className="text-xs text-[var(--color-ink-muted)]">{app.company}</p>
                 </td>
-                <td className="px-6 py-4 text-slate-600 text-xs">{app.purpose}</td>
-                <td className="px-6 py-4 font-bold text-slate-900">{formatCurrency(app.amount)}</td>
+                <td className="px-6 py-4 text-[var(--color-ink-soft)] text-xs">{app.purpose}</td>
+                <td className="px-6 py-4 font-bold text-[var(--color-ink)]">{formatCurrency(app.amount)}</td>
                 <td className="px-6 py-4">
                   <span className={`text-xs font-bold ${app.score >= 70 ? 'text-emerald-600' : app.score >= 50 ? 'text-amber-600' : 'text-red-600'}`}>
                     {app.score}
                   </span>
                 </td>
-                <td className="px-6 py-4 text-xs text-slate-500">{formatDate(app.submittedAt)}</td>
+                <td className="px-6 py-4 text-xs text-[var(--color-ink-soft)]">{formatDate(app.submittedAt)}</td>
                 <td className="px-6 py-4">
                   <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${statusBadgeClass[app.status]}`}>
                     {statusLabel[app.status]}
@@ -174,30 +174,30 @@ export function ApplicationsPage() {
           style={{ animation: 'fade-in 0.2s ease-out both' }}
         >
           <div
-            className="bg-white h-full w-full max-w-lg overflow-y-auto shadow-2xl"
+            className="bg-[var(--color-surface)] h-full w-full max-w-lg overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
             style={{ animation: 'slide-down 0.35s cubic-bezier(0.16, 1, 0.3, 1) both' }}
           >
-            <div className="flex items-start justify-between p-7 border-b border-slate-100">
+            <div className="flex items-start justify-between p-7 border-b border-[var(--color-border-soft)]">
               <div>
-                <p className="text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-1">Application</p>
+                <p className="text-[11px] font-mono uppercase tracking-wider text-[var(--color-ink-muted)] mb-1">Application</p>
                 <h2 className="font-mono text-lg font-bold tracking-tight">{selectedApp.id}</h2>
-                <p className="text-sm text-slate-700 mt-2 font-semibold">{selectedApp.applicantName}</p>
-                <p className="text-xs text-slate-400">{selectedApp.company}</p>
+                <p className="text-sm text-[var(--color-ink-2)] mt-2 font-semibold">{selectedApp.applicantName}</p>
+                <p className="text-xs text-[var(--color-ink-muted)]">{selectedApp.company}</p>
               </div>
-              <button onClick={() => setSelected(null)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors">
+              <button onClick={() => setSelected(null)} className="p-1.5 rounded-lg text-[var(--color-ink-muted)] hover:text-[var(--color-ink-2)] hover:bg-[var(--color-surface-3)] transition-colors">
                 <X size={16} />
               </button>
             </div>
 
             <div className="p-7 space-y-5">
               <div>
-                <p className="text-[10px] font-mono uppercase tracking-wider text-slate-400 mb-2">Current status</p>
+                <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ink-muted)] mb-2">Current status</p>
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${statusBadgeClass[selectedApp.status]}`}>
                   {statusLabel[selectedApp.status]}
                 </span>
                 {selectedApp.decisionAt ? (
-                  <p className="text-[11px] text-slate-500 mt-2">Decision: {formatDate(selectedApp.decisionAt)}</p>
+                  <p className="text-[11px] text-[var(--color-ink-soft)] mt-2">Decision: {formatDate(selectedApp.decisionAt)}</p>
                 ) : null}
               </div>
 
@@ -208,9 +208,9 @@ export function ApplicationsPage() {
                   { l: 'Purpose',    v: selectedApp.purpose },
                   { l: 'Submitted',  v: formatDate(selectedApp.submittedAt) },
                 ].map((row) => (
-                  <div key={row.l} className="bg-slate-50 rounded-xl p-3">
-                    <p className="text-[10px] font-mono uppercase tracking-wider text-slate-400 mb-1">{row.l}</p>
-                    <p className="font-semibold text-slate-900">{row.v}</p>
+                  <div key={row.l} className="bg-[var(--color-surface-2)] rounded-xl p-3">
+                    <p className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ink-muted)] mb-1">{row.l}</p>
+                    <p className="font-semibold text-[var(--color-ink)]">{row.v}</p>
                   </div>
                 ))}
               </div>
@@ -235,19 +235,19 @@ export function ApplicationsPage() {
 
               {(['under_review', 'awaiting_documents', 'submitted'] as ApplicationStatus[]).includes(selectedApp.status) ? (
                 <div>
-                  <label className="text-[10px] font-mono uppercase tracking-wider text-slate-400 mb-1.5 block">Decline reason (required to decline)</label>
+                  <label className="text-[10px] font-mono uppercase tracking-wider text-[var(--color-ink-muted)] mb-1.5 block">Decline reason (required to decline)</label>
                   <textarea
                     value={declineReason}
                     onChange={(e) => setDeclineReason(e.target.value)}
                     rows={2}
                     placeholder="e.g. Insufficient cash flow per Q1 bank statements."
-                    className="w-full px-3 py-2 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-4 focus:ring-slate-100 focus:border-slate-400 resize-none transition-all"
+                    className="w-full px-3 py-2 rounded-xl border border-[var(--color-border)] text-sm focus:outline-none focus:ring-4 focus:ring-slate-100 focus:border-slate-400 resize-none transition-all"
                   />
                 </div>
               ) : null}
             </div>
 
-            <div className="p-7 border-t border-slate-100 sticky bottom-0 bg-white/95 backdrop-blur space-y-2">
+            <div className="p-7 border-t border-[var(--color-border-soft)] sticky bottom-0 bg-[var(--color-surface)]/95 backdrop-blur space-y-2">
               {selectedApp.status === 'submitted' ? (
                 <Button onClick={() => moveToReview(selectedApp.id)} variant="outline" className="w-full">
                   <Clock size={14} /> Move to review

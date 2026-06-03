@@ -93,8 +93,8 @@ export function TeamPage() {
 
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Team</h1>
-          <p className="text-sm text-slate-500 mt-1">{team.filter((m) => m.status === 'active').length} active members · {team.filter((m) => m.status === 'invited').length} pending invites</p>
+          <h1 className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">Team</h1>
+          <p className="text-sm text-[var(--color-ink-soft)] mt-1">{team.filter((m) => m.status === 'active').length} active members · {team.filter((m) => m.status === 'invited').length} pending invites</p>
         </div>
         <Button size="md" onClick={() => setInviting(true)}>
           <UserPlus size={15} /> Invite member
@@ -106,7 +106,7 @@ export function TeamPage() {
           {team.map((m, i) => (
             <div
               key={m.id}
-              className="flex items-center justify-between px-6 py-4 hover:bg-slate-50/60 transition-colors"
+              className="flex items-center justify-between px-6 py-4 hover:bg-[var(--color-surface-2)]/60 transition-colors"
               style={{ animation: 'fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both', animationDelay: `${i * 50}ms` }}
             >
               <div className="flex items-center gap-4">
@@ -114,16 +114,16 @@ export function TeamPage() {
                   {initials(m.name)}
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">{m.name}</p>
-                  <p className="text-xs text-slate-400">{m.email}</p>
+                  <p className="text-sm font-semibold text-[var(--color-ink)]">{m.name}</p>
+                  <p className="text-xs text-[var(--color-ink-muted)]">{m.email}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <p className="text-xs text-slate-500">{m.branch}</p>
+                <p className="text-xs text-[var(--color-ink-soft)]">{m.branch}</p>
                 <select
                   value={m.role}
                   onChange={(e) => changeRole(m, e.target.value as Role)}
-                  className="text-xs px-2 py-1 rounded-lg border border-slate-200 bg-white font-medium text-slate-700 cursor-pointer hover:border-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-100"
+                  className="text-xs px-2 py-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] font-medium text-[var(--color-ink-2)] cursor-pointer hover:border-slate-400 focus:outline-none focus:ring-4 focus:ring-slate-100"
                 >
                   {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
                     <option key={r} value={r}>{ROLE_LABELS[r]}</option>
@@ -145,16 +145,16 @@ export function TeamPage() {
           style={{ animation: 'fade-in 0.2s ease-out both' }}
         >
           <div
-            className="bg-white rounded-2xl max-w-md w-full p-7"
+            className="bg-[var(--color-surface)] rounded-2xl max-w-md w-full p-7"
             onClick={(e) => e.stopPropagation()}
             style={{ animation: 'scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both' }}
           >
             <div className="flex items-start justify-between mb-5">
               <div>
                 <h3 className="text-xl font-bold tracking-tight">Invite team member</h3>
-                <p className="text-sm text-slate-500 mt-1">They'll receive an email with a sign-up link.</p>
+                <p className="text-sm text-[var(--color-ink-soft)] mt-1">They'll receive an email with a sign-up link.</p>
               </div>
-              <button onClick={() => setInviting(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">
+              <button onClick={() => setInviting(false)} className="p-1.5 rounded-lg text-[var(--color-ink-muted)] hover:text-[var(--color-ink-2)] hover:bg-[var(--color-surface-3)]">
                 <X size={16} />
               </button>
             </div>
@@ -164,11 +164,11 @@ export function TeamPage() {
               <Input label="Work email" value={invite.email} onChange={(e) => setInvite((p) => ({ ...p, email: e.target.value }))} placeholder="lerato@client.co.za" type="email" />
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1.5">Role</label>
+                  <label className="block text-xs font-medium text-[var(--color-ink-soft)] mb-1.5">Role</label>
                   <select
                     value={invite.role}
                     onChange={(e) => setInvite((p) => ({ ...p, role: e.target.value as Role }))}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm bg-white focus:outline-none focus:ring-4 focus:ring-slate-100 focus:border-slate-400 cursor-pointer"
+                    className="w-full px-3 py-2.5 rounded-xl border border-[var(--color-border)] text-sm bg-[var(--color-surface)] focus:outline-none focus:ring-4 focus:ring-slate-100 focus:border-slate-400 cursor-pointer"
                   >
                     {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
                       <option key={r} value={r}>{ROLE_LABELS[r]}</option>
@@ -195,7 +195,7 @@ export function TeamPage() {
           style={{ animation: 'fade-in 0.2s ease-out both' }}
         >
           <div
-            className="bg-white rounded-2xl max-w-md w-full p-7"
+            className="bg-[var(--color-surface)] rounded-2xl max-w-md w-full p-7"
             onClick={(e) => e.stopPropagation()}
             style={{ animation: 'scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both' }}
           >
@@ -206,25 +206,25 @@ export function TeamPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold tracking-tight">{editing.name}</h3>
-                  <p className="text-xs text-slate-500">{editing.email}</p>
+                  <p className="text-xs text-[var(--color-ink-soft)]">{editing.email}</p>
                 </div>
               </div>
-              <button onClick={() => setEditing(null)} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">
+              <button onClick={() => setEditing(null)} className="p-1.5 rounded-lg text-[var(--color-ink-muted)] hover:text-[var(--color-ink-2)] hover:bg-[var(--color-surface-3)]">
                 <X size={16} />
               </button>
             </div>
 
             <div className="space-y-3 mb-6">
               <div className="text-sm">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Role</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-ink-muted)] mb-1">Role</p>
                 <p className="font-semibold">{ROLE_LABELS[editing.role]}</p>
               </div>
               <div className="text-sm">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Branch</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-ink-muted)] mb-1">Branch</p>
                 <p className="font-semibold">{editing.branch}</p>
               </div>
               <div className="text-sm">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Status</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-[var(--color-ink-muted)] mb-1">Status</p>
                 <Badge variant={editing.status === 'active' ? 'success' : 'muted'} className="capitalize">{editing.status}</Badge>
               </div>
             </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { Zap, CheckCircle, XCircle, Save, RotateCcw } from 'lucide-react';
@@ -53,6 +53,25 @@ export default function FeaturesPage() {
   const [saved, setSaved]     = useState<ClientFeatures[]>(INITIAL_CLIENTS);
   const [pending, setPending] = useState<PendingChanges>({});
   const [toast, setToast]     = useState<{ kind: ToastKind; message: string } | null>(null);
+
+  // Load real clients + their feature flags
+  const loadClients = useCallback(async () => {
+    try {
+      const res = await fetch('/api/clients');
+      if (!res.ok) return;
+      const { clients } = await res.json();
+      if (Array.isArray(clients) && clients.length > 0) {
+        setSaved(clients.map((c: Record<string, unknown>) => {
+          const featureArr = (c.client_features as Array<{flag: string; enabled: boolean}> | undefined) ?? [];
+          const features = arrayToMap(featureArr.filter(f => f.enabled).map(f => f.flag));
+          const tier = (['core','growth','enterprise'] as const).includes(c.tier as 'core') ? c.tier as 'core'|'growth'|'enterprise' : 'core';
+          return { name: String(c.name), slug: String(c.slug), tier, features };
+        }));
+      }
+    } catch { /* keep seed */ }
+  }, []);
+
+  useEffect(() => { loadClients(); }, [loadClients]);
 
   function effectiveValue(slug: string, key: FeatureKey): boolean {
     if (pending[slug] && key in pending[slug]) return pending[slug][key];

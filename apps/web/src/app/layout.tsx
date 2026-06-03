@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     title:       'AlgoLend — End-to-End Lending Platform for South African Credit Providers',
     description: 'A fully branded, end-to-end credit management platform for South African corporate lenders. Credit engine, KYC, open banking, e-contracts, and SACRRA reporting — configured to your exact credit policy.',
     images: [{
-      url:    'https://algolend.co.za/og.png',
+      url:    'https://algolend.co.za/api/og',
       width:  1200,
       height: 630,
       alt:    'AlgoLend — Lending Platform',

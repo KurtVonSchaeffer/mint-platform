@@ -84,8 +84,8 @@ export function ProfilePage() {
   return (
     <div className="space-y-6 page-enter max-w-2xl">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Profile</h1>
-        <p className="text-slate-500 text-sm mt-1">Your personal details and login security.</p>
+        <h1 className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">Profile</h1>
+        <p className="text-[var(--color-ink-soft)] text-sm mt-1">Your personal details and login security.</p>
       </div>
 
       {/* Identity card */}
@@ -96,8 +96,8 @@ export function ProfilePage() {
               {initials(form.full_name || profile?.full_name || 'U')}
             </div>
             <div>
-              <p className="font-semibold text-slate-900">{form.full_name || profile?.full_name || '—'}</p>
-              <p className="text-sm text-slate-400 capitalize">{profile?.role?.replace('_', ' ')}</p>
+              <p className="font-semibold text-[var(--color-ink)]">{form.full_name || profile?.full_name || '—'}</p>
+              <p className="text-sm text-[var(--color-ink-muted)] capitalize">{profile?.role?.replace('_', ' ')}</p>
             </div>
           </div>
         </CardHeader>
@@ -138,7 +138,7 @@ export function ProfilePage() {
 
       {/* Password card */}
       <Card>
-        <CardHeader><h3 className="font-semibold text-slate-900">Change password</h3></CardHeader>
+        <CardHeader><h3 className="font-semibold text-[var(--color-ink)]">Change password</h3></CardHeader>
         <CardBody className="space-y-4">
           <Input
             label="Current password"

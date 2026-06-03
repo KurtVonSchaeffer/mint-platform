@@ -28,7 +28,7 @@ const typeConfig: Record<Notification['type'], { icon: typeof Bell; bg: string; 
   approval:  { icon: CheckCircle,   bg: 'bg-emerald-50',  color: 'text-emerald-600' },
   document:  { icon: FileSignature, bg: 'bg-purple-50',   color: 'text-purple-600' },
   payment:   { icon: CreditCard,    bg: 'bg-blue-50',     color: 'text-blue-600' },
-  message:   { icon: MessageSquare, bg: 'bg-slate-100',   color: 'text-slate-600' },
+  message:   { icon: MessageSquare, bg: 'bg-[var(--color-surface-3)]',   color: 'text-[var(--color-ink-soft)]' },
   kyc:       { icon: ShieldCheck,   bg: 'bg-emerald-50',  color: 'text-emerald-600' },
   reminder:  { icon: Clock,         bg: 'bg-amber-50',    color: 'text-amber-600' },
 };
@@ -48,8 +48,8 @@ export function NotificationsPage() {
     <div className="space-y-6 max-w-3xl">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Notifications</h1>
-          <p className="text-slate-500 text-sm mt-1">
+          <h1 className="text-2xl font-bold text-[var(--color-ink)]">Notifications</h1>
+          <p className="text-[var(--color-ink-soft)] text-sm mt-1">
             {unreadCount > 0
               ? <>You have <strong>{unreadCount}</strong> unread {unreadCount === 1 ? 'notification' : 'notifications'}</>
               : 'You are all caught up'}
@@ -71,7 +71,7 @@ export function NotificationsPage() {
             className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors ${
               filter === f
                 ? 'bg-[var(--color-brand)] text-white'
-                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                : 'bg-[var(--color-surface-3)] text-[var(--color-ink-soft)] hover:bg-slate-200'
             }`}
           >
             {f}
@@ -85,11 +85,11 @@ export function NotificationsPage() {
       {/* List */}
       {filtered.length === 0 ? (
         <Card className="p-12 text-center">
-          <div className="w-12 h-12 rounded-full bg-slate-100 mx-auto flex items-center justify-center mb-4">
-            <Bell size={20} className="text-slate-400" />
+          <div className="w-12 h-12 rounded-full bg-[var(--color-surface-3)] mx-auto flex items-center justify-center mb-4">
+            <Bell size={20} className="text-[var(--color-ink-muted)]" />
           </div>
-          <p className="text-sm font-semibold text-slate-700">No notifications</p>
-          <p className="text-xs text-slate-400 mt-1">You're all caught up.</p>
+          <p className="text-sm font-semibold text-[var(--color-ink-2)]">No notifications</p>
+          <p className="text-xs text-[var(--color-ink-muted)] mt-1">You're all caught up.</p>
         </Card>
       ) : (
         <Card className="p-0 overflow-hidden">
@@ -101,19 +101,19 @@ export function NotificationsPage() {
                 <button
                   key={n.id}
                   onClick={() => toggleRead(n.id)}
-                  className={`w-full text-left px-5 py-4 flex items-start gap-4 transition-colors hover:bg-slate-50 ${!n.read ? 'bg-[var(--color-brand-muted)]/15' : ''}`}
+                  className={`w-full text-left px-5 py-4 flex items-start gap-4 transition-colors hover:bg-[var(--color-surface-2)] ${!n.read ? 'bg-[var(--color-brand-muted)]/15' : ''}`}
                 >
                   <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${cfg.bg}`}>
                     <Icon size={16} className={cfg.color} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3">
-                      <p className={`text-sm ${!n.read ? 'font-bold text-slate-900' : 'font-semibold text-slate-700'}`}>
+                      <p className={`text-sm ${!n.read ? 'font-bold text-[var(--color-ink)]' : 'font-semibold text-[var(--color-ink-2)]'}`}>
                         {n.title}
                       </p>
-                      <span className="text-[10px] text-slate-400 shrink-0 mt-0.5">{n.timestamp}</span>
+                      <span className="text-[10px] text-[var(--color-ink-muted)] shrink-0 mt-0.5">{n.timestamp}</span>
                     </div>
-                    <p className="text-xs text-slate-500 mt-1 leading-relaxed line-clamp-2">{n.body}</p>
+                    <p className="text-xs text-[var(--color-ink-soft)] mt-1 leading-relaxed line-clamp-2">{n.body}</p>
                   </div>
                   {!n.read && (
                     <span className="w-2 h-2 rounded-full bg-[var(--color-brand)] shrink-0 mt-2" />
@@ -126,11 +126,11 @@ export function NotificationsPage() {
       )}
 
       {/* Channel preferences hint */}
-      <Card className="p-5 flex items-start gap-3 bg-slate-50/50">
-        <AlertCircle size={15} className="text-slate-400 mt-0.5 shrink-0" />
-        <div className="text-xs text-slate-500 leading-relaxed">
+      <Card className="p-5 flex items-start gap-3 bg-[var(--color-surface-2)]/50">
+        <AlertCircle size={15} className="text-[var(--color-ink-muted)] mt-0.5 shrink-0" />
+        <div className="text-xs text-[var(--color-ink-soft)] leading-relaxed">
           Notification delivery channels (email, in-app, WhatsApp) can be managed under
-          <strong className="text-slate-700"> Profile → Preferences</strong>.
+          <strong className="text-[var(--color-ink-2)]"> Profile → Preferences</strong>.
         </div>
       </Card>
     </div>
