@@ -6,11 +6,11 @@ import { ArrowRight } from 'lucide-react';
 import { MobileNav } from './MobileNav';
 
 const LINKS = [
-  { label: 'Platform',     href: '#platform'   },
-  { label: 'How it works', href: '#process'     },
-  { label: 'Compliance',   href: '#compliance'  },
-  { label: 'Pricing',      href: '#pricing'     },
-  { label: 'FAQ',          href: '#faq'         },
+  { label: 'Platform',     href: '#platform'    },
+  { label: 'How it works', href: '#process'      },
+  { label: 'Compliance',   href: '#compliance'   },
+  { label: 'Pricing',      href: '#pricing'      },
+  { label: 'Admin tour',   href: '/admin-tour'   },
 ];
 
 const SECTIONS = ['platform', 'process', 'compliance', 'pricing', 'faq', 'enquire'];

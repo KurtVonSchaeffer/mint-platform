@@ -305,6 +305,61 @@ let cachedSystemSettings = {
     timestamp: 0
 };
 
+// ─── Account status kill-switch ──────────────────────────────────────────────
+// Reads this deployment's status from the Mint admin `clients` table every 60s.
+// If status === 'suspended', all non-auth/health requests are blocked and the
+// suspended.html page is served. Toggle back to 'active' in mint-admin to restore.
+const ACCOUNT_SLUG = process.env.CLIENT_SLUG || process.env.ALGOLEND_SLUG || null;
+let cachedAccountStatus = { status: 'active', timestamp: 0 };
+const ACCOUNT_STATUS_TTL_MS = 60 * 1000;
+
+async function loadAccountStatus() {
+    if (!ACCOUNT_SLUG) return 'active'; // no slug configured — assume active
+    const now = Date.now();
+    if (now - cachedAccountStatus.timestamp < ACCOUNT_STATUS_TTL_MS) {
+        return cachedAccountStatus.status;
+    }
+    try {
+        const { data, error } = await supabaseService
+            .from('clients')
+            .select('status')
+            .eq('slug', ACCOUNT_SLUG)
+            .maybeSingle();
+        if (!error && data?.status) {
+            cachedAccountStatus = { status: data.status, timestamp: now };
+            if (data.status === 'suspended') {
+                console.warn(`[kill-switch] Account "${ACCOUNT_SLUG}" is SUSPENDED.`);
+            }
+        }
+    } catch (err) {
+        console.error('[kill-switch] Status check failed:', err.message);
+    }
+    return cachedAccountStatus.status;
+}
+
+// Paths that are ALWAYS allowed regardless of suspension
+const SUSPENSION_WHITELIST = ['/suspended.html', '/health', '/favicon.ico'];
+
+// Middleware — runs before every request
+app.use(async (req, res, next) => {
+    // Allow whitelisted paths through unconditionally
+    if (SUSPENSION_WHITELIST.some(p => req.path === p || req.path.startsWith(p))) {
+        return next();
+    }
+    const status = await loadAccountStatus();
+    if (status === 'suspended') {
+        // API calls get JSON; browser requests get the HTML page
+        if (req.path.startsWith('/api/')) {
+            return res.status(402).json({
+                error: 'Account suspended. Please contact Mint Platforms to restore access.',
+                code:  'ACCOUNT_SUSPENDED',
+            });
+        }
+        return res.status(402).sendFile(path.join(__dirname, 'public', 'suspended.html'));
+    }
+    next();
+});
+
 async function loadSystemSettings(forceRefresh = false) {
     const now = Date.now();
     const isCacheFresh = now - cachedSystemSettings.timestamp < THEME_CACHE_TTL_MS;

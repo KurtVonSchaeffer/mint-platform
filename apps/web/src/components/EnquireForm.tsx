@@ -52,20 +52,30 @@ export function EnquireForm() {
 
   if (status === 'success') {
     return (
-      <div className="rounded-3xl p-12 text-center bg-white/5 border border-white/10" style={{ animation: 'fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
+      <div className="rounded-3xl p-10 text-center bg-white/5 border border-white/10" style={{ animation: 'fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both' }}>
         <div className="w-16 h-16 mx-auto mb-5 rounded-full bg-emerald-500/15 border border-emerald-400/30 flex items-center justify-center">
           <Check size={24} className="text-emerald-400" />
         </div>
         <h3 className="text-2xl font-semibold text-white mb-2">Enquiry received.</h3>
         <p className="text-sm text-white/55 mb-6 max-w-sm mx-auto">
-          We've logged your details and will be in touch within one business day to set up a call.
+          We'll be in touch within one business day — or skip the wait and book a time directly.
         </p>
+        <a
+          href="https://calendly.com/mintplatforms"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center gap-2 w-full bg-white text-[#09090B] font-semibold text-[14px] px-5 py-3.5 rounded-2xl transition-all hover:-translate-y-0.5 mb-4"
+          style={{ boxShadow: '0 8px 24px -6px rgba(255,255,255,0.2)' }}
+        >
+          Book a time now
+          <ArrowUpRight size={15} />
+        </a>
         <button
           type="button"
           onClick={() => setStatus('idle')}
           className="text-xs font-mono uppercase tracking-[0.18em] text-white/40 hover:text-white transition-colors"
         >
-          ← Send another
+          ← Send another enquiry
         </button>
       </div>
     );

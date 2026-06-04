@@ -344,6 +344,34 @@ html, body {
   100% { transform: translateY(0); }
 }
 
+/* ===== Pricing card — gradient border spin =========================== */
+@keyframes border-spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Floating badge drift — subtle up/down separate from breathe */
+@keyframes badge-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-5px); }
+}
+
+/* Slide in from the left/right for showcase swap */
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-40px) scale(0.97); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(40px) scale(0.97); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+/* Recommended card inner glow pulse */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }
+  50%       { box-shadow: 0 0 32px 8px rgba(124, 58, 237, 0.18); }
+}
+
 /* ===== Trust / credential badges ====================================== */
 .trust-badge {
   position: relative;

@@ -226,6 +226,37 @@ body::before {
   50%      { box-shadow: 0 0 20px 2px rgba(124,58,237,0.3); }
 }
 
+/* Mesh blob drift */
+@keyframes mesh-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(18px, -14px) scale(1.04); }
+  66%       { transform: translate(-12px, 10px) scale(0.97); }
+}
+
+/* Revenue bar fill on mount */
+@keyframes progress-fill {
+  from { width: 0 !important; }
+  to   { /* width set inline */ }
+}
+
+/* Floating badge drift */
+@keyframes badge-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+
+/* Spinning gradient border for highlighted cards */
+@keyframes border-spin {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Slide in left */
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
 /* ─── Cards ────────────────────────────────────────────────────── */
 .bento-card {
   position: relative;

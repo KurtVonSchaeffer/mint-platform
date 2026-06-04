@@ -75,6 +75,36 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       console.error('[clients] status update failed', error);
       errors.push(error.message);
     }
+
+    // Push MINT_ACCOUNT_STATUS env var to the client's Vercel project so the
+    // running server reads it within the 60s cache TTL — no redeploy required.
+    const token  = process.env.VERCEL_API_TOKEN ?? process.env.VERCEL_TOKEN;
+    const teamId = process.env.VERCEL_TEAM_ID;
+    if (token && !error) {
+      try {
+        const { data: cRow } = await supabaseAdmin
+          .from('clients')
+          .select('vercel_project_id')
+          .eq('id', id)
+          .single();
+        if (cRow?.vercel_project_id) {
+          const qs = teamId ? `?teamId=${teamId}` : '';
+          await fetch(`https://api.vercel.com/v10/projects/${cRow.vercel_project_id}/env${qs}`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              key:    'MINT_ACCOUNT_STATUS',
+              value:  body.status,
+              type:   'plain',
+              target: ['production'],
+            }),
+          });
+          console.log(`[status] pushed MINT_ACCOUNT_STATUS="${body.status}" to Vercel project ${cRow.vercel_project_id}`);
+        }
+      } catch (e) {
+        console.warn('[status] Vercel env sync failed (non-fatal):', e instanceof Error ? e.message : e);
+      }
+    }
   }
 
   // ── API quota update ─────────────────────────────────────────────────

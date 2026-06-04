@@ -7,9 +7,9 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 const WORDMARK = 'AlgoLend';
 
 const STATS = [
-  { label: 'IN APPLICATIONS', value: 'R 2.4bn', detail: 'processed' },
-  { label: 'DEPLOYMENTS',     value: '14',       detail: 'live in production' },
-  { label: 'UPTIME',          value: '99.9%',   detail: 'platform SLA' },
+  { label: 'AVG GO-LIVE',  value: '4-8 wks', detail: 'from kick-off' },
+  { label: 'UPTIME SLA',   value: '99.9%',   detail: 'platform guarantee' },
+  { label: 'CREDIT CYCLE', value: '< 48hr',  detail: 'avg decision time' },
 ];
 
 interface Particle {

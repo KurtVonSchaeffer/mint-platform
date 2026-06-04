@@ -19,14 +19,15 @@ import { NavBar } from '@/components/NavBar';
 import { SeeItWorkButton } from '@/components/SeeItWorkButton';
 import { FaqSection } from '@/components/FaqSection';
 import { AnimatedStat } from '@/components/AnimatedStat';
+import { PricingSection } from '@/components/PricingSection';
 
 /* ─── Content ─────────────────────────────────────────────────────── */
 
 const stats = [
-  { value: 'R 2.4bn+', label: 'in applications processed' },
-  { value: '14',        label: 'lender deployments live' },
-  { value: '99.9%',     label: 'platform uptime SLA' },
-  { value: '< 48hr',    label: 'avg credit decision' },
+  { value: '4–8 wks',  label: 'avg implementation time' },
+  { value: '1 DB',     label: 'dedicated per deployment' },
+  { value: '99.9%',    label: 'platform uptime SLA' },
+  { value: '< 48hr',   label: 'avg credit decision' },
 ];
 
 const integrations = [
@@ -41,37 +42,6 @@ const integrations = [
   { name: 'Vercel',       sub: 'Infrastructure' },
 ];
 
-const lenders = [
-  'BridgeCapital', 'Apex Credit', 'Nexus Business', 'Summit Lending', 'Elevate Capital',
-  'Velocity Trading', 'Phakisa Microfinance', 'Horizon Credit',
-];
-
-const testimonials = [
-  {
-    quote: 'We replaced three separate vendors with AlgoLend. Our credit decisions are down from five days to under twenty-four hours.',
-    name: 'Thabo Mokoena',
-    role: 'Head of Credit',
-    company: 'BridgeCapital Finance',
-    initials: 'TM',
-    accent: '#7C3AED',
-  },
-  {
-    quote: 'The TruID integration alone paid for the platform inside the first quarter. Affordability checks that used to take a day are now instant.',
-    name: 'Lerato Dlamini',
-    role: 'COO',
-    company: 'Apex Credit Solutions',
-    initials: 'LD',
-    accent: '#059669',
-  },
-  {
-    quote: 'SACRRA submissions used to be a two-day exercise. Now they run themselves on the 28th of every month with full reconciliation.',
-    name: 'Sipho Nkosi',
-    role: 'Compliance Director',
-    company: 'Nexus Business Finance',
-    initials: 'SN',
-    accent: '#0284C7',
-  },
-];
 
 const process = [
   { n: '01', icon: Sparkles,  title: 'Discovery',       desc: 'We map your credit policy, products, compliance posture, and team workflows in detail.' },
@@ -134,7 +104,7 @@ export default function HomePage() {
                 style={{ animation: 'var(--animate-fade-up)', animationDelay: '0ms' }}
               >
                 <span className="relative w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot" />
-                <span className="text-[var(--color-ink-soft)]">Trusted by <span className="text-[var(--color-ink)] font-semibold">14 South African</span> credit providers</span>
+                <span className="text-[var(--color-ink-soft)]">Built for <span className="text-[var(--color-ink)] font-semibold">South African</span> credit providers</span>
               </div>
 
               {/* Headline */}
@@ -472,216 +442,63 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ────────────────────────────────────────────── */}
+      {/* ── CASE STUDY CTA ──────────────────────────────────────────── */}
       <section className="bg-[var(--color-bg)] py-24 border-t border-[var(--color-border-soft)]">
         <div className="max-w-[1200px] mx-auto px-6">
           <Reveal>
-            <div className="text-center mb-14 max-w-2xl mx-auto">
-              <p className="eyebrow mb-4">In their words</p>
-              <h2 className="headline text-5xl lg:text-6xl font-semibold mb-5">
-                What lenders are<br />
-                <span className="italic font-serif" style={{ fontFamily: 'Georgia, serif' }}>actually saying</span>.
-              </h2>
-              <p className="text-lg text-[var(--color-ink-soft)]">
-                Three quotes pulled directly from go-live feedback calls.
-              </p>
+            <div className="bento-card p-10 lg:p-16 flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
+
+              {/* Left — icon + copy */}
+              <div className="flex-1 min-w-0">
+                <div className="w-14 h-14 rounded-2xl bg-[var(--color-brand)]/10 border border-[var(--color-brand)]/20 flex items-center justify-center mb-6">
+                  <BarChart3 size={24} className="text-[var(--color-brand)]" />
+                </div>
+                <p className="eyebrow mb-3">Early adopters</p>
+                <h2 className="headline text-4xl lg:text-5xl font-semibold mb-4 tracking-tight">
+                  Be our first<br />reference client.
+                </h2>
+                <p className="text-lg text-[var(--color-ink-soft)] leading-relaxed max-w-lg">
+                  We're onboarding our first cohort of South African credit providers. Early clients get
+                  priority implementation slots, dedicated support, and the chance to shape the
+                  product roadmap — in exchange for a published case study once you're live.
+                </p>
+              </div>
+
+              {/* Right — benefit list + CTA */}
+              <div className="w-full lg:w-80 shrink-0">
+                <ul className="space-y-3 mb-8">
+                  {[
+                    'Priority implementation slot',
+                    'Direct line to the product team',
+                    'Locked-in early-adopter pricing',
+                    'Published case study (optional)',
+                  ].map((item) => (
+                    <li key={item} className="flex items-start gap-3 text-sm text-[var(--color-ink-soft)]">
+                      <Check size={14} className="text-[var(--color-brand)] mt-0.5 shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+                <Link
+                  href="#enquire"
+                  className="btn-shine inline-flex items-center justify-center gap-2 w-full bg-[var(--color-ink)] text-[var(--color-bg)] font-semibold text-[14px] px-5 py-3.5 rounded-full transition-all hover:-translate-y-0.5"
+                  style={{ boxShadow: '0 12px 32px -8px rgba(9,9,11,0.35)' }}
+                >
+                  Apply for early access
+                  <ArrowUpRight size={15} />
+                </Link>
+                <p className="text-center text-[11px] text-[var(--color-ink-muted)] mt-3 uppercase tracking-wider font-mono">
+                  No commitment · 30-min call
+                </p>
+              </div>
+
             </div>
           </Reveal>
-
-          <div className="grid md:grid-cols-3 gap-5">
-            {testimonials.map((t, i) => (
-              <Reveal key={t.name} delay={i * 80}>
-                <article className="bento-card p-7 h-full flex flex-col group">
-                  {/* Decorative quote mark */}
-                  <span
-                    aria-hidden
-                    className="text-7xl leading-none mb-2 font-serif"
-                    style={{ fontFamily: 'Georgia, serif', color: t.accent, opacity: 0.18 }}
-                  >
-                    “
-                  </span>
-
-                  <p className="text-[15px] leading-relaxed text-[var(--color-ink)] mb-6 flex-1">
-                    {t.quote}
-                  </p>
-
-                  <div className="flex items-center gap-3 pt-4 border-t border-[var(--color-border-soft)]">
-                    {/* Initials avatar */}
-                    <div
-                      className="w-11 h-11 rounded-full flex items-center justify-center text-sm font-semibold text-white shrink-0 transition-transform group-hover:scale-105"
-                      style={{ background: `linear-gradient(135deg, ${t.accent} 0%, ${t.accent}CC 100%)` }}
-                    >
-                      {t.initials}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-[var(--color-ink)]">{t.name}</p>
-                      <p className="text-xs text-[var(--color-ink-muted)]">
-                        {t.role} · {t.company}
-                      </p>
-                    </div>
-                  </div>
-                </article>
-              </Reveal>
-            ))}
-          </div>
         </div>
       </section>
 
       {/* ── §04 — PRICING ───────────────────────────────────────────── */}
-      <section id="pricing" className="bg-[var(--color-bg)] py-24">
-        <div className="max-w-[1200px] mx-auto px-6">
-
-          <Reveal>
-            <div className="text-center mb-14 max-w-2xl mx-auto">
-              <p className="eyebrow mb-4">Pricing</p>
-              <h2 className="headline text-5xl lg:text-6xl font-semibold mb-5">
-                Three tiers.<br />
-                One platform.
-              </h2>
-              <p className="text-lg text-[var(--color-ink-soft)]">
-                Every deployment is quoted on scope — choose the tier that fits your credit operation, then we build it to spec.
-              </p>
-            </div>
-          </Reveal>
-
-          <Reveal delay={100}>
-            <div className="grid lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
-
-              {/* Core */}
-              <div className="bento-card p-8 flex flex-col">
-                <div className="mb-6">
-                  <p className="eyebrow mb-2">Core</p>
-                  <p className="text-2xl font-semibold tracking-tight mb-2">Get started</p>
-                  <p className="text-sm text-[var(--color-ink-soft)] leading-relaxed">
-                    Everything a registered credit provider needs to start lending digitally.
-                  </p>
-                </div>
-                <ul className="space-y-2.5 flex-1 mb-8">
-                  {[
-                    'Credit scoring engine',
-                    'Borrower application portal',
-                    'Term loans & working capital',
-                    'SACRRA bureau reporting',
-                    'NCA-compliant quotations',
-                    'Loan book & repayment tracking',
-                    'NCR audit trail',
-                    '1 branch',
-                  ].map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-[var(--color-ink-soft)]">
-                      <Check size={13} className="text-[var(--color-brand)] mt-0.5 shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="#enquire"
-                  className="inline-flex items-center justify-center gap-2 text-sm font-semibold px-5 py-3 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] transition-colors"
-                >
-                  Get a quote <ArrowRight size={13} />
-                </Link>
-              </div>
-
-              {/* Growth — highlighted */}
-              <div className="bento-card bento-card-dark p-8 flex flex-col relative overflow-hidden">
-                <div
-                  className="absolute -top-20 -right-20 w-56 h-56 rounded-full pointer-events-none"
-                  style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.25) 0%, transparent 70%)' }}
-                  aria-hidden
-                />
-                <div className="relative mb-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="eyebrow" style={{ color: '#A78BFA' }}>Growth</p>
-                    <span className="text-[10px] font-bold px-2 py-1 rounded-full" style={{ background: 'rgba(167,139,250,0.15)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.25)' }}>
-                      Most popular
-                    </span>
-                  </div>
-                  <p className="text-2xl font-semibold tracking-tight mb-2 text-white">Scale your operation</p>
-                  <p className="text-sm text-white/60 leading-relaxed">
-                    Multi-branch operations, open banking, e-contracts, and automated compliance.
-                  </p>
-                </div>
-                <ul className="space-y-2.5 flex-1 mb-8 relative">
-                  {[
-                    'Everything in Core',
-                    'Open banking — TruID affordability',
-                    'E-contracts via DocuSeal',
-                    'Multi-branch management',
-                    'WhatsApp loan notifications',
-                    'Invoice finance product',
-                    'Sure Systems EFT integration',
-                    'Unlimited branches',
-                  ].map((f, i) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-white/80">
-                      <Check size={13} className="mt-0.5 shrink-0" style={{ color: i === 0 ? '#A78BFA' : '#A78BFA' }} />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="#enquire"
-                  className="relative inline-flex items-center justify-center gap-2 text-sm font-semibold px-5 py-3 rounded-full text-white transition-all hover:-translate-y-0.5"
-                  style={{ background: 'linear-gradient(135deg, #7C3AED, #9B5CF6)', boxShadow: '0 8px 24px rgba(124,58,237,0.4)' }}
-                >
-                  Get a quote <ArrowRight size={13} />
-                </Link>
-              </div>
-
-              {/* Enterprise */}
-              <div className="bento-card p-8 flex flex-col">
-                <div className="mb-6">
-                  <p className="eyebrow mb-2">Enterprise</p>
-                  <p className="text-2xl font-semibold tracking-tight mb-2">Full platform</p>
-                  <p className="text-sm text-[var(--color-ink-soft)] leading-relaxed">
-                    The complete suite for high-volume lenders with complex risk frameworks.
-                  </p>
-                </div>
-                <ul className="space-y-2.5 flex-1 mb-8">
-                  {[
-                    'Everything in Growth',
-                    'Biometric KYC (liveness + DHA)',
-                    'Advanced analytics dashboard',
-                    'Custom credit scorecard builder',
-                    'PEPs & sanctions screening',
-                    'Dedicated implementation team',
-                    'SLA-backed support',
-                    'White-glove onboarding',
-                  ].map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-[var(--color-ink-soft)]">
-                      <Check size={13} className="text-[var(--color-brand)] mt-0.5 shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="#enquire"
-                  className="inline-flex items-center justify-center gap-2 text-sm font-semibold px-5 py-3 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] hover:bg-[var(--color-surface-2)] transition-colors"
-                >
-                  Get a quote <ArrowRight size={13} />
-                </Link>
-              </div>
-            </div>
-          </Reveal>
-
-          <Reveal delay={200}>
-            <div className="mt-10 max-w-5xl mx-auto grid sm:grid-cols-2 gap-4">
-              <div className="bento-card p-6">
-                <p className="eyebrow mb-2">i. One-off implementation</p>
-                <p className="text-base font-semibold mb-2 tracking-tight">Quoted on scope</p>
-                <p className="text-sm text-[var(--color-ink-soft)]">
-                  Branding, scorecard configuration, integrations, UAT, and go-live support. Priced on what we build.
-                </p>
-              </div>
-              <div className="bento-card p-6">
-                <p className="eyebrow mb-2">ii. Pass-through API costs</p>
-                <p className="text-base font-semibold mb-2 tracking-tight">At cost, no markup</p>
-                <p className="text-sm text-[var(--color-ink-soft)]">
-                  Experian, TruID, DocuSeal, and SACRRA charges are passed through at provider cost. Transparent billing.
-                </p>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
+      <PricingSection />
 
       <FaqSection />
 
@@ -773,12 +590,12 @@ export default function HomePage() {
               <p className="text-base font-semibold mb-5">Quick Links</p>
               <ul className="space-y-3">
                 {[
-                  { l: 'Platform',    h: '#platform' },
-                  { l: 'How it works', h: '#process' },
+                  { l: 'Platform',    h: '#platform'   },
+                  { l: 'How it works', h: '#process'  },
                   { l: 'Compliance',  h: '#compliance' },
-                  { l: 'Pricing',     h: '#pricing' },
-                  { l: 'Book a demo', h: '#enquire' },
-                  { l: 'Intro',       h: '/intro' },
+                  { l: 'Pricing',     h: '#pricing'    },
+                  { l: 'Admin tour',  h: '/admin-tour' },
+                  { l: 'Book a demo', h: '#enquire'    },
                 ].map((it) => (
                   <li key={it.l}>
                     <Link href={it.h} className="text-sm text-white/55 hover:text-white transition-colors">
