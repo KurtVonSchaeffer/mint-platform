@@ -36,6 +36,7 @@ export async function middleware(request: NextRequest) {
   const isPublic =
     pathname.startsWith('/login') ||
     pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/marketplace') ||   // MINT integration — uses its own Bearer auth
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon');
 
