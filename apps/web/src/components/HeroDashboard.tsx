@@ -49,7 +49,7 @@ export function HeroDashboard() {
           className="flex-1 mx-4 rounded-md px-3 py-1 text-center text-[10px] font-mono"
           style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.30)' }}
         >
-          portal.bridgecapital.algolend.co.za
+          admin.algolend.co.za
         </div>
         {/* Live pill */}
         <div
@@ -71,7 +71,7 @@ export function HeroDashboard() {
         >
           <div className="mb-5 flex items-center gap-2 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <MiniLogo />
-            <span className="text-[11px] font-bold text-white">BridgeCapital</span>
+            <span className="text-[11px] font-bold text-white">AlgoLend</span>
           </div>
           {SIDEBAR.map((item, i) => (
             <div

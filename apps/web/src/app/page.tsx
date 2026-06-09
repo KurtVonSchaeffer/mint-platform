@@ -17,6 +17,7 @@ import { ContainerScroll } from '@/components/ContainerScroll';
 import { HeroDashboard } from '@/components/HeroDashboard';
 import { NavBar } from '@/components/NavBar';
 import { SeeItWorkButton } from '@/components/SeeItWorkButton';
+import { WatchIntroButton } from '@/components/WatchIntroButton';
 import { FaqSection } from '@/components/FaqSection';
 import { AnimatedStat } from '@/components/AnimatedStat';
 import { PricingSection } from '@/components/PricingSection';
@@ -238,12 +239,7 @@ export default function HomePage() {
                   Book a live walk-through
                   <ArrowUpRight size={15} />
                 </Link>
-                <Link
-                  href="/intro"
-                  className="inline-flex items-center gap-2 text-white font-medium text-[14px] px-5 py-3.5 rounded-full border border-white/15 hover:bg-white/5 transition-colors"
-                >
-                  Or watch the intro
-                </Link>
+                <WatchIntroButton />
               </div>
             </div>
           </Reveal>

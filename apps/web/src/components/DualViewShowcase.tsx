@@ -1,11 +1,115 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
-import { Check, Sparkles, BarChart3 } from 'lucide-react';
+import { Check, Sparkles, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
 
-/* ─── Lender admin view — real screenshot inside laptop chrome ──── */
+/* ─── Slide data ─────────────────────────────────────────────────── */
+const LENDER_SLIDES = [
+  { src: '/screenshots/admin-live-dashboard.jpg',    label: 'Dashboard',    url: 'algolend-opal.vercel.app/admin/dashboard'    },
+  { src: '/screenshots/admin-live-loanbook.jpg',     label: 'Loan Book',    url: 'algolend-opal.vercel.app/admin/loan-book'    },
+  { src: '/screenshots/admin-live-applications.jpg', label: 'Applications', url: 'algolend-opal.vercel.app/admin/applications' },
+];
+
+const BORROWER_SLIDES = [
+  { src: '/screenshots/borrower-live-dashboard.jpg', label: 'Dashboard' },
+  { src: '/screenshots/borrower-live-apply.jpg',     label: 'My Loans'  },
+];
+
+/* ─── Carousel hook ──────────────────────────────────────────────── */
+function useCarousel(count: number, autoMs = 5000) {
+  const [idx, setIdx] = useState(0);
+  const next = useCallback(() => setIdx((i) => (i + 1) % count), [count]);
+  const prev = useCallback(() => setIdx((i) => (i - 1 + count) % count), [count]);
+  const goTo = useCallback((n: number) => setIdx(n), []);
+  // auto-advance resets on every idx change (including manual nav)
+  useEffect(() => {
+    const t = setTimeout(next, autoMs);
+    return () => clearTimeout(t);
+  }, [idx, next, autoMs]);
+  return { idx, next, prev, goTo };
+}
+
+/* ─── Touch / mouse swipe handler ────────────────────────────────── */
+function useSwipe(onLeft: () => void, onRight: () => void) {
+  const startX = useRef(0);
+  return {
+    onTouchStart: (e: React.TouchEvent) => { startX.current = e.touches[0].clientX; },
+    onTouchEnd:   (e: React.TouchEvent) => {
+      const dx = e.changedTouches[0].clientX - startX.current;
+      if (Math.abs(dx) > 40) dx < 0 ? onLeft() : onRight();
+    },
+    onMouseDown: (e: React.MouseEvent) => { startX.current = e.clientX; },
+    onMouseUp:   (e: React.MouseEvent) => {
+      const dx = e.clientX - startX.current;
+      if (Math.abs(dx) > 40) dx < 0 ? onLeft() : onRight();
+    },
+  };
+}
+
+/* ─── Shared dot indicators ──────────────────────────────────────── */
+function Dots({ count, active, onDot, light = false }: {
+  count: number; active: number; onDot: (i: number) => void; light?: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-center gap-1.5 pt-2 pb-1">
+      {Array.from({ length: count }).map((_, i) => (
+        <button
+          key={i}
+          onClick={() => onDot(i)}
+          aria-label={`Go to slide ${i + 1}`}
+          style={{
+            width:      i === active ? 18 : 6,
+            height:     6,
+            borderRadius: 99,
+            transition: 'width 0.3s ease, background 0.3s ease',
+            background: i === active
+              ? (light ? 'rgba(255,255,255,0.9)' : '#7C3AED')
+              : (light ? 'rgba(255,255,255,0.25)' : 'rgba(124,58,237,0.25)'),
+            border: 'none',
+            cursor: 'pointer',
+            padding: 0,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/* ─── Nav arrow buttons ──────────────────────────────────────────── */
+function NavBtn({ dir, onClick, light = false }: {
+  dir: 'prev' | 'next'; onClick: () => void; light?: boolean;
+}) {
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
+      aria-label={dir === 'prev' ? 'Previous slide' : 'Next slide'}
+      className="absolute top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200"
+      style={{
+        [dir === 'prev' ? 'left' : 'right']: 8,
+        background: light ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.08)',
+        border: `1px solid ${light ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.12)'}`,
+        color: light ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.7)',
+        backdropFilter: 'blur(8px)',
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.background = light ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.15)';
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.background = light ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.08)';
+      }}
+    >
+      {dir === 'prev' ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+    </button>
+  );
+}
+
+/* ─── Lender admin view ──────────────────────────────────────────── */
 function LenderView() {
+  const { idx, next, prev, goTo } = useCarousel(LENDER_SLIDES.length, 5000);
+  const swipe = useSwipe(next, prev);
+  const slide = LENDER_SLIDES[idx];
+
   return (
     <div className="relative w-full max-w-4xl mx-auto">
 
@@ -14,8 +118,8 @@ function LenderView() {
         className="relative rounded-2xl overflow-hidden"
         style={{
           background: '#1A1A1F',
-          border: '10px solid #1A1A1F',
-          boxShadow: '0 40px 80px -20px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.06)',
+          border: '10px solid #2A2A30',
+          boxShadow: '0 40px 80px -20px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.12), 0 0 60px -10px rgba(124,58,237,0.2)',
           animation: 'breathe 8s ease-in-out infinite',
         }}
       >
@@ -27,37 +131,58 @@ function LenderView() {
             <span className="w-3 h-3 rounded-full" style={{ background: 'rgba(52,211,153,0.7)' }} />
           </div>
           <div
-            className="flex-1 mx-4 px-3 py-1 rounded-md text-[11px] font-mono text-center"
+            className="flex-1 mx-4 px-3 py-1 rounded-md text-[11px] font-mono text-center transition-all duration-300"
             style={{ background: '#2d2d2d', color: '#888' }}
           >
-            admin.algolend.co.za/dashboard
+            {slide.url}
           </div>
         </div>
 
-        {/* Real screenshot */}
-        <div className="relative overflow-hidden" style={{ height: 420 }}>
-          <Image
-            src="/screenshots/lender-dashboard.jpg"
-            alt="AlgoLend lender admin dashboard"
-            width={1400}
-            height={860}
-            className="w-full object-cover object-top"
-            style={{ height: '100%' }}
-            unoptimized
-          />
-          {/* Subtle vignette at bottom */}
+        {/* Slides */}
+        <div
+          className="relative overflow-hidden select-none cursor-grab active:cursor-grabbing"
+          style={{ height: 420 }}
+          {...swipe}
+        >
+          <div
+            className="flex h-full"
+            style={{
+              width: `${LENDER_SLIDES.length * 100}%`,
+              transform: `translateX(-${(idx * 100) / LENDER_SLIDES.length}%)`,
+              transition: 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1)',
+            }}
+          >
+            {LENDER_SLIDES.map((s, i) => (
+              <div key={i} className="relative h-full" style={{ width: `${100 / LENDER_SLIDES.length}%` }}>
+                <Image
+                  src={s.src}
+                  alt={`AlgoLend admin — ${s.label}`}
+                  width={1400}
+                  height={860}
+                  className="w-full object-cover object-top"
+                  style={{ height: '100%', filter: 'brightness(1.25) contrast(1.05)' }}
+                  unoptimized
+                  priority={i === 0}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom vignette */}
           <div
             className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none"
             style={{ background: 'linear-gradient(to bottom, transparent, rgba(26,26,31,0.6))' }}
           />
+
+          {/* Arrows — sit inside the image area */}
+          <NavBtn dir="prev" onClick={prev} />
+          <NavBtn dir="next" onClick={next} />
         </div>
 
-        {/* Laptop base notch */}
-        <div
-          className="absolute left-1/2 -translate-x-1/2 -bottom-1 rounded-b-3xl bg-[#0A0A0D]"
-          style={{ width: '105%', height: 12 }}
-          aria-hidden
-        />
+        {/* Dot indicators inside laptop chrome */}
+        <div className="bg-[#0F0F12]">
+          <Dots count={LENDER_SLIDES.length} active={idx} onDot={goTo} light />
+        </div>
       </div>
 
       {/* Floating badge — top right: Live indicator */}
@@ -117,10 +242,13 @@ function LenderView() {
   );
 }
 
-/* ─── Borrower portal view — real screenshot inside phone chrome ── */
+/* ─── Borrower portal view ───────────────────────────────────────── */
 function BorrowerView() {
+  const { idx, next, prev, goTo } = useCarousel(BORROWER_SLIDES.length, 4500);
+  const swipe = useSwipe(next, prev);
+
   return (
-    <div className="relative flex items-center justify-center" style={{ minHeight: 520 }}>
+    <div className="relative flex items-center justify-center" style={{ minHeight: 600 }}>
 
       {/* Left context */}
       <div className="hidden md:block absolute left-[4%] top-1/2 -translate-y-1/2 max-w-[190px] space-y-3">
@@ -137,12 +265,11 @@ function BorrowerView() {
         </ul>
       </div>
 
-      {/* Phone frame with real screenshot */}
+      {/* Phone frame */}
       <div
         className="relative"
         style={{ width: 260, animation: 'breathe 7s ease-in-out infinite' }}
       >
-        {/* Phone outer shell */}
         <div
           className="rounded-[42px] overflow-hidden"
           style={{
@@ -153,31 +280,50 @@ function BorrowerView() {
         >
           {/* Notch */}
           <div className="flex items-center justify-center h-7 bg-[#1A1A1F]">
-            <div
-              className="rounded-full bg-black"
-              style={{ width: 100, height: 18 }}
-            />
+            <div className="rounded-full bg-black" style={{ width: 100, height: 18 }} />
           </div>
 
-          {/* Screenshot inside phone — uses true 390px mobile capture */}
+          {/* Slides inside phone screen */}
           <div
-            className="overflow-hidden rounded-2xl"
-            style={{ height: 480 }}
+            className="overflow-hidden rounded-2xl relative select-none cursor-grab active:cursor-grabbing"
+            style={{ height: 528 }}
+            {...swipe}
           >
-            <Image
-              src="/screenshots/borrower-mobile.jpg"
-              alt="AlgoLend borrower portal"
-              width={390}
-              height={1200}
-              className="w-full object-cover object-top"
-              style={{ height: 'auto' }}
-              unoptimized
-            />
+            <div
+              className="flex h-full"
+              style={{
+                width: `${BORROWER_SLIDES.length * 100}%`,
+                transform: `translateX(-${(idx * 100) / BORROWER_SLIDES.length}%)`,
+                transition: 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1)',
+              }}
+            >
+              {BORROWER_SLIDES.map((s, i) => (
+                <div key={i} className="relative h-full shrink-0" style={{ width: `${100 / BORROWER_SLIDES.length}%` }}>
+                  <Image
+                    src={s.src}
+                    alt={`AlgoLend borrower portal — ${s.label}`}
+                    width={390}
+                    height={1200}
+                    className="w-full object-cover object-top"
+                    style={{ height: '100%' }}
+                    unoptimized
+                    priority={i === 0}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Prev/next arrows inside screen */}
+            <NavBtn dir="prev" onClick={prev} light />
+            <NavBtn dir="next" onClick={next} light />
           </div>
 
-          {/* Home indicator */}
-          <div className="flex items-center justify-center py-2 bg-[#1A1A1F]">
-            <div className="w-24 h-1 rounded-full bg-white/20" />
+          {/* Dot indicators + home indicator */}
+          <div className="bg-[#1A1A1F]">
+            <Dots count={BORROWER_SLIDES.length} active={idx} onDot={goTo} light />
+            <div className="flex items-center justify-center pb-2 pt-1">
+              <div className="w-24 h-1 rounded-full bg-white/20" />
+            </div>
           </div>
         </div>
       </div>
@@ -243,7 +389,7 @@ function BorrowerView() {
 
 /* ─── Main export ───────────────────────────────────────────────── */
 export function DualViewShowcase() {
-  const [active, setActive] = useState<'lender' | 'borrower'>('lender');
+  const [active, setActive]   = useState<'lender' | 'borrower'>('lender');
   const [animating, setAnimating] = useState(false);
   const [direction, setDirection] = useState<'left' | 'right'>('right');
 
@@ -266,8 +412,8 @@ export function DualViewShowcase() {
           style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)' }}
         >
           {([
-            { key: 'lender',   label: 'Your view',      sub: 'Admin console' },
-            { key: 'borrower', label: "Borrower's view", sub: 'Mobile portal' },
+            { key: 'lender',   label: 'Your view',       sub: 'Admin console' },
+            { key: 'borrower', label: "Borrower's view",  sub: 'Mobile portal' },
           ] as const).map((tab) => (
             <button
               key={tab.key}
@@ -275,8 +421,8 @@ export function DualViewShowcase() {
               className="relative px-6 py-3 rounded-full text-[13px] font-semibold transition-all duration-300 flex items-center gap-2.5"
               style={{
                 background: active === tab.key ? 'white' : 'transparent',
-                color: active === tab.key ? '#0F0A1E' : 'rgba(255,255,255,0.5)',
-                boxShadow: active === tab.key ? '0 4px 16px rgba(0,0,0,0.25)' : 'none',
+                color:      active === tab.key ? '#0F0A1E' : 'rgba(255,255,255,0.5)',
+                boxShadow:  active === tab.key ? '0 4px 16px rgba(0,0,0,0.25)' : 'none',
               }}
             >
               <span>{tab.label}</span>
@@ -284,7 +430,7 @@ export function DualViewShowcase() {
                 className="text-[10px] font-medium px-2 py-0.5 rounded-full"
                 style={{
                   background: active === tab.key ? 'rgba(124,58,237,0.1)' : 'rgba(255,255,255,0.08)',
-                  color: active === tab.key ? '#7C3AED' : 'rgba(255,255,255,0.35)',
+                  color:      active === tab.key ? '#7C3AED' : 'rgba(255,255,255,0.35)',
                 }}
               >
                 {tab.sub}
@@ -298,7 +444,7 @@ export function DualViewShowcase() {
       <div className="pb-12 overflow-visible">
         <div
           style={{
-            opacity: animating ? 0 : 1,
+            opacity:   animating ? 0 : 1,
             transform: animating
               ? `translateX(${direction === 'right' ? '-50px' : '50px'}) scale(0.97)`
               : 'translateX(0) scale(1)',

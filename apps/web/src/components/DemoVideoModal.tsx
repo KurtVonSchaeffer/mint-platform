@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Play, ExternalLink } from 'lucide-react';
 
 interface Props {
@@ -8,16 +9,21 @@ interface Props {
 }
 
 /**
- * Demo video modal — replace DEMO_VIDEO_URL with your actual Loom or YouTube link.
- * Until a real recording exists, shows a polished placeholder with a CTA to book a live demo.
+ * Demo video modal.
+ * - DEMO_VIDEO_URL: optional embed link (Loom/YouTube) — takes priority if set.
+ * - DEMO_VIDEO_SRC: local self-hosted file in /public, played natively.
+ * Falls back to a polished placeholder if neither is set.
  */
 const DEMO_VIDEO_URL = ''; // e.g. 'https://www.loom.com/embed/xxxx' or 'https://www.youtube-nocookie.com/embed/xxxx'
+const DEMO_VIDEO_SRC = '/videos/algolend-showcase-v4.mp4';
 
 export function DemoVideoModal({ onClose }: Props) {
   const backdropRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     // Animate in
     requestAnimationFrame(() => setVisible(true));
     // Close on Escape
@@ -32,7 +38,9 @@ export function DemoVideoModal({ onClose }: Props) {
     setTimeout(onClose, 250);
   }
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <div
       ref={backdropRef}
       className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8"
@@ -77,6 +85,18 @@ export function DemoVideoModal({ onClose }: Props) {
               allowFullScreen
               title="AlgoLend Platform Demo"
             />
+          ) : DEMO_VIDEO_SRC ? (
+            <video
+              className="w-full h-full"
+              src={DEMO_VIDEO_SRC}
+              controls
+              autoPlay
+              playsInline
+              preload="metadata"
+              aria-label="AlgoLend platform demo video"
+            >
+              Your browser does not support the video tag.
+            </video>
           ) : (
             /* ── Placeholder until recording is ready ── */
             <div className="w-full h-full flex flex-col items-center justify-center gap-8 px-8 text-center"
@@ -135,6 +155,7 @@ export function DemoVideoModal({ onClose }: Props) {
           Press <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/50 font-mono text-[10px]">Esc</kbd> to close
         </p>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
