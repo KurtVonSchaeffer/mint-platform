@@ -33,6 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('mint-theme');if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}` }} />
       </head>
       <body className="antialiased">
+        <a href="#main" className="skip-nav">Skip to main content</a>
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

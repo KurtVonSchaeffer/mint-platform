@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { ALL_FEATURES } from '@/lib/features';
+import { logAudit } from '@/lib/audit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -74,6 +75,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     if (error) {
       console.error('[clients] status update failed', error);
       errors.push(error.message);
+    } else {
+      const action = body.status === 'suspended' ? 'client.suspend'
+        : body.status === 'active' ? 'client.activate'
+        : 'client.update';
+      logAudit({ action, resourceType: 'client', resourceId: id, meta: { status: body.status } });
     }
 
     // Push MINT_ACCOUNT_STATUS env var to the client's Vercel project so the
@@ -191,6 +197,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       }
     }
 
+    logAudit({ action: 'quota.update', resourceType: 'client', resourceId: id, meta: { units, newQuota } });
     return NextResponse.json({ ok: true, newQuota, invoiceReference: invErr ? null : reference });
   }
 
@@ -216,6 +223,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         errors.push(error.message);
       }
     }
+  }
+
+  if (body.features !== undefined && errors.length === 0) {
+    logAudit({ action: 'feature.toggle', resourceType: 'client', resourceId: id, meta: { features: body.features } });
   }
 
   if (errors.length > 0) {

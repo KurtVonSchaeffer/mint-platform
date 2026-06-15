@@ -201,27 +201,27 @@ export default function PricingPage() {
                           {CATEGORY_LABELS[cat]}
                         </span>
                       </div>
-                      <div className="space-y-1.5">
-                        {services.map(s => {
+                      <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--color-border2)' }}>
+                        {services.map((s, si) => {
                           const on      = selectedIds.has(s.id);
                           const sell    = sellingPrice(s);
                           const monthly = sell * volume;
+                          const zebraBase = si % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.018)';
                           return (
                             <button
                               key={s.id}
                               onClick={() => toggleService(s.id)}
-                              className="w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left cursor-pointer"
+                              className="w-full flex items-center gap-3 p-3 transition-all text-left cursor-pointer"
                               style={{
-                                border: on
-                                  ? `1px solid rgba(${cc.rgb},0.3)`
-                                  : '1px solid var(--color-border2)',
-                                background: on ? cc.bg : 'transparent',
+                                borderBottom: si < services.length - 1 ? '1px solid var(--color-row-border)' : 'none',
+                                background: on ? cc.bg : zebraBase,
+                                outline: on ? `1px solid rgba(${cc.rgb},0.3)` : 'none',
                               }}
                               onMouseEnter={e => {
-                                if (!on) (e.currentTarget as HTMLElement).style.borderColor = `rgba(${cc.rgb},0.2)`;
+                                if (!on) (e.currentTarget as HTMLElement).style.background = `rgba(${cc.rgb},0.06)`;
                               }}
                               onMouseLeave={e => {
-                                if (!on) (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border2)';
+                                if (!on) (e.currentTarget as HTMLElement).style.background = zebraBase;
                               }}
                             >
                               {on
@@ -313,8 +313,8 @@ export default function PricingPage() {
             {/* Rate card reference */}
             <div className="bento-card p-5">
               <p className="eyebrow mb-3">Rate card — all tiers</p>
-              <div className="space-y-1.5">
-                {VOLUME_TIERS.map(t => {
+              <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--color-border2)' }}>
+                {VOLUME_TIERS.map((t, ti) => {
                   const total = calculateMonthlyBill({
                     selectedServiceIds:   [...selectedIds],
                     monthlyVolume:        t.volume,
@@ -323,15 +323,19 @@ export default function PricingPage() {
                     branchFeeCents:       branchFee,
                   }).grandTotal;
                   const isActive = t.id === tierId;
+                  const zebraBase = ti % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.018)';
                   return (
                     <div
                       key={t.id}
-                      className="flex justify-between items-center py-2 px-3 rounded-xl transition-colors cursor-pointer"
-                      style={isActive ? {
-                        background: 'rgba(124,58,237,0.08)',
-                        border: '1px solid rgba(124,58,237,0.2)',
-                      } : {}}
+                      className="flex justify-between items-center py-2.5 px-3 transition-colors cursor-pointer"
+                      style={{
+                        borderBottom: ti < VOLUME_TIERS.length - 1 ? '1px solid var(--color-row-border)' : 'none',
+                        background: isActive ? 'rgba(124,58,237,0.1)' : zebraBase,
+                        boxShadow: isActive ? 'inset 2px 0 0 var(--color-purple)' : 'none',
+                      }}
                       onClick={() => { setTierId(t.id); setCustomVolume(null); }}
+                      onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
+                      onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = zebraBase; }}
                     >
                       <div>
                         <p className="text-xs font-semibold" style={{ color: isActive ? 'var(--color-violet)' : 'var(--color-text2)' }}>{t.label}</p>

@@ -12,3 +12,4 @@ dist
 
 # Shared dev store (file-based leads — now in Supabase)
 .shared/leads.jsonl
+.vercel

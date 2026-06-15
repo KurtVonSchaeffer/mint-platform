@@ -179,6 +179,79 @@ export function quotaExceededEmail(q: {
 </body></html>`;
 }
 
+export function invoiceReadyEmail(inv: {
+  reference: string; clientName: string; contact: string;
+  periodStart: string; periodEnd: string;
+  subtotalCents: number; vatCents: number; totalCents: number;
+  dueDate: string; lineCount: number;
+}) {
+  const fmt = (c: number) =>
+    new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 2 }).format(c / 100);
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:32px;text-align:center">
+    <p style="color:#fff;font-size:24px;font-weight:700;margin:0">AlgoLend</p>
+    <p style="color:rgba(255,255,255,0.7);font-size:12px;letter-spacing:3px;text-transform:uppercase;margin:4px 0 0">Tax Invoice</p>
+  </div>
+  <div style="padding:32px">
+    <p style="font-size:16px;margin:0 0 8px">Hi ${inv.contact},</p>
+    <p style="color:#555;line-height:1.6;margin:0 0 24px">
+      Please find your invoice for the period <strong>${inv.periodStart} – ${inv.periodEnd}</strong> attached below.
+    </p>
+    <div style="background:#f9f7ff;border:1px solid #e5e0ff;border-radius:12px;padding:20px;margin-bottom:24px">
+      <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#7C3AED;margin:0 0 12px">${inv.reference}</p>
+      <table style="width:100%;border-collapse:collapse">
+        <tr><td style="padding:5px 0;color:#555">${inv.lineCount} line item${inv.lineCount !== 1 ? 's' : ''}</td><td style="text-align:right;color:#888;font-size:13px">subtotal</td></tr>
+        <tr><td style="padding:5px 0;color:#555">Subtotal</td><td style="text-align:right;font-weight:600">${fmt(inv.subtotalCents)}</td></tr>
+        <tr><td style="padding:5px 0;color:#555">VAT (15%)</td><td style="text-align:right">${fmt(inv.vatCents)}</td></tr>
+        <tr style="border-top:2px solid #7C3AED"><td style="padding:10px 0 0;font-weight:700;font-size:16px">Total Due</td><td style="text-align:right;font-weight:700;font-size:18px;color:#7C3AED;padding-top:10px">${fmt(inv.totalCents)}</td></tr>
+      </table>
+    </div>
+    <p style="color:#555;font-size:14px;line-height:1.6">Payment is due by <strong>${inv.dueDate}</strong>. Please use <strong>${inv.reference}</strong> as your payment reference.</p>
+    <p style="color:#888;font-size:13px;margin-top:16px">Questions? Reply to this email or contact <a href="mailto:accounts@algolend.co.za" style="color:#7C3AED">accounts@algolend.co.za</a>.</p>
+  </div>
+  <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
+    AlgoLend · Mint Platforms (Pty) Ltd · accounts@algolend.co.za
+  </div>
+</div>
+</body></html>`;
+}
+
+export function upgradeRequestEmail(req: {
+  clientName: string; contact: string; tier: string;
+  type: 'quota' | 'feature';
+  currentQuota?: number; requestedQuota?: number;
+  feature?: string; note?: string;
+}) {
+  const detail = req.type === 'quota'
+    ? `Quota upgrade: <strong>${(req.currentQuota ?? 0).toLocaleString()}</strong> → <strong>${(req.requestedQuota ?? 0).toLocaleString()}</strong> calls/month`
+    : `Feature request: <strong>${req.feature}</strong>`;
+
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:#7C3AED;padding:28px 32px">
+    <p style="color:#fff;font-size:20px;font-weight:700;margin:0">Upgrade Request</p>
+    <p style="color:rgba(255,255,255,0.8);font-size:13px;margin:4px 0 0">${req.clientName} — ${req.tier} tier</p>
+  </div>
+  <div style="padding:28px 32px">
+    <p style="color:#555;line-height:1.6">${detail}</p>
+    ${req.note ? `<div style="background:#f9f7ff;border-left:3px solid #7C3AED;padding:12px 16px;margin:16px 0;font-size:14px;color:#555">"${req.note}"</div>` : ''}
+    <p style="color:#555;font-size:14px">Contact: <strong>${req.contact}</strong></p>
+    <div style="margin-top:24px;text-align:center">
+      <a href="https://admin.algolend.co.za/clients" style="background:#7C3AED;color:#fff;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px">
+        View in Admin →
+      </a>
+    </div>
+  </div>
+  <div style="background:#f5f6fa;padding:16px;text-align:center;font-size:11px;color:#aaa">
+    AlgoLend · Mint Platforms (Pty) Ltd — this is an internal notification
+  </div>
+</div>
+</body></html>`;
+}
+
 export function welcomeClientEmail(client: {
   name: string; contact: string; slug: string; portalUrl: string;
 }) {

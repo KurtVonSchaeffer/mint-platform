@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
-import { Inbox, RefreshCw, Sparkles, Mail, Building2, ChevronDown, Plus, X, Loader2 } from 'lucide-react';
+import { OnboardingWizard } from '@/components/OnboardingWizard';
+import { Inbox, RefreshCw, Sparkles, Mail, Building2, ChevronDown, Plus, X, Loader2, UserPlus } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 type LeadStatus = 'new' | 'contacted' | 'qualified' | 'won' | 'lost';
@@ -141,10 +142,12 @@ function AddLeadModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
 }
 
 export default function LeadsPage() {
-  const [leads, setLeads]     = useState<Lead[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [addOpen, setAddOpen] = useState(false);
-  const [toast, setToast]     = useState<{ kind: ToastKind; message: string } | null>(null);
+  const [leads, setLeads]         = useState<Lead[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [addOpen, setAddOpen]     = useState(false);
+  const [convertLead, setConvertLead] = useState<Lead | null>(null);
+  const [toast, setToast]         = useState<{ kind: ToastKind; message: string } | null>(null);
+  const [statusFilter, setStatusFilter] = useState<LeadStatus | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -180,10 +183,27 @@ export default function LeadsPage() {
     return acc;
   }, {});
 
+  const filteredLeads = statusFilter ? leads.filter(l => l.status === statusFilter) : leads;
+
   return (
     <Shell>
       {toast && <Toast kind={toast.kind} message={toast.message} onClose={() => setToast(null)} />}
       {addOpen && <AddLeadModal onClose={() => setAddOpen(false)} onAdded={load} />}
+      {convertLead && (
+        <OnboardingWizard
+          onClose={() => setConvertLead(null)}
+          onCreated={() => {
+            setConvertLead(null);
+            setToast({ kind: 'success', message: `${convertLead.company} onboarded as a new client.` });
+            load();
+          }}
+          initialValues={{
+            name:         convertLead.company,
+            contactEmail: convertLead.email,
+            contactName:  convertLead.name,
+          }}
+        />
+      )}
 
       <div className="space-y-6 page-enter">
         {/* Header */}
@@ -212,14 +232,38 @@ export default function LeadsPage() {
           </div>
         </div>
 
-        {/* KPI strip */}
+        {/* KPI strip — click to filter */}
         <div className="grid grid-cols-5 gap-3">
-          {(Object.entries(STATUS_CONFIG) as [LeadStatus, typeof STATUS_CONFIG[LeadStatus]][]).map(([k, cfg]) => (
-            <div key={k} className="bento-card p-4">
-              <p className="text-xs mb-1" style={{ color: 'var(--color-text3)' }}>{cfg.label}</p>
-              <p className="text-2xl font-bold tracking-tight stat-value" style={{ color: cfg.color }}>{byStatus[k] ?? 0}</p>
-            </div>
-          ))}
+          {(Object.entries(STATUS_CONFIG) as [LeadStatus, typeof STATUS_CONFIG[LeadStatus]][]).map(([k, cfg]) => {
+            const isActive = statusFilter === k;
+            return (
+              <button
+                key={k}
+                onClick={() => setStatusFilter(prev => prev === k ? null : k)}
+                className="bento-card p-4 text-left transition-all cursor-pointer"
+                style={isActive ? {
+                  background: cfg.bg,
+                  border: `1px solid ${cfg.border}`,
+                  boxShadow: `0 0 20px rgba(${cfg.bg.match(/[\d.]+,[\d.]+,[\d.]+/)?.[0]},0.15)`,
+                  transform: 'translateY(-1px)',
+                } : {}}
+                title={isActive ? `Clear "${cfg.label}" filter` : `Filter by ${cfg.label}`}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs" style={{ color: isActive ? cfg.color : 'var(--color-text3)' }}>{cfg.label}</p>
+                  {isActive && (
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                      style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}>
+                      active
+                    </span>
+                  )}
+                </div>
+                <p className="text-2xl font-bold tracking-tight stat-value" style={{ color: cfg.color }}>
+                  {byStatus[k] ?? 0}
+                </p>
+              </button>
+            );
+          })}
         </div>
 
         {/* List */}
@@ -240,13 +284,26 @@ export default function LeadsPage() {
         ) : (
           <div className="bento-card overflow-hidden p-0">
             <div className="px-6 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--color-border2)' }}>
-              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text3)' }}>
-                {leads.length} {leads.length === 1 ? 'lead' : 'leads'} · newest first
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text3)' }}>
+                  {filteredLeads.length} {filteredLeads.length === 1 ? 'lead' : 'leads'}
+                  {statusFilter ? ` · ${STATUS_CONFIG[statusFilter].label}` : ' · newest first'}
+                </span>
+                {statusFilter && (
+                  <button
+                    onClick={() => setStatusFilter(null)}
+                    className="text-[10px] font-semibold px-2 py-0.5 rounded-full transition-colors"
+                    style={{ background: STATUS_CONFIG[statusFilter].bg, color: STATUS_CONFIG[statusFilter].color, border: `1px solid ${STATUS_CONFIG[statusFilter].border}` }}
+                    title="Clear filter"
+                  >
+                    ✕ clear
+                  </button>
+                )}
+              </div>
               <span className="text-[10px] font-mono" style={{ color: 'var(--color-green)' }}>● LIVE</span>
             </div>
             <div>
-              {leads.map(lead => (
+              {filteredLeads.map(lead => (
                 <article key={lead.id} className="lead-card p-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                   <div className="grid grid-cols-[1fr_auto] gap-6 items-start">
                     <div className="min-w-0">
@@ -277,17 +334,30 @@ export default function LeadsPage() {
                       )}
                     </div>
 
-                    <div className="text-right shrink-0">
-                      <p className="text-[10px] font-mono mb-2" style={{ color: 'var(--color-text3)' }}>
+                    <div className="text-right shrink-0 flex flex-col items-end gap-2">
+                      <p className="text-[10px] font-mono" style={{ color: 'var(--color-text3)' }}>
                         {formatDistanceToNow(new Date(lead.createdAt), { addSuffix: true })}
                       </p>
-                      <a
-                        href={`mailto:${lead.email}?subject=Re: ${lead.company} — AlgoLend`}
-                        className="inline-flex items-center gap-1.5 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
-                        style={{ background: 'linear-gradient(135deg,var(--color-purple),var(--color-purple2))', boxShadow: '0 2px 10px rgba(124,58,237,0.3)' }}
-                      >
-                        <Mail size={11} /> Reply
-                      </a>
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={`mailto:${lead.email}?subject=Re: ${lead.company} — AlgoLend`}
+                          className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+                          style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                        >
+                          <Mail size={11} /> Reply
+                        </a>
+                        {lead.status !== 'won' && lead.status !== 'lost' && (
+                          <button
+                            onClick={() => setConvertLead(lead)}
+                            className="inline-flex items-center gap-1.5 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
+                            style={{ background: 'linear-gradient(135deg,var(--color-purple),var(--color-purple2))', boxShadow: '0 2px 10px rgba(124,58,237,0.3)' }}
+                          >
+                            <UserPlus size={11} /> Onboard
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </article>

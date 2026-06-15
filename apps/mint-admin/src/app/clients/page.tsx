@@ -9,6 +9,7 @@ import { ALL_FEATURES, FEATURE_LABELS } from '@/lib/features';
 import Link from 'next/link';
 import {
   Power, Settings2, ExternalLink, X, Search, Plus, Zap, Building2, Mail, Loader2, Download,
+  LayoutGrid, Table2,
 } from 'lucide-react';
 
 interface ClientFeature { flag: string; enabled: boolean; }
@@ -22,6 +23,7 @@ interface Client {
   status: 'trial' | 'active' | 'suspended' | 'churned';
   tier: 'core' | 'growth' | 'enterprise';
   monthly_fee_cents: number;
+  api_quota: number;
   contact_email: string;
   client_features: ClientFeature[];
   features: Record<string, boolean>;
@@ -50,6 +52,7 @@ export default function ClientsPage() {
   const [toast, setToast] = useState<{ kind: ToastKind; message: string } | null>(null);
   const [pendingConfirm, setPendingConfirm] = useState<Client | null>(null);
   const [saving, setSaving] = useState(false);
+  const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
 
   const loadClients = useCallback(async () => {
     try {
@@ -332,6 +335,22 @@ export default function ClientsPage() {
               </button>
             ))}
           </div>
+          {/* View toggle */}
+          <div className="ml-auto flex items-center rounded-lg overflow-hidden" style={{ border: '1px solid var(--color-border2)' }}>
+            {(['card', 'table'] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                aria-label={`${mode} view`}
+                className="px-2.5 py-1.5 transition-colors"
+                style={viewMode === mode
+                  ? { background: 'rgba(124,58,237,0.15)', color: 'var(--color-violet)' }
+                  : { background: 'transparent', color: 'var(--color-text3)' }}
+              >
+                {mode === 'card' ? <LayoutGrid size={14} /> : <Table2 size={14} />}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Clients list */}
@@ -342,10 +361,8 @@ export default function ClientsPage() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="bento-card p-12 text-center">
-            <div
-              className="w-12 h-12 mx-auto rounded-2xl flex items-center justify-center mb-3"
-              style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}
-            >
+            <div className="w-12 h-12 mx-auto rounded-2xl flex items-center justify-center mb-3"
+              style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}>
               <Building2 size={18} />
             </div>
             <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>
@@ -355,7 +372,80 @@ export default function ClientsPage() {
               {clients.length === 0 ? 'Click "Onboard client" to add the first one.' : 'Try adjusting your search or filter.'}
             </p>
           </div>
+        ) : viewMode === 'table' ? (
+
+          /* ── Table view ───────────────────────────────────── */
+          <div className="bento-card overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--color-border2)' }}>
+                  {['Client', 'Status', 'Tier', 'Domain', 'MRR', 'Features', 'Actions'].map((h) => (
+                    <th key={h} className="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider"
+                      style={{ color: 'var(--color-text3)' }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((c, i) => (
+                  <tr
+                    key={c.id}
+                    className="transition-colors"
+                    style={{ borderBottom: i < filtered.length - 1 ? '1px solid var(--color-row-border)' : 'none' }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-card-hover)'; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                  >
+                    <td className="px-4 py-3">
+                      <Link href={`/clients/${c.id}`} className="font-semibold hover:underline"
+                        style={{ color: 'var(--color-text)' }}>{c.name}</Link>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={statusBadge[c.status]}>
+                        <span className="w-1.5 h-1.5 rounded-full" style={{
+                          background: c.status === 'active' ? 'var(--color-green)' :
+                                      c.status === 'trial'  ? 'var(--color-sky)'   :
+                                      c.status === 'suspended' ? 'var(--color-red)' : 'var(--color-text3)',
+                        }} />{c.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3"><span className={tierBadge[c.tier]}>{c.tier}</span></td>
+                    <td className="px-4 py-3 font-mono text-xs" style={{ color: 'var(--color-text3)' }}>
+                      {c.domain ?? `${c.subdomain}.algolend.co.za`}
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-xs" style={{ color: 'var(--color-text2)' }}>
+                      {fmt(c.monthly_fee_cents / 100)}
+                    </td>
+                    <td className="px-4 py-3 text-xs" style={{ color: 'var(--color-text3)' }}>
+                      {Object.values(c.features).filter(Boolean).length} / {ALL_FEATURES.length}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5">
+                        <button onClick={() => openClient(c)} title="Manage features"
+                          className="p-1.5 rounded-lg transition-colors"
+                          style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.3)'; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border2)'; }}>
+                          <Settings2 size={13} />
+                        </button>
+                        <button onClick={() => toggleKillRequest(c)}
+                          className="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors"
+                          style={c.status === 'active'
+                            ? { background: 'rgba(248,113,113,0.1)', color: 'var(--color-red)', border: '1px solid rgba(248,113,113,0.2)' }
+                            : { background: 'rgba(52,211,153,0.1)', color: 'var(--color-green)', border: '1px solid rgba(52,211,153,0.2)' }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.75'; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
+                          {c.status === 'active' ? 'Suspend' : 'Reactivate'}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
         ) : (
+
+          /* ── Card view ────────────────────────────────────── */
           <div className="grid grid-cols-1 gap-4">
             {filtered.map((c, i) => (
               <article
@@ -369,15 +459,11 @@ export default function ClientsPage() {
                     <div className="flex items-center gap-3 flex-wrap mb-2">
                       <h2 className="text-lg font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>{c.name}</h2>
                       <span className={statusBadge[c.status]}>
-                        <span
-                          className="w-1.5 h-1.5 rounded-full"
-                          style={{
-                            background: c.status === 'active' ? 'var(--color-green)' :
-                                        c.status === 'trial'  ? 'var(--color-sky)'   :
-                                        c.status === 'suspended' ? 'var(--color-red)' : 'var(--color-text3)',
-                          }}
-                        />
-                        {c.status}
+                        <span className="w-1.5 h-1.5 rounded-full" style={{
+                          background: c.status === 'active' ? 'var(--color-green)' :
+                                      c.status === 'trial'  ? 'var(--color-sky)'   :
+                                      c.status === 'suspended' ? 'var(--color-red)' : 'var(--color-text3)',
+                        }} />{c.status}
                       </span>
                       <span className={tierBadge[c.tier]}>{c.tier}</span>
                     </div>
@@ -397,9 +483,7 @@ export default function ClientsPage() {
                     </div>
                     <div className="flex flex-wrap gap-1.5">
                       {ALL_FEATURES.filter((f) => f in c.features).map((f) => (
-                        <span
-                          key={f}
-                          className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                        <span key={f} className="text-[10px] px-2 py-0.5 rounded-full font-medium"
                           style={c.features[f] ? {
                             background: 'rgba(52,211,153,0.1)',
                             color: 'var(--color-green)',
@@ -409,75 +493,44 @@ export default function ClientsPage() {
                             color: 'var(--color-text3)',
                             border: '1px solid var(--color-border2)',
                             textDecoration: 'line-through',
-                          }}
-                        >
+                          }}>
                           {FEATURE_LABELS[f]}
                         </span>
                       ))}
                     </div>
                   </div>
                   <div className="relative z-10 flex items-center gap-2 shrink-0">
-                    <a
-                      href={`https://vercel.com/mint-platforms/${c.slug}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      title="Vercel project"
+                    <a href={`https://vercel.com/mint-platforms/${c.slug}`} target="_blank" rel="noreferrer" title="Vercel project"
                       className="p-2 rounded-xl transition-colors"
                       style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
                       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.3)'; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border2)'; }}
-                    >
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border2)'; }}>
                       <svg width="13" height="13" viewBox="0 0 76 65" fill="currentColor"><path d="M37.5274 0L75.0548 65H0L37.5274 0Z" /></svg>
                     </a>
-                    <a
-                      href={`https://${c.domain ?? `${c.subdomain}.algolend.co.za`}`}
-                      target="_blank"
-                      rel="noreferrer"
+                    <a href={`https://${c.domain ?? `${c.subdomain}.algolend.co.za`}`} target="_blank" rel="noreferrer"
                       title="Open portal in new tab"
                       className="p-2 rounded-xl transition-colors"
                       style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
                       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.3)'; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border2)'; }}
-                    >
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border2)'; }}>
                       <ExternalLink size={15} />
                     </a>
-                    <button
-                      onClick={e => { e.preventDefault(); openClient(c); }}
-                      title="Manage features"
+                    <button onClick={e => { e.preventDefault(); openClient(c); }} title="Manage features"
                       className="relative z-10 p-2 rounded-xl transition-colors"
                       style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
                       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.3)'; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border2)'; }}
-                    >
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border2)'; }}>
                       <Settings2 size={15} />
                     </button>
-                    <button
-                      onClick={e => { e.preventDefault(); toggleKillRequest(c); }}
+                    <button onClick={e => { e.preventDefault(); toggleKillRequest(c); }}
                       className="relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
                       style={c.status === 'active' ? {
-                        background: 'rgba(248,113,113,0.1)',
-                        color: 'var(--color-red)',
-                        border: '1px solid rgba(248,113,113,0.2)',
+                        background: 'rgba(248,113,113,0.1)', color: 'var(--color-red)', border: '1px solid rgba(248,113,113,0.2)',
                       } : {
-                        background: 'rgba(52,211,153,0.1)',
-                        color: 'var(--color-green)',
-                        border: '1px solid rgba(52,211,153,0.2)',
+                        background: 'rgba(52,211,153,0.1)', color: 'var(--color-green)', border: '1px solid rgba(52,211,153,0.2)',
                       }}
-                      onMouseEnter={(e) => {
-                        if (c.status === 'active') {
-                          (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.2)';
-                        } else {
-                          (e.currentTarget as HTMLElement).style.background = 'rgba(52,211,153,0.2)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (c.status === 'active') {
-                          (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.1)';
-                        } else {
-                          (e.currentTarget as HTMLElement).style.background = 'rgba(52,211,153,0.1)';
-                        }
-                      }}
-                    >
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = c.status === 'active' ? 'rgba(248,113,113,0.2)' : 'rgba(52,211,153,0.2)'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = c.status === 'active' ? 'rgba(248,113,113,0.1)' : 'rgba(52,211,153,0.1)'; }}>
                       <Power size={13} />
                       {c.status === 'active' ? 'Suspend' : 'Reactivate'}
                     </button>
@@ -560,36 +613,36 @@ export default function ClientsPage() {
 
             {/* API Quota management */}
             <div className="px-7 pb-5" style={{ borderTop: '1px solid var(--color-border2)', paddingTop: '1.5rem' }}>
-              <p className="eyebrow mb-3">API Quota</p>
+              <div className="flex items-center justify-between mb-3">
+                <p className="eyebrow">API Quota</p>
+                <Link
+                  href={`/clients/${selected.id}`}
+                  className="text-[10px] font-semibold"
+                  style={{ color: 'var(--color-violet)' }}
+                  onClick={() => setSelected(null)}
+                >
+                  View usage →
+                </Link>
+              </div>
               <div className="space-y-3">
-                {/* Usage bar */}
-                {(() => {
-                  const quota   = (selected as Client & { api_quota?: number }).api_quota ?? 10000;
-                  const used    = Math.round(quota * 0.74); // TODO: pull from telemetry
-                  const pct     = Math.round((used / quota) * 100);
-                  const barColor = pct >= 80 ? 'var(--color-red)' : pct >= 60 ? 'var(--color-amber)' : 'var(--color-green)';
-                  return (
-                    <>
-                      <div className="flex justify-between text-xs mb-1.5" style={{ fontFamily: 'var(--font-mono)' }}>
-                        <span style={{ color: 'var(--color-text2)' }}>{used.toLocaleString()} / {quota.toLocaleString()} calls</span>
-                        <span style={{ color: barColor, fontWeight: 700 }}>{pct}%</span>
-                      </div>
-                      <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
-                        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: barColor, boxShadow: `0 0 8px ${barColor}` }} />
-                      </div>
-                    </>
-                  );
-                })()}
+                {/* Quota summary — real data only; per-month usage is on the detail page */}
+                <div className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-mono"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border2)' }}>
+                  <span style={{ color: 'var(--color-text3)' }}>Monthly call limit</span>
+                  <span className="font-bold" style={{ color: 'var(--color-text)' }}>
+                    {(selected.api_quota ?? 10000).toLocaleString()} calls
+                  </span>
+                </div>
 
                 {/* Quota editor */}
                 <div className="flex gap-2 items-end mt-3">
                   <div className="flex-1">
                     <label className="block text-[10px] font-medium mb-1" style={{ color: 'var(--color-text3)' }}>
-                      Monthly call limit
+                      Change limit
                     </label>
                     <select
                       className="field-input cursor-pointer font-mono"
-                      defaultValue={(selected as Client & { api_quota?: number }).api_quota ?? 10000}
+                      defaultValue={selected.api_quota ?? 10000}
                       onChange={async (e) => {
                         const quota = parseInt(e.target.value, 10);
                         await fetch(`/api/clients/${selected.id}`, {

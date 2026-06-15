@@ -122,7 +122,7 @@ export default function HomePage() {
 
               {/* CTAs */}
               <div
-                className="flex items-center justify-center gap-3"
+                className="flex flex-wrap items-center justify-center gap-3"
                 style={{ animation: 'var(--animate-fade-up)', animationDelay: '240ms' }}
               >
                 <Link
@@ -168,7 +168,7 @@ export default function HomePage() {
 
       {/* ── STATS ───────────────────────────────────────────────────── */}
       <section className="bg-[var(--color-bg)]">
-        <div className="max-w-[1200px] mx-auto px-6 py-20 grid grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="max-w-[1200px] mx-auto px-6 py-20 grid grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-8">
           {stats.map((s) => (
             <AnimatedStat key={s.label} value={s.value} label={s.label} />
           ))}
@@ -176,7 +176,7 @@ export default function HomePage() {
       </section>
 
       {/* ── DUAL-DEVICE SHOWCASE — "See it in action" ────────────────── */}
-      <section className="relative bg-[var(--color-ink)] text-white py-28 overflow-hidden">
+      <section className="relative bg-[var(--color-ink)] text-white py-16 md:py-28 overflow-hidden">
         {/* Ambient glow blobs */}
         <div
           className="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full pointer-events-none"
@@ -205,7 +205,7 @@ export default function HomePage() {
           <Reveal>
             <div className="text-center mb-20 max-w-3xl mx-auto">
               <p className="eyebrow mb-4" style={{ color: '#A78BFA' }}>See it in action</p>
-              <h2 className="headline text-5xl lg:text-6xl font-semibold mb-5">
+              <h2 className="headline text-4xl md:text-5xl lg:text-6xl font-semibold mb-5">
                 One platform.<br />
                 <span style={{ backgroundImage: 'linear-gradient(90deg, #C4B5FD, #7C3AED)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                   Two experiences.
@@ -321,7 +321,7 @@ export default function HomePage() {
           <Reveal>
             <div className="text-center mb-16 max-w-2xl mx-auto">
               <p className="eyebrow mb-4">The Platform</p>
-              <h2 className="headline text-5xl lg:text-6xl font-semibold mb-5">
+              <h2 className="headline text-4xl md:text-5xl lg:text-6xl font-semibold mb-5">
                 Six capabilities,<br />
                 one platform.
               </h2>
@@ -374,7 +374,7 @@ export default function HomePage() {
           <Reveal>
             <div className="text-center mb-16 max-w-2xl mx-auto">
               <p className="eyebrow mb-4" style={{ color: '#A78BFA' }}>How it works</p>
-              <h2 className="headline text-5xl lg:text-6xl font-semibold mb-5">
+              <h2 className="headline text-4xl md:text-5xl lg:text-6xl font-semibold mb-5">
                 Bespoke. Not a download.
               </h2>
               <p className="text-lg text-white/60">
@@ -410,7 +410,7 @@ export default function HomePage() {
             <div className="grid lg:grid-cols-[1fr_2fr] gap-12 items-end mb-16">
               <div>
                 <p className="eyebrow mb-4">Compliance</p>
-                <h2 className="headline text-5xl font-semibold">
+                <h2 className="headline text-4xl md:text-5xl font-semibold">
                   Built for South African<br />
                   financial regulation.
                 </h2>
@@ -442,7 +442,7 @@ export default function HomePage() {
       <section className="bg-[var(--color-bg)] py-24 border-t border-[var(--color-border-soft)]">
         <div className="max-w-[1200px] mx-auto px-6">
           <Reveal>
-            <div className="bento-card p-10 lg:p-16 flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
+            <div className="bento-card p-8 sm:p-10 lg:p-16 flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
 
               {/* Left — icon + copy */}
               <div className="flex-1 min-w-0">
@@ -502,14 +502,14 @@ export default function HomePage() {
       <section id="enquire" className="bg-[var(--color-bg)] pb-24">
         <div className="max-w-[1200px] mx-auto px-6">
           <Reveal>
-            <div className="relative bento-card bento-card-dark p-12 lg:p-20 overflow-hidden">
+            <div className="relative bento-card bento-card-dark p-8 sm:p-12 lg:p-20 overflow-hidden">
               {/* Ambient glow */}
               <div className="absolute -top-40 -right-40 w-[400px] h-[400px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(167, 139, 250, 0.35) 0%, transparent 70%)' }} aria-hidden />
 
               <div className="relative grid lg:grid-cols-[1fr_1fr] gap-12 items-center">
                 <div>
                   <p className="eyebrow mb-4" style={{ color: '#A78BFA' }}>Start a conversation</p>
-                  <h2 className="headline text-5xl lg:text-6xl font-semibold mb-6">
+                  <h2 className="headline text-4xl md:text-5xl lg:text-6xl font-semibold mb-6">
                     Ready to launch<br />
                     your lending platform?
                   </h2>

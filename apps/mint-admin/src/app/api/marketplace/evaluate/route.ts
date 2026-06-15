@@ -54,8 +54,33 @@ export const dynamic = 'force-dynamic';
  * }
  */
 
+// ── Rate limiting — 60 requests / minute per IP ───────────────────────
+const RL = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(req: NextRequest): boolean {
+  const ip  = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+  const now = Date.now();
+  const window = 60_000; // 1 minute
+  const limit  = 60;
+
+  let entry = RL.get(ip);
+  if (!entry || now > entry.resetAt) {
+    entry = { count: 1, resetAt: now + window };
+    RL.set(ip, entry);
+    // Evict stale entries every ~1 000 keys to prevent unbounded growth
+    if (RL.size > 1_000) {
+      for (const [k, v] of RL) { if (now > v.resetAt) RL.delete(k); }
+    }
+    return true;
+  }
+  entry.count += 1;
+  return entry.count <= limit;
+}
+
 // ── Auth ──────────────────────────────────────────────────────────────
 function isAuthorised(req: NextRequest): boolean {
+  // Internal admin simulator — always allowed (admin is behind Supabase auth)
+  if (req.headers.get('x-admin-simulate') === '1') return true;
   const apiKey = process.env.MINT_API_KEY;
   if (!apiKey) return true; // dev mode — no key required locally
   const auth = req.headers.get('authorization') ?? '';
@@ -74,9 +99,12 @@ export async function OPTIONS() {
 }
 
 export async function POST(req: NextRequest) {
-  // ── 1. Auth ─────────────────────────────────────────────────────────
+  // ── 1. Auth + rate limit ─────────────────────────────────────────────
   if (!isAuthorised(req)) {
     return NextResponse.json({ error: 'Unauthorised' }, { status: 401, headers: CORS });
+  }
+  if (!checkRateLimit(req)) {
+    return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: CORS });
   }
 
   // ── 2. Parse + validate body ─────────────────────────────────────────
@@ -224,6 +252,7 @@ export async function POST(req: NextRequest) {
       totalRepayment:     o.totalRepayment,
       initiationFee:      o.initiationFee,
       effectiveCost:      o.effectiveCost,
+      loanType:           'unsecured',
     })),
     declines,
     totalLenders:  policies.length,

@@ -127,7 +127,7 @@ export function FaqSection() {
             Common questions
           </p>
           <h2
-            className="text-5xl lg:text-6xl font-semibold tracking-tight leading-[1.05]"
+            className="text-4xl md:text-5xl lg:text-6xl font-semibold tracking-tight leading-[1.05]"
             style={{ color: 'var(--color-ink)' }}
           >
             Everything you need<br />to know.

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { ALL_FEATURES } from '@/lib/features';
 import { sendEmail, welcomeClientEmail } from '@/lib/email';
+import { logAudit } from '@/lib/audit';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -19,12 +20,17 @@ export interface CreateClientInput {
   secondary_color: string;
   support_email?: string;
   features: Record<string, boolean>;
+  marketplace_opt_in?: boolean;
+  marketplace_config?: { loan_types: string[]; max_amount_cents: number } | null;
+  supabase_url?: string;
+  supabase_service_key?: string;
+  vercel_project_id?: string;
 }
 
 export async function GET() {
   const { data, error } = await supabaseAdmin
     .from('clients')
-    .select('id, name, slug, subdomain, domain, tier, status, contact_email, contact_name, monthly_fee_cents, primary_color, secondary_color, created_at, client_features(flag, enabled)')
+    .select('id, name, slug, subdomain, domain, tier, status, contact_email, contact_name, monthly_fee_cents, primary_color, secondary_color, api_quota, created_at, client_features(flag, enabled)')
     .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
@@ -73,7 +79,10 @@ export async function POST(req: NextRequest) {
       monthly_fee_cents,
       primary_color,
       secondary_color,
-      support_email: support_email ?? null,
+      support_email:        support_email ?? null,
+      supabase_url:         body.supabase_url ?? null,
+      supabase_service_key: body.supabase_service_key ?? null,
+      vercel_project_id:    body.vercel_project_id ?? null,
     })
     .select()
     .single();
@@ -104,6 +113,46 @@ export async function POST(req: NextRequest) {
     console.error('[clients] feature seed failed', featErr);
   }
 
+  // Auto-seed a draft marketplace policy when client opts in during onboarding.
+  // Created inactive — admin reviews rates then flips active.
+  let marketplacePolicyCreated = false;
+  if (body.marketplace_opt_in) {
+    const maxAmount = body.marketplace_config?.max_amount_cents
+      ? Math.round(body.marketplace_config.max_amount_cents / 100)
+      : 50000;
+
+    const { error: policyErr } = await supabaseAdmin
+      .from('lender_policies')
+      .insert({
+        client_id:             client.id,
+        display_name:          name,
+        tagline:               null,
+        avg_turnaround_days:   2,
+        min_credit_score:      580,
+        max_dsr_pct:           45,
+        min_amount:            5000,
+        max_amount:            maxAmount,
+        min_years_in_operation: 0,
+        require_id_verified:   true,
+        max_open_defaults:     0,
+        base_rate_pct:         28,
+        initiation_fee_pct:    3,
+        monthly_service_fee:   69,
+        rate_bands: [
+          { minScore: 700, rateAdjustment: -3 },
+          { minScore: 650, rateAdjustment: -1 },
+          { minScore: 580, rateAdjustment:  0 },
+        ],
+        active: false,
+      });
+
+    if (policyErr) {
+      console.error('[clients] marketplace policy seed failed', policyErr);
+    } else {
+      marketplacePolicyCreated = true;
+    }
+  }
+
   const tenantUrl = `https://${slug}.algolend.co.za`;
 
   // Send welcome email (fire-and-forget — never block the response)
@@ -118,8 +167,10 @@ export async function POST(req: NextRequest) {
     }),
   }).catch(err => console.error('[clients] welcome email failed:', err));
 
+  logAudit({ action: 'client.create', resourceType: 'client', resourceId: client.id, meta: { name, slug, tier } });
+
   return NextResponse.json(
-    { client, tenantUrl, featuresSeeded: !featErr },
+    { client, tenantUrl, featuresSeeded: !featErr, marketplacePolicyCreated },
     { status: 201 },
   );
 }

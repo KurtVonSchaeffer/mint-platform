@@ -1,0 +1,26 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "buildCommand": "next build",
+  "functions": {
+    "src/app/api/billing/generate/route.ts": { "maxDuration": 60 },
+    "src/app/api/billing/cron/route.ts": { "maxDuration": 120 },
+    "src/app/api/migration/**": { "maxDuration": 300 },
+    "src/app/api/marketplace/evaluate/route.ts": { "maxDuration": 30 }
+  },
+  "crons": [
+    {
+      "path": "/api/billing/cron",
+      "schedule": "0 4 1 * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/marketplace/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Credentials", "value": "false" }
+      ]
+    }
+  ]
+}

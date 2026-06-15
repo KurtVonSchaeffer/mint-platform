@@ -61,7 +61,7 @@ export function PlatformGallery() {
         {/* Header */}
         <div className="text-center mb-12">
           <p className="eyebrow mb-4">Platform preview</p>
-          <h2 className="headline text-5xl lg:text-6xl font-semibold mb-5">
+          <h2 className="headline text-4xl md:text-5xl lg:text-6xl font-semibold mb-5">
             See it for real.
           </h2>
           <p className="text-lg text-[var(--color-ink-soft)] max-w-xl mx-auto">

@@ -418,7 +418,7 @@ export function DualViewShowcase() {
             <button
               key={tab.key}
               onClick={() => switchTo(tab.key)}
-              className="relative px-6 py-3 rounded-full text-[13px] font-semibold transition-all duration-300 flex items-center gap-2.5"
+              className="relative px-3 sm:px-6 py-2 sm:py-3 rounded-full text-[12px] sm:text-[13px] font-semibold transition-all duration-300 flex items-center gap-1.5 sm:gap-2.5"
               style={{
                 background: active === tab.key ? 'white' : 'transparent',
                 color:      active === tab.key ? '#0F0A1E' : 'rgba(255,255,255,0.5)',
@@ -427,7 +427,7 @@ export function DualViewShowcase() {
             >
               <span>{tab.label}</span>
               <span
-                className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+                className="hidden sm:inline text-[10px] font-medium px-2 py-0.5 rounded-full"
                 style={{
                   background: active === tab.key ? 'rgba(124,58,237,0.1)' : 'rgba(255,255,255,0.08)',
                   color:      active === tab.key ? '#7C3AED' : 'rgba(255,255,255,0.35)',

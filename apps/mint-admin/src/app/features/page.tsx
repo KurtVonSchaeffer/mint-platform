@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
-import { Zap, CheckCircle, XCircle, Save, RotateCcw } from 'lucide-react';
+import { Zap, Save, RotateCcw, Loader2 } from 'lucide-react';
 
 const ALL_FEATURES = [
   { key: 'open_banking',       label: 'Open Banking (TruID)',      description: 'Bank statement retrieval + affordability metrics' },
@@ -21,23 +21,17 @@ const ALL_FEATURES = [
 type FeatureKey = (typeof ALL_FEATURES)[number]['key'];
 
 interface ClientFeatures {
+  id:       string;
   name:     string;
   slug:     string;
   tier:     'core' | 'growth' | 'enterprise';
   features: Record<string, boolean>;
 }
 
-const INITIAL_CLIENTS: ClientFeatures[] = [
-  { name: 'BridgeCapital Finance',  slug: 'bridgecapital', tier: 'enterprise', features: arrayToMap(['open_banking', 'e_contracts', 'credit_scoring', 'sacrra_bureau', 'multi_branch', 'working_capital', 'term_loans', 'whatsapp_notify', 'advanced_analytics']) },
-  { name: 'Apex Credit Solutions',  slug: 'apexcredit',    tier: 'growth',     features: arrayToMap(['open_banking', 'e_contracts', 'credit_scoring', 'sacrra_bureau', 'term_loans']) },
-  { name: 'Nexus Business Finance', slug: 'nexusbiz',      tier: 'growth',     features: arrayToMap(['e_contracts', 'credit_scoring', 'sacrra_bureau', 'working_capital', 'term_loans']) },
-  { name: 'Elevate Capital',        slug: 'elevatecap',    tier: 'growth',     features: arrayToMap(['e_contracts', 'term_loans', 'sacrra_bureau']) },
-  { name: 'Summit Lending',         slug: 'summit',        tier: 'core',       features: arrayToMap(['term_loans']) },
-];
-
-function arrayToMap(enabled: string[]): Record<string, boolean> {
+function featureMap(featureArr: Array<{ flag: string; enabled: boolean }>): Record<string, boolean> {
   const map: Record<string, boolean> = {};
-  for (const f of ALL_FEATURES) map[f.key] = enabled.includes(f.key);
+  for (const f of ALL_FEATURES) map[f.key] = false;
+  for (const f of featureArr) map[f.flag] = f.enabled;
   return map;
 }
 
@@ -50,25 +44,38 @@ const tierBadge: Record<string, string> = {
 };
 
 export default function FeaturesPage() {
-  const [saved, setSaved]     = useState<ClientFeatures[]>(INITIAL_CLIENTS);
-  const [pending, setPending] = useState<PendingChanges>({});
-  const [toast, setToast]     = useState<{ kind: ToastKind; message: string } | null>(null);
+  const [saved,        setSaved]        = useState<ClientFeatures[]>([]);
+  const [pending,      setPending]      = useState<PendingChanges>({});
+  const [loading,      setLoading]      = useState(true);
+  const [saving,       setSaving]       = useState(false);
+  const [toast,        setToast]        = useState<{ kind: ToastKind; message: string } | null>(null);
+  const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
 
-  // Load real clients + their feature flags
   const loadClients = useCallback(async () => {
     try {
       const res = await fetch('/api/clients');
-      if (!res.ok) return;
+      if (!res.ok) throw new Error('fetch failed');
       const { clients } = await res.json();
-      if (Array.isArray(clients) && clients.length > 0) {
-        setSaved(clients.map((c: Record<string, unknown>) => {
-          const featureArr = (c.client_features as Array<{flag: string; enabled: boolean}> | undefined) ?? [];
-          const features = arrayToMap(featureArr.filter(f => f.enabled).map(f => f.flag));
-          const tier = (['core','growth','enterprise'] as const).includes(c.tier as 'core') ? c.tier as 'core'|'growth'|'enterprise' : 'core';
-          return { name: String(c.name), slug: String(c.slug), tier, features };
-        }));
+      if (Array.isArray(clients)) {
+        const mapped = clients.map((c: Record<string, unknown>) => {
+          const featureArr = (c.client_features as Array<{ flag: string; enabled: boolean }> | undefined) ?? [];
+          const tier = (['core', 'growth', 'enterprise'] as const).find(t => t === c.tier) ?? 'core';
+          return {
+            id:       String(c.id),
+            name:     String(c.name),
+            slug:     String(c.slug),
+            tier,
+            features: featureMap(featureArr),
+          };
+        });
+        setSaved(mapped);
+        setSelectedSlug(prev => prev ?? mapped[0]?.slug ?? null);
       }
-    } catch { /* keep seed */ }
+    } catch {
+      setToast({ kind: 'error', message: 'Could not load clients — check Supabase env vars.' });
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { loadClients(); }, [loadClients]);
@@ -79,7 +86,7 @@ export default function FeaturesPage() {
   }
 
   function toggle(slug: string, key: FeatureKey) {
-    const current = effectiveValue(slug, key);
+    const current  = effectiveValue(slug, key);
     const original = saved.find((c) => c.slug === slug)?.features[key] ?? false;
     const newValue = !current;
 
@@ -100,16 +107,46 @@ export default function FeaturesPage() {
 
   const pendingCount = Object.values(pending).reduce((sum, m) => sum + Object.keys(m).length, 0);
 
-  function saveAll() {
-    if (pendingCount === 0) return;
-    setSaved((prev) =>
-      prev.map((c) => {
-        if (!(c.slug in pending)) return c;
-        return { ...c, features: { ...c.features, ...pending[c.slug] } };
+  async function saveAll() {
+    if (pendingCount === 0 || saving) return;
+    setSaving(true);
+    const errors: string[] = [];
+
+    await Promise.allSettled(
+      Object.entries(pending).map(async ([slug, changes]) => {
+        const client = saved.find((c) => c.slug === slug);
+        if (!client) return;
+
+        // Build merged feature map: current saved + pending changes
+        const merged: Record<string, boolean> = { ...client.features, ...changes };
+
+        const res = await fetch(`/api/clients/${client.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ features: merged }),
+        });
+
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          errors.push(body.error ?? `Save failed for ${client.name}`);
+        }
       }),
     );
-    setToast({ kind: 'success', message: `${pendingCount} ${pendingCount === 1 ? 'change' : 'changes'} deployed via Vercel API. Live in ~60s.` });
-    setPending({});
+
+    if (errors.length > 0) {
+      setToast({ kind: 'error', message: errors[0] });
+    } else {
+      // Commit pending into saved
+      setSaved((prev) =>
+        prev.map((c) => {
+          if (!(c.slug in pending)) return c;
+          return { ...c, features: { ...c.features, ...pending[c.slug] } };
+        }),
+      );
+      setToast({ kind: 'success', message: `${pendingCount} ${pendingCount === 1 ? 'change' : 'changes'} saved. Vercel env updated — live in ~60s.` });
+      setPending({});
+    }
+    setSaving(false);
   }
 
   function discardAll() {
@@ -139,7 +176,7 @@ export default function FeaturesPage() {
                 className="font-mono text-xs px-1.5 py-0.5 rounded"
                 style={{ background: 'rgba(124,58,237,0.12)', color: 'var(--color-violet)' }}
               >
-                VITE_FEATURES
+                MINT_ENABLED_FEATURES
               </code>{' '}
               env var updates.
             </p>
@@ -147,7 +184,7 @@ export default function FeaturesPage() {
         </div>
 
         {/* Sticky save bar */}
-        {pendingCount > 0 ? (
+        {pendingCount > 0 && (
           <div
             className="amber-banner bento-card p-4 flex items-center justify-between gap-4"
             style={{
@@ -167,14 +204,15 @@ export default function FeaturesPage() {
                   {pendingCount} pending {pendingCount === 1 ? 'change' : 'changes'}
                 </p>
                 <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
-                  Across {Object.keys(pending).length} {Object.keys(pending).length === 1 ? 'client' : 'clients'} — not yet deployed.
+                  Across {Object.keys(pending).length} {Object.keys(pending).length === 1 ? 'client' : 'clients'} — not yet saved.
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={discardAll}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg transition-colors"
+                disabled={saving}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50"
                 style={{ color: 'var(--color-text3)' }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
@@ -184,87 +222,130 @@ export default function FeaturesPage() {
               </button>
               <button
                 onClick={saveAll}
-                className="btn-purple btn-shine inline-flex items-center gap-1.5 !py-2 !text-xs"
+                disabled={saving}
+                className="btn-purple btn-shine inline-flex items-center gap-1.5 !py-2 !text-xs disabled:opacity-60"
               >
-                <Save size={13} />
-                Save &amp; deploy ({pendingCount})
+                {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={13} />}
+                {saving ? 'Saving…' : `Save & deploy (${pendingCount})`}
               </button>
             </div>
           </div>
-        ) : null}
+        )}
 
-        {/* Matrix */}
-        <div className="bento-card overflow-x-auto p-0">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th style={{ width: '256px', textAlign: 'left' }}>Feature</th>
-                {saved.map((c) => (
-                  <th key={c.slug} style={{ textAlign: 'center' }}>
-                    <div style={{ color: 'var(--color-text2)' }}>{c.name.split(' ')[0]}</div>
-                    <span className={`${tierBadge[c.tier]} mt-1`}>{c.tier}</span>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {ALL_FEATURES.map((feat) => (
-                <tr key={feat.key}>
-                  <td>
-                    <p className="font-semibold" style={{ color: 'var(--color-text)' }}>{feat.label}</p>
-                    <p className="text-xs mt-0.5" style={{ color: 'var(--color-text3)' }}>{feat.description}</p>
-                  </td>
-                  {saved.map((c) => {
-                    const enabled = effectiveValue(c.slug, feat.key);
-                    const pendingChange = isPending(c.slug, feat.key);
+        {/* Loading */}
+        {loading && (
+          <div className="bento-card p-12 flex flex-col items-center justify-center gap-3">
+            <Loader2 size={20} className="animate-spin" style={{ color: 'var(--color-purple2)' }} />
+            <p className="text-sm" style={{ color: 'var(--color-text3)' }}>Loading clients…</p>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!loading && saved.length === 0 && (
+          <div className="bento-card p-12 flex flex-col items-center justify-center gap-3 text-center">
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mb-1"
+              style={{ background: 'rgba(124,58,237,0.08)' }}
+            >
+              <Zap size={20} style={{ color: 'var(--color-violet)' }} />
+            </div>
+            <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>No clients yet</p>
+            <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
+              Add your first client to start managing feature flags.
+            </p>
+          </div>
+        )}
+
+        {/* Client selector */}
+        {!loading && saved.length > 0 && (() => {
+          const selected = saved.find(c => c.slug === selectedSlug) ?? null;
+          return (
+            <>
+              <div className="flex items-center gap-3 flex-wrap">
+                <label className="text-sm font-medium shrink-0" style={{ color: 'var(--color-text2)' }}>Client</label>
+                <select
+                  className="field-input max-w-xs"
+                  value={selectedSlug ?? ''}
+                  onChange={e => setSelectedSlug(e.target.value || null)}
+                >
+                  {saved.map(c => (
+                    <option key={c.slug} value={c.slug}>{c.name}</option>
+                  ))}
+                </select>
+                {selected && <span className={tierBadge[selected.tier]}>{selected.tier}</span>}
+                {selected && pending[selected.slug] && Object.keys(pending[selected.slug]).length > 0 && (
+                  <span className="text-xs font-semibold px-2.5 py-1 rounded-lg"
+                    style={{ background: 'rgba(251,191,36,0.12)', color: 'var(--color-amber)', border: '1px solid rgba(251,191,36,0.2)' }}>
+                    {Object.keys(pending[selected.slug]).length} unsaved
+                  </span>
+                )}
+              </div>
+
+              {/* Feature list */}
+              {selected && (
+                <div className="bento-card p-0 overflow-hidden">
+                  {ALL_FEATURES.map((feat, i) => {
+                    const enabled = effectiveValue(selected.slug, feat.key);
+                    const changed = isPending(selected.slug, feat.key);
                     return (
-                      <td key={c.slug} style={{ textAlign: 'center' }}>
-                        <button
-                          title={`${enabled ? 'Disable' : 'Enable'} ${feat.label} for ${c.name}${pendingChange ? ' (pending)' : ''}`}
-                          onClick={() => toggle(c.slug, feat.key)}
-                          className="relative inline-flex items-center justify-center w-8 h-8 rounded-full transition-all hover:scale-110"
-                          style={pendingChange ? {
-                            outline: '2px solid var(--color-amber)',
-                            outlineOffset: '2px',
-                          } : {}}
-                        >
-                          {enabled
-                            ? <CheckCircle size={20} style={{ color: 'var(--color-green)' }} />
-                            : <XCircle size={20} style={{ color: 'rgba(255,255,255,0.1)' }} />
-                          }
-                          {pendingChange ? (
-                            <span
-                              className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full"
-                              style={{ background: 'var(--color-amber)', border: '2px solid var(--color-surface)' }}
-                            />
-                          ) : null}
-                        </button>
-                      </td>
+                      <div
+                        key={feat.key}
+                        className="flex items-center justify-between gap-4 px-6 py-4 transition-colors"
+                        style={{
+                          borderBottom: i < ALL_FEATURES.length - 1 ? '1px solid var(--color-row-border)' : 'none',
+                          background: changed ? 'rgba(251,191,36,0.03)' : 'transparent',
+                        }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = changed ? 'rgba(251,191,36,0.05)' : 'var(--color-card-hover)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = changed ? 'rgba(251,191,36,0.03)' : 'transparent'; }}
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{feat.label}</p>
+                          <p className="text-xs mt-0.5" style={{ color: 'var(--color-text3)' }}>{feat.description}</p>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          {changed && (
+                            <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded"
+                              style={{ background: 'rgba(251,191,36,0.12)', color: 'var(--color-amber)', border: '1px solid rgba(251,191,36,0.2)' }}>
+                              pending
+                            </span>
+                          )}
+                          <button
+                            onClick={() => toggle(selected.slug, feat.key)}
+                            role="switch"
+                            aria-checked={enabled}
+                            aria-label={`${enabled ? 'Disable' : 'Enable'} ${feat.label}`}
+                            className="relative w-10 h-5 rounded-full transition-colors shrink-0"
+                            style={{ background: enabled ? 'var(--color-purple)' : 'rgba(255,255,255,0.1)' }}
+                          >
+                            <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                          </button>
+                        </div>
+                      </div>
                     );
                   })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                </div>
+              )}
+            </>
+          );
+        })()}
 
         {/* Info note */}
-        <div
-          className="rounded-2xl px-5 py-4 flex items-start gap-3"
-          style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.18)' }}
-        >
-          <Zap size={16} className="mt-0.5 shrink-0" style={{ color: 'var(--color-amber)' }} />
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--color-amber)' }}>
-            Saving changes updates each client's{' '}
-            <code
-              className="font-mono px-1 rounded"
-              style={{ background: 'rgba(251,191,36,0.12)' }}
-            >VITE_FEATURES</code>{' '}
-            environment variable via the Vercel API and triggers a redeployment.
-            Changes are live within ~60 seconds. Toggles with an{' '}
-            <span className="font-bold">amber ring</span> are pending — click Save &amp; deploy to commit them.
-          </p>
-        </div>
+        {!loading && saved.length > 0 && (
+          <div
+            className="rounded-2xl px-5 py-4 flex items-start gap-3"
+            style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.18)' }}
+          >
+            <Zap size={16} className="mt-0.5 shrink-0" style={{ color: 'var(--color-amber)' }} />
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--color-amber)' }}>
+              Saving changes upserts each client's feature flags in Supabase and, if a{' '}
+              <code className="font-mono px-1 rounded" style={{ background: 'rgba(251,191,36,0.12)' }}>vercel_project_id</code>{' '}
+              is set, pushes{' '}
+              <code className="font-mono px-1 rounded" style={{ background: 'rgba(251,191,36,0.12)' }}>MINT_ENABLED_FEATURES</code>{' '}
+              via the Vercel API and triggers a redeployment. Live within ~60 seconds.
+              Toggles with an <span className="font-bold">amber ring</span> are pending.
+            </p>
+          </div>
+        )}
       </div>
     </Shell>
   );

@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     card:        'summary_large_image',
     title:       'AlgoLend — Lending Platform for SA Credit Providers',
     description: 'End-to-end credit management platform — branded to you, compliant by default.',
-    images:      ['https://algolend.co.za/og.png'],
+    images:      ['https://algolend.co.za/api/og'],
   },
   robots: {
     index:  true,

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { sendEmail, upgradeRequestEmail } from '@/lib/email';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -71,8 +72,21 @@ export async function POST(
     },
   });
 
-  // TODO: send email notification to Mint Platforms team via Resend
-  // await sendUpgradeNotification({ client, ...body });
+  const adminEmail = process.env.ADMIN_NOTIFY_EMAIL ?? 'admin@mintplatforms.co.za';
+  sendEmail({
+    to:      adminEmail,
+    subject: `Upgrade request — ${client.name}`,
+    html:    upgradeRequestEmail({
+      clientName:     client.name,
+      contact:        client.contact_email,
+      tier:           client.tier,
+      type:           body.type,
+      currentQuota:   body.currentQuota ?? (client.api_quota as number | undefined),
+      requestedQuota: body.requestedQuota,
+      feature:        body.feature,
+      note:           body.note,
+    }),
+  }).catch(err => console.error('[request-upgrade] email failed:', err));
 
   return NextResponse.json({ ok: true, message: 'Upgrade request received. The Mint Platforms team will be in touch within 1 business day.' });
 }

@@ -22,43 +22,26 @@ const tiers = [
       'NCA-compliant quotations',
       'Loan book & repayment tracking',
       'NCR audit trail',
-      '1 branch',
+      'Up to 8 branches',
+      'Standard API usage quota',
     ],
   },
   {
     id: 'growth',
     eyebrow: 'Growth',
     headline: 'Scale your operation',
-    desc: 'Multi-branch operations, open banking, e-contracts, and automated compliance.',
+    desc: 'Everything in Core — plus open banking, e-contracts, and higher API limits for growing operations.',
     from: 'From R 18,000 /mo',
     recommended: true,
     features: [
       'Everything in Core',
       'Open banking — TruID affordability',
       'E-contracts via DocuSeal',
-      'Multi-branch management',
       'WhatsApp loan notifications',
       'Invoice finance product',
       'Sure Systems EFT integration',
       'Unlimited branches',
-    ],
-  },
-  {
-    id: 'enterprise',
-    eyebrow: 'Enterprise',
-    headline: 'Full platform',
-    desc: 'The complete suite for high-volume lenders with complex risk frameworks.',
-    from: 'Custom pricing',
-    recommended: false,
-    features: [
-      'Everything in Growth',
-      'Biometric KYC (liveness + DHA)',
-      'Advanced analytics dashboard',
-      'Custom credit scorecard builder',
-      'PEPs & sanctions screening',
-      'Dedicated implementation team',
-      'SLA-backed support',
-      'White-glove onboarding',
+      'Higher API usage quota',
     ],
   },
 ] as const;
@@ -223,8 +206,8 @@ export function PricingSection() {
         <Reveal>
           <div className="text-center mb-14 max-w-2xl mx-auto">
             <p className="eyebrow mb-4">Pricing</p>
-            <h2 className="headline text-5xl lg:text-6xl font-semibold mb-5">
-              Three tiers.<br />
+            <h2 className="headline text-4xl md:text-5xl lg:text-6xl font-semibold mb-5">
+              Two tiers.<br />
               One platform.
             </h2>
             <p className="text-lg text-[var(--color-ink-soft)]">
@@ -234,7 +217,7 @@ export function PricingSection() {
           </div>
         </Reveal>
 
-        <div className="grid lg:grid-cols-3 gap-5 max-w-5xl mx-auto items-stretch">
+        <div className="grid lg:grid-cols-2 gap-5 max-w-3xl mx-auto items-stretch">
           {tiers.map((tier, i) => (
             <TierCard key={tier.id} tier={tier} index={i} />
           ))}

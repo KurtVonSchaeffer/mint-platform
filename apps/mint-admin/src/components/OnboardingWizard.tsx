@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Building2, Layers, Palette, Zap, CheckCircle2, ChevronRight, Loader2, ExternalLink } from 'lucide-react';
+import { X, Building2, Layers, Palette, Zap, CheckCircle2, ChevronRight, Loader2, ExternalLink, Store } from 'lucide-react';
 import { ALL_FEATURES, FEATURE_LABELS } from '@/lib/features';
 import type { CreateClientInput } from '@/app/api/clients/route';
 
@@ -17,14 +17,15 @@ const DEFAULT_FEATURES_BY_TIER: Record<string, string[]> = {
   enterprise: ALL_FEATURES as unknown as string[],
 };
 
-type Step = 'details' | 'tier' | 'branding' | 'features' | 'review' | 'done';
+type Step = 'details' | 'tier' | 'branding' | 'features' | 'marketplace' | 'review' | 'done';
 
 const STEPS: { id: Step; label: string; icon: typeof Building2 }[] = [
-  { id: 'details',  label: 'Details',  icon: Building2 },
-  { id: 'tier',     label: 'Tier',     icon: Layers    },
-  { id: 'branding', label: 'Branding', icon: Palette   },
-  { id: 'features', label: 'Features', icon: Zap       },
-  { id: 'review',   label: 'Review',   icon: CheckCircle2 },
+  { id: 'details',     label: 'Details',     icon: Building2    },
+  { id: 'tier',        label: 'Tier',        icon: Layers       },
+  { id: 'branding',    label: 'Branding',    icon: Palette      },
+  { id: 'features',    label: 'Features',    icon: Zap          },
+  { id: 'marketplace', label: 'Marketplace', icon: Store        },
+  { id: 'review',      label: 'Review',      icon: CheckCircle2 },
 ];
 
 function slugify(name: string) {
@@ -36,22 +37,28 @@ function fmt(cents: number) {
 }
 
 interface Props {
-  onClose:   () => void;
-  onCreated: () => void;
+  onClose:       () => void;
+  onCreated:     () => void;
+  initialValues?: {
+    name?:         string;
+    contactEmail?: string;
+    contactName?:  string;
+    legalName?:    string;
+  };
 }
 
-export function OnboardingWizard({ onClose, onCreated }: Props) {
+export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
   const [step, setStep]               = useState<Step>('details');
   const [error, setError]             = useState<string | null>(null);
   const [submitting, setSubmitting]   = useState(false);
-  const [result, setResult]           = useState<{ tenantUrl: string; clientName: string } | null>(null);
+  const [result, setResult]           = useState<{ tenantUrl: string; clientName: string; marketplaceOptIn: boolean } | null>(null);
 
-  const [name, setName]               = useState('');
-  const [slug, setSlug]               = useState('');
+  const [name, setName]               = useState(initialValues?.name ?? '');
+  const [slug, setSlug]               = useState(initialValues?.name ? slugify(initialValues.name) : '');
   const [slugEdited, setSlugEdited]   = useState(false);
-  const [legalName, setLegalName]     = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [contactName, setContactName] = useState('');
+  const [legalName, setLegalName]     = useState(initialValues?.legalName ?? '');
+  const [contactEmail, setContactEmail] = useState(initialValues?.contactEmail ?? '');
+  const [contactName, setContactName] = useState(initialValues?.contactName ?? '');
   const [ncrNumber, setNcrNumber]     = useState('');
   const [tier, setTier]               = useState<'core' | 'growth' | 'enterprise'>('growth');
   const [monthlyFeeCents, setMonthlyFeeCents] = useState(22000 * 100);
@@ -61,6 +68,12 @@ export function OnboardingWizard({ onClose, onCreated }: Props) {
   const [features, setFeatures] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(ALL_FEATURES.map((f) => [f, DEFAULT_FEATURES_BY_TIER.growth.includes(f)])),
   );
+  const [mpOptIn, setMpOptIn]           = useState(false);
+  const [mpLoanTypes, setMpLoanTypes]   = useState<string[]>([]);
+  const [mpMaxAmount, setMpMaxAmount]   = useState('50000');
+  const [dbUrl, setDbUrl]               = useState('');
+  const [dbServiceKey, setDbServiceKey] = useState('');
+  const [vercelProjectId, setVercelProjectId] = useState('');
 
   function handleNameChange(val: string) {
     setName(val);
@@ -88,12 +101,17 @@ export function OnboardingWizard({ onClose, onCreated }: Props) {
       ncr_number: ncrNumber.trim() || undefined, tier, monthly_fee_cents: monthlyFeeCents,
       primary_color: primaryColor, secondary_color: secondaryColor,
       support_email: supportEmail.trim() || undefined, features,
+      marketplace_opt_in: mpOptIn,
+      marketplace_config: mpOptIn ? { loan_types: mpLoanTypes, max_amount_cents: parseInt(mpMaxAmount || '0', 10) * 100 } : undefined,
+      supabase_url: dbUrl.trim() || undefined,
+      supabase_service_key: dbServiceKey.trim() || undefined,
+      vercel_project_id: vercelProjectId.trim() || undefined,
     };
     try {
       const res  = await fetch('/api/clients', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? 'Something went wrong.'); setSubmitting(false); return; }
-      setResult({ tenantUrl: data.tenantUrl, clientName: name }); setStep('done'); onCreated();
+      setResult({ tenantUrl: data.tenantUrl, clientName: name, marketplaceOptIn: mpOptIn }); setStep('done'); onCreated();
     } catch { setError('Network error — please try again.'); }
     finally  { setSubmitting(false); }
   }
@@ -131,46 +149,19 @@ export function OnboardingWizard({ onClose, onCreated }: Props) {
 
         {/* Step indicator */}
         {step !== 'done' && (
-          <div
-            className="flex items-center gap-0 px-7 py-4 overflow-x-auto"
-            style={{ borderBottom: '1px solid var(--color-border2)' }}
-          >
-            {STEPS.map((s, i) => {
-              const Icon  = s.icon;
-              const active = s.id === step;
-              const done   = i < stepIndex;
-              return (
-                <div key={s.id} className="flex items-center gap-0 shrink-0">
-                  <div className="flex items-center gap-1.5">
-                    <div
-                      className="w-6 h-6 rounded-full flex items-center justify-center transition-colors"
-                      style={active ? {
-                        background: 'linear-gradient(135deg, var(--color-purple), var(--color-purple2))',
-                        color: 'white',
-                        boxShadow: '0 2px 8px rgba(124,58,237,0.4)',
-                      } : done ? {
-                        background: 'rgba(52,211,153,0.15)',
-                        color: 'var(--color-green)',
-                      } : {
-                        background: 'rgba(255,255,255,0.06)',
-                        color: 'var(--color-text3)',
-                      }}
-                    >
-                      {done ? <CheckCircle2 size={13} /> : <Icon size={13} />}
-                    </div>
-                    <span
-                      className="text-xs font-semibold"
-                      style={{ color: active ? 'var(--color-text)' : done ? 'var(--color-green)' : 'var(--color-text3)' }}
-                    >
-                      {s.label}
-                    </span>
+          <div className="flex items-center px-7 py-4 overflow-x-auto" style={{ borderBottom: '1px solid var(--color-border2)', gap: 0 }}>
+            {STEPS.map((s, i) => { const Icon = s.icon; const active = s.id === step; const done = i < stepIndex; return (
+              <div key={s.id} className="flex items-center shrink-0">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center transition-colors"
+                    style={active ? { background: 'linear-gradient(135deg,var(--color-purple),var(--color-purple2))', color: 'white', boxShadow: '0 2px 8px rgba(124,58,237,0.4)' } : done ? { background: 'rgba(52,211,153,0.15)', color: 'var(--color-green)' } : { background: 'rgba(255,255,255,0.06)', color: 'var(--color-text3)' }}>
+                    {done ? <CheckCircle2 size={13} /> : <Icon size={13} />}
                   </div>
-                  {i < STEPS.length - 1 && (
-                    <ChevronRight size={13} className="mx-2 shrink-0" style={{ color: 'var(--color-text3)' }} />
-                  )}
+                  <span className="text-xs font-semibold" style={{ color: active ? 'var(--color-text)' : done ? 'var(--color-green)' : 'var(--color-text3)' }}>{s.label}</span>
                 </div>
-              );
-            })}
+                {i < STEPS.length - 1 && <ChevronRight size={13} className="mx-2 shrink-0" style={{ color: 'var(--color-text3)' }} />}
+              </div>
+            ); })}
           </div>
         )}
 
@@ -205,6 +196,18 @@ export function OnboardingWizard({ onClose, onCreated }: Props) {
               <Field label="NCR registration number">
                 <input value={ncrNumber} onChange={(e) => setNcrNumber(e.target.value)} placeholder="NCRCP22892" className="field-input font-mono" />
               </Field>
+              <div className="pt-3 space-y-3" style={{ borderTop: '1px solid var(--color-border2)' }}>
+                <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-text3)' }}>Database credentials <span className="normal-case font-normal">(optional — required for marketplace)</span></p>
+                <Field label="Supabase URL">
+                  <input className="field-input font-mono" value={dbUrl} onChange={(e) => setDbUrl(e.target.value)} placeholder="https://xxxxxxxxxxxx.supabase.co" />
+                </Field>
+                <Field label="Service role key" hint="Stored server-side only — never exposed to the client">
+                  <input type="password" className="field-input font-mono" value={dbServiceKey} onChange={(e) => setDbServiceKey(e.target.value)} placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9…" />
+                </Field>
+                <Field label="Vercel project ID" hint="prj_xxx — used for API usage tracking and env var sync">
+                  <input className="field-input font-mono" value={vercelProjectId} onChange={(e) => setVercelProjectId(e.target.value)} placeholder="prj_xxxxxxxxxxxxxxxxxxxx" />
+                </Field>
+              </div>
             </div>
           )}
 
@@ -283,21 +286,11 @@ export function OnboardingWizard({ onClose, onCreated }: Props) {
               <Field label="Support email">
                 <input type="email" value={supportEmail} onChange={(e) => setSupportEmail(e.target.value)} placeholder="support@bridgecap.co.za" className="field-input" />
               </Field>
-              {/* Live preview */}
-              <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--color-border2)' }}>
-                <div className="p-4 text-white text-sm font-semibold" style={{ backgroundColor: secondaryColor }}>
-                  Portal preview
-                </div>
-                <div className="p-4 bg-white flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg" style={{ backgroundColor: primaryColor }} />
-                  <div>
-                    <div className="text-sm font-bold text-slate-900">{name || 'Client name'}</div>
-                    <div className="text-xs text-slate-400">{slug ? `${slug}.algolend.co.za` : 'subdomain.algolend.co.za'}</div>
-                  </div>
-                  <button className="ml-auto text-xs font-semibold px-3 py-1.5 rounded-lg text-white" style={{ backgroundColor: primaryColor }}>
-                    Sign in
-                  </button>
-                </div>
+              <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border2)' }}>
+                <div className="w-7 h-7 rounded-lg shrink-0" style={{ backgroundColor: secondaryColor }} />
+                <div className="w-7 h-7 rounded-lg shrink-0" style={{ backgroundColor: primaryColor }} />
+                <span className="text-xs font-mono" style={{ color: 'var(--color-text3)' }}>{slug || 'client'}.algolend.co.za</span>
+                <span className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-lg text-white" style={{ backgroundColor: primaryColor }}>Sign in</span>
               </div>
             </div>
           )}
@@ -308,32 +301,80 @@ export function OnboardingWizard({ onClose, onCreated }: Props) {
               <p className="text-xs mb-3" style={{ color: 'var(--color-text3)' }}>
                 Pre-populated from the {tier} tier. Toggle to customise.
               </p>
-              {ALL_FEATURES.map((flag) => {
-                const enabled = features[flag] ?? false;
-                return (
-                  <button
-                    key={flag}
-                    onClick={() => toggleFeature(flag)}
-                    className="w-full flex items-center justify-between gap-4 py-3 px-3 rounded-xl transition-colors text-left"
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                  >
-                    <span className="text-sm" style={{ color: 'var(--color-text2)' }}>{FEATURE_LABELS[flag]}</span>
-                    <div
-                      role="switch"
-                      aria-checked={enabled}
-                      className="relative w-10 h-5 rounded-full transition-colors shrink-0"
-                      style={{ background: enabled ? 'var(--color-purple)' : 'rgba(255,255,255,0.1)' }}
-                    >
-                      <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
-                    </div>
-                  </button>
-                );
-              })}
+              {ALL_FEATURES.map((flag) => { const enabled = features[flag] ?? false; return (
+                <button key={flag} onClick={() => toggleFeature(flag)}
+                  className="w-full flex items-center justify-between gap-4 py-3 px-3 rounded-xl transition-colors text-left"
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                >
+                  <span className="text-sm" style={{ color: 'var(--color-text2)' }}>{FEATURE_LABELS[flag]}</span>
+                  <div role="switch" aria-checked={enabled} className="relative w-10 h-5 rounded-full transition-colors shrink-0" style={{ background: enabled ? 'var(--color-purple)' : 'rgba(255,255,255,0.1)' }}>
+                    <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </div>
+                </button>
+              ); })}
             </div>
           )}
 
-          {/* ── Step 5: Review ── */}
+          {/* ── Step 5: Marketplace ── */}
+          {step === 'marketplace' && (
+            <div className="space-y-4">
+              <div className="rounded-xl p-4" style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.15)' }}>
+                <div className="flex items-start gap-3">
+                  <Store size={18} className="mt-0.5 shrink-0" style={{ color: 'var(--color-violet)' }} />
+                  <div>
+                    <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>AlgoLend Marketplace</p>
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text3)' }}>
+                      Mint originates and underwrites personal loans through its consumer app. By joining the marketplace,
+                      you become a lending partner — your capital is deployed to pre-qualified Mint borrowers and you earn
+                      the interest. Mint handles origination, collections, and compliance.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {([true, false] as const).map((opt) => (
+                  <button key={String(opt)} onClick={() => setMpOptIn(opt)}
+                    className="p-4 rounded-xl border-2 text-left transition-all"
+                    style={mpOptIn === opt ? (opt ? { borderColor: 'rgba(124,58,237,0.5)', background: 'rgba(124,58,237,0.08)' } : { borderColor: 'rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.04)' }) : { borderColor: 'var(--color-border2)', background: 'transparent' }}
+                    onMouseEnter={(e) => { if (mpOptIn !== opt) (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.25)'; }}
+                    onMouseLeave={(e) => { if (mpOptIn !== opt) (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border2)'; }}
+                  >
+                    <p className="font-bold text-sm mb-1" style={{ color: opt ? 'var(--color-violet)' : 'var(--color-text2)' }}>
+                      {opt ? '✓ Join the marketplace' : '✗ Not at this time'}
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
+                      {opt ? 'Deploy capital to Mint-originated loans and earn interest.' : 'Skip for now — this can be enabled later from client settings.'}
+                    </p>
+                  </button>
+                ))}
+              </div>
+              {mpOptIn && (
+                <div className="space-y-3 rounded-xl p-4" style={{ background: 'rgba(124,58,237,0.04)', border: '1px solid rgba(124,58,237,0.12)' }}>
+                  <Field label="Maximum loan amount per borrower (R)">
+                    <input type="number" value={mpMaxAmount} onChange={(e) => setMpMaxAmount(e.target.value)}
+                      placeholder="50000" className="field-input font-mono" />
+                  </Field>
+                  <Field label="Loan types you will fund">
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {['Personal', 'Payday', 'Business', 'Vehicle'].map((lt) => {
+                        const on = mpLoanTypes.includes(lt);
+                        return (
+                          <button key={lt} onClick={() => setMpLoanTypes((p) => on ? p.filter((x) => x !== lt) : [...p, lt])}
+                            className="px-3 py-1 rounded-full text-xs font-semibold transition-colors"
+                            style={on ? { background: 'var(--color-purple)', color: '#fff' } : { background: 'rgba(255,255,255,0.06)', color: 'var(--color-text3)', border: '1px solid var(--color-border2)' }}>
+                            {lt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </Field>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Step 6: Review ── */}
           {step === 'review' && (
             <div className="space-y-4">
               <ReviewRow label="Company"  value={name} />
@@ -341,7 +382,10 @@ export function OnboardingWizard({ onClose, onCreated }: Props) {
               {legalName && <ReviewRow label="Legal name" value={legalName} />}
               <ReviewRow label="Contact"  value={`${contactName || '—'} · ${contactEmail}`} />
               {ncrNumber && <ReviewRow label="NCR number" value={ncrNumber} mono />}
-              <ReviewRow label="Tier"     value={`${tier.charAt(0).toUpperCase() + tier.slice(1)} — ${fmt(monthlyFeeCents)}/mo`} />
+              <ReviewRow label="Tier"      value={`${tier.charAt(0).toUpperCase() + tier.slice(1)} — ${fmt(monthlyFeeCents)}/mo`} />
+              <ReviewRow label="Marketplace" value={mpOptIn ? `Opted in — ${mpLoanTypes.length > 0 ? mpLoanTypes.join(', ') : 'all loan types'} · max R${parseInt(mpMaxAmount || '0', 10).toLocaleString()}` : 'Not participating'} />
+              <ReviewRow label="Database" value={dbUrl ? `${dbUrl.replace(/^https?:\/\//, '')} · key set` : 'Not configured — add later from client settings'} mono={!!dbUrl} />
+              {vercelProjectId && <ReviewRow label="Vercel project" value={vercelProjectId} mono />}
               <div className="flex items-center gap-3">
                 <span className="text-xs font-medium w-28 shrink-0" style={{ color: 'var(--color-text3)' }}>Brand colours</span>
                 <div className="flex items-center gap-2">
@@ -381,73 +425,46 @@ export function OnboardingWizard({ onClose, onCreated }: Props) {
           {/* ── Done ── */}
           {step === 'done' && result && (
             <div className="text-center py-4">
-              <div
-                className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-5"
-                style={{ background: 'rgba(52,211,153,0.12)', color: 'var(--color-green)' }}
-              >
+              <div className="w-16 h-16 mx-auto rounded-2xl flex items-center justify-center mb-5" style={{ background: 'rgba(52,211,153,0.12)', color: 'var(--color-green)' }}>
                 <CheckCircle2 size={28} />
               </div>
-              <h3 className="text-xl font-bold tracking-tight mb-2" style={{ color: 'var(--color-text)' }}>
-                {result.clientName} is live
-              </h3>
-              <p className="text-sm mb-6" style={{ color: 'var(--color-text3)' }}>
-                Tenant created, feature flags seeded, and portal URL ready. Share the link with the client to begin onboarding.
-              </p>
-              <a
-                href={result.tenantUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-2 btn-purple btn-shine"
-              >
-                <ExternalLink size={14} />
-                {result.tenantUrl}
+              <h3 className="text-xl font-bold tracking-tight mb-2" style={{ color: 'var(--color-text)' }}>{result.clientName} is live</h3>
+              <p className="text-sm mb-6" style={{ color: 'var(--color-text3)' }}>Tenant created, feature flags seeded, and portal URL ready.</p>
+              <a href={result.tenantUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 btn-purple btn-shine">
+                <ExternalLink size={14} />{result.tenantUrl}
               </a>
-              <p className="text-xs mt-4" style={{ color: 'var(--color-text3)' }}>
-                Status: Trial · DNS propagation may take up to 5 minutes.
-              </p>
+              <p className="text-xs mt-4" style={{ color: 'var(--color-text3)' }}>Status: Trial · DNS propagation may take up to 5 minutes.</p>
+              {result.marketplaceOptIn && (
+                <div className="mt-4 mx-auto max-w-xs rounded-xl px-4 py-3 text-left text-xs" style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)', color: 'var(--color-violet)' }}>
+                  <p className="font-bold mb-0.5">Marketplace policy drafted</p>
+                  <p style={{ color: 'var(--color-text3)' }}>Default credit rules created. Review and set their rates in <strong>Marketplace → Lender Policies</strong>, then toggle active to go live.</p>
+                </div>
+              )}
             </div>
           )}
         </div>
 
         {/* Footer nav */}
         {step !== 'done' && (
-          <div
-            className="px-7 py-5 flex justify-between items-center"
-            style={{ borderTop: '1px solid var(--color-border2)' }}
-          >
-            <button
-              onClick={() => {
-                const prev = STEPS[stepIndex - 1];
-                if (prev) setStep(prev.id); else onClose();
-              }}
+          <div className="px-7 py-5 flex justify-between items-center" style={{ borderTop: '1px solid var(--color-border2)' }}>
+            <button onClick={() => { const prev = STEPS[stepIndex - 1]; if (prev) setStep(prev.id); else onClose(); }}
               className="px-4 py-2 rounded-xl text-sm font-medium transition-colors"
               style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-            >
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
               {stepIndex === 0 ? 'Cancel' : 'Back'}
             </button>
-
             {step === 'review' ? (
-              <button
-                onClick={submit}
-                disabled={submitting}
-                className="btn-purple btn-shine inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
+              <button onClick={submit} disabled={submitting}
+                className="btn-purple btn-shine inline-flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed">
                 {submitting ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
                 {submitting ? 'Creating…' : 'Create client'}
               </button>
             ) : (
-              <button
-                onClick={() => { setError(null); const next = STEPS[stepIndex + 1]; if (next) setStep(next.id); }}
-                disabled={
-                  (step === 'details' && (!name.trim() || !slug.trim() || !contactEmail.trim())) ||
-                  (step === 'tier' && !tier)
-                }
-                className="btn-purple btn-shine inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                Next
-                <ChevronRight size={14} />
+              <button onClick={() => { setError(null); const next = STEPS[stepIndex + 1]; if (next) setStep(next.id); }}
+                disabled={(step === 'details' && (!name.trim() || !slug.trim() || !contactEmail.trim())) || (step === 'tier' && !tier)}
+                className="btn-purple btn-shine inline-flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
+                Next <ChevronRight size={14} />
               </button>
             )}
           </div>

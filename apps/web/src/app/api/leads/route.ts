@@ -5,11 +5,13 @@ import { pushLeadToAttio } from '@/lib/attio';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { persistSession: false } },
-);
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: false } },
+  );
+}
 
 const REQUIRED = ['name', 'email', 'company'] as const;
 
@@ -36,6 +38,7 @@ export async function POST(req: NextRequest) {
   const company = String(body.company).trim();
   const message = typeof body.message === 'string' ? body.message.trim() : null;
 
+  const supabase = getSupabase();
   const { data: lead, error } = await supabase
     .from('leads')
     .insert({ name, email, company, message, source: 'marketing-site', status: 'new' })

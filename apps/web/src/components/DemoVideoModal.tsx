@@ -15,7 +15,7 @@ interface Props {
  * Falls back to a polished placeholder if neither is set.
  */
 const DEMO_VIDEO_URL = ''; // e.g. 'https://www.loom.com/embed/xxxx' or 'https://www.youtube-nocookie.com/embed/xxxx'
-const DEMO_VIDEO_SRC = '/videos/algolend-showcase-v4.mp4';
+const DEMO_VIDEO_SRC = '/videos/algolend-showcase-v5.mp4';
 
 export function DemoVideoModal({ onClose }: Props) {
   const backdropRef = useRef<HTMLDivElement>(null);

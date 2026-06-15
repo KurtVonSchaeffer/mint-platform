@@ -1,30 +1,10 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import { Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
-
-function AlgoLendMark() {
-  return (
-    <svg width="40" height="40" viewBox="0 0 32 32" fill="none" aria-hidden>
-      <defs>
-        <linearGradient id="lg1" x1="4" y1="28" x2="28" y2="6" gradientUnits="userSpaceOnUse">
-          <stop offset="0%"   stopColor="#7C3AED" />
-          <stop offset="50%"  stopColor="#9B5CF6" />
-          <stop offset="100%" stopColor="#A78BFA" />
-        </linearGradient>
-        <linearGradient id="lg2" x1="4" y1="8" x2="28" y2="8" gradientUnits="userSpaceOnUse">
-          <stop offset="0%"   stopColor="#A78BFA" />
-          <stop offset="100%" stopColor="#7C3AED" />
-        </linearGradient>
-      </defs>
-      <path d="M4 26 Q4 6 16 6 Q28 6 28 26" stroke="url(#lg1)" strokeWidth="2.8" fill="none" strokeLinecap="round" />
-      <path d="M9 26 Q9 12 16 12 Q23 12 23 26" stroke="url(#lg2)" strokeWidth="2.2" fill="none" strokeLinecap="round" opacity="0.7" />
-      <circle cx="16" cy="26" r="2" fill="url(#lg1)" />
-    </svg>
-  );
-}
 
 export default function LoginPage() {
   return (
@@ -107,23 +87,10 @@ function LoginForm() {
         >
           {/* Brand */}
           <div className="flex flex-col items-center mb-8">
-            <AlgoLendMark />
-            <div className="mt-3 text-center">
-              <p
-                className="text-lg font-bold tracking-tight"
-                style={{
-                  backgroundImage: 'linear-gradient(135deg, #EEF0FF 0%, #C4B5FD 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                AlgoLend
-              </p>
-              <p className="text-[11px] tracking-widest uppercase mt-0.5" style={{ color: 'rgba(167,139,250,0.5)' }}>
-                Admin Console
-              </p>
-            </div>
+            <Image src="/algolend-logo-dark.png" alt="AlgoLend" width={160} height={40} style={{ objectFit: 'contain' }} priority />
+            <p className="text-[11px] tracking-widest uppercase mt-2" style={{ color: 'rgba(167,139,250,0.5)' }}>
+              Admin Console
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">

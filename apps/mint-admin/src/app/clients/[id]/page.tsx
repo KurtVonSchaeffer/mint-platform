@@ -6,10 +6,11 @@ import Link from 'next/link';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { FEATURE_LABELS } from '@/lib/features';
+import { MarketplaceApplications } from '@/components/MarketplaceApplications';
 import {
   ArrowLeft, ExternalLink, Mail, Receipt, CheckCircle, AlertCircle,
   Clock, Send, Loader2, Activity, BarChart3, Building2, Calendar,
-  PlusCircle, X, Zap,
+  PlusCircle, X, Zap, Store, CheckCircle2, XCircle,
 } from 'lucide-react';
 
 // ─── Types ─────────────────────────────────────────────────────────────
@@ -80,11 +81,41 @@ export default function ClientDetailPage() {
   const [usage,      setUsage]      = useState<UsageRow[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [toast,      setToast]      = useState<{ kind: ToastKind; message: string } | null>(null);
-  const [activeTab,  setActiveTab]  = useState<'invoices' | 'usage' | 'features'>('invoices');
+  const [activeTab,  setActiveTab]  = useState<'invoices' | 'usage' | 'features' | 'marketplace'>('invoices');
   const [topupOpen,  setTopupOpen]  = useState(false);
   const [topupUnits, setTopupUnits] = useState(5000);
   const [topupPrice, setTopupPrice] = useState(50000); // R500 per 1k calls in cents
   const [topupSaving, setTopupSaving] = useState(false);
+
+  type MpPolicy = { id: string; active: boolean; display_name: string; base_rate_pct: number; min_credit_score: number; min_amount: number; max_amount: number; tagline: string | null };
+  const [mpPolicy,  setMpPolicy]  = useState<MpPolicy | null | undefined>(undefined); // undefined=unloaded
+  const [mpLoading, setMpLoading] = useState(false);
+  const [mpSaving,  setMpSaving]  = useState(false);
+
+  async function loadMp(clientId: string) {
+    setMpLoading(true);
+    try {
+      const res  = await fetch('/api/lender-policies');
+      const json = await res.json();
+      const found = (json.policies ?? []).find((p: { client_id: string }) => p.client_id === clientId) ?? null;
+      setMpPolicy(found);
+    } finally {
+      setMpLoading(false);
+    }
+  }
+
+  async function toggleMpActive() {
+    if (!mpPolicy) return;
+    setMpSaving(true);
+    const next = !mpPolicy.active;
+    setMpPolicy(p => p ? { ...p, active: next } : p);
+    await fetch(`/api/lender-policies/${mpPolicy.id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ active: next }),
+    });
+    setMpSaving(false);
+    setToast({ kind: next ? 'success' : 'info', message: `${mpPolicy.display_name} is now ${next ? 'live in' : 'paused from'} the Mint marketplace.` });
+  }
 
   const load = useCallback(async () => {
     try {
@@ -145,6 +176,14 @@ export default function ClientDetailPage() {
   // Aggregate usage by service for the most recent month
   const latestMonth = usage[0]?.month ?? null;
   const latestUsage = latestMonth ? usage.filter(u => u.month === latestMonth) : [];
+
+  // Current month API call count (excludes loan_registered / loan_disbursed — those are free)
+  const currentMonthCalls = latestUsage.reduce((s, u) => s + u.total_quantity, 0);
+  const quota = client.api_quota ?? 10000;
+  const quotaPct = quota > 0 ? Math.min(100, Math.round((currentMonthCalls / quota) * 100)) : 0;
+  const quotaColor = quotaPct >= 80 ? 'var(--color-red)' : quotaPct >= 60 ? 'var(--color-amber)' : 'var(--color-green)';
+
+  const TIER_QUOTA_DEFAULTS: Record<string, number> = { core: 2000, growth: 10000, enterprise: 20000 };
 
   const tierBadge = { core: 'badge badge-core', growth: 'badge badge-growth', enterprise: 'badge badge-enterprise' } as const;
   const statusBadge = { active: 'badge badge-active', trial: 'badge badge-trial', suspended: 'badge badge-suspended', churned: 'badge badge-churned' } as const;
@@ -221,12 +260,12 @@ export default function ClientDetailPage() {
         </div>
 
         {/* KPI strip */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           {[
-            { label: 'Monthly fee', value: fmt(client.monthly_fee_cents / 100), sub: `${client.tier} tier`, color: 'var(--color-violet)' },
-            { label: 'Total invoiced', value: fmt(totalRevenue), sub: 'Paid invoices', color: 'var(--color-green)' },
-            { label: 'Outstanding', value: fmt(outstanding), sub: 'Sent + overdue', color: outstanding > 0 ? 'var(--color-red)' : 'var(--color-text3)' },
-            { label: 'Features enabled', value: enabledFeatures.length, sub: `of 12 available`, color: 'var(--color-sky)' },
+            { label: 'Monthly fee',      value: fmt(client.monthly_fee_cents / 100), sub: `${client.tier} tier`,         color: 'var(--color-violet)' },
+            { label: 'Total invoiced',   value: fmt(totalRevenue),                   sub: 'Paid invoices',               color: 'var(--color-green)'  },
+            { label: 'Outstanding',      value: fmt(outstanding),                    sub: 'Sent + overdue',              color: outstanding > 0 ? 'var(--color-red)' : 'var(--color-text3)' },
+            { label: 'Features enabled', value: enabledFeatures.length,              sub: `of 12 available`,             color: 'var(--color-sky)'    },
           ].map(k => (
             <div key={k.label} className="bento-card p-5">
               <p className="eyebrow mb-1">{k.label}</p>
@@ -234,18 +273,39 @@ export default function ClientDetailPage() {
               <p className="text-xs mt-1 font-semibold" style={{ color: k.color }}>{k.sub}</p>
             </div>
           ))}
+
+          {/* API quota usage — current month */}
+          <div className="bento-card p-5">
+            <div className="flex items-center justify-between mb-1">
+              <p className="eyebrow">API quota</p>
+              <span className="text-[10px] font-bold" style={{ color: quotaColor }}>{quotaPct}%</span>
+            </div>
+            <p className="text-2xl font-bold tracking-tight stat-value" style={{ color: 'var(--color-text)' }}>
+              {currentMonthCalls.toLocaleString()}
+            </p>
+            <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <div className="h-full rounded-full transition-all duration-700" style={{ width: `${quotaPct}%`, background: quotaColor, boxShadow: `0 0 6px ${quotaColor}` }} />
+            </div>
+            <p className="text-[10px] mt-1.5 font-mono" style={{ color: 'var(--color-text3)' }}>
+              of {quota.toLocaleString()} · {TIER_QUOTA_DEFAULTS[client.tier] ?? quota} default
+            </p>
+          </div>
         </div>
 
         {/* Tabs */}
         <div className="flex items-center gap-1" style={{ borderBottom: '1px solid var(--color-border2)', paddingBottom: '0' }}>
           {([
-            { id: 'invoices', label: 'Invoices', icon: Receipt,   count: invoices.length },
-            { id: 'usage',    label: 'Usage',    icon: BarChart3, count: null },
-            { id: 'features', label: 'Features', icon: Activity,  count: enabledFeatures.length },
+            { id: 'invoices',    label: 'Invoices',    icon: Receipt,  count: invoices.length },
+            { id: 'usage',       label: 'Usage',       icon: BarChart3, count: null },
+            { id: 'features',    label: 'Features',    icon: Activity, count: enabledFeatures.length },
+            { id: 'marketplace', label: 'Marketplace', icon: Store,    count: null },
           ] as const).map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                setActiveTab(tab.id);
+                if (tab.id === 'marketplace' && mpPolicy === undefined) loadMp(client.id);
+              }}
               className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors relative"
               style={{
                 color: activeTab === tab.id ? 'var(--color-violet)' : 'var(--color-text3)',
@@ -402,6 +462,75 @@ export default function ClientDetailPage() {
             <p className="text-xs mt-4" style={{ color: 'var(--color-text3)' }}>
               <Link href="/clients" className="underline" style={{ color: 'var(--color-violet)' }}>Go to the clients list</Link> to toggle feature flags for this client.
             </p>
+          </div>
+        )}
+
+        {/* ── Marketplace tab ──────────────────────────────────────────── */}
+        {activeTab === 'marketplace' && (
+          <div className="space-y-4">
+            {(mpLoading || mpPolicy === undefined) ? (
+              <div className="bento-card p-12 flex items-center justify-center gap-3">
+                <Loader2 size={18} className="animate-spin" style={{ color: 'var(--color-violet)' }} />
+                <span className="text-sm" style={{ color: 'var(--color-text3)' }}>Loading…</span>
+              </div>
+            ) : mpPolicy === null ? (
+              <div className="bento-card p-10 text-center">
+                <Store size={20} className="mx-auto mb-3" style={{ color: 'var(--color-text3)' }} />
+                <p className="font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Not in the Mint marketplace</p>
+                <p className="text-sm mb-4" style={{ color: 'var(--color-text3)' }}>No lender policy configured. Add one to include this client in MINT consumer quote results.</p>
+                <Link href="/marketplace" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold"
+                  style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.2)' }}>
+                  <Store size={13} /> Configure lender policy
+                </Link>
+              </div>
+            ) : (
+              <div className="bento-card p-5"
+                style={{ borderColor: mpPolicy.active ? 'rgba(52,211,153,0.25)' : 'var(--color-border2)', background: mpPolicy.active ? 'rgba(52,211,153,0.03)' : undefined }}>
+                <div className="flex items-start justify-between gap-4 flex-wrap mb-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-0.5">
+                      {mpPolicy.active ? <CheckCircle2 size={15} style={{ color: 'var(--color-green)' }} /> : <XCircle size={15} style={{ color: 'var(--color-text3)' }} />}
+                      <p className="font-semibold text-sm" style={{ color: mpPolicy.active ? 'var(--color-green)' : 'var(--color-text)' }}>
+                        {mpPolicy.active ? 'Live in Mint marketplace' : 'Policy inactive'}
+                      </p>
+                    </div>
+                    <p className="text-xs ml-5" style={{ color: 'var(--color-text3)' }}>{mpPolicy.display_name}{mpPolicy.tagline ? ` · ${mpPolicy.tagline}` : ''}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Link href="/marketplace" className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
+                      style={{ background: 'rgba(124,58,237,0.08)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.15)' }}>
+                      <Zap size={11} /> Edit policy
+                    </Link>
+                    <button onClick={toggleMpActive} disabled={mpSaving} role="switch" aria-checked={mpPolicy.active}
+                      className="relative w-10 h-5 rounded-full transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+                      style={{ background: mpPolicy.active ? 'var(--color-green)' : 'rgba(255,255,255,0.1)' }}>
+                      {mpSaving
+                        ? <Loader2 size={11} className="absolute inset-0 m-auto animate-spin text-white" />
+                        : <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${mpPolicy.active ? 'translate-x-5' : 'translate-x-0.5'}`} />}
+                    </button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3 pt-4" style={{ borderTop: '1px solid var(--color-border2)' }}>
+                  {[
+                    { label: 'Base rate',    value: `${mpPolicy.base_rate_pct}% p.a.` },
+                    { label: 'Min score',    value: String(mpPolicy.min_credit_score) },
+                    { label: 'Loan range',   value: `${fmt(mpPolicy.min_amount * 100)} – ${fmt(mpPolicy.max_amount * 100)}` },
+                  ].map(s => (
+                    <div key={s.label}>
+                      <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: 'var(--color-text3)' }}>{s.label}</p>
+                      <p className="text-sm font-semibold font-mono" style={{ color: 'var(--color-text)' }}>{s.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* Applications inbox — always shown when marketplace tab is open */}
+            {activeTab === 'marketplace' && client && (
+              <MarketplaceApplications
+                clientId={client.id}
+                onToast={(kind, message) => setToast({ kind, message })}
+              />
+            )}
           </div>
         )}
 

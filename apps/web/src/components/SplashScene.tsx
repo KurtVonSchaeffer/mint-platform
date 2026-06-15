@@ -6,6 +6,28 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 
 const WORDMARK = 'AlgoLend';
 
+function AlgoLendMark() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden>
+      <defs>
+        <linearGradient id="sl-g" x1="4" y1="31" x2="28" y2="2" gradientUnits="userSpaceOnUse">
+          <stop offset="0%"   stopColor="#6D28D9" />
+          <stop offset="55%"  stopColor="#7C3AED" />
+          <stop offset="100%" stopColor="#A78BFA" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M 5 31 L 5 14 Q 5 2 16 2 Q 27 2 27 14 L 27 31"
+        stroke="url(#sl-g)"
+        strokeWidth="6.5"
+        fill="none"
+        strokeLinecap="butt"
+      />
+      <circle cx="16" cy="14" r="6.8" fill="#06070D" />
+    </svg>
+  );
+}
+
 const STATS = [
   { label: 'AVG GO-LIVE',  value: '4-8 wks', detail: 'from kick-off' },
   { label: 'UPTIME SLA',   value: '99.9%',   detail: 'platform guarantee' },
@@ -175,12 +197,16 @@ export function SplashScene() {
 
       {/* ── Top bar — skip ──────────────────────────────────────────── */}
       <header className="relative z-10 flex items-center justify-between px-8 py-6">
-        <span
-          className="text-xs font-mono uppercase tracking-[0.22em] text-white/40"
+        <div
+          className="flex items-center gap-2"
           style={{ animation: 'fade-in 1s ease-out 0.2s both' }}
         >
-          MINT PLATFORMS / INTRO
-        </span>
+          <AlgoLendMark />
+          <div>
+            <p className="text-sm font-bold tracking-tight text-white leading-none">AlgoLend</p>
+            <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-white/40 mt-0.5">by Mint Platforms</p>
+          </div>
+        </div>
         <button
           onClick={handleEnter}
           className="text-xs font-mono uppercase tracking-[0.22em] text-white/40 hover:text-white transition-colors flex items-center gap-2"

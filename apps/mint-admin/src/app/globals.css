@@ -35,7 +35,7 @@
   /* ── Text ── */
   --color-text:     #EEF0FF;
   --color-text2:    #8B90B4;
-  --color-text3:    #4B5080;
+  --color-text3:    #6E74A4;  /* raised from #4B5080 — ~3.8:1 on surface */
 
   /* ── Status ── */
   --color-green:  #34D399;
@@ -48,8 +48,8 @@
   --color-mint-dark:  #10B981;
   --color-mint-muted: rgba(52, 211, 153, 0.15);
   --color-mint-soft:  rgba(52, 211, 153, 0.08);
-  --color-ink-soft:   #4B5080;
-  --color-ink-muted:  #4B5080;
+  --color-ink-soft:   #6E74A4;
+  --color-ink-muted:  #6E74A4;
   --color-bg:         #0B0D18;
   --color-navy:       #0B0D18;
 
@@ -91,7 +91,7 @@ html[data-theme="light"] {
   /* Text */
   --color-text:     #0D1026;
   --color-text2:    #42466B;
-  --color-text3:    #8B90B4;
+  --color-text3:    #595D84;  /* raised from #8B90B4 — ~5.5:1 on white */
 
   /* Legacy compat */
   --color-bg:       #F5F6FA;
@@ -107,6 +107,36 @@ html[data-theme="light"] {
 
 /* ─── Reset & Base ─────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; }
+
+/* Interactive element defaults */
+button, [role="button"], summary { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+
+/* Visible focus rings for keyboard navigation */
+:focus-visible {
+  outline: 2px solid rgba(124, 58, 237, 0.7);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+/* field-input uses box-shadow for focus feedback — suppress default outline */
+.field-input:focus-visible { outline: none; }
+
+/* Skip nav — visually hidden until focused */
+.skip-nav {
+  position: absolute;
+  top: -100%;
+  left: 1rem;
+  z-index: 9999;
+  padding: 0.5rem 1rem;
+  background: var(--color-purple);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0 0 8px 8px;
+  text-decoration: none;
+  transition: top 0.15s ease;
+}
+.skip-nav:focus { top: 0; }
 
 html {
   scroll-behavior: smooth;
@@ -257,6 +287,18 @@ body::before {
   to   { opacity: 1; transform: translateX(0); }
 }
 
+/* Radar ripple — three staggered rings for LIVE dot */
+@keyframes radar-ring {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  100% { transform: scale(5);   opacity: 0;   }
+}
+
+/* ARR hero aura — breathes behind the number */
+@keyframes arr-aura {
+  0%, 100% { opacity: 0.18; transform: scale(1);    }
+  50%      { opacity: 0.34; transform: scale(1.09); }
+}
+
 /* ─── Cards ────────────────────────────────────────────────────── */
 .bento-card {
   position: relative;
@@ -343,6 +385,11 @@ body::before {
   box-shadow: 0 8px 30px rgba(124,58,237,0.5), 0 0 0 1px rgba(124,58,237,0.3);
 }
 .btn-purple:active { transform: translateY(0); }
+/* overflow:hidden clips the default outline — use box-shadow ring instead */
+.btn-purple:focus-visible {
+  outline: none;
+  box-shadow: 0 4px 20px rgba(124,58,237,0.4), 0 0 0 3px rgba(167,139,250,0.5);
+}
 
 /* ─── Form field ───────────────────────────────────────────────── */
 .field-input {
@@ -383,8 +430,8 @@ select.field-input option { background: var(--color-surface2); }
 .badge-active    { background: rgba(52,211,153,0.1);  border-color: rgba(52,211,153,0.2);  color: #34D399; }
 .badge-trial     { background: rgba(96,165,250,0.1);  border-color: rgba(96,165,250,0.2);  color: #60A5FA; }
 .badge-suspended { background: rgba(248,113,113,0.1); border-color: rgba(248,113,113,0.2); color: #F87171; }
-.badge-churned   { background: rgba(75,80,128,0.2);   border-color: rgba(75,80,128,0.3);   color: #6B7280; }
-.badge-core       { background: rgba(75,80,128,0.15);  border-color: rgba(75,80,128,0.25);  color: #8B90B4; }
+.badge-churned   { background: rgba(75,80,128,0.2);   border-color: rgba(75,80,128,0.3);   color: #9B9FB8; }
+.badge-core       { background: rgba(75,80,128,0.15);  border-color: rgba(75,80,128,0.25);  color: #A0A4C0; }
 .badge-growth     { background: rgba(124,58,237,0.12); border-color: rgba(124,58,237,0.25); color: #A78BFA; }
 .badge-enterprise { background: rgba(251,191,36,0.1);  border-color: rgba(251,191,36,0.2);  color: #FBBF24; }
 
@@ -465,13 +512,13 @@ html[data-theme="light"] .tcv-sub   { color: rgba(109,40,217,0.55); }
 
 /* Purple hero banner (ARR, billing totals) */
 .purple-hero {
-  background: linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(16,21,37,0.95) 100%);
-  border: 1px solid rgba(124,58,237,0.25);
+  background: linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(16,21,37,0.95) 100%);
+  border: 1px solid rgba(124,58,237,0.18);
   box-shadow: 0 0 40px rgba(124,58,237,0.08);
 }
 html[data-theme="light"] .purple-hero {
-  background: linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(248,246,255,0.98) 100%);
-  box-shadow: 0 4px 24px rgba(124,58,237,0.08);
+  background: linear-gradient(135deg, rgba(124,58,237,0.06) 0%, rgba(248,246,255,0.98) 100%);
+  box-shadow: 0 0 40px rgba(124,58,237,0.08);
 }
 
 /* Amber-to-dark banner (pending changes bar in features page) */
@@ -651,4 +698,16 @@ html[data-theme="light"] .confirm-backdrop {
 }
 .lead-email-link:hover {
   color: var(--color-violet);
+}
+
+/* ─── Accessibility: reduced motion ────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* Keep animate-spin working (spinners need it) but slow it to imperceptible */
+  .animate-spin { animation-duration: 0.01ms !important; }
 }

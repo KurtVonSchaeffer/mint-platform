@@ -186,6 +186,11 @@ export default function MarketplacePage() {
             {/* Body */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
+              {/* Product type notice */}
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs" style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.15)', color: 'var(--color-violet)' }}>
+                <span className="font-bold">Product type:</span> Unsecured personal loan — this marketplace only supports unsecured credit.
+              </div>
+
               {/* Client selector (new only) */}
               {isNew && (
                 <div>
