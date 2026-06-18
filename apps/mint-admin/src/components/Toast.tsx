@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Check, AlertCircle, Info, X } from 'lucide-react';
 
 export type ToastKind = 'success' | 'error' | 'info';
@@ -21,6 +22,10 @@ interface ToastProps {
 }
 
 export function Toast({ kind, message, onClose, duration = 3500 }: ToastProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
+
   useEffect(() => {
     if (duration === 0) return;
     const t = window.setTimeout(onClose, duration);
@@ -30,11 +35,11 @@ export function Toast({ kind, message, onClose, duration = 3500 }: ToastProps) {
   const c = cfg[kind];
   const Icon = c.icon;
 
-  return (
+  const el = (
     <div
       role="alert"
       aria-live="assertive"
-      className="fixed top-5 right-5 z-50 flex items-start gap-3 max-w-sm rounded-2xl px-4 py-3"
+      className="fixed top-5 right-5 z-[9999] flex items-start gap-3 max-w-sm rounded-2xl px-4 py-3"
       style={{
         background:    'var(--color-surface)',
         border:        `1px solid ${c.border}`,
@@ -66,4 +71,7 @@ export function Toast({ kind, message, onClose, duration = 3500 }: ToastProps) {
       </button>
     </div>
   );
+
+  if (!mounted) return null;
+  return createPortal(el, document.body);
 }

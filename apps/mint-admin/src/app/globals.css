@@ -304,7 +304,7 @@ body::before {
   position: relative;
   background: var(--color-surface);
   border: 1px solid var(--color-border2);
-  border-radius: 20px;
+  border-radius: 14px;
   overflow: hidden;
   transition:
     transform 0.35s var(--ease-spring),
@@ -316,7 +316,7 @@ body::before {
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(124,58,237,0.06) 0%, transparent 60%);
+  background: radial-gradient(ellipse 80% 60% at 50% -20%, rgba(124,58,237,0.05) 0%, transparent 60%);
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.35s ease;
@@ -459,14 +459,14 @@ select.field-input option { background: var(--color-surface2); }
   border-bottom: 1px solid var(--color-border2);
 }
 .data-table thead th {
-  padding: 12px 20px;
+  padding: 10px 20px;
   text-align: left;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--color-text3);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
 }
 .data-table tbody tr {
   border-bottom: 1px solid rgba(255,255,255,0.03);
@@ -544,7 +544,7 @@ html[data-theme="light"] .confirm-backdrop {
 /* Thin backdrop — just catches outside clicks, barely dims content  */
 .slideover-backdrop {
   position: fixed;
-  inset: 0;
+  inset: 56px 0 0 0;
   z-index: 40;
   background: rgba(0, 0, 0, 0.18);
   animation: fade-in 0.15s ease-out both;
@@ -552,12 +552,13 @@ html[data-theme="light"] .confirm-backdrop {
 html[data-theme="light"] .slideover-backdrop {
   background: rgba(0, 0, 0, 0.08);
 }
-/* The panel itself slides in from the right */
+/* The panel itself slides in from the right, below the topbar */
 .slideover-panel {
   position: fixed;
-  inset-block: 0;
+  top: 56px;
+  bottom: 0;
   right: 0;
-  z-index: 50;
+  z-index: 40;
   overflow-y: auto;
   background: var(--color-surface);
   border-left: 1px solid var(--color-border2);
@@ -601,12 +602,12 @@ html[data-theme="light"] .sidebar-footer {
 
 /* Sidebar user chip */
 .sidebar-user {
-  background: rgba(124,58,237,0.07);
-  border: 1px solid rgba(124,58,237,0.1);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
 }
 html[data-theme="light"] .sidebar-user {
-  background: rgba(124,58,237,0.05);
-  border: 1px solid rgba(124,58,237,0.12);
+  background: rgba(0,0,0,0.04);
+  border: 1px solid rgba(0,0,0,0.07);
 }
 
 /* bento-card: lighter shadow in light mode */

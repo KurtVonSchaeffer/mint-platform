@@ -8,8 +8,8 @@ import {
   LayoutDashboard, Users, CreditCard, Zap, BarChart3,
   Settings, LogOut, TrendingUp, FileText, Receipt, ArrowDownToLine,
   ChevronRight, Sun, Moon, Calculator, UserCog, Store, Menu, X,
-  Search, Bell, Plus, UserPlus, ChevronDown, Wallet, SlidersHorizontal, Plug,
-  AlertTriangle, AlertCircle, Loader2, CheckCircle2, ShieldCheck,
+  Bell, Plus, UserPlus, ChevronDown, Wallet, SlidersHorizontal, Plug,
+  AlertTriangle, AlertCircle, Loader2, CheckCircle2, ShieldCheck, ClipboardList,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { useRouter } from 'next/navigation';
@@ -19,10 +19,32 @@ type IconProps = { size?: number; className?: string; style?: React.CSSPropertie
 type NavItem  = { label: string; href: string; icon: React.ComponentType<IconProps> };
 type NavGroup = { group: string; icon: React.ComponentType<IconProps>; items: NavItem[] };
 
+// Routes each role can access. super_admin gets everything.
+const ROLE_ROUTES: Record<string, string[]> = {
+  super_admin:   ['*'],
+  admin:         ['/', '/clients', '/leads', '/applications', '/pricing', '/quotes', '/invoices', '/billing', '/marketplace', '/features', '/usage', '/compliance', '/migration'],
+  finance:       ['/', '/pricing', '/quotes', '/invoices', '/billing'],
+  support:       ['/', '/clients', '/leads', '/applications'],
+};
+
+const ROLE_LABELS: Record<string, { label: string; color: string }> = {
+  super_admin: { label: 'Super Admin', color: '#A78BFA' },
+  admin:       { label: 'Admin',       color: '#60A5FA' },
+  finance:     { label: 'Finance',     color: '#34D399' },
+  support:     { label: 'Support',     color: '#FBBF24' },
+};
+
+function canAccess(href: string, role: string): boolean {
+  const allowed = ROLE_ROUTES[role] ?? ROLE_ROUTES.support;
+  if (allowed[0] === '*') return true;
+  return allowed.some(a => a === href || (a !== '/' && href.startsWith(a)));
+}
+
 const nav: (NavItem | NavGroup)[] = [
   { label: 'Dashboard',   href: '/',            icon: LayoutDashboard },
   { label: 'Clients',     href: '/clients',     icon: Users },
-  { label: 'Leads',       href: '/leads',       icon: TrendingUp },
+  { label: 'Leads',        href: '/leads',        icon: TrendingUp    },
+  { label: 'Applications', href: '/applications', icon: ClipboardList },
   {
     group: 'Financials',
     icon: Wallet,
@@ -89,6 +111,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [userEmail,    setUserEmail]    = useState<string | null>(null);
   const [userInitials, setUserInitials] = useState('SA');
   const [userName,     setUserName]     = useState('Super Admin');
+  const [userRole,     setUserRole]     = useState<string>('super_admin');
   const newRef    = useRef<HTMLDivElement>(null);
   const bellRef   = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -118,6 +141,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       setUserEmail(email);
       setUserName(name);
       setUserInitials(initials);
+      setUserRole((user.user_metadata?.role as string | undefined) ?? 'super_admin');
     });
   }, []);
 
@@ -256,16 +280,15 @@ export function Shell({ children }: { children: React.ReactNode }) {
         }}
       >
         {/* Page title from path */}
-        <p className="text-xs font-semibold shrink-0" style={{ color: 'var(--color-text3)', fontFamily: 'var(--font-mono)', letterSpacing: '0.06em' }}>
+        <p className="text-xs font-medium shrink-0" style={{ color: 'var(--color-text3)' }}>
           {flatNav.find(n => n.href === '/' ? pathname === '/' : pathname.startsWith(n.href))?.label ?? 'Dashboard'}
         </p>
-        <span style={{ color: 'var(--color-border3)', fontSize: 12 }}>/</span>
+        <span style={{ color: 'var(--color-border3)', fontSize: 14, lineHeight: 1 }}>›</span>
 
         {/* ── Search ── */}
         <div ref={searchRef} className="flex-1 max-w-md relative">
           <form onSubmit={handleSearch}>
             <div className="relative flex items-center">
-              <Search size={13} className="absolute left-3 pointer-events-none" style={{ color: 'var(--color-text3)' }} />
               <input
                 ref={searchInputRef}
                 value={searchQ}
@@ -273,7 +296,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 onFocus={() => setSearchOpen(true)}
                 placeholder="Search…"
                 aria-label="Search navigation"
-                className="w-full pl-8 pr-16 py-1.5 text-sm rounded-xl transition-all field-input"
+                className="w-full pl-4 pr-16 py-1.5 text-sm rounded-xl transition-all field-input"
                 style={{
                   background: navColors.searchBg,
                   border: `1px solid ${searchOpen ? 'rgba(124,58,237,0.4)' : navColors.topBarBorder}`,
@@ -281,12 +304,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   boxShadow: searchOpen ? '0 0 0 3px rgba(124,58,237,0.1)' : 'none',
                 }}
               />
-              <kbd
-                className="absolute right-3 text-[10px] px-1.5 py-0.5 rounded font-mono pointer-events-none"
-                style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--color-text3)', border: '1px solid rgba(255,255,255,0.08)' }}
-              >
-                ⌘K
-              </kbd>
+              {!searchQ && (
+                <kbd
+                  className="absolute right-3 text-[10px] px-1.5 py-0.5 rounded font-mono pointer-events-none"
+                  style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--color-text3)', border: '1px solid rgba(255,255,255,0.08)' }}
+                >
+                  ⌘K
+                </kbd>
+              )}
             </div>
           </form>
 
@@ -358,7 +383,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             {/* Notification panel */}
             {bellOpen && (
               <div
-                className="absolute right-0 top-full mt-2 w-80 rounded-2xl overflow-hidden z-50"
+                className="absolute right-0 top-full mt-2 w-80 rounded-xl overflow-hidden z-50"
                 style={{
                   background: 'var(--color-surface)',
                   border: '1px solid var(--color-border2)',
@@ -567,7 +592,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 py-3 px-2.5 space-y-0.5 overflow-y-auto relative">
-          {nav.map((entry) => {
+          {nav.filter(entry => {
+            if ('group' in entry) return entry.items.some(i => canAccess(i.href, userRole));
+            return canAccess(entry.href, userRole);
+          }).map((entry) => {
             if ('group' in entry) {
               // ── Accordion group ────────────────────────────
               const isOpen     = openGroups.has(entry.group);
@@ -607,7 +635,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   </button>
                   {isOpen && (
                     <div className="mt-0.5 ml-4 pl-3 space-y-0.5" style={{ borderLeft: `1px solid ${isLight ? 'rgba(124,58,237,0.15)' : 'rgba(124,58,237,0.2)'}` }}>
-                      {entry.items.map(({ label, href, icon: Icon }) => {
+                      {entry.items.filter(i => canAccess(i.href, userRole)).map(({ label, href, icon: Icon }) => {
                         const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href);
                         const isHovChild = hovered === href;
                         return (
@@ -624,12 +652,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                                 ? { background: navColors.hoverBg, color: navColors.hoverText }
                                 : { color: navColors.normalText }}
                           >
-                            <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0 transition-all duration-200"
-                              style={isActive
-                                ? { background: navColors.iconActiveBg, color: navColors.activeText }
-                                : { background: navColors.iconNormalBg, color: 'inherit' }}>
-                              <Icon size={12} />
-                            </div>
+                            <Icon size={12} className="shrink-0" style={{ opacity: isActive ? 1 : 0.55, color: isActive ? navColors.activeText : 'inherit' }} />
                             <span className="flex-1">{label}</span>
                           </Link>
                         );
@@ -656,10 +679,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   : isHov ? { background: navColors.hoverBg, color: navColors.hoverText }
                   : { color: navColors.normalText }}
               >
-                <div className="relative z-10 w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all duration-200"
-                  style={isActive ? { background: navColors.iconActiveBg, color: navColors.activeText }
-                    : { background: navColors.iconNormalBg, color: 'inherit' }}>
-                  <Icon size={15} />
+                <div className="relative z-10 w-6 h-6 rounded-md flex items-center justify-center shrink-0 transition-all duration-200"
+                  style={isActive ? { color: navColors.activeText } : { color: 'inherit', opacity: 0.65 }}>
+                  <Icon size={14} />
                 </div>
                 <span className="relative z-10 flex-1">{label}</span>
                 {isActive && <ChevronRight size={12} className="relative z-10 shrink-0" style={{ color: 'rgba(124,58,237,0.5)' }} />}
@@ -676,7 +698,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
               {userInitials}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold truncate" style={{ color: 'var(--color-text)' }}>{userName}</p>
+              <div className="flex items-center gap-1.5">
+                <p className="text-xs font-semibold truncate" style={{ color: 'var(--color-text)' }}>{userName}</p>
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
+                  style={{ background: 'rgba(124,58,237,0.12)', color: ROLE_LABELS[userRole]?.color ?? '#A78BFA' }}>
+                  {ROLE_LABELS[userRole]?.label ?? userRole}
+                </span>
+              </div>
               <p className="text-[10px] truncate" style={{ color: 'var(--color-text3)', fontFamily: 'var(--font-mono)' }}>{userEmail ?? 'mint_platforms'}</p>
             </div>
             {/* Theme toggle — sidebar (mobile only, desktop is in topbar) */}

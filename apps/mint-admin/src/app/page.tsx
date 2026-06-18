@@ -277,7 +277,7 @@ export default function DashboardPage() {
         {/* ── Trial conversion CTA ─────────────────────────────────────── */}
         {!loading && trialClients.length > 0 && (
           <div
-            className="rounded-2xl p-4 flex items-center justify-between gap-4 flex-wrap"
+            className="rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap"
             style={{
               background: 'linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(167,139,250,0.06) 100%)',
               border: '1px solid rgba(124,58,237,0.28)',

@@ -131,7 +131,18 @@ export function NavBar() {
         {/* CTA + mobile */}
         <div className="flex items-center gap-2">
           <Link
-            href="#enquire"
+            href="/demo"
+            className="hidden md:inline-flex items-center gap-1.5 text-[13px] font-medium px-4 py-2 rounded-full border transition-all duration-200 hover:-translate-y-px"
+            style={{
+              color: scrolled ? '#7C3AED' : 'rgba(255,255,255,0.85)',
+              borderColor: scrolled ? 'rgba(124,58,237,0.4)' : 'rgba(255,255,255,0.25)',
+              background: scrolled ? 'rgba(124,58,237,0.06)' : 'rgba(255,255,255,0.07)',
+            }}
+          >
+            Try demo
+          </Link>
+          <Link
+            href="/apply"
             className="btn-shine hidden md:inline-flex items-center gap-1.5 text-white text-[13px] font-semibold px-4 py-2 rounded-full transition-all duration-200 hover:-translate-y-px"
             style={{
               background: 'linear-gradient(135deg, #7C3AED 0%, #9B5CF6 100%)',
@@ -140,7 +151,7 @@ export function NavBar() {
                 : '0 4px 20px rgba(124,58,237,0.5)',
             }}
           >
-            Book a demo
+            Start now
             <ArrowRight size={13} />
           </Link>
           <MobileNav scrolled={scrolled} />

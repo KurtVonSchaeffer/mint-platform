@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { pushLeadToAttio } from '@/lib/attio';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -51,9 +50,6 @@ export async function POST(req: NextRequest) {
   }
 
   console.log('[leads] new', { id: lead.id, email, company });
-
-  // Fire-and-forget to Attio CRM — never blocks the response
-  void pushLeadToAttio({ name, email, company, message: message ?? '' });
 
   return NextResponse.json({ ok: true, id: lead.id }, { status: 201 });
 }

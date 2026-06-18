@@ -2,8 +2,8 @@
 
 import { Plus, Trash2 } from 'lucide-react';
 import {
-  CHECK_CATALOG, VOLUME_TIERS, ADMIN_FEE, BRANCH_RATE,
-  computeMonthlyFee, fmtR, fmtRc, rateWithMargin,
+  CHECK_CATALOG, VOLUME_TIERS, BRANCH_RATE,
+  fmtR, fmtRc, rateWithMargin,
   type CheckId, type VolumeTierId,
 } from '@/lib/quote-pricing';
 
@@ -14,6 +14,7 @@ export interface QuoteEditState {
   contact:        string;
   email:          string;
   setupFee:       string;
+  monthlyFee:     string;   // flat fee the client pays — drives all totals
   selectedChecks: CheckId[];
   volumeTier:     VolumeTierId;
   branches:       string;
@@ -26,13 +27,15 @@ interface Props {
 }
 
 export function QuoteEditPanel({ state, onChange }: Props) {
-  const branches   = Math.max(1, parseInt(state.branches, 10) || 1);
-  const computed   = computeMonthlyFee(state.selectedChecks, state.volumeTier, branches);
-  const tier       = VOLUME_TIERS.find((t) => t.id === state.volumeTier) ?? VOLUME_TIERS[0];
-  const adjVolume  = tier.volume * 0.95;
-  const customMo   = state.customItems.filter((c) => c.recurring).reduce((s, c) => s + c.amount, 0);
-  const customOnce = state.customItems.filter((c) => !c.recurring).reduce((s, c) => s + c.amount, 0);
-  const setupFee   = parseInt(state.setupFee.replace(/\D/g, ''), 10) || 0;
+  const branches    = Math.max(1, parseInt(state.branches, 10) || 1);
+  const flatFee     = Math.max(0, parseFloat(state.monthlyFee) || 0);
+  const tier        = VOLUME_TIERS.find((t) => t.id === state.volumeTier) ?? VOLUME_TIERS[0];
+  const adjVolume   = tier.volume * 0.95;
+  const customMo    = state.customItems.filter((c) => c.recurring).reduce((s, c) => s + c.amount, 0);
+  const customOnce  = state.customItems.filter((c) => !c.recurring).reduce((s, c) => s + c.amount, 0);
+  const setupFee    = parseInt(state.setupFee.replace(/\D/g, ''), 10) || 0;
+  const branchExtra = branches > 1 ? (branches - 1) * BRANCH_RATE : 0;
+  const totalMonthly = flatFee + branchExtra + customMo;
 
   function toggleCheck(id: CheckId) {
     const next = state.selectedChecks.includes(id)
@@ -64,21 +67,35 @@ export function QuoteEditPanel({ state, onChange }: Props) {
         <input value={state.email}   onChange={(e) => onChange({ email:   e.target.value })} className="field-input w-full text-sm" placeholder="email@example.co.za" type="email" />
       </div>
 
-      {/* Setup fee */}
-      <div>
-        <label className="eyebrow block mb-1.5">Setup / implementation fee (R)</label>
-        <input
-          value={state.setupFee}
-          onChange={(e) => onChange({ setupFee: e.target.value })}
-          className="field-input w-full font-mono"
-          placeholder="100000"
-          inputMode="numeric"
-        />
+      {/* Fees */}
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="eyebrow block mb-1.5">Flat monthly fee (R)</label>
+          <input
+            value={state.monthlyFee}
+            onChange={(e) => onChange({ monthlyFee: e.target.value })}
+            className="field-input w-full font-mono"
+            placeholder="9500"
+            inputMode="numeric"
+          />
+          <p className="text-[10px] mt-1" style={{ color: 'var(--color-text3)' }}>What the client pays /mo</p>
+        </div>
+        <div>
+          <label className="eyebrow block mb-1.5">Setup / implementation fee (R)</label>
+          <input
+            value={state.setupFee}
+            onChange={(e) => onChange({ setupFee: e.target.value })}
+            className="field-input w-full font-mono"
+            placeholder="100000"
+            inputMode="numeric"
+          />
+          <p className="text-[10px] mt-1" style={{ color: 'var(--color-text3)' }}>One-off, invoiced separately</p>
+        </div>
       </div>
 
       {/* Volume tier */}
       <div>
-        <p className="eyebrow mb-3">Monthly check volume</p>
+        <p className="eyebrow mb-3">Included quota (calls / type / month)</p>
         <div className="grid grid-cols-5 gap-1.5">
           {VOLUME_TIERS.map((t) => (
             <button
@@ -138,7 +155,7 @@ export function QuoteEditPanel({ state, onChange }: Props) {
                 </span>
                 <span className="text-[11px] font-mono shrink-0 ml-3 text-right" style={{ color: active ? 'var(--color-violet)' : 'var(--color-text3)' }}>
                   <span className="block">{fmtRc(pricePerUnit)}/chk</span>
-                  {active ? <span className="block opacity-70">+{fmtR(contribution)}/mo</span> : null}
+                  <span className="block opacity-60 text-[10px]">{adjVolume} incl.</span>
                 </span>
               </button>
             );
@@ -199,19 +216,36 @@ export function QuoteEditPanel({ state, onChange }: Props) {
       <div className="tcv-card rounded-2xl p-5" style={{ border: '1px solid rgba(124,58,237,0.3)', boxShadow: '0 0 30px rgba(124,58,237,0.1)' }}>
         <p className="tcv-label text-[10px] font-bold uppercase tracking-wider mb-3">Cost breakdown preview</p>
         <div className="space-y-1 mb-3 text-xs" style={{ color: 'var(--color-text3)' }}>
-          <div className="flex justify-between"><span>API checks ({tier.label} tier, {adjVolume} units)</span><span className="font-mono">{fmtR(computed - ADMIN_FEE - branches * BRANCH_RATE - customMo)}/mo</span></div>
-          <div className="flex justify-between"><span>Admin fee</span><span className="font-mono">{fmtR(ADMIN_FEE)}/mo</span></div>
-          {branches > 1 ? <div className="flex justify-between"><span>{branches} branches</span><span className="font-mono">{fmtR(branches * BRANCH_RATE)}/mo</span></div> : null}
-          {customMo > 0 ? <div className="flex justify-between"><span>Custom recurring</span><span className="font-mono">{fmtR(customMo)}/mo</span></div> : null}
-          {customOnce > 0 ? <div className="flex justify-between"><span>Custom once-off</span><span className="font-mono">{fmtR(customOnce)}</span></div> : null}
+          <div className="flex justify-between">
+            <span>Platform fee ({tier.label}, {Math.round(adjVolume)} calls/type)</span>
+            <span className="font-mono">{fmtR(flatFee)}/mo</span>
+          </div>
+          {branchExtra > 0 && (
+            <div className="flex justify-between">
+              <span>{branches - 1} additional branch{branches - 1 > 1 ? 'es' : ''}</span>
+              <span className="font-mono">{fmtR(branchExtra)}/mo</span>
+            </div>
+          )}
+          {customMo > 0 && (
+            <div className="flex justify-between">
+              <span>Custom recurring</span>
+              <span className="font-mono">{fmtR(customMo)}/mo</span>
+            </div>
+          )}
+          {customOnce > 0 && (
+            <div className="flex justify-between">
+              <span>Custom once-off</span>
+              <span className="font-mono">{fmtR(customOnce)}</span>
+            </div>
+          )}
         </div>
         <div className="flex justify-between pt-3" style={{ borderTop: '1px solid rgba(124,58,237,0.2)' }}>
           <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text3)' }}>Total monthly</span>
-          <span className="text-xl font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>{fmtR(computed + customMo)}/mo</span>
+          <span className="text-xl font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>{fmtR(totalMonthly)}/mo</span>
         </div>
         <div className="flex justify-between mt-1">
           <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--color-text3)' }}>Year-one TCV</span>
-          <span className="text-sm font-bold" style={{ color: 'var(--color-violet)' }}>{fmtR(setupFee + customOnce + (computed + customMo) * 12)}</span>
+          <span className="text-sm font-bold" style={{ color: 'var(--color-violet)' }}>{fmtR(setupFee + customOnce + totalMonthly * 12)}</span>
         </div>
       </div>
 

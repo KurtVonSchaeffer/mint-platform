@@ -32,36 +32,56 @@ export function printableInvoice(inv: InvoiceForTemplate): string {
     if (!iso) return '—';
     return new Date(iso).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
   };
+  const fmtDT = (iso: string | null | undefined) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })
+      + ' ' + d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit', hour12: false });
+  };
 
   const platformItems = inv.invoice_line_items.filter(
     (li) => !li.service || !API_USAGE_SERVICES.has(li.service),
   );
-  const usageItems = inv.invoice_line_items.filter(
+  const apiItems = inv.invoice_line_items.filter(
     (li) => li.service && API_USAGE_SERVICES.has(li.service),
   );
-  const usageTotal = usageItems.reduce((s, l) => s + l.total_cents, 0);
+  const platformTotal = platformItems.reduce((s, l) => s + l.total_cents, 0);
+  const apiTotal      = apiItems.reduce((s, l) => s + l.total_cents, 0);
 
   const rowHtml = (li: InvoiceForTemplate['invoice_line_items'][number]) => `
     <tr>
       <td>${li.description}</td>
-      <td class="r">${li.quantity.toLocaleString()}</td>
-      <td class="r">${li.unit_price_cents > 0 ? fmtC(li.unit_price_cents) : '—'}</td>
+      <td class="r">${li.quantity.toLocaleString('en-ZA')}</td>
+      <td class="r">${li.unit_price_cents >= 100 ? fmtC(li.unit_price_cents) : `R ${(li.unit_price_cents / 100).toFixed(2)}`}</td>
       <td class="r fw">${fmtC(li.total_cents)}</td>
     </tr>`;
 
-  const usageSectionHtml = usageItems.length === 0 ? '' : `
-  <div class="section-title" style="margin-top:28px">API usage charges</div>
-  <div class="usage-note">Per-check rates include a 38% platform margin. All rates exclude VAT.</div>
-  <table class="items-table" style="margin-bottom:8px">
+  const platformSectionHtml = platformItems.length === 0 ? '' : `
+  <div class="section-title" style="margin-top:0">Platform fees</div>
+  <table class="items-table">
     <thead><tr>
-      <th>Check / Service</th>
-      <th class="r">Calls</th>
+      <th>Service</th>
+      <th class="r">Qty</th>
+      <th class="r">Rate (excl. VAT)</th>
+      <th class="r">Amount</th>
+    </tr></thead>
+    <tbody>${platformItems.map(rowHtml).join('')}</tbody>
+  </table>
+  ${apiItems.length > 0 ? `<div class="section-subtotal">Platform subtotal: <strong>${fmtC(platformTotal)}</strong></div>` : ''}`;
+
+  const apiSectionHtml = apiItems.length === 0 ? '' : `
+  <div class="section-title">Included API &amp; third-party services</div>
+  <p style="font-size:11px;color:#94a3b8;margin-bottom:10px;font-style:italic;">Bundled monthly quota. Rates include AlgoLend platform margin. All amounts exclude VAT.</p>
+  <table class="items-table">
+    <thead><tr>
+      <th>Service</th>
+      <th class="r">Monthly quota</th>
       <th class="r">Rate / call</th>
       <th class="r">Amount</th>
     </tr></thead>
-    <tbody>${usageItems.map(rowHtml).join('')}</tbody>
+    <tbody>${apiItems.map(rowHtml).join('')}</tbody>
   </table>
-  <div class="usage-subtotal">API usage subtotal: <strong>${fmtC(usageTotal)}</strong></div>`;
+  <div class="section-subtotal">API services subtotal: <strong>${fmtC(apiTotal)}</strong></div>`;
 
   const logoSvg = `<svg width="34" height="38" viewBox="0 0 34 38" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle;flex-shrink:0">
     <path d="M5 36 L5 13 Q5 3 16 3 Q28 3 28 14 Q28 23 19 26" stroke="#7C3AED" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
@@ -86,22 +106,21 @@ export function printableInvoice(inv: InvoiceForTemplate): string {
   .dates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin-bottom: 32px; }
   .date-item .dl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 3px; }
   .date-item .dv { font-size: 13px; font-weight: 600; color: #0f172a; }
-  .items-table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; margin-bottom: 10px; margin-top: 28px; }
+  .items-table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
   .items-table thead tr { background: #f8fafc; }
   .items-table th { padding: 10px 14px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: #64748b; text-align: left; border-bottom: 2px solid #e2e8f0; }
   .items-table th.r { text-align: right; }
-  .items-table td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #334155; vertical-align: top; }
-  .items-table td.r { text-align: right; color: #64748b; }
-  .items-table td.fw { text-align: right; font-weight: 600; color: #0f172a; }
+  .items-table td { padding: 11px 14px; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #334155; vertical-align: top; }
+  .items-table td.r { text-align: right; color: #64748b; white-space: nowrap; }
+  .items-table td.fw { text-align: right; font-weight: 600; color: #0f172a; white-space: nowrap; }
   .items-table tbody tr:last-child td { border-bottom: none; }
-  .usage-note { font-size: 11px; color: #94a3b8; margin-bottom: 10px; font-style: italic; }
-  .usage-subtotal { text-align: right; font-size: 12px; color: #64748b; margin-bottom: 24px; padding: 8px 14px; background: #f8fafc; border-radius: 6px; }
-  .totals-wrap { display: flex; justify-content: flex-end; margin-bottom: 36px; }
+  .section-subtotal { text-align: right; font-size: 12px; color: #64748b; padding: 8px 14px; background: #f8fafc; border-radius: 6px; margin-bottom: 4px; }
+  .totals-wrap { display: flex; justify-content: flex-end; margin: 28px 0 36px; }
   .totals { width: 300px; }
   .totals-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; color: #64748b; }
   .totals-row .val { font-family: monospace; }
   .totals-total { display: flex; justify-content: space-between; padding: 10px 0 0 0; font-size: 17px; font-weight: 700; color: #0f172a; border-top: 2px solid #7C3AED; margin-top: 4px; }
-  .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #94a3b8; margin-bottom: 12px; }
   .payment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 32px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; margin-bottom: 28px; }
   .pd-item .pdl { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 600; margin-bottom: 2px; }
   .pd-item .pdv { font-size: 13px; font-weight: 600; color: #0f172a; }
@@ -114,7 +133,7 @@ export function printableInvoice(inv: InvoiceForTemplate): string {
   <div class="header">
     <div>
       <div class="brand-logo">${logoSvg}<span class="brand-name">AlgoLend</span></div>
-      <div class="brand-sub">ALGOrithm Behind Better LENDing.</div>
+      <div class="brand-sub">A product of Mint Platforms (Pty) Ltd</div>
     </div>
     <div>
       <div class="inv-title">Tax Invoice</div>
@@ -128,8 +147,7 @@ export function printableInvoice(inv: InvoiceForTemplate): string {
       <div class="party-name">Mint Platforms (Pty) Ltd</div>
       <div class="party-detail">
         3 Gwen Lane, Sandown<br>
-        Sandton, 2031, South Africa<br>
-        VAT No. 4360329853
+        Sandton, 2031, South Africa
       </div>
     </div>
     <div>
@@ -144,29 +162,18 @@ export function printableInvoice(inv: InvoiceForTemplate): string {
 
   <div class="dates">
     <div class="date-item"><div class="dl">Invoice Number</div><div class="dv">${inv.reference}</div></div>
-    <div class="date-item"><div class="dl">Invoice Date</div><div class="dv">${fmtD(inv.issued_at)}</div></div>
+    <div class="date-item"><div class="dl">Invoice Date</div><div class="dv">${fmtDT(inv.issued_at)}</div></div>
     <div class="date-item"><div class="dl">Due Date</div><div class="dv">${fmtD(inv.due_at)}</div></div>
     ${inv.period_start ? `<div class="date-item" style="grid-column:1/-1"><div class="dl">Billing Period</div><div class="dv">${fmtD(inv.period_start)} – ${fmtD(inv.period_end)}</div></div>` : ''}
   </div>
 
-  ${platformItems.length > 0 ? `
-  <div class="section-title">Platform fees</div>
-  <table class="items-table">
-    <thead><tr>
-      <th>Description of Services</th>
-      <th class="r">Qty</th>
-      <th class="r">Rate (excl. VAT)</th>
-      <th class="r">Amount</th>
-    </tr></thead>
-    <tbody>${platformItems.map(rowHtml).join('')}</tbody>
-  </table>` : ''}
-
-  ${usageSectionHtml}
+  ${platformSectionHtml}
+  ${apiSectionHtml}
 
   <div class="totals-wrap">
     <div class="totals">
       <div class="totals-row"><span>Subtotal</span><span class="val">${fmtC(inv.subtotal_cents)}</span></div>
-      <div class="totals-row"><span>VAT (15%)</span><span class="val">${fmtC(inv.vat_cents)}</span></div>
+      <div class="totals-row"><span>VAT (${inv.vat_cents === 0 ? '0% — not a registered VAT vendor' : '15%'})</span><span class="val">${fmtC(inv.vat_cents)}</span></div>
       <div class="totals-total"><span>Total Due</span><span>${fmtC(inv.total_cents)}</span></div>
     </div>
   </div>
@@ -185,11 +192,12 @@ export function printableInvoice(inv: InvoiceForTemplate): string {
 
   <div class="notes">
     <strong>Note:</strong> Please use <strong>${inv.reference}</strong> as your payment reference.
-    Thank you for your business. ${inv.notes ?? 'Payment is due by the date indicated above.'}
+    ${inv.notes ?? 'Monthly subscription renews automatically. Payment is due by the date indicated above.'}
+    ${apiItems.length > 0 ? ' Included quotas reset on the 1st of each month. Additional usage is billed at pay-as-you-use rates.' : ''}
   </div>
 
   <div class="footer">
-    Mint Platforms (Pty) Ltd · Reg. No. 2024/123456/07 · VAT No. 4360329853 · accounts@algolend.co.za
+    Mint Platforms (Pty) Ltd · Reg. No. 2024/123456/07 · accounts@algolend.co.za
   </div>
 
 </body></html>`;

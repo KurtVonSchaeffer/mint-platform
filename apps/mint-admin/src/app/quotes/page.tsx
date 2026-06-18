@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { QuoteEditPanel, type QuoteEditState, type CustomItem } from '@/components/QuoteEditPanel';
 import {
-  CHECK_CATALOG, VOLUME_TIERS, computeMonthlyFee, fmtR, fmtRc, rateWithMargin,
+  CHECK_CATALOG, VOLUME_TIERS, BRANCH_RATE, computeMonthlyFee, fmtR, fmtRc, rateWithMargin,
   type CheckId, type VolumeTierId,
 } from '@/lib/quote-pricing';
 import {
@@ -75,10 +75,53 @@ export default function QuotesPage() {
 
   function pushToast(kind: ToastKind, message: string) { setToast({ kind, message }); }
 
+  // Auto-create a prefilled draft when arriving from the pricing calculator
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('new') !== '1') return;
+    const raw = sessionStorage.getItem('new_quote_prefill');
+    sessionStorage.removeItem('new_quote_prefill');
+    const prefill = raw ? JSON.parse(raw) : null;
+
+    const id    = `Q-${new Date().getFullYear()}-${String(INITIAL_QUOTES.length + 11).padStart(3, '0')}`;
+    const draft: Quote = {
+      id,
+      client:         'New Prospect (Pty) Ltd',
+      contact:        'Contact name',
+      email:          'contact@example.co.za',
+      setupFee:       100000,
+      monthlyFee:     prefill?.monthlyFee ?? computeMonthlyFee(['bureau', 'banking'], '0-50', 1),
+      selectedChecks: prefill?.selectedChecks ?? ['bureau', 'banking'],
+      volumeTier:     prefill?.volumeTier    ?? '0-50',
+      branches:       prefill?.branches      ?? 1,
+      customItems:    [],
+      status:         'draft',
+      sentDate:       null,
+      validUntil:     null,
+      viewedAt:       null,
+    };
+    setQuotes(prev => [draft, ...prev]);
+    setSelected(draft);
+    setEditState({
+      client: draft.client, contact: draft.contact, email: draft.email,
+      setupFee: String(draft.setupFee),
+      monthlyFee: String(draft.monthlyFee),
+      selectedChecks: draft.selectedChecks,
+      volumeTier: draft.volumeTier,
+      branches: String(draft.branches),
+      customItems: [],
+    });
+    pushToast('success', `Draft ${id} created from pricing calculator.`);
+    // Clean URL
+    window.history.replaceState({}, '', '/quotes');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function openEdit(q: Quote) {
     setEditState({
       client: q.client, contact: q.contact, email: q.email,
       setupFee: String(q.setupFee),
+      monthlyFee: String(q.monthlyFee),
       selectedChecks: q.selectedChecks,
       volumeTier: q.volumeTier,
       branches: String(q.branches),
@@ -88,10 +131,12 @@ export default function QuotesPage() {
 
   function saveEdit(q: Quote) {
     if (!editState) return;
-    const branches  = Math.max(1, parseInt(editState.branches, 10) || 1);
-    const setupFee  = Math.max(0, parseInt(editState.setupFee.replace(/\D/g,''), 10) || 0);
-    const monthly   = computeMonthlyFee(editState.selectedChecks, editState.volumeTier, branches)
-      + editState.customItems.filter((c) => c.recurring).reduce((s, c) => s + c.amount, 0);
+    const branches   = Math.max(1, parseInt(editState.branches, 10) || 1);
+    const setupFee   = Math.max(0, parseInt(editState.setupFee.replace(/\D/g,''), 10) || 0);
+    const flatFee    = Math.max(0, parseFloat(editState.monthlyFee) || 0);
+    const branchExtra = branches > 1 ? (branches - 1) * BRANCH_RATE : 0;
+    const customMo   = editState.customItems.filter((c) => c.recurring).reduce((s, c) => s + c.amount, 0);
+    const monthly    = flatFee + branchExtra + customMo;
     const updated: Quote = {
       ...q,
       client: editState.client.trim() || q.client,

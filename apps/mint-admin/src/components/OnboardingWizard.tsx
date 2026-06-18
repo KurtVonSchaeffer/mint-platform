@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, Building2, Layers, Palette, Zap, CheckCircle2, ChevronRight, Loader2, ExternalLink, Store } from 'lucide-react';
+import { X, Building2, Layers, Palette, Zap, CheckCircle2, ChevronRight, Loader2, ExternalLink, Store, Upload, FileText } from 'lucide-react';
 import { ALL_FEATURES, FEATURE_LABELS } from '@/lib/features';
 import type { CreateClientInput } from '@/app/api/clients/route';
 
@@ -17,7 +17,7 @@ const DEFAULT_FEATURES_BY_TIER: Record<string, string[]> = {
   enterprise: ALL_FEATURES as unknown as string[],
 };
 
-type Step = 'details' | 'tier' | 'branding' | 'features' | 'marketplace' | 'review' | 'done';
+type Step = 'details' | 'tier' | 'branding' | 'features' | 'marketplace' | 'documents' | 'review' | 'done';
 
 const STEPS: { id: Step; label: string; icon: typeof Building2 }[] = [
   { id: 'details',     label: 'Details',     icon: Building2    },
@@ -25,7 +25,16 @@ const STEPS: { id: Step; label: string; icon: typeof Building2 }[] = [
   { id: 'branding',    label: 'Branding',    icon: Palette      },
   { id: 'features',    label: 'Features',    icon: Zap          },
   { id: 'marketplace', label: 'Marketplace', icon: Store        },
+  { id: 'documents',   label: 'Documents',   icon: FileText     },
   { id: 'review',      label: 'Review',      icon: CheckCircle2 },
+];
+
+const REQUIRED_DOCS: { id: string; label: string; hint: string; required: boolean }[] = [
+  { id: 'cipc_cert',     label: 'CIPC registration certificate', hint: 'Company registration document from CIPC', required: true  },
+  { id: 'director_id',   label: 'Director ID copy',              hint: 'Clear copy of director\'s South African ID', required: true  },
+  { id: 'ncr_cert',      label: 'NCR lending licence',           hint: 'NCR registration certificate for credit providers', required: true  },
+  { id: 'bank_statement',label: '3 months bank statements',      hint: 'Business account statements — last 3 months', required: true  },
+  { id: 'signed_sla',    label: 'Signed service agreement',      hint: 'We\'ll email you a copy to sign — upload if already signed', required: false },
 ];
 
 function slugify(name: string) {
@@ -68,6 +77,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
   const [features, setFeatures] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(ALL_FEATURES.map((f) => [f, DEFAULT_FEATURES_BY_TIER.growth.includes(f)])),
   );
+  const [docFiles, setDocFiles]         = useState<Record<string, File | null>>({});
   const [mpOptIn, setMpOptIn]           = useState(false);
   const [mpLoanTypes, setMpLoanTypes]   = useState<string[]>([]);
   const [mpMaxAmount, setMpMaxAmount]   = useState('50000');
@@ -111,6 +121,20 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
       const res  = await fetch('/api/clients', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? 'Something went wrong.'); setSubmitting(false); return; }
+
+      // Upload any attached documents now that we have a client ID
+      const clientId = data.client?.id;
+      if (clientId) {
+        const uploads = Object.entries(docFiles).filter(([, f]) => f != null);
+        await Promise.allSettled(uploads.map(([docType, file]) => {
+          const fd = new FormData();
+          fd.append('client_id', clientId);
+          fd.append('doc_type', docType);
+          fd.append('file', file!);
+          return fetch('/api/documents/upload', { method: 'POST', body: fd });
+        }));
+      }
+
       setResult({ tenantUrl: data.tenantUrl, clientName: name, marketplaceOptIn: mpOptIn }); setStep('done'); onCreated();
     } catch { setError('Network error — please try again.'); }
     finally  { setSubmitting(false); }
@@ -374,7 +398,71 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
             </div>
           )}
 
-          {/* ── Step 6: Review ── */}
+          {/* ── Step 6: Documents ── */}
+          {step === 'documents' && (
+            <div className="space-y-3">
+              <p className="text-xs mb-4" style={{ color: 'var(--color-text3)' }}>
+                Upload required compliance documents. Required items must be uploaded before activation.
+                All files are stored securely and only accessible to Mint Platforms staff.
+              </p>
+              {REQUIRED_DOCS.map((doc) => {
+                const file = docFiles[doc.id] ?? null;
+                return (
+                  <label key={doc.id} className="block cursor-pointer">
+                    <div
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl border transition-all"
+                      style={file ? {
+                        borderColor: 'rgba(52,211,153,0.4)',
+                        background: 'rgba(52,211,153,0.05)',
+                      } : {
+                        borderColor: 'var(--color-border2)',
+                        background: 'var(--color-surface2)',
+                      }}
+                    >
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ background: file ? 'rgba(52,211,153,0.12)' : 'rgba(255,255,255,0.05)', color: file ? 'var(--color-green)' : 'var(--color-text3)' }}>
+                        {file ? <CheckCircle2 size={15} /> : <Upload size={15} />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>
+                          {doc.label}
+                          {doc.required && <span className="ml-1 text-[10px] font-bold uppercase" style={{ color: 'var(--color-red)' }}>required</span>}
+                        </p>
+                        <p className="text-[11px] truncate" style={{ color: file ? 'var(--color-green)' : 'var(--color-text3)' }}>
+                          {file ? file.name : doc.hint}
+                        </p>
+                      </div>
+                      {file && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); setDocFiles((p) => ({ ...p, [doc.id]: null })); }}
+                          className="shrink-0 text-xs px-2 py-0.5 rounded"
+                          style={{ color: 'var(--color-text3)', background: 'rgba(255,255,255,0.06)' }}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      className="sr-only"
+                      accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0] ?? null;
+                        setDocFiles((p) => ({ ...p, [doc.id]: f }));
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                );
+              })}
+              <p className="text-[11px] pt-2" style={{ color: 'var(--color-text3)' }}>
+                Accepted: PDF, JPG, PNG, Word. Missing documents can be uploaded later from the client profile.
+              </p>
+            </div>
+          )}
+
+          {/* ── Step 7: Review ── */}
           {step === 'review' && (
             <div className="space-y-4">
               <ReviewRow label="Company"  value={name} />
@@ -385,6 +473,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
               <ReviewRow label="Tier"      value={`${tier.charAt(0).toUpperCase() + tier.slice(1)} — ${fmt(monthlyFeeCents)}/mo`} />
               <ReviewRow label="Marketplace" value={mpOptIn ? `Opted in — ${mpLoanTypes.length > 0 ? mpLoanTypes.join(', ') : 'all loan types'} · max R${parseInt(mpMaxAmount || '0', 10).toLocaleString()}` : 'Not participating'} />
               <ReviewRow label="Database" value={dbUrl ? `${dbUrl.replace(/^https?:\/\//, '')} · key set` : 'Not configured — add later from client settings'} mono={!!dbUrl} />
+              <ReviewRow label="Documents" value={(() => { const uploaded = REQUIRED_DOCS.filter(d => docFiles[d.id]); const missing = REQUIRED_DOCS.filter(d => d.required && !docFiles[d.id]); return uploaded.length > 0 ? `${uploaded.length} attached${missing.length > 0 ? ` · ${missing.length} required missing` : ''}` : 'None attached — upload after creation'; })()}  />
               {vercelProjectId && <ReviewRow label="Vercel project" value={vercelProjectId} mono />}
               <div className="flex items-center gap-3">
                 <span className="text-xs font-medium w-28 shrink-0" style={{ color: 'var(--color-text3)' }}>Brand colours</span>

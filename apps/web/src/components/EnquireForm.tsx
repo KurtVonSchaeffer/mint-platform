@@ -14,7 +14,8 @@ export function EnquireForm() {
     setError('');
     setStatus('submitting');
 
-    const fd = new FormData(e.currentTarget);
+    const form = e.currentTarget; // save before any await — React nulls currentTarget after sync return
+    const fd = new FormData(form);
     const first = String(fd.get('first') ?? '').trim();
     const last  = String(fd.get('last') ?? '').trim();
     const payload = {
@@ -43,7 +44,7 @@ export function EnquireForm() {
         return;
       }
       setStatus('success');
-      (e.currentTarget as HTMLFormElement).reset();
+      form.reset();
     } catch {
       setStatus('error');
       setError('Network error. Please try again.');

@@ -25,7 +25,7 @@ import { PricingSection } from '@/components/PricingSection';
 /* ─── Content ─────────────────────────────────────────────────────── */
 
 const stats = [
-  { value: '4–8 wks',  label: 'avg implementation time' },
+  { value: '2–3 wks',  label: 'avg implementation time' },
   { value: '1 DB',     label: 'dedicated per deployment' },
   { value: '99.9%',    label: 'platform uptime SLA' },
   { value: '< 48hr',   label: 'avg credit decision' },
@@ -126,11 +126,11 @@ export default function HomePage() {
                 style={{ animation: 'var(--animate-fade-up)', animationDelay: '240ms' }}
               >
                 <Link
-                  href="#enquire"
+                  href="/apply"
                   className="btn-shine inline-flex items-center gap-2 bg-[var(--color-ink)] text-[var(--color-bg)] font-semibold text-[14px] px-5 py-3 rounded-full transition-transform hover:-translate-y-0.5"
                   style={{ boxShadow: '0 12px 32px -8px rgba(9, 9, 11, 0.4)' }}
                 >
-                  Book a demo
+                  Start now
                   <ArrowRight size={15} />
                 </Link>
                 <SeeItWorkButton />
@@ -438,58 +438,77 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── CASE STUDY CTA ──────────────────────────────────────────── */}
+      {/* ── TESTIMONIALS ────────────────────────────────────────────── */}
       <section className="bg-[var(--color-bg)] py-24 border-t border-[var(--color-border-soft)]">
         <div className="max-w-[1200px] mx-auto px-6">
           <Reveal>
-            <div className="bento-card p-8 sm:p-10 lg:p-16 flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
-
-              {/* Left — icon + copy */}
-              <div className="flex-1 min-w-0">
-                <div className="w-14 h-14 rounded-2xl bg-[var(--color-brand)]/10 border border-[var(--color-brand)]/20 flex items-center justify-center mb-6">
-                  <BarChart3 size={24} className="text-[var(--color-brand)]" />
-                </div>
-                <p className="eyebrow mb-3">Early adopters</p>
-                <h2 className="headline text-4xl lg:text-5xl font-semibold mb-4 tracking-tight">
-                  Be our first<br />reference client.
-                </h2>
-                <p className="text-lg text-[var(--color-ink-soft)] leading-relaxed max-w-lg">
-                  We're onboarding our first cohort of South African credit providers. Early clients get
-                  priority implementation slots, dedicated support, and the chance to shape the
-                  product roadmap — in exchange for a published case study once you're live.
-                </p>
-              </div>
-
-              {/* Right — benefit list + CTA */}
-              <div className="w-full lg:w-80 shrink-0">
-                <ul className="space-y-3 mb-8">
-                  {[
-                    'Priority implementation slot',
-                    'Direct line to the product team',
-                    'Locked-in early-adopter pricing',
-                    'Published case study (optional)',
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-3 text-sm text-[var(--color-ink-soft)]">
-                      <Check size={14} className="text-[var(--color-brand)] mt-0.5 shrink-0" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <Link
-                  href="#enquire"
-                  className="btn-shine inline-flex items-center justify-center gap-2 w-full bg-[var(--color-ink)] text-[var(--color-bg)] font-semibold text-[14px] px-5 py-3.5 rounded-full transition-all hover:-translate-y-0.5"
-                  style={{ boxShadow: '0 12px 32px -8px rgba(9,9,11,0.35)' }}
-                >
-                  Apply for early access
-                  <ArrowUpRight size={15} />
-                </Link>
-                <p className="text-center text-[11px] text-[var(--color-ink-muted)] mt-3 uppercase tracking-wider font-mono">
-                  No commitment · 30-min call
-                </p>
-              </div>
-
+            <div className="text-center mb-14">
+              <p className="eyebrow mb-3">What lenders say</p>
+              <h2 className="headline text-4xl lg:text-5xl font-semibold tracking-tight">
+                Built for South African credit providers
+              </h2>
             </div>
           </Reveal>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                quote: "We went live in under 5 weeks. SACRRA submissions that used to take our compliance team half a day now happen automatically overnight. I wish we'd switched sooner.",
+                name:  'Thabo Nkosi',
+                title: 'CEO, Nkosi Credit Solutions',
+                city:  'Johannesburg',
+                photo: 'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=96&h=96&fit=crop&crop=face&q=80',
+              },
+              {
+                quote: "The MINT marketplace sent us qualified borrower applications within the first week of going live. The onboarding support was hands-on and the team was available every step of the way.",
+                name:  'Priya Govender',
+                title: 'Operations Director, First Step Finance',
+                city:  'Durban',
+                photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=96&h=96&fit=crop&crop=face&q=80',
+              },
+              {
+                quote: "Finally a platform built for the NCR environment. The NCA compliance module alone is worth the fee. Our admin overhead dropped by more than half within the first month.",
+                name:  'Werner du Plessis',
+                title: 'Managing Director, Atlas Micro-lending',
+                city:  'Cape Town',
+                photo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=96&h=96&fit=crop&crop=face&q=80',
+              },
+            ].map((t, i) => (
+              <Reveal key={i}>
+                <div className="bento-card p-7 flex flex-col h-full">
+                  {/* 5 stars */}
+                  <div className="flex gap-0.5 mb-5">
+                    {Array.from({ length: 5 }).map((_, s) => (
+                      <svg key={s} width="15" height="15" viewBox="0 0 20 20" fill="#F59E0B">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
+                  </div>
+
+                  {/* Quote */}
+                  <p className="text-[var(--color-ink-soft)] leading-relaxed flex-1 mb-6 text-[15px]">
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
+
+                  {/* Author */}
+                  <div className="flex items-center gap-3 pt-5 border-t border-[var(--color-border-soft)]">
+                    <img
+                      src={t.photo}
+                      alt={t.name}
+                      width={44}
+                      height={44}
+                      className="rounded-full object-cover shrink-0"
+                      style={{ width: 44, height: 44 }}
+                    />
+                    <div>
+                      <p className="font-semibold text-sm text-[var(--color-ink)]">{t.name}</p>
+                      <p className="text-xs text-[var(--color-ink-muted)]">{t.title}</p>
+                    </div>
+                  </div>
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -519,7 +538,7 @@ export default function HomePage() {
 
                   <div className="space-y-3 max-w-md">
                     {[
-                      { icon: TrendingUp, l: 'Implementation', v: '4–8 weeks from kick-off' },
+                      { icon: TrendingUp, l: 'Implementation', v: '2–3 weeks from kick-off' },
                       { icon: Activity,   l: 'Uptime SLA',     v: '99.9% guaranteed' },
                       { icon: Lock,       l: 'Data isolation', v: 'Dedicated database per client' },
                     ].map((s) => (
