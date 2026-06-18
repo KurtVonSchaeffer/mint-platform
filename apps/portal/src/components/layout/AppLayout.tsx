@@ -3,7 +3,7 @@ import { Sidebar } from './Sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { Bell } from 'lucide-react';
 
-function TopBar({ mode }: { mode: 'client' | 'admin' }) {
+function TopBar({ mode: _mode }: { mode: 'client' | 'admin' }) {
   const { profile } = useAuth();
   const firstName = profile?.full_name?.split(' ')[0] ?? '';
 

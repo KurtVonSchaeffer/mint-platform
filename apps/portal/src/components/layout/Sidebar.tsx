@@ -1,5 +1,4 @@
 import { NavLink } from 'react-router-dom';
-import { cn } from '@/lib/utils';
 import { useTenant } from '@/contexts/TenantContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Logo } from '@/components/Logo';
