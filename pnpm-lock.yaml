@@ -236,6 +236,9 @@ importers:
       react-dom:
         specifier: ^19
         version: 19.2.6(react@19.2.6)
+      resend:
+        specifier: ^6.12.4
+        version: 6.12.4
       simple-icons:
         specifier: ^16.21.0
         version: 16.21.0
