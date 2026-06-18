@@ -407,11 +407,17 @@ export default function DemoPage() {
     <main className="min-h-screen" style={{ background: '#06070D' }}>
       <header className="sticky top-0 z-10 px-5 py-3 flex items-center justify-between"
         style={{ background: 'rgba(11,13,24,0.92)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-white text-xs" style={{ background: BRAND }}>A</div>
-          <div>
-            <p className="text-xs font-bold text-white">AlgoLend</p>
-            <p className="text-[9px] text-[#6E74A4]">Interactive demo</p>
+        <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-1.5 text-[11px] font-medium px-3 py-1.5 rounded-lg hover:text-[#A78BFA] transition-colors"
+            style={{ color: '#6E74A4', background: 'rgba(255,255,255,0.05)' }}>
+            ← Back
+          </Link>
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-white text-xs" style={{ background: BRAND }}>A</div>
+            <div>
+              <p className="text-xs font-bold text-white">AlgoLend</p>
+              <p className="text-[9px] text-[#6E74A4]">Interactive demo</p>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2 text-[10px] px-2.5 py-1.5 rounded-full"
