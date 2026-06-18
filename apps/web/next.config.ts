@@ -1,7 +1,6 @@
 import type { NextConfig } from 'next';
 
 const config: NextConfig = {
-  output: 'standalone',
   productionBrowserSourceMaps: false,
   webpack(cfg) {
     // Stop source-map-loader fetching .map files from packages that don't
