@@ -4,9 +4,11 @@
   "cwd": "/Users/kurtvonschaeffer/mint-platform/apps/web",
   "context": {},
   "metrics": {
-    "edits": 4,
+    "edits": 5,
     "commands": 0,
     "tasks": 0,
     "errors": 0
-  }
+  },
+  "endedAt": "2026-06-18T18:03:00.832Z",
+  "duration": 34583110
 }
