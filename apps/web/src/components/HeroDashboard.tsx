@@ -8,10 +8,8 @@
 const SIDEBAR = ['Dashboard', 'Applications', 'Loan Book', 'Payments', 'Compliance', 'Reports', 'Team', 'Settings'];
 
 const STATS = [
-  { l: 'Applications', v: '47',    d: '+12%' },
+  { l: 'Applications', v: '47',     d: '+12%'  },
   { l: 'Approved',     v: 'R 2.4M', d: '+8.4%' },
-  { l: 'Decline rate', v: '14%',   d: '-2.1%' },
-  { l: 'Avg score',    v: '74',    d: '+3'    },
 ];
 
 const APPS = [
