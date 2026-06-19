@@ -41,7 +41,7 @@ export const SERVICE_RATES: Record<string, number> = {
   // Legacy service names → mapped to catalog rates
   trueid_lookup:      catalogRate('banking'),     // TruID = bank account linking
   experian_score:     catalogRate('bureau'),      // Experian = bureau enquiry
-  docuseal_envelope:  catalogRate('contracts'),   // DocuSeal = automated contracts
+  docuseal_envelope:  catalogRate('contracts'),   // e-contracts
   sacrra_submission:  catalogRate('watchlist'),   // SACRRA = compliance check
   sure_systems_pull:  catalogRate('banking'),     // Sure Systems = bank pull
   // Non-check pass-throughs
@@ -57,14 +57,14 @@ export const SERVICE_LABELS: Record<string, string> = {
   cipc:               'CIPC Data: Employment checks',
   bureau:             'Bureau enquiries (Experian standard)',
   banking:            'Bank account linking (TruID)',
-  contracts:          'Automated e-contracts (DocuSeal)',
+  contracts:          'Automated e-contracts',
   liveness:           'Liveness & ID + phone verification',
   homeaff:            'Liveness + Home Affairs verification',
   watchlist:          'Watchlist: PEPs & Sanctions (SACRRA)',
   address:            'Address verification',
   trueid_lookup:      'Bank account linking (TruID)',
   experian_score:     'Bureau enquiries (Experian)',
-  docuseal_envelope:  'Automated e-contracts (DocuSeal)',
+  docuseal_envelope:  'E-contracts signed',
   sacrra_submission:  'SACRRA bureau submissions',
   sure_systems_pull:  'Bank debit-order pulls',
   sms_outbound:       'Outbound SMS notifications',

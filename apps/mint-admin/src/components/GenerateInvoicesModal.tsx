@@ -134,7 +134,7 @@ export function GenerateInvoicesModal({ onClose, onGenerated, defaultClientId }:
               <div className="rounded-xl p-3 mb-5 space-y-1 text-xs" style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.15)', color: 'var(--color-text2)' }}>
                 <p>✓ One-time activation fee for clients activated this month</p>
                 <p>✓ Licence fees with pro-rata for mid-month activations</p>
-                <p>✓ Per-API usage costs (TruID, Experian, DocuSeal, SACRRA, calls)</p>
+                <p>✓ Per-API usage costs (TruID, Experian, SACRRA, e-contracts, calls)</p>
                 <p>✓ VAT at 15% applied automatically</p>
                 <p>✓ Invoices created as <strong>Draft</strong> — review before sending</p>
               </div>

@@ -20,7 +20,7 @@ interface MonthOption { id: string; label: string; }
 const SERVICE_LABELS: Record<string, string> = {
   trueid_lookup:      'TruID lookups',
   experian_score:     'Experian scores',
-  docuseal_envelope:  'DocuSeal envelopes',
+  docuseal_envelope:  'E-contracts signed',
   sacrra_submission:  'SACRRA submissions',
   sure_systems_pull:  'Sure Systems pulls',
   sms_outbound:       'SMS sent',

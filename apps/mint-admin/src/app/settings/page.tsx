@@ -174,18 +174,11 @@ export default function SettingsPage() {
                 where: 'ZwaneOfficial/public/admin/src/modules/sacrra.js',
               },
               {
-                name: 'DocuSeal',
-                purpose: 'E-contract generation, signing, and certificates of completion',
-                docs: 'https://www.docuseal.com/docs',
-                envVars: ['DOCUSEAL_API_KEY', 'DOCUSEAL_BASE_URL'],
-                where: 'ZwaneOfficial / e-contract module',
-              },
-              {
                 name: 'Resend',
                 purpose: 'Transactional email — notifications, magic links, statements',
                 docs: 'https://resend.com/docs',
                 envVars: ['RESEND_API_KEY', 'RESEND_FROM_EMAIL'],
-                where: 'ZwaneOfficial — referenced via @resend dependency',
+                where: 'apps/mint-admin — via @resend/mail',
               },
             ].map((integration) => (
               <details

@@ -7,7 +7,7 @@ import { Zap, Save, RotateCcw, Loader2 } from 'lucide-react';
 
 const ALL_FEATURES = [
   { key: 'open_banking',       label: 'Open Banking (TruID)',      description: 'Bank statement retrieval + affordability metrics' },
-  { key: 'e_contracts',        label: 'E-Contracts (DocuSeal)',     description: 'Digital agreement signing + certificates' },
+  { key: 'e_contracts',        label: 'E-Contracts',                description: 'Digital agreement signing + certificates' },
   { key: 'credit_scoring',     label: 'Credit Scoring (Experian)',  description: 'Automated credit bureau pulls' },
   { key: 'sacrra_bureau',      label: 'SACRRA Bureau Reporting',    description: 'Monthly NCA-compliant submissions' },
   { key: 'multi_branch',       label: 'Multi-Branch Support',       description: 'Branch manager role with scoped application views' },

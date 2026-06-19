@@ -42,7 +42,7 @@ export const SERVICE_RATES: ServiceRate[] = [
   },
   {
     id:            'automated_contracts',
-    name:          'Automated Contracts (DocuSeal)',
+    name:          'Automated Contracts',
     description:   'E-contract generation, issuing, and digital signing',
     providerCents: 360,
     featureFlag:   'e_contracts',

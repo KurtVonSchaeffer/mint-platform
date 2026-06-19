@@ -156,7 +156,7 @@ export function quotaExceededEmail(q: {
     <p>Hi ${q.contact},</p>
     <p style="color:#555;line-height:1.6">
       Your AlgoLend deployment has reached its monthly API quota of <strong>${q.limit.toLocaleString()} calls</strong>.
-      External API calls (Experian, TruID, DocuSeal, SureSystems) are <strong>blocked</strong> until your quota is topped up or the month resets.
+      External API calls (Experian, TruID, SureSystems) are <strong>blocked</strong> until your quota is topped up or the month resets.
     </p>
     <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:12px;padding:20px;text-align:center;margin:20px 0">
       <p style="font-size:36px;font-weight:700;color:#dc2626;margin:0">100%</p>

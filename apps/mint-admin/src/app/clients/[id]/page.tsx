@@ -10,7 +10,7 @@ import { MarketplaceApplications } from '@/components/MarketplaceApplications';
 import {
   ArrowLeft, ExternalLink, Mail, Receipt, CheckCircle, AlertCircle,
   Clock, Send, Loader2, Activity, BarChart3, Building2, Calendar,
-  PlusCircle, X, Zap, Store, CheckCircle2, XCircle,
+  PlusCircle, X, Zap, Store, CheckCircle2, XCircle, FileText, Upload,
 } from 'lucide-react';
 
 // ─── Types ─────────────────────────────────────────────────────────────
@@ -48,6 +48,11 @@ interface UsageRow {
   total_quantity: number; total_cost_cents: number;
 }
 
+interface AgreementDoc {
+  id: string; type: string; file_name: string;
+  storage_path: string; status: string; created_at: string;
+}
+
 // ─── Helpers ────────────────────────────────────────────────────────────
 function fmt(cents: number) {
   return new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', maximumFractionDigits: 0 }).format(cents / 100);
@@ -67,7 +72,7 @@ const statusStyle = {
 
 const SERVICE_LABELS: Record<string, string> = {
   trueid_lookup: 'TruID lookups', experian_score: 'Experian scores',
-  docuseal_envelope: 'DocuSeal envelopes', sacrra_submission: 'SACRRA submissions',
+  docuseal_envelope: 'E-contracts signed', sacrra_submission: 'SACRRA submissions',
   sure_systems_pull: 'Sure Systems pulls', sms_outbound: 'SMS sent',
   email_outbound: 'Emails sent', api_call: 'API calls',
 };
@@ -81,7 +86,9 @@ export default function ClientDetailPage() {
   const [usage,      setUsage]      = useState<UsageRow[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [toast,      setToast]      = useState<{ kind: ToastKind; message: string } | null>(null);
-  const [activeTab,  setActiveTab]  = useState<'invoices' | 'usage' | 'features' | 'marketplace'>('invoices');
+  const [activeTab,  setActiveTab]  = useState<'invoices' | 'usage' | 'features' | 'marketplace' | 'agreement'>('invoices');
+  const [agreements, setAgreements] = useState<AgreementDoc[]>([]);
+  const [agrUploading, setAgrUploading] = useState(false);
   const [topupOpen,  setTopupOpen]  = useState(false);
   const [topupUnits, setTopupUnits] = useState(5000);
   const [topupPrice, setTopupPrice] = useState(50000); // R500 per 1k calls in cents
@@ -125,6 +132,7 @@ export default function ClientDetailPage() {
       setClient(data.client);
       setInvoices(data.invoices);
       setUsage(data.usage);
+      setAgreements(data.agreements ?? []);
     } catch {
       setToast({ kind: 'error', message: 'Could not load client data.' });
     } finally {
@@ -295,10 +303,11 @@ export default function ClientDetailPage() {
         {/* Tabs */}
         <div className="flex items-center gap-1" style={{ borderBottom: '1px solid var(--color-border2)', paddingBottom: '0' }}>
           {([
-            { id: 'invoices',    label: 'Invoices',    icon: Receipt,  count: invoices.length },
+            { id: 'invoices',    label: 'Invoices',    icon: Receipt,   count: invoices.length },
             { id: 'usage',       label: 'Usage',       icon: BarChart3, count: null },
-            { id: 'features',    label: 'Features',    icon: Activity, count: enabledFeatures.length },
-            { id: 'marketplace', label: 'Marketplace', icon: Store,    count: null },
+            { id: 'features',    label: 'Features',    icon: Activity,  count: enabledFeatures.length },
+            { id: 'marketplace', label: 'Marketplace', icon: Store,     count: null },
+            { id: 'agreement',   label: 'Agreement',   icon: FileText,  count: agreements.length > 0 ? agreements.length : null },
           ] as const).map(tab => (
             <button
               key={tab.id}
@@ -530,6 +539,99 @@ export default function ClientDetailPage() {
                 clientId={client.id}
                 onToast={(kind, message) => setToast({ kind, message })}
               />
+            )}
+          </div>
+        )}
+
+        {/* ── Agreement tab ────────────────────────────────────────── */}
+        {activeTab === 'agreement' && (
+          <div className="space-y-4">
+            {/* Status banner */}
+            <div
+              className="bento-card p-5 flex items-start gap-4"
+              style={agreements.length > 0
+                ? { borderColor: 'rgba(52,211,153,0.25)', background: 'rgba(52,211,153,0.03)' }
+                : { borderColor: 'rgba(251,191,36,0.25)', background: 'rgba(251,191,36,0.03)' }}
+            >
+              {agreements.length > 0
+                ? <CheckCircle2 size={20} style={{ color: 'var(--color-green)', flexShrink: 0 }} />
+                : <AlertCircle  size={20} style={{ color: 'var(--color-amber)', flexShrink: 0 }} />}
+              <div>
+                <p className="font-semibold text-sm" style={{ color: agreements.length > 0 ? 'var(--color-green)' : 'var(--color-amber)' }}>
+                  {agreements.length > 0 ? 'Onboarding agreement on file' : 'Onboarding agreement not yet uploaded'}
+                </p>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--color-text3)' }}>
+                  {agreements.length > 0
+                    ? `${agreements.length} document${agreements.length > 1 ? 's' : ''} uploaded · last on ${fmtDate(agreements[0].created_at)}`
+                    : 'Upload the signed agreement PDF once the client has reviewed and signed it.'}
+                </p>
+              </div>
+            </div>
+
+            {/* Upload */}
+            <div className="bento-card p-5 space-y-3">
+              <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Upload signed agreement</p>
+              <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
+                PDF only. The document will be stored securely and associated with this client's account.
+              </p>
+              <label
+                className="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-colors"
+                style={{ border: '1px dashed var(--color-border2)', color: 'var(--color-text3)' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.4)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border2)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; }}
+              >
+                {agrUploading
+                  ? <Loader2 size={15} className="animate-spin" />
+                  : <Upload size={15} />}
+                <span className="text-sm">{agrUploading ? 'Uploading…' : 'Choose PDF file to upload'}</span>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  className="sr-only"
+                  disabled={agrUploading}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file || !client) return;
+                    setAgrUploading(true);
+                    try {
+                      const form = new FormData();
+                      form.append('client_id', client.id);
+                      form.append('doc_type', 'onboarding_agreement');
+                      form.append('file', file);
+                      const res = await fetch('/api/documents/upload', { method: 'POST', body: form });
+                      if (!res.ok) throw new Error(await res.text());
+                      setToast({ kind: 'success', message: 'Agreement uploaded successfully.' });
+                      load();
+                    } catch (err) {
+                      setToast({ kind: 'error', message: `Upload failed: ${err instanceof Error ? err.message : String(err)}` });
+                    } finally {
+                      setAgrUploading(false);
+                      e.target.value = '';
+                    }
+                  }}
+                />
+              </label>
+            </div>
+
+            {/* Document list */}
+            {agreements.length > 0 && (
+              <div className="bento-card divide-y" style={{ '--tw-divide-opacity': 1 } as React.CSSProperties}>
+                {agreements.map(doc => (
+                  <div key={doc.id} className="flex items-center gap-3 px-5 py-3">
+                    <FileText size={14} style={{ color: 'var(--color-violet)', flexShrink: 0 }} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-medium truncate" style={{ color: 'var(--color-text)' }}>{doc.file_name}</p>
+                      <p className="text-[10px]" style={{ color: 'var(--color-text3)' }}>Uploaded {fmtDate(doc.created_at)}</p>
+                    </div>
+                    <span
+                      className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                      style={{ background: 'rgba(52,211,153,0.1)', color: 'var(--color-green)', border: '1px solid rgba(52,211,153,0.2)' }}
+                    >
+                      {doc.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         )}

@@ -18,7 +18,7 @@ export type FeatureFlag = typeof ALL_FEATURES[number];
 
 export const FEATURE_LABELS: Record<FeatureFlag, string> = {
   open_banking:       'Open Banking (TruID)',
-  e_contracts:        'E-Contracts (DocuSeal)',
+  e_contracts:        'E-Contracts',
   credit_scoring:     'Credit Scoring Engine',
   sacrra_bureau:      'SACRRA Bureau Reporting',
   multi_branch:       'Multi-Branch Management',
