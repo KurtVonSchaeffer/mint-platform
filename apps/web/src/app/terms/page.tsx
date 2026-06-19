@@ -41,7 +41,7 @@ export default function TermsPage() {
               AlgoLend is a B2B white-label lending platform provided to corporate credit providers (&ldquo;Lenders&rdquo;). Mint Platforms grants Lenders a non-exclusive, non-transferable licence to use the platform subject to a separate commercial agreement.
             </p>
             <p>
-              The platform includes a credit management system, borrower portal, credit engine, integrations (Experian, TruID, DocuSeal, SureSystems), and reporting tools. Features available depend on the Lender&apos;s selected tier and commercial agreement.
+              The platform includes a credit management system, borrower portal, credit engine, integrations (Experian, TruID, e-contracts, SureSystems), and reporting tools. Features available depend on the Lender&apos;s selected tier and commercial agreement.
             </p>
           </Section>
 

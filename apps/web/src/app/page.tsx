@@ -35,7 +35,7 @@ const integrations = [
   { name: 'TruID',        sub: 'Open Banking' },
   { name: 'Experian',     sub: 'Credit Bureau' },
   { name: 'SACRRA',       sub: 'Bureau Reporting' },
-  { name: 'DocuSeal',     sub: 'E-Signatures' },
+  { name: 'E-Contracts',  sub: 'E-Signatures' },
   { name: 'Sure Systems', sub: 'EFT & Payments' },
   { name: 'Resend',       sub: 'Transactional Mail' },
   { name: 'OpenPGP',      sub: 'Bureau Encryption' },

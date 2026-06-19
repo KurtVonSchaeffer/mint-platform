@@ -172,7 +172,7 @@ export const LOGO_MAP: Record<string, React.ComponentType<LogoProps>> = {
   TruID:           TruIDLogo,
   Experian:        ExperianLogo,
   SACRRA:          SacrraLogo,
-  DocuSeal:        DocuSealLogo,
+  'E-Contracts':   DocuSealLogo,
   'Sure Systems':  SureSystemsLogo,
   Resend:          ResendLogo,
   OpenPGP:         OpenPGPLogo,

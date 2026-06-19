@@ -181,7 +181,7 @@ export function EContractsCard() {
           <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center mb-5 group-hover:bg-amber-500/25 group-hover:scale-105 transition-all">
             <FileSignature size={17} className="text-amber-300" />
           </div>
-          <h3 className="text-xl font-semibold mb-2 tracking-tight text-white">E-contracts via DocuSeal</h3>
+          <h3 className="text-xl font-semibold mb-2 tracking-tight text-white">E-contracts</h3>
           <p className="text-sm text-white/55 leading-relaxed">
             Automated agreement generation, secure digital signing, certificates of completion — all inside the portal.
           </p>

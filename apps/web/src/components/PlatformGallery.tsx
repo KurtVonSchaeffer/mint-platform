@@ -18,7 +18,7 @@ const VIEWS = [
       'Credit applications pipeline with scoring',
       'Live portfolio health & NPA tracking',
       'SACRRA bureau reporting (auto-28th)',
-      'TruID, Experian & DocuSeal integrations',
+      'TruID, Experian & e-contract integrations',
     ],
     src: '/screenshots/lender-dashboard.jpg',
     alt: 'AlgoLend lender admin dashboard',
@@ -33,7 +33,7 @@ const VIEWS = [
     bullets: [
       'One-click loan application flow',
       'Live repayment schedule & balance',
-      'NCA quotation & DocuSeal e-signing',
+      'NCA quotation & e-contract signing',
       'WhatsApp payment notifications',
     ],
     src: '/screenshots/borrower-portal.jpg',

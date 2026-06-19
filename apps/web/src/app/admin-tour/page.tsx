@@ -94,7 +94,7 @@ const sections = [
       'Company branding (logo, colors, domain)',
       'Product builder (terms, rates, limits)',
       'Role-based access control (admin, analyst, agent)',
-      'Integration credentials (Experian, TruID, DocuSeal)',
+      'Integration credentials (Experian, TruID, e-contracts)',
     ],
   },
 ];
@@ -103,7 +103,7 @@ const integrations = [
   { name: 'TruID',        desc: 'Open banking — real-time affordability',  color: '#059669' },
   { name: 'Experian',     desc: 'Credit bureau — full consumer report',    color: '#3b82f6' },
   { name: 'SACRRA',       desc: 'Bureau reporting — layout 700 auto-sub',  color: '#f59e0b' },
-  { name: 'DocuSeal',     desc: 'E-signatures — NCA-compliant contracts',  color: '#8b5cf6' },
+  { name: 'E-Contracts',  desc: 'E-signatures — NCA-compliant contracts',  color: '#8b5cf6' },
   { name: 'Sure Systems', desc: 'EFT & debit orders — automated payments', color: '#ef4444' },
   { name: 'Resend',       desc: 'Transactional email — instant delivery',  color: '#64748b' },
 ];
