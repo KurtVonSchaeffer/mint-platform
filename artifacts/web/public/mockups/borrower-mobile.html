@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=390, initial-scale=1.0" />
+  <title>AlgoLend — Borrower App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    * { font-family: 'Inter', sans-serif; box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #F4F6FB; width: 390px; min-height: 844px; overflow-x: hidden; }
+    .card { background: white; border-radius: 16px; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+  <!-- Status bar -->
+  <div style="background:white;padding:12px 20px 8px;display:flex;justify-content:space-between;align-items:center">
+    <span style="font-size:13px;font-weight:700;color:#111">9:41</span>
+    <div style="display:flex;gap:5px;align-items:center">
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="#111"><rect x="0" y="3" width="3" height="9" rx="1"/><rect x="4.5" y="2" width="3" height="10" rx="1"/><rect x="9" y="0" width="3" height="12" rx="1"/><rect x="13.5" y="0" width="2.5" height="12" rx="1" opacity="0.3"/></svg>
+      <svg width="15" height="12" viewBox="0 0 15 12" fill="#111"><path d="M7.5 2.5C5 2.5 2.8 3.6 1.3 5.3L0 4C1.9 1.9 4.6 0.5 7.5 0.5s5.6 1.4 7.5 3.5l-1.3 1.3C12.2 3.6 10 2.5 7.5 2.5z"/><path d="M7.5 6C5.9 6 4.5 6.7 3.5 7.8L2.2 6.5C3.6 5 5.4 4 7.5 4s3.9 1 5.3 2.5L11.5 7.8C10.5 6.7 9.1 6 7.5 6z"/><circle cx="7.5" cy="10" r="2"/></svg>
+      <svg width="24" height="12" viewBox="0 0 24 12" fill="none"><rect x="0.5" y="0.5" width="20" height="11" rx="3" stroke="#111" stroke-opacity="0.35"/><rect x="1.5" y="1.5" width="16" height="9" rx="2" fill="#111"/><path d="M22 4v4a2 2 0 0 0 0-4z" fill="#111" opacity="0.4"/></svg>
+    </div>
+  </div>
+
+  <!-- Top nav -->
+  <div style="background:white;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(0,0,0,0.06)">
+    <div style="display:flex;align-items:center;gap:8px">
+      <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+        <path d="M 6 30 L 6 14 C 6 8.48 10.48 4 16 4 C 21.52 4 26 8.48 26 14 L 26 30" stroke="#7C3AED" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <circle cx="16" cy="15" r="5.5" fill="#0F1629"/>
+      </svg>
+      <span style="font-size:15px;font-weight:700;color:#111;letter-spacing:-0.3px">AlgoLend</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="position:relative">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span style="position:absolute;top:-1px;right:-1px;width:7px;height:7px;background:#ef4444;border-radius:50%;border:1.5px solid white"></span>
+      </div>
+      <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#A78BFA);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white">SN</div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+
+    <!-- Greeting -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <p style="font-size:20px;font-weight:700;color:#111;letter-spacing:-0.5px">Good morning, Sipho 👋</p>
+        <p style="font-size:12px;color:#94a3b8;margin-top:2px">Your loan is on track</p>
+      </div>
+      <button style="background:#7C3AED;color:white;border:none;border-radius:20px;padding:8px 14px;font-size:12px;font-weight:600;display:flex;align-items:center;gap:4px;cursor:pointer">
+        Apply
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+
+    <!-- Active loan hero card -->
+    <div style="background:linear-gradient(135deg,#7C3AED 0%,#5B21B6 100%);border-radius:20px;padding:20px;color:white">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <div>
+          <p style="font-size:10px;font-weight:600;letter-spacing:0.1em;opacity:0.7;text-transform:uppercase;margin-bottom:4px">Active Loan</p>
+          <p style="font-size:32px;font-weight:800;letter-spacing:-1px;line-height:1">R 850,000</p>
+          <p style="font-size:12px;opacity:0.7;margin-top:4px">Working Capital · 12 months</p>
+        </div>
+        <span style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);border-radius:20px;padding:4px 10px;font-size:11px;font-weight:600;display:flex;align-items:center;gap:5px">
+          <span style="width:6px;height:6px;background:white;border-radius:50%"></span>
+          Active
+        </span>
+      </div>
+
+      <!-- Progress bar -->
+      <div style="margin-bottom:6px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;opacity:0.8;margin-bottom:6px">
+          <span>Repayment progress</span>
+          <span style="font-weight:600">5 of 12 payments</span>
+        </div>
+        <div style="height:6px;background:rgba(255,255,255,0.2);border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:42%;background:white;border-radius:3px"></div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;opacity:0.55">
+        <span>Disbursed: 12 Jan 2026</span>
+        <span>Maturity: 12 Jan 2027</span>
+      </div>
+
+      <!-- 3-col stats -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.15)">
+        <div>
+          <p style="font-size:10px;opacity:0.6">Next Payment</p>
+          <p style="font-size:14px;font-weight:700;margin-top:2px">R 84,583</p>
+          <p style="font-size:10px;opacity:0.55">Due 12 Jul 2026</p>
+        </div>
+        <div>
+          <p style="font-size:10px;opacity:0.6">Interest Rate</p>
+          <p style="font-size:14px;font-weight:700;margin-top:2px">28% p.a.</p>
+          <p style="font-size:10px;opacity:0.55">NCA compliant</p>
+        </div>
+        <div>
+          <p style="font-size:10px;opacity:0.6">Outstanding</p>
+          <p style="font-size:14px;font-weight:700;margin-top:2px">R 508,500</p>
+          <p style="font-size:10px;opacity:0.55">Principal balance</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Two action buttons -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <button style="background:#7C3AED;color:white;border:none;border-radius:14px;padding:14px;font-size:13px;font-weight:600;cursor:pointer">Pay Now</button>
+      <button style="background:white;color:#111;border:1px solid rgba(0,0,0,0.1);border-radius:14px;padding:14px;font-size:13px;font-weight:600;cursor:pointer">Statement</button>
+    </div>
+
+    <!-- Payment schedule -->
+    <div class="card" style="padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <p style="font-size:14px;font-weight:600;color:#111">Payment Schedule</p>
+        <a href="#" style="font-size:12px;font-weight:600;color:#7C3AED;text-decoration:none">View all</a>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <!-- Paid -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px;background:rgba(52,211,153,0.06);border:1px solid rgba(52,211,153,0.15)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:28px;height:28px;border-radius:10px;background:rgba(52,211,153,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div>
+              <p style="font-size:13px;font-weight:600;color:#111">12 May 2026</p>
+              <p style="font-size:11px;color:#94a3b8">Payment 5 of 12</p>
+            </div>
+          </div>
+          <span style="font-size:13px;font-weight:700;color:#059669;font-family:monospace">R 84,583</span>
+        </div>
+        <!-- Next due -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px;background:rgba(124,58,237,0.05);border:1px solid rgba(124,58,237,0.12)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:28px;height:28px;border-radius:10px;background:rgba(124,58,237,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div>
+              <p style="font-size:13px;font-weight:600;color:#111">12 Jul 2026 <span style="font-size:10px;background:rgba(124,58,237,0.1);color:#7C3AED;border-radius:6px;padding:2px 6px;font-weight:600;margin-left:4px">Next due</span></p>
+              <p style="font-size:11px;color:#94a3b8">Payment 6 of 12</p>
+            </div>
+          </div>
+          <span style="font-size:13px;font-weight:700;color:#7C3AED;font-family:monospace">R 84,583</span>
+        </div>
+        <!-- Upcoming -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px;border:1px solid rgba(0,0,0,0.07)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:28px;height:28px;border-radius:10px;background:#f8f8f8;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+            </div>
+            <div>
+              <p style="font-size:13px;font-weight:600;color:#94a3b8">12 Aug 2026</p>
+              <p style="font-size:11px;color:#cbd5e1">Payment 7 of 12</p>
+            </div>
+          </div>
+          <span style="font-size:13px;font-weight:700;color:#cbd5e1;font-family:monospace">R 84,583</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="card" style="padding:16px">
+      <p style="font-size:14px;font-weight:600;color:#111;margin-bottom:12px">Notifications</p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:12px;background:rgba(124,58,237,0.04);border:1px solid rgba(124,58,237,0.1)">
+          <div style="width:26px;height:26px;border-radius:8px;background:rgba(124,58,237,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg>
+          </div>
+          <div style="flex:1">
+            <p style="font-size:12px;font-weight:600;color:#111">Payment reminder</p>
+            <p style="font-size:11px;color:#94a3b8;margin-top:2px;line-height:1.4">Your next debit of R 84,583 is due in 8 days.</p>
+          </div>
+          <span style="font-size:10px;color:#cbd5e1;font-family:monospace;white-space:nowrap">2h ago</span>
+        </div>
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:12px;border:1px solid rgba(0,0,0,0.07)">
+          <div style="width:26px;height:26px;border-radius:8px;background:rgba(52,211,153,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div style="flex:1">
+            <p style="font-size:12px;font-weight:600;color:#111">Payment confirmed</p>
+            <p style="font-size:11px;color:#94a3b8;margin-top:2px;line-height:1.4">R 84,583 received via Sure Systems EFT.</p>
+          </div>
+          <span style="font-size:10px;color:#cbd5e1;font-family:monospace;white-space:nowrap">3d ago</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom nav -->
+    <div class="card" style="padding:10px 8px;display:flex;justify-content:space-around">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+        <div style="width:32px;height:32px;border-radius:10px;background:rgba(124,58,237,0.1);display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        </div>
+        <p style="font-size:10px;font-weight:600;color:#7C3AED">Home</p>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;opacity:0.5">
+        <div style="width:32px;height:32px;border-radius:10px;background:#f8f8f8;display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        </div>
+        <p style="font-size:10px;font-weight:500;color:#666">Loans</p>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;opacity:0.5">
+        <div style="width:32px;height:32px;border-radius:10px;background:#f8f8f8;display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <p style="font-size:10px;font-weight:500;color:#666">Docs</p>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:3px;opacity:0.5">
+        <div style="width:32px;height:32px;border-radius:10px;background:#f8f8f8;display:flex;align-items:center;justify-content:center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+        </div>
+        <p style="font-size:10px;font-weight:500;color:#666">Profile</p>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
