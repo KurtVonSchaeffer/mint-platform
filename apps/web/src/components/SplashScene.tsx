@@ -29,7 +29,7 @@ function AlgoLendMark() {
 }
 
 const STATS = [
-  { label: 'AVG GO-LIVE',  value: '4-8 wks', detail: 'from kick-off' },
+  { label: 'AVG GO-LIVE',  value: '2-3 wks', detail: 'from kick-off' },
   { label: 'UPTIME SLA',   value: '99.9%',   detail: 'platform guarantee' },
   { label: 'CREDIT CYCLE', value: '< 48hr',  detail: 'avg decision time' },
 ];

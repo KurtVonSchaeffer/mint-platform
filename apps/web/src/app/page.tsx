@@ -26,7 +26,7 @@ import { PricingSection } from '@/components/PricingSection';
 
 const stats = [
   { value: '2–3 wks',  label: 'avg implementation time' },
-  { value: '1 DB',     label: 'dedicated per deployment' },
+  { value: '1 Database', label: 'dedicated per deployment' },
   { value: '99.9%',    label: 'platform uptime SLA' },
   { value: '< 48hr',   label: 'avg credit decision' },
 ];
@@ -168,7 +168,7 @@ export default function HomePage() {
 
       {/* ── STATS ───────────────────────────────────────────────────── */}
       <section className="bg-[var(--color-bg)]">
-        <div className="max-w-[1200px] mx-auto px-6 py-20 grid grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-8">
+        <div className="max-w-[1200px] mx-auto px-6 py-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-8">
           {stats.map((s) => (
             <AnimatedStat key={s.label} value={s.value} label={s.label} />
           ))}
