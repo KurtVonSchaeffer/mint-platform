@@ -66,7 +66,7 @@ export function HeroDashboard() {
 
         {/* Sidebar */}
         <div
-          className="flex w-40 shrink-0 flex-col p-3"
+          className="hidden sm:flex w-40 shrink-0 flex-col p-3"
           style={{ background: 'rgba(8,5,20,0.80)', borderRight: '1px solid rgba(255,255,255,0.06)' }}
         >
           <div className="mb-5 flex items-center gap-2 pb-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -96,7 +96,7 @@ export function HeroDashboard() {
           </div>
 
           {/* Stat cards */}
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {STATS.map((s) => (
               <div
                 key={s.l}

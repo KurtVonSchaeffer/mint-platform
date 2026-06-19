@@ -84,7 +84,7 @@ export function EnquireForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="rounded-3xl p-8 bg-white/5 border border-white/10 space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 gap-3">
         {[
           { id: 'first', label: 'First name', placeholder: 'Sipho' },
           { id: 'last',  label: 'Last name',  placeholder: 'Nkosi' },

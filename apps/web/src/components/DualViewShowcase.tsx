@@ -141,7 +141,7 @@ function LenderView() {
         {/* Slides */}
         <div
           className="relative overflow-hidden select-none cursor-grab active:cursor-grabbing"
-          style={{ height: 420 }}
+          style={{ height: 'clamp(240px, 45vw, 420px)' }}
           {...swipe}
         >
           <div

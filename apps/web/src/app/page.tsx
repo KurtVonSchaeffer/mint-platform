@@ -525,7 +525,7 @@ export default function HomePage() {
               {/* Ambient glow */}
               <div className="absolute -top-40 -right-40 w-[400px] h-[400px] rounded-full" style={{ background: 'radial-gradient(circle, rgba(167, 139, 250, 0.35) 0%, transparent 70%)' }} aria-hidden />
 
-              <div className="relative grid lg:grid-cols-[1fr_1fr] gap-12 items-center">
+              <div className="relative grid lg:grid-cols-[1fr_1fr] gap-8 lg:gap-12 items-center">
                 <div>
                   <p className="eyebrow mb-4" style={{ color: '#A78BFA' }}>Start a conversation</p>
                   <h2 className="headline text-4xl md:text-5xl lg:text-6xl font-semibold mb-6">
@@ -567,7 +567,7 @@ export default function HomePage() {
       <footer className="bg-[var(--color-ink)] text-[var(--color-bg)]">
         <div className="max-w-[1200px] mx-auto px-6 pt-20 pb-12">
 
-          <div className="grid lg:grid-cols-[1.4fr_1fr_1.2fr_1.3fr] gap-12">
+          <div className="grid lg:grid-cols-[1.4fr_1fr_1.2fr_1.3fr] gap-8 lg:gap-12">
 
             {/* Col 1 — brand + description + socials */}
             <div>

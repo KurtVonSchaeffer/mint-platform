@@ -184,7 +184,7 @@ export function PricingSection() {
               {
                 label: 'iii. API costs',
                 title: 'Transparent billing',
-                desc: 'Experian, TruID, DocuSeal, and SACRRA charges are passed through at provider cost.',
+                desc: 'Experian, TruID, SACRRA, and e-contract charges are passed through at provider cost.',
               },
             ].map(n => (
               <div key={n.label} className="bento-card p-5">
