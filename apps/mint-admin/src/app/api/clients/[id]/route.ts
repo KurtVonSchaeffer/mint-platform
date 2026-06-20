@@ -6,6 +6,42 @@ import { logAudit } from '@/lib/audit';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+/** Upsert a Vercel env var — creates on first call, patches on subsequent calls. */
+async function vercelUpsertEnv(
+  projectId: string,
+  key: string,
+  value: string,
+  target: string[],
+  token: string,
+  teamId?: string,
+) {
+  const qs = teamId ? `?teamId=${teamId}` : '';
+  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+  // List env vars to find existing ID
+  const listRes = await fetch(`https://api.vercel.com/v9/projects/${projectId}/env${qs}`, { headers });
+  if (listRes.ok) {
+    const { envs } = await listRes.json() as { envs: Array<{ id: string; key: string }> };
+    const existing = envs.find(e => e.key === key);
+    if (existing) {
+      // PATCH to update
+      await fetch(`https://api.vercel.com/v9/projects/${projectId}/env/${existing.id}${qs}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ value, target }),
+      });
+      return;
+    }
+  }
+
+  // Not found — POST to create
+  await fetch(`https://api.vercel.com/v10/projects/${projectId}/env${qs}`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ key, value, type: 'plain', target }),
+  });
+}
+
 type Params = { params: Promise<{ id: string }> };
 
 /** GET /api/clients/:id — fetch single client with invoices + usage */
@@ -102,17 +138,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
           .eq('id', id)
           .single();
         if (cRow?.vercel_project_id) {
-          const qs = teamId ? `?teamId=${teamId}` : '';
-          await fetch(`https://api.vercel.com/v10/projects/${cRow.vercel_project_id}/env${qs}`, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              key:    'MINT_ACCOUNT_STATUS',
-              value:  body.status,
-              type:   'plain',
-              target: ['production'],
-            }),
-          });
+          await vercelUpsertEnv(cRow.vercel_project_id, 'MINT_ACCOUNT_STATUS', body.status!, ['production'], token, teamId);
           console.log(`[status] pushed MINT_ACCOUNT_STATUS="${body.status}" to Vercel project ${cRow.vercel_project_id}`);
         }
       } catch (e) {
@@ -196,12 +222,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       const { data: vRow } = await supabaseAdmin
         .from('clients').select('vercel_project_id').eq('id', id).single();
       if (vRow?.vercel_project_id) {
-        const qs = teamId ? `?teamId=${teamId}` : '';
-        fetch(`https://api.vercel.com/v10/projects/${vRow.vercel_project_id}/env${qs}`, {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ key: 'API_QUOTA', value: String(newQuota), type: 'plain', target: ['production'] }),
-        }).catch(e => console.warn('[topup] Vercel env sync failed:', e.message));
+        vercelUpsertEnv(vRow.vercel_project_id, 'API_QUOTA', String(newQuota), ['production'], token, teamId)
+          .catch(e => console.warn('[topup] Vercel env sync failed:', e instanceof Error ? e.message : e));
       }
     }
 
@@ -271,23 +293,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
             .map((r) => r.flag)
             .join(',');
 
-          const qs = teamId ? `?teamId=${teamId}` : '';
-
-          // Upsert MINT_ENABLED_FEATURES env var on the Vercel project
-          await fetch(`https://api.vercel.com/v10/projects/${projectId}/env${qs}`, {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              key:    'MINT_ENABLED_FEATURES',
-              value:  enabledList,
-              type:   'plain',
-              target: ['production', 'preview'],
-            }),
-          });
-
+          await vercelUpsertEnv(projectId, 'MINT_ENABLED_FEATURES', enabledList, ['production', 'preview'], token, teamId);
           console.log(`[features] pushed MINT_ENABLED_FEATURES="${enabledList}" to project ${projectId}`);
         }
       } catch (e) {

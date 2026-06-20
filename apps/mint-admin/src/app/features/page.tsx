@@ -4,21 +4,24 @@ import { useState, useEffect, useCallback } from 'react';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { Zap, Save, RotateCcw, Loader2 } from 'lucide-react';
+import { ALL_FEATURES, FEATURE_LABELS, type FeatureFlag } from '@/lib/features';
 
-const ALL_FEATURES = [
-  { key: 'open_banking',       label: 'Open Banking (TruID)',      description: 'Bank statement retrieval + affordability metrics' },
-  { key: 'e_contracts',        label: 'E-Contracts',                description: 'Digital agreement signing + certificates' },
-  { key: 'credit_scoring',     label: 'Credit Scoring (Experian)',  description: 'Automated credit bureau pulls' },
-  { key: 'sacrra_bureau',      label: 'SACRRA Bureau Reporting',    description: 'Monthly NCA-compliant submissions' },
-  { key: 'multi_branch',       label: 'Multi-Branch Support',       description: 'Branch manager role with scoped application views' },
-  { key: 'working_capital',    label: 'Working Capital Product',    description: 'Short-term revolving credit' },
-  { key: 'term_loans',         label: 'Term Loans Product',         description: 'Fixed-term instalment loans' },
-  { key: 'invoice_finance',    label: 'Invoice Finance',            description: 'Debtor book and invoice discounting' },
-  { key: 'whatsapp_notify',    label: 'WhatsApp Notifications',     description: 'Status updates via WhatsApp Business API' },
-  { key: 'advanced_analytics', label: 'Advanced Analytics',         description: 'Portfolio performance + cohort analysis' },
-] as const;
+const FEATURE_DESCRIPTIONS: Record<FeatureFlag, string> = {
+  open_banking:       'Bank statement retrieval + affordability metrics',
+  e_contracts:        'Digital agreement signing + certificates',
+  credit_scoring:     'Automated credit bureau pulls via Experian',
+  sacrra_bureau:      'Monthly NCA-compliant bureau submissions',
+  multi_branch:       'Branch manager role with scoped application views',
+  working_capital:    'Short-term revolving credit product',
+  term_loans:         'Fixed-term instalment loans',
+  invoice_finance:    'Debtor book and invoice discounting',
+  whatsapp_notify:    'Status updates via WhatsApp Business API',
+  advanced_analytics: 'Portfolio performance + cohort analysis',
+  sure_systems:       'EFT debit orders + mandate management via SureSystems',
+  biometric_kyc:      'Liveness detection + facial ID verification',
+};
 
-type FeatureKey = (typeof ALL_FEATURES)[number]['key'];
+type FeatureKey = FeatureFlag;
 
 interface ClientFeatures {
   id:       string;
@@ -30,7 +33,7 @@ interface ClientFeatures {
 
 function featureMap(featureArr: Array<{ flag: string; enabled: boolean }>): Record<string, boolean> {
   const map: Record<string, boolean> = {};
-  for (const f of ALL_FEATURES) map[f.key] = false;
+  for (const key of ALL_FEATURES) map[key] = false;
   for (const f of featureArr) map[f.flag] = f.enabled;
   return map;
 }
@@ -285,11 +288,11 @@ export default function FeaturesPage() {
               {selected && (
                 <div className="bento-card p-0 overflow-hidden">
                   {ALL_FEATURES.map((feat, i) => {
-                    const enabled = effectiveValue(selected.slug, feat.key);
-                    const changed = isPending(selected.slug, feat.key);
+                    const enabled = effectiveValue(selected.slug, feat);
+                    const changed = isPending(selected.slug, feat);
                     return (
                       <div
-                        key={feat.key}
+                        key={feat}
                         className="flex items-center justify-between gap-4 px-6 py-4 transition-colors"
                         style={{
                           borderBottom: i < ALL_FEATURES.length - 1 ? '1px solid var(--color-row-border)' : 'none',
@@ -299,8 +302,8 @@ export default function FeaturesPage() {
                         onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = changed ? 'rgba(251,191,36,0.03)' : 'transparent'; }}
                       >
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{feat.label}</p>
-                          <p className="text-xs mt-0.5" style={{ color: 'var(--color-text3)' }}>{feat.description}</p>
+                          <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{FEATURE_LABELS[feat]}</p>
+                          <p className="text-xs mt-0.5" style={{ color: 'var(--color-text3)' }}>{FEATURE_DESCRIPTIONS[feat]}</p>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
                           {changed && (
@@ -310,10 +313,10 @@ export default function FeaturesPage() {
                             </span>
                           )}
                           <button
-                            onClick={() => toggle(selected.slug, feat.key)}
+                            onClick={() => toggle(selected.slug, feat)}
                             role="switch"
                             aria-checked={enabled}
-                            aria-label={`${enabled ? 'Disable' : 'Enable'} ${feat.label}`}
+                            aria-label={`${enabled ? 'Disable' : 'Enable'} ${FEATURE_LABELS[feat]}`}
                             className="relative w-10 h-5 rounded-full transition-colors shrink-0"
                             style={{ background: enabled ? 'var(--color-purple)' : 'rgba(255,255,255,0.1)' }}
                           >

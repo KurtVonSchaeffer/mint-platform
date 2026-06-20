@@ -112,6 +112,8 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [userInitials, setUserInitials] = useState('SA');
   const [userName,     setUserName]     = useState('Super Admin');
   const [userRole,     setUserRole]     = useState<string>('super_admin');
+  const [appOpen, setAppOpen] = useState(false);
+  const appRef    = useRef<HTMLDivElement>(null);
   const newRef    = useRef<HTMLDivElement>(null);
   const bellRef   = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
@@ -148,6 +150,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   // Close dropdowns on outside click
   useEffect(() => {
     function handle(e: MouseEvent) {
+      if (appRef.current && !appRef.current.contains(e.target as Node)) setAppOpen(false);
       if (newRef.current && !newRef.current.contains(e.target as Node)) setNewOpen(false);
       if (bellRef.current && !bellRef.current.contains(e.target as Node)) setBellOpen(false);
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) setSearchOpen(false);
@@ -573,20 +576,82 @@ export function Shell({ children }: { children: React.ReactNode }) {
           aria-hidden
         />
 
-        {/* Brand */}
-        <div className="sidebar-brand flex items-center gap-3 h-16 px-5 shrink-0 relative">
-          <div className="flex flex-col gap-0.5">
-            <AlgoLendLogo height={26} isLight={isLight} />
-            <p className="text-[9px] tracking-widest uppercase pl-0.5" style={{ color: navColors.subText }}>Admin Console</p>
-          </div>
-          <div className="ml-auto flex items-center gap-1.5">
-            <div className="relative flex items-center justify-center w-3 h-3">
-              <div className="absolute w-1.5 h-1.5 rounded-full" aria-hidden style={{ background: 'var(--color-green)', animation: 'radar-ring 2s ease-out infinite' }} />
-              <div className="absolute w-1.5 h-1.5 rounded-full" aria-hidden style={{ background: 'var(--color-green)', animation: 'radar-ring 2s ease-out infinite 0.6s' }} />
-              <div className="absolute w-1.5 h-1.5 rounded-full" aria-hidden style={{ background: 'var(--color-green)', animation: 'radar-ring 2s ease-out infinite 1.2s' }} />
-              <div className="w-1.5 h-1.5 rounded-full relative" style={{ background: 'var(--color-green)' }} />
+        {/* Brand + App Switcher */}
+        <div className="sidebar-brand flex flex-col h-auto px-5 pt-4 pb-3 shrink-0 relative gap-2">
+          <div className="flex items-center gap-3">
+            <div className="flex flex-col gap-0.5">
+              <AlgoLendLogo height={26} isLight={isLight} />
+              <p className="text-[9px] tracking-widest uppercase pl-0.5" style={{ color: navColors.subText }}>Admin Console</p>
             </div>
-            <span style={{ color: navColors.liveText, fontSize: 9, letterSpacing: '0.08em' }}>Live</span>
+            <div className="ml-auto flex items-center gap-1.5">
+              <div className="relative flex items-center justify-center w-3 h-3">
+                <div className="absolute w-1.5 h-1.5 rounded-full" aria-hidden style={{ background: 'var(--color-green)', animation: 'radar-ring 2s ease-out infinite' }} />
+                <div className="absolute w-1.5 h-1.5 rounded-full" aria-hidden style={{ background: 'var(--color-green)', animation: 'radar-ring 2s ease-out infinite 0.6s' }} />
+                <div className="absolute w-1.5 h-1.5 rounded-full" aria-hidden style={{ background: 'var(--color-green)', animation: 'radar-ring 2s ease-out infinite 1.2s' }} />
+                <div className="w-1.5 h-1.5 rounded-full relative" style={{ background: 'var(--color-green)' }} />
+              </div>
+              <span style={{ color: navColors.liveText, fontSize: 9, letterSpacing: '0.08em' }}>Live</span>
+            </div>
+          </div>
+
+          {/* App switcher */}
+          <div ref={appRef} className="relative">
+            <button
+              onClick={() => setAppOpen(o => !o)}
+              className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+              style={{
+                background: isLight ? 'rgba(124,58,237,0.07)' : 'rgba(124,58,237,0.12)',
+                border: '1px solid rgba(124,58,237,0.2)',
+                color: 'var(--color-violet)',
+              }}
+            >
+              <span className="flex items-center gap-1.5">
+                <LayoutDashboard size={11} />
+                AlgoLend Admin
+              </span>
+              <ChevronDown size={10} className={`transition-transform duration-200 ${appOpen ? 'rotate-180' : ''}`} />
+            </button>
+            {appOpen && (
+              <div
+                className="absolute left-0 right-0 top-full mt-1 rounded-xl overflow-hidden z-50 shadow-2xl"
+                style={{
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border2)',
+                  boxShadow: '0 12px 40px rgba(0,0,0,0.35)',
+                  animation: 'slide-down 0.18s cubic-bezier(0.16,1,0.3,1) both',
+                }}
+              >
+                <div className="px-3 py-1.5" style={{ borderBottom: '1px solid var(--color-border2)' }}>
+                  <p className="text-[9px] uppercase tracking-widest font-semibold" style={{ color: 'var(--color-text3)' }}>Switch tool</p>
+                </div>
+                <button
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium text-left transition-colors"
+                  style={{ background: isLight ? 'rgba(124,58,237,0.06)' : 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}
+                  onClick={() => setAppOpen(false)}
+                >
+                  <LayoutDashboard size={13} />
+                  <div>
+                    <p className="font-semibold">AlgoLend Admin</p>
+                    <p className="text-[10px] opacity-60">Client management</p>
+                  </div>
+                  <CheckCircle2 size={12} className="ml-auto opacity-70" />
+                </button>
+                <Link
+                  href="/mint-invoice"
+                  onClick={() => setAppOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-colors"
+                  style={{ color: 'var(--color-text2)' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                >
+                  <Receipt size={13} />
+                  <div>
+                    <p className="font-semibold">Mint Invoice Creator</p>
+                    <p className="text-[10px] opacity-60">Internal billing tool</p>
+                  </div>
+                </Link>
+              </div>
+            )}
           </div>
         </div>
 

@@ -18,6 +18,16 @@ interface ClientRow {
 interface MonthOption { id: string; label: string; }
 
 const SERVICE_LABELS: Record<string, string> = {
+  // Catalog services
+  cipc:               'CIPC Data',
+  bureau:             'Bureau enquiries',
+  banking:            'Bank account linking',
+  contracts:          'E-contracts signed',
+  liveness:           'Liveness & ID verification',
+  homeaff:            'Home Affairs verification',
+  watchlist:          'Watchlist / PEPs & Sanctions',
+  address:            'Address verification',
+  // Legacy service names
   trueid_lookup:      'TruID lookups',
   experian_score:     'Experian scores',
   docuseal_envelope:  'E-contracts signed',

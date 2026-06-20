@@ -270,7 +270,7 @@ export default function ClientDetailPage() {
         {/* KPI strip */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           {[
-            { label: 'Monthly fee',      value: fmt(client.monthly_fee_cents / 100), sub: `${client.tier} tier`,         color: 'var(--color-violet)' },
+            { label: 'Monthly fee',      value: fmt(client.monthly_fee_cents),       sub: `${client.tier} tier`,         color: 'var(--color-violet)' },
             { label: 'Total invoiced',   value: fmt(totalRevenue),                   sub: 'Paid invoices',               color: 'var(--color-green)'  },
             { label: 'Outstanding',      value: fmt(outstanding),                    sub: 'Sent + overdue',              color: outstanding > 0 ? 'var(--color-red)' : 'var(--color-text3)' },
             { label: 'Features enabled', value: enabledFeatures.length,              sub: `of 12 available`,             color: 'var(--color-sky)'    },
