@@ -1,7 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "nextjs",
-  "buildCommand": "pnpm next build",
   "functions": {
     "src/app/api/billing/generate/route.ts": { "maxDuration": 60 },
     "src/app/api/billing/cron/route.ts": { "maxDuration": 120 },
