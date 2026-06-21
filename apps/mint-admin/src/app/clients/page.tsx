@@ -80,6 +80,12 @@ export default function ClientsPage() {
     setPendingConfirm(c);
   }
 
+  function activateLabel(status: Client['status']) {
+    if (status === 'active') return 'Suspend';
+    if (status === 'trial')  return 'Activate';
+    return 'Reactivate';
+  }
+
   async function confirmKill() {
     if (!pendingConfirm) return;
     const next = pendingConfirm.status === 'active' ? 'suspended' : 'active';
@@ -215,12 +221,12 @@ export default function ClientsPage() {
               <Power size={18} />
             </div>
             <h3 className="text-xl font-bold mb-2 tracking-tight" style={{ color: 'var(--color-text)' }}>
-              {pendingConfirm.status === 'active' ? 'Suspend' : 'Reactivate'} {pendingConfirm.name}?
+              {activateLabel(pendingConfirm.status)} {pendingConfirm.name}?
             </h3>
             <p className="text-sm leading-relaxed mb-6" style={{ color: 'var(--color-text3)' }}>
               {pendingConfirm.status === 'active'
-                ? `Their portal at ${pendingConfirm.domain ?? `${pendingConfirm.subdomain}.algolend.co.za`} will become unreachable. The Vercel project will be paused.`
-                : `Their portal at ${pendingConfirm.domain ?? `${pendingConfirm.subdomain}.algolend.co.za`} will come back online. Billing will resume on the next cycle.`}
+                ? `Their portal at ${pendingConfirm.domain ?? `${pendingConfirm.subdomain}.algolend.co.za`} will become unreachable.`
+                : `Their account will be set to active. Billing will start on the next cycle.`}
             </p>
             <div className="flex gap-2">
               <button
@@ -235,7 +241,7 @@ export default function ClientsPage() {
                     : '0 4px 20px rgba(52,211,153,0.35)',
                 }}
               >
-                {pendingConfirm.status === 'active' ? 'Yes, suspend' : 'Yes, reactivate'}
+                {pendingConfirm.status === 'active' ? 'Yes, suspend' : pendingConfirm.status === 'trial' ? 'Yes, activate' : 'Yes, reactivate'}
               </button>
               <button
                 onClick={() => setPendingConfirm(null)}
@@ -496,7 +502,7 @@ export default function ClientsPage() {
                             : { background: 'rgba(52,211,153,0.1)', color: 'var(--color-green)', border: '1px solid rgba(52,211,153,0.2)' }}
                           onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = '0.75'; }}
                           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
-                          {c.status === 'active' ? 'Suspend' : 'Reactivate'}
+                          {activateLabel(c.status)}
                         </button>
                         <button onClick={() => setPendingDelete(c)} title="Delete client"
                           className="p-1.5 rounded-lg transition-colors"
@@ -602,7 +608,7 @@ export default function ClientsPage() {
                       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = c.status === 'active' ? 'rgba(248,113,113,0.2)' : 'rgba(52,211,153,0.2)'; }}
                       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = c.status === 'active' ? 'rgba(248,113,113,0.1)' : 'rgba(52,211,153,0.1)'; }}>
                       <Power size={13} />
-                      {c.status === 'active' ? 'Suspend' : 'Reactivate'}
+                      {activateLabel(c.status)}
                     </button>
                     <button onClick={e => { e.preventDefault(); setPendingDelete(c); }} title="Delete client"
                       className="relative z-10 p-2 rounded-xl transition-colors"
