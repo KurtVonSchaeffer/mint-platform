@@ -127,7 +127,6 @@ export default function MintInvoicePage() {
               <div className="flex items-start justify-between">
                 <div>
                   <Image src="/mint-logo.svg" alt="Mint Platforms" width={160} height={44} unoptimized style={{ height: 44, width: 'auto' }} />
-                  <p className="text-xs text-gray-400 mt-2">A product of Mint Platforms (Pty) Ltd</p>
                 </div>
                 <div className="text-right">
                   <h1 className="text-4xl font-bold" style={{ color: '#4c1d95' }}>Tax Invoice</h1>
