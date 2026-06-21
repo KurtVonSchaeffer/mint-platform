@@ -71,10 +71,10 @@ export default function MintInvoicePage() {
       <style>{`
         @media print {
           .no-print { display: none !important; }
-          body { background: white !important; margin: 0; }
+          body { background: white !important; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .print-root { display: block !important; padding: 0 !important; max-width: none !important; }
           .inv-card { box-shadow: none !important; border-radius: 0 !important; width: 100% !important; }
-          @page { margin: 0; size: A4; }
+          @page { margin: 10mm; size: A4; }
         }
         body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       `}</style>
