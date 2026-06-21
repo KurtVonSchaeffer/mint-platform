@@ -10,7 +10,7 @@ import { MarketplaceApplications } from '@/components/MarketplaceApplications';
 import {
   ArrowLeft, ExternalLink, Mail, Receipt, CheckCircle, AlertCircle,
   Clock, Send, Loader2, Activity, BarChart3, Building2, Calendar,
-  PlusCircle, X, Zap, Store, CheckCircle2, XCircle, FileText, Upload, CreditCard, Save,
+  PlusCircle, X, Zap, Store, CheckCircle2, XCircle, FileText, Upload, CreditCard, Save, ScrollText,
 } from 'lucide-react';
 
 // ─── Types ─────────────────────────────────────────────────────────────
@@ -96,7 +96,8 @@ export default function ClientDetailPage() {
   const [billingFee,  setBillingFee]  = useState('');
   const [billingTier, setBillingTier] = useState<'core' | 'growth' | 'enterprise' | ''>('');
   const [billingQuota, setBillingQuota] = useState('');
-  const [billingSaving, setBillingSaving] = useState(false);
+  const [billingSaving,  setBillingSaving]  = useState(false);
+  const [agrSending,    setAgrSending]    = useState(false);
 
   type MpPolicy = { id: string; active: boolean; display_name: string; base_rate_pct: number; min_credit_score: number; min_amount: number; max_amount: number; tagline: string | null };
   const [mpPolicy,  setMpPolicy]  = useState<MpPolicy | null | undefined>(undefined); // undefined=unloaded
@@ -270,6 +271,26 @@ export default function ClientDetailPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <button
+                onClick={async () => {
+                  setAgrSending(true);
+                  try {
+                    const res = await fetch(`/api/clients/${params.id}/send-agreement`, { method: 'POST' });
+                    if (!res.ok) throw new Error((await res.json()).error);
+                    setToast({ kind: 'success', message: `Agreement link sent to ${client.contact_email}` });
+                  } catch (err) {
+                    setToast({ kind: 'error', message: `Failed to send: ${err instanceof Error ? err.message : err}` });
+                  } finally { setAgrSending(false); }
+                }}
+                disabled={agrSending}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors disabled:opacity-60"
+                style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.25)' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.18)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.1)'; }}
+              >
+                {agrSending ? <Loader2 size={13} className="animate-spin" /> : <ScrollText size={13} />}
+                {agrSending ? 'Sending…' : 'Send agreement'}
+              </button>
               <button
                 onClick={() => setTopupOpen(true)}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors"

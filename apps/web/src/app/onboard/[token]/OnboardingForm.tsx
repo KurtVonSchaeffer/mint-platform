@@ -2,8 +2,44 @@
 
 import { useState } from 'react';
 
-const STEPS = ['Details', 'Directors', 'Documents', 'Review'] as const;
+const STEPS = ['Details', 'Directors', 'Documents', 'Agreement', 'Review'] as const;
 type Step = (typeof STEPS)[number];
+
+const AGREEMENT_TEXT = `SERVICE AGREEMENT
+
+This Service Agreement ("Agreement") is entered into between Mint Platforms (Pty) Ltd, Registration No. 2024/123456/07, ("Service Provider") and the Client identified in this application ("Client").
+
+1. SERVICES
+The Service Provider agrees to provide the AlgoLend lending management platform ("Platform") to the Client, including loan origination, borrower management, bureau integrations, and related services as specified in the selected service tier.
+
+2. SUBSCRIPTION FEES
+The Client agrees to pay the monthly subscription fee applicable to their selected tier. Fees are invoiced monthly in advance and due within 30 days of invoice date. Late payments attract interest at prime + 2% per annum.
+
+3. TERM AND TERMINATION
+This Agreement commences on the activation date and continues month-to-month unless either party provides 30 days written notice of termination. The Service Provider may terminate immediately for non-payment or breach of this Agreement.
+
+4. ACCEPTABLE USE
+The Client agrees to use the Platform solely for lawful lending activities and in compliance with all applicable South African laws, including the National Credit Act 34 of 2005, POPIA, FICA, and any applicable NCR regulations. The Client warrants that they hold all required licences.
+
+5. DATA AND PRIVACY
+The Service Provider will process personal data on behalf of the Client in accordance with POPIA. The Client remains the responsible party for all borrower data processed through the Platform. The Service Provider implements industry-standard security measures to protect all data.
+
+6. INTELLECTUAL PROPERTY
+The Platform and all related intellectual property remain the exclusive property of the Service Provider. This Agreement grants the Client a non-exclusive, non-transferable licence to use the Platform for the duration of the Agreement.
+
+7. LIMITATION OF LIABILITY
+The Service Provider's liability is limited to the fees paid in the 3 months preceding any claim. The Service Provider is not liable for indirect, consequential, or special damages.
+
+8. SUPPORT
+The Service Provider will provide reasonable technical support during business hours (08:00–17:00 SAST, Monday–Friday, excluding public holidays). Critical issues will be addressed within 4 business hours.
+
+9. CONFIDENTIALITY
+Both parties agree to keep confidential all proprietary information disclosed under this Agreement and not to disclose it to third parties without prior written consent.
+
+10. GOVERNING LAW
+This Agreement is governed by the laws of the Republic of South Africa. Disputes will be resolved in the courts of Gauteng, South Africa.
+
+By signing below, the Client confirms they have read, understood, and agree to be bound by the terms of this Agreement.`;
 
 const REQUIRED_DOCS = [
   { id: 'cipc_cert',      label: 'CIPC registration certificate', hint: 'Company registration document from CIPC', required: true  },
@@ -38,6 +74,10 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
 
   // Step 3 — Documents
   const [docFiles, setDocFiles] = useState<Record<string, File | null>>({});
+
+  // Step 4 — Agreement
+  const [agrAccepted,  setAgrAccepted]  = useState(false);
+  const [agrSignature, setAgrSignature] = useState('');
 
   const stepIndex = STEPS.indexOf(step);
 
@@ -78,6 +118,9 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
           lead_id:    leadId,
           name, company, legal_name: legalName, phone, ncr_number: ncr,
           directors,
+          agreement_accepted:  agrAccepted,
+          agreement_signature: agrSignature.trim(),
+          agreement_signed_at: new Date().toISOString(),
         }),
       });
       if (!res.ok) {
@@ -252,7 +295,69 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
             </div>
           )}
 
-          {/* Step 4 — Review */}
+          {/* Step 4 — Agreement */}
+          {step === 'Agreement' && (
+            <div className="space-y-5">
+              <div>
+                <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--color-ink)' }}>Service Agreement</h2>
+                <p className="text-sm" style={{ color: 'var(--color-ink-soft)' }}>
+                  Please read the agreement carefully before signing.
+                </p>
+              </div>
+
+              {/* Scrollable agreement text */}
+              <div
+                className="rounded-xl p-5 text-xs leading-relaxed font-mono overflow-y-auto"
+                style={{
+                  maxHeight: 280,
+                  background: 'var(--color-surface-2)',
+                  border: '1px solid var(--color-border)',
+                  color: 'var(--color-ink-soft)',
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                {AGREEMENT_TEXT}
+              </div>
+
+              {/* Accept checkbox */}
+              <label className="flex items-start gap-3 cursor-pointer">
+                <div className="mt-0.5 shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={agrAccepted}
+                    onChange={e => setAgrAccepted(e.target.checked)}
+                    className="w-4 h-4 rounded accent-violet-600 cursor-pointer"
+                  />
+                </div>
+                <span className="text-sm" style={{ color: 'var(--color-ink)' }}>
+                  I have read and agree to the terms of this Service Agreement on behalf of <strong>{company || 'my company'}</strong>.
+                </span>
+              </label>
+
+              {/* Digital signature */}
+              <OField
+                label="Full name (digital signature)"
+                hint="Type your full name exactly as it appears on your ID"
+              >
+                <input
+                  value={agrSignature}
+                  onChange={e => setAgrSignature(e.target.value)}
+                  placeholder={name || 'Your full name'}
+                  className="o-input"
+                  disabled={!agrAccepted}
+                  style={{ opacity: agrAccepted ? 1 : 0.4 }}
+                />
+              </OField>
+
+              {agrAccepted && agrSignature.trim() && (
+                <div className="rounded-xl px-4 py-3 text-xs" style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#15803D' }}>
+                  ✓ Signed by <strong>{agrSignature.trim()}</strong> on {new Date().toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Step 5 — Review */}
           {step === 'Review' && (
             <div className="space-y-5">
               <h2 className="text-lg font-bold mb-4" style={{ color: 'var(--color-ink)' }}>Review & submit</h2>
@@ -275,6 +380,10 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
                     warn={!docFiles[doc.id] && doc.required} />
                 ))}
               </Section>
+              <Section title="Agreement">
+                <Row label="Status"    value={agrAccepted && agrSignature.trim() ? '✓ Signed' : '⚠ Not yet signed'} warn={!agrAccepted || !agrSignature.trim()} />
+                {agrSignature.trim() && <Row label="Signed by" value={agrSignature.trim()} />}
+              </Section>
               {error && (
                 <p className="text-sm px-4 py-3 rounded-xl" style={{ background: '#FEF2F2', color: '#B91C1C' }}>{error}</p>
               )}
@@ -294,7 +403,10 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
           {step !== 'Review' ? (
             <button
               onClick={() => setStep(STEPS[stepIndex + 1] ?? step)}
-              disabled={step === 'Details' && (!name.trim() || !company.trim())}
+              disabled={
+                (step === 'Details'    && (!name.trim() || !company.trim())) ||
+                (step === 'Agreement'  && (!agrAccepted || !agrSignature.trim()))
+              }
               className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity disabled:opacity-40"
               style={{ background: 'var(--color-brand)' }}>
               Next →

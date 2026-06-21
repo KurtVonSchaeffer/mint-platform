@@ -39,10 +39,13 @@ export async function POST(
       company:           String(body.company ?? '').trim() || undefined,
       onboarding_status: 'complete',
       onboarding_data: {
-        legal_name:  body.legal_name,
-        phone:       body.phone,
-        ncr_number:  body.ncr_number,
-        directors:   body.directors,
+        legal_name:          body.legal_name,
+        phone:               body.phone,
+        ncr_number:          body.ncr_number,
+        directors:           body.directors,
+        agreement_accepted:  body.agreement_accepted ?? false,
+        agreement_signature: body.agreement_signature ?? null,
+        agreement_signed_at: body.agreement_signed_at ?? null,
       },
     })
     .eq('id', lead.id);
