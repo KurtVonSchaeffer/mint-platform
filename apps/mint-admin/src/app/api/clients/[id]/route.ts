@@ -310,11 +310,34 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const { id } = await params;
 
-  const { error } = await supabaseAdmin
-    .from('clients')
-    .delete()
-    .eq('id', id);
+  // Delete referencing rows first to satisfy FK constraints
+  const deps = [
+    supabaseAdmin.from('audit_log').delete().eq('client_id', id),
+    supabaseAdmin.from('client_features').delete().eq('client_id', id),
+  ];
+  const depResults = await Promise.all(deps);
+  for (const { error } of depResults) {
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
+  // Delete invoice line items via invoices
+  const { data: invoices } = await supabaseAdmin
+    .from('invoices')
+    .select('id')
+    .eq('client_id', id);
+
+  if (invoices?.length) {
+    const invoiceIds = invoices.map(i => i.id);
+    const { error } = await supabaseAdmin
+      .from('invoice_line_items')
+      .delete()
+      .in('invoice_id', invoiceIds);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  await supabaseAdmin.from('invoices').delete().eq('client_id', id);
+
+  const { error } = await supabaseAdmin.from('clients').delete().eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
