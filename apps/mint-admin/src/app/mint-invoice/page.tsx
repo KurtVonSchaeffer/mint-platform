@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Plus, Trash2, ArrowLeft, Printer } from 'lucide-react';
 
-/* ── Mint Platforms constants ─────────────────────────────────── */
 const FROM = {
   company: 'Mint Platforms (Pty) Ltd',
   address: ['3 Gwen Lane, Sandown', 'Sandton, 2031, South Africa'],
@@ -21,45 +20,30 @@ const BANKING = {
   type:   'Savings',
 };
 
-/* ── Types ───────────────────────────────────────────────────── */
-interface LineItem {
-  id:   number;
-  desc: string;
-  sub:  string;
-  qty:  number;
-  rate: number;
-}
+interface LineItem { id: number; desc: string; sub: string; qty: number; rate: number; }
 
-/* ── Helpers ─────────────────────────────────────────────────── */
 let nextId = 2;
 
-function toISO(d: Date) {
-  return d.toISOString().slice(0, 10); // "YYYY-MM-DD"
-}
+function toISO(d: Date) { return d.toISOString().slice(0, 10); }
 function today() { return toISO(new Date()); }
-function defaultDue() {
-  const d = new Date();
-  d.setMonth(d.getMonth() + 1);
-  return toISO(d);
-}
+function defaultDue() { const d = new Date(); d.setMonth(d.getMonth() + 1); return toISO(d); }
 function fmtDate(iso: string) {
   if (!iso) return '';
-  const d = new Date(iso + 'T00:00:00');
-  return d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+  return new Date(iso + 'T00:00:00').toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 function invoiceNo(client: string, seq: number) {
-  const d   = new Date();
+  const d = new Date();
   const mon = d.toLocaleString('default', { month: 'short' }).toUpperCase();
-  const yr  = d.getFullYear();
   const tag = client ? client.replace(/[^a-zA-Z0-9]/g, '').slice(0, 8).toUpperCase() : 'CLIENT';
-  const num = String(seq).padStart(3, '0');
-  return `MP-${tag}-${mon}${yr}-${num}`;
+  return `MP-${tag}-${mon}${d.getFullYear()}-${String(seq).padStart(3, '0')}`;
 }
 function fmt(n: number) {
   return `R ${n.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-/* ── Component ───────────────────────────────────────────────── */
+/* ── Shared input style ──────────────────────────────────────────── */
+const inp = 'w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-violet-400 placeholder:text-gray-300';
+
 export default function MintInvoicePage() {
   const [clientName,  setClientName]  = useState('');
   const [clientAddr,  setClientAddr]  = useState('');
@@ -70,19 +54,12 @@ export default function MintInvoicePage() {
   const [invoiceSeq,  setInvoiceSeq]  = useState(1);
   const [vatEnabled,  setVatEnabled]  = useState(false);
   const [notes,       setNotes]       = useState('');
-  const [items, setItems] = useState<LineItem[]>([
-    { id: 1, desc: '', sub: '', qty: 1, rate: 0 },
-  ]);
+  const [items, setItems] = useState<LineItem[]>([{ id: 1, desc: '', sub: '', qty: 1, rate: 0 }]);
 
-  function addItem() {
-    setItems(p => [...p, { id: nextId++, desc: '', sub: '', qty: 1, rate: 0 }]);
-  }
-  function removeItem(id: number) {
-    setItems(p => p.filter(i => i.id !== id));
-  }
-  function update(id: number, field: keyof LineItem, val: string | number) {
-    setItems(p => p.map(i => (i.id === id ? { ...i, [field]: val } : i)));
-  }
+  const addItem    = () => setItems(p => [...p, { id: nextId++, desc: '', sub: '', qty: 1, rate: 0 }]);
+  const removeItem = (id: number) => setItems(p => p.filter(i => i.id !== id));
+  const update     = (id: number, f: keyof LineItem, v: string | number) =>
+    setItems(p => p.map(i => i.id === id ? { ...i, [f]: v } : i));
 
   const subtotal = items.reduce((s, i) => s + i.qty * i.rate, 0);
   const vat      = vatEnabled ? subtotal * 0.15 : 0;
@@ -95,243 +72,239 @@ export default function MintInvoicePage() {
         @media print {
           .no-print { display: none !important; }
           body { background: white !important; margin: 0; }
-          .print-root {
-            display: block !important;
-            padding: 0 !important;
-            max-width: none !important;
-          }
-          .invoice-card {
-            box-shadow: none !important;
-            border: none !important;
-            border-radius: 0 !important;
-            width: 100% !important;
-          }
-          @page { margin: 12mm; }
+          .print-root { display: block !important; padding: 0 !important; max-width: none !important; }
+          .inv-card { box-shadow: none !important; border-radius: 0 !important; width: 100% !important; }
+          @page { margin: 0; size: A4; }
         }
-        .inv-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9ca3af; margin-bottom: 4px; }
-        .inv-td { padding: 14px 12px; border-bottom: 1px solid #f3f4f6; font-size: 14px; vertical-align: top; }
-        .inv-th { padding: 10px 12px; font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: #9ca3af; border-bottom: 2px solid #e5e7eb; }
-        .inv-no { white-space: nowrap; overflow-wrap: anywhere; }
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       `}</style>
 
       <div className="min-h-screen" style={{ background: '#f1f5f9' }}>
 
         {/* Top bar */}
-        <div className="no-print sticky top-0 z-10 flex items-center justify-between px-8 h-14 bg-white shadow-sm">
+        <div className="no-print sticky top-0 z-10 flex items-center justify-between px-8 h-14 bg-white border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-purple-600 transition-colors">
+            <Link href="/" className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-violet-600 transition-colors">
               <ArrowLeft size={13} /> Back to Admin
             </Link>
             <span className="text-gray-200">|</span>
-            <p className="text-sm font-semibold text-gray-800">Mint Platforms — Invoice Creator</p>
+            <p className="text-sm font-semibold text-gray-700">Invoice Creator</p>
           </div>
           <button
             onClick={() => window.print()}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
-            style={{ background: 'linear-gradient(135deg,#4c1d95,#7C3AED)', boxShadow: '0 3px 12px rgba(124,58,237,0.35)' }}
+            style={{ background: 'linear-gradient(135deg,#4c1d95,#7C3AED)' }}
           >
             <Printer size={14} /> Print / Save PDF
           </button>
         </div>
 
-        <div className="print-root max-w-6xl mx-auto px-6 py-8 grid lg:grid-cols-[1fr_300px] gap-6 items-start">
+        <div className="print-root max-w-6xl mx-auto px-6 py-8 grid lg:grid-cols-[1fr_310px] gap-8 items-start">
 
-          {/* ── INVOICE PREVIEW ───────────────────────────────── */}
-          <div className="invoice-card bg-white rounded-2xl shadow-lg overflow-hidden">
+          {/* ── INVOICE PREVIEW ─────────────────────────────────── */}
+          <div className="inv-card bg-white rounded-2xl shadow-xl overflow-hidden">
 
-            {/* Header */}
-            <div className="px-10 pt-10 pb-6">
+            {/* ── Dark header band ── */}
+            <div style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #3730a3 100%)' }} className="px-10 py-8">
               <div className="flex items-start justify-between">
                 <div>
-                  <Image src="/mint-logo.svg" alt="Mint Platforms" width={160} height={44} unoptimized style={{ height: 44, width: 'auto' }} />
+                  <Image src="/mint-logo-white.png" alt="Mint Platforms" width={140} height={36} unoptimized
+                    style={{ height: 36, width: 'auto', opacity: 0.95 }} />
+                  <p className="text-indigo-300 text-xs mt-2">{FROM.company}</p>
                 </div>
                 <div className="text-right">
-                  <h1 className="text-3xl font-bold whitespace-nowrap" style={{ color: '#4c1d95' }}>Tax Invoice</h1>
-                  <p className="text-sm font-bold mt-1 inv-no" style={{ color: '#7C3AED' }}>{invNo}</p>
+                  <p className="text-xs font-bold tracking-[0.2em] uppercase text-indigo-300 mb-1">Tax Invoice</p>
+                  <p className="text-2xl font-bold text-white leading-tight">{invNo}</p>
                 </div>
               </div>
-              <div className="mt-6" style={{ height: 2, background: 'linear-gradient(90deg,#4c1d95,#a78bfa)' }} />
-            </div>
 
-            {/* FROM / BILL TO */}
-            <div className="px-10 pb-8 grid grid-cols-2 gap-10">
-              <div>
-                <p className="inv-label">From</p>
-                <p className="text-base font-bold text-gray-900 mb-1">{FROM.company}</p>
-                {FROM.address.map(a => <p key={a} className="text-sm text-gray-500">{a}</p>)}
-              </div>
-              <div>
-                <p className="inv-label">Bill to</p>
-                <p className="text-base font-bold text-gray-900 mb-1">
-                  {clientName || <span className="text-gray-300">Client name</span>}
-                </p>
-                {clientAddr.split('\n').filter(Boolean).map((l, i) => <p key={i} className="text-sm text-gray-500">{l}</p>)}
-                {clientPhone && <p className="text-sm text-gray-500">{clientPhone}</p>}
-                {clientEmail && <p className="text-sm text-gray-500">{clientEmail}</p>}
-              </div>
-            </div>
-
-            {/* Invoice meta box */}
-            <div className="mx-10 mb-8 rounded-xl overflow-hidden" style={{ border: '1px solid #e5e7eb' }}>
-              <div className="grid grid-cols-3">
+              {/* Meta strip inside header */}
+              <div className="mt-6 pt-5 border-t border-indigo-700/60 grid grid-cols-3 gap-4">
                 {[
-                  { label: 'Invoice Number', value: invNo },
-                  { label: 'Invoice Date',   value: fmtDate(invoiceDate) },
-                  { label: 'Due Date',       value: fmtDate(dueDate) },
-                ].map((m, i) => (
-                  <div key={m.label} className="px-5 py-4" style={{ borderRight: i < 2 ? '1px solid #e5e7eb' : 'none' }}>
-                    <p className="inv-label">{m.label}</p>
-                    <p className="text-sm font-bold text-gray-900 inv-no">{m.value}</p>
+                  { l: 'Invoice Date', v: fmtDate(invoiceDate) },
+                  { l: 'Due Date',     v: fmtDate(dueDate) },
+                  { l: 'Status',       v: 'Due' },
+                ].map(m => (
+                  <div key={m.l}>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-400 mb-0.5">{m.l}</p>
+                    <p className="text-sm font-semibold text-white">{m.v}</p>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Line items table */}
-            <div className="px-10 mb-6">
-              <p className="inv-label mb-3">Services</p>
-              <table className="w-full">
+            {/* ── FROM / BILL TO ── */}
+            <div className="px-10 py-8 grid grid-cols-2 gap-8" style={{ borderBottom: '1px solid #f0f0f5' }}>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">From</p>
+                <p className="text-sm font-bold text-gray-900">{FROM.company}</p>
+                {FROM.address.map(a => <p key={a} className="text-sm text-gray-500 leading-relaxed">{a}</p>)}
+                <p className="text-sm text-gray-500">{FROM.email}</p>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Bill To</p>
+                {clientName
+                  ? <p className="text-sm font-bold text-gray-900">{clientName}</p>
+                  : <p className="text-sm font-bold text-gray-300">Client name</p>}
+                {clientAddr.split('\n').filter(Boolean).map((l, i) =>
+                  <p key={i} className="text-sm text-gray-500 leading-relaxed">{l}</p>)}
+                {clientPhone && <p className="text-sm text-gray-500">{clientPhone}</p>}
+                {clientEmail && <p className="text-sm text-gray-500">{clientEmail}</p>}
+              </div>
+            </div>
+
+            {/* ── Line items table ── */}
+            <div className="px-10 py-6">
+              <table className="w-full text-sm">
                 <thead>
-                  <tr>
-                    <th className="inv-th text-left">Service</th>
-                    <th className="inv-th text-right" style={{ width: 60 }}>Qty</th>
-                    <th className="inv-th text-right" style={{ width: 128 }}>Rate (excl. VAT)</th>
-                    <th className="inv-th text-right" style={{ width: 112 }}>Amount</th>
+                  <tr style={{ background: '#f8f7ff' }}>
+                    <th className="text-left text-[10px] font-bold uppercase tracking-widest text-gray-400 px-4 py-3 rounded-l-lg">Description</th>
+                    <th className="text-center text-[10px] font-bold uppercase tracking-widest text-gray-400 px-4 py-3" style={{ width: 60 }}>Qty</th>
+                    <th className="text-right text-[10px] font-bold uppercase tracking-widest text-gray-400 px-4 py-3" style={{ width: 130 }}>Unit Price</th>
+                    <th className="text-right text-[10px] font-bold uppercase tracking-widest text-gray-400 px-4 py-3 rounded-r-lg" style={{ width: 130 }}>Amount</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map(item => (
-                    <tr key={item.id}>
-                      <td className="inv-td">
-                        <p className="text-gray-800">{item.desc || <span className="text-gray-300">Service description</span>}</p>
+                  {items.map((item, idx) => (
+                    <tr key={item.id} style={{ borderBottom: idx < items.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
+                      <td className="px-4 py-4">
+                        <p className="font-medium text-gray-800">{item.desc || <span className="text-gray-300 font-normal">Service description</span>}</p>
                         {item.sub && <p className="text-xs text-gray-400 mt-0.5">{item.sub}</p>}
                       </td>
-                      <td className="inv-td text-right text-gray-600">{item.qty}</td>
-                      <td className="inv-td text-right text-gray-600">{fmt(item.rate)}</td>
-                      <td className="inv-td text-right font-bold text-gray-900">{fmt(item.qty * item.rate)}</td>
+                      <td className="px-4 py-4 text-center text-gray-600">{item.qty}</td>
+                      <td className="px-4 py-4 text-right text-gray-600">{fmt(item.rate)}</td>
+                      <td className="px-4 py-4 text-right font-bold text-gray-900">{fmt(item.qty * item.rate)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            {/* Totals */}
-            <div className="px-10 mb-8 flex justify-end">
-              <div style={{ width: 280 }} className="space-y-2">
-                <div className="flex justify-between text-sm text-gray-500">
-                  <span>Subtotal</span><span>{fmt(subtotal)}</span>
+            {/* ── Totals ── */}
+            <div className="px-10 pb-8 flex justify-end">
+              <div className="w-64">
+                <div className="flex justify-between text-sm text-gray-500 py-1.5">
+                  <span>Subtotal</span><span className="font-medium text-gray-700">{fmt(subtotal)}</span>
                 </div>
-                <div className="flex justify-between text-sm text-gray-500">
-                  <span>{vatEnabled ? 'VAT (15%)' : 'VAT (0% — not a registered VAT vendor)'}</span>
-                  <span>{fmt(vat)}</span>
+                <div className="flex justify-between text-sm text-gray-500 py-1.5">
+                  <span>{vatEnabled ? 'VAT (15%)' : 'VAT (0%)'}</span>
+                  <span className="font-medium text-gray-700">{fmt(vat)}</span>
                 </div>
-                <div className="flex justify-between pt-3" style={{ borderTop: '2px solid #e5e7eb' }}>
-                  <span className="text-base font-bold text-gray-900">Total Due</span>
-                  <span className="text-base font-bold text-gray-900">{fmt(total)}</span>
+                {!vatEnabled && (
+                  <p className="text-[10px] text-gray-400 -mt-1 mb-1">Not a registered VAT vendor</p>
+                )}
+                <div className="mt-2 pt-3 flex justify-between items-center rounded-xl px-4 py-3"
+                  style={{ background: 'linear-gradient(135deg,#1e1b4b,#3730a3)' }}>
+                  <span className="text-sm font-bold text-indigo-200">Total Due</span>
+                  <span className="text-lg font-bold text-white">{fmt(total)}</span>
                 </div>
               </div>
             </div>
 
-            {/* Notes */}
+            {/* ── Notes ── */}
             {notes && (
-              <div className="mx-10 mb-8 p-4 rounded-xl text-sm text-gray-600 leading-relaxed"
-                style={{ background: '#f0f9ff', border: '1px solid #bae6fd' }}>
-                <strong className="text-gray-700">Note: </strong>{notes}
+              <div className="mx-10 mb-6 px-4 py-3 rounded-xl text-sm text-gray-600"
+                style={{ background: '#fefce8', border: '1px solid #fde68a' }}>
+                <span className="font-semibold text-gray-700">Note: </span>{notes}
               </div>
             )}
 
-            {/* Banking details */}
-            <div className="px-10 mb-8">
-              <p className="inv-label mb-3">Payment Details</p>
-              <div className="rounded-xl p-5 grid grid-cols-3 gap-x-6 gap-y-4" style={{ border: '1px solid #e5e7eb' }}>
+            {/* ── Payment details ── */}
+            <div className="mx-10 mb-8 rounded-xl overflow-hidden" style={{ border: '1px solid #e5e7eb' }}>
+              <div className="px-5 py-3" style={{ background: '#f8f7ff', borderBottom: '1px solid #e5e7eb' }}>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">Payment Details</p>
+              </div>
+              <div className="px-5 py-4 grid grid-cols-3 gap-x-8 gap-y-3">
                 {[
-                  { l: 'Bank Name',       v: BANKING.bank   },
-                  { l: 'Account Name',    v: BANKING.name   },
-                  { l: 'Account Number',  v: BANKING.number },
-                  { l: 'Branch Code',     v: BANKING.branch },
-                  { l: 'Account Type',    v: BANKING.type   },
-                  { l: 'Reference',       v: invNo          },
+                  { l: 'Bank',           v: BANKING.bank   },
+                  { l: 'Account Name',   v: BANKING.name   },
+                  { l: 'Account No.',    v: BANKING.number },
+                  { l: 'Branch Code',    v: BANKING.branch },
+                  { l: 'Account Type',   v: BANKING.type   },
+                  { l: 'Reference',      v: invNo          },
                 ].map(d => (
                   <div key={d.l}>
-                    <p className="inv-label">{d.l}</p>
-                    <p className="text-sm font-bold text-gray-900 inv-no">{d.v}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-0.5">{d.l}</p>
+                    <p className="text-sm font-semibold text-gray-800">{d.v}</p>
                   </div>
                 ))}
               </div>
-              <div className="mt-3 p-4 rounded-xl text-sm text-gray-600" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
-                <strong className="text-gray-700">Note: </strong>
-                Please use <strong>{invNo}</strong> as your payment reference. Thank you for your business.
+              <div className="px-5 py-3 text-sm text-gray-600" style={{ background: '#f0fdf4', borderTop: '1px solid #d1fae5' }}>
+                Please use <strong className="text-gray-800">{invNo}</strong> as your payment reference.
               </div>
             </div>
 
-            {/* Footer */}
-            <div className="px-10 py-5 text-center text-xs text-gray-400" style={{ borderTop: '1px solid #f3f4f6' }}>
-              {FROM.company} · Reg. No. {FROM.reg} · {FROM.email}
+            {/* ── Footer ── */}
+            <div className="px-10 py-4 flex items-center justify-between text-xs text-gray-400"
+              style={{ borderTop: '1px solid #f3f4f6' }}>
+              <span>{FROM.company} · Reg. {FROM.reg}</span>
+              <span>{FROM.email}</span>
             </div>
           </div>
 
-          {/* ── INPUT PANEL ────────────────────────────────────── */}
+          {/* ── INPUT PANEL ─────────────────────────────────────── */}
           <div className="no-print space-y-4">
 
-            {/* Dates */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm space-y-3">
-              <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Invoice</p>
+            {/* Invoice meta */}
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Invoice</p>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Invoice #</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={invoiceSeq}
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Number</label>
+                <input type="number" min={1} value={invoiceSeq}
                   onChange={e => setInvoiceSeq(Math.max(1, Number(e.target.value)))}
-                  className="field-input w-full text-sm"
-                />
+                  onFocus={e => e.target.select()}
+                  className={inp} />
                 <p className="text-[10px] text-gray-400 mt-1">{invNo}</p>
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Date</label>
-                <input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} className="field-input w-full text-sm" />
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Invoice Date</label>
+                <input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} className={inp} />
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Due Date</label>
-                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="field-input w-full text-sm" />
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Due Date</label>
+                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className={inp} />
               </div>
             </div>
 
             {/* Bill to */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm space-y-3">
-              <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Bill to</p>
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Bill To</p>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Company / Name *</label>
-                <input value={clientName} onChange={e => setClientName(e.target.value)} placeholder="e.g. Zwane Official" className="field-input w-full text-sm" />
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Company / Name</label>
+                <input value={clientName} onChange={e => setClientName(e.target.value)}
+                  placeholder="e.g. Zwane Official" className={inp} />
               </div>
               <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Address</label>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Address</label>
                 <textarea value={clientAddr} onChange={e => setClientAddr(e.target.value)} rows={3}
-                  placeholder={"2nd Floor, Northlands Corner\nJohannesburg, 2169"} className="field-input w-full text-sm resize-none" />
+                  placeholder={'2nd Floor, Northlands Corner\nJohannesburg, 2169'}
+                  className={`${inp} resize-none`} />
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Phone</label>
-                  <input value={clientPhone} onChange={e => setClientPhone(e.target.value)} placeholder="010 500 0978" className="field-input w-full text-sm" />
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Phone</label>
+                  <input value={clientPhone} onChange={e => setClientPhone(e.target.value)}
+                    placeholder="010 500 0978" className={inp} />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Email</label>
-                  <input value={clientEmail} onChange={e => setClientEmail(e.target.value)} placeholder="admin@client.co.za" className="field-input w-full text-sm" />
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Email</label>
+                  <input value={clientEmail} onChange={e => setClientEmail(e.target.value)}
+                    placeholder="admin@client.co.za" className={inp} />
                 </div>
               </div>
             </div>
 
             {/* Line items */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm space-y-3">
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-bold uppercase tracking-wider text-gray-400">Line Items</p>
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Line Items</p>
                 <button
                   onClick={() => setVatEnabled(v => !v)}
-                  className="text-[10px] px-2.5 py-1 rounded-lg font-bold transition-colors"
+                  className="text-[10px] px-2.5 py-1 rounded-lg font-bold transition-all"
                   style={{
-                    background: vatEnabled ? 'rgba(124,58,237,0.1)' : '#f9fafb',
-                    color: vatEnabled ? '#7C3AED' : '#9ca3af',
-                    border: `1px solid ${vatEnabled ? 'rgba(124,58,237,0.25)' : '#e5e7eb'}`,
+                    background: vatEnabled ? 'rgba(99,102,241,0.1)' : '#f9fafb',
+                    color:      vatEnabled ? '#4f46e5' : '#9ca3af',
+                    border:     `1px solid ${vatEnabled ? 'rgba(99,102,241,0.3)' : '#e5e7eb'}`,
                   }}
                 >
                   VAT {vatEnabled ? '15%' : '0%'}
@@ -339,91 +312,72 @@ export default function MintInvoicePage() {
               </div>
 
               {items.map((item, idx) => (
-                <div key={item.id} className="pb-3 space-y-2" style={{ borderBottom: idx < items.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-mono text-gray-300 shrink-0">{String(idx + 1).padStart(2, '0')}</span>
-                    <input
-                      value={item.desc}
-                      onChange={e => update(item.id, 'desc', e.target.value)}
-                      placeholder="Service name"
-                      className="field-input flex-1 text-sm"
-                    />
+                <div key={item.id} className="space-y-2 pb-3"
+                  style={{ borderBottom: idx < items.length - 1 ? '1px solid #f3f4f6' : 'none' }}>
+                  <div className="flex gap-2">
+                    <input value={item.desc} onChange={e => update(item.id, 'desc', e.target.value)}
+                      placeholder="Service name" className={`${inp} flex-1`} />
                     {items.length > 1 && (
-                      <button onClick={() => removeItem(item.id)} className="text-gray-300 hover:text-red-400 transition-colors shrink-0">
+                      <button onClick={() => removeItem(item.id)}
+                        className="p-2 rounded-lg text-gray-300 hover:text-red-400 hover:bg-red-50 transition-colors">
                         <Trash2 size={13} />
                       </button>
                     )}
                   </div>
-                  <input
-                    value={item.sub}
-                    onChange={e => update(item.id, 'sub', e.target.value)}
-                    placeholder="Sub-description (optional)"
-                    className="field-input w-full text-xs ml-6"
-                  />
-                  <div className="flex gap-2 pl-6">
-                    <div className="flex-1">
-                      <label className="block text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">Qty</label>
-                      <input
-                        type="number" min={1}
-                        value={item.qty || ''}
-                        onFocus={e => e.target.select()}
+                  <input value={item.sub} onChange={e => update(item.id, 'sub', e.target.value)}
+                    placeholder="Sub-description (optional)" className={`${inp} text-xs`} />
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1">Qty</label>
+                      <input type="number" min={1} value={item.qty || ''} onFocus={e => e.target.select()}
                         onChange={e => update(item.id, 'qty', e.target.value === '' ? 1 : Number(e.target.value))}
-                        className="field-input w-full text-sm"
-                      />
+                        className={inp} />
                     </div>
-                    <div className="flex-[2]">
-                      <label className="block text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">Rate (R)</label>
-                      <input
-                        type="number" min={0} step={0.01}
-                        value={item.rate || ''}
-                        placeholder="0.00"
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1">Rate (R)</label>
+                      <input type="number" min={0} step={0.01} value={item.rate || ''} placeholder="0.00"
                         onFocus={e => e.target.select()}
                         onChange={e => update(item.id, 'rate', e.target.value === '' ? 0 : Number(e.target.value))}
-                        className="field-input w-full text-sm"
-                      />
+                        className={inp} />
                     </div>
-                    <div className="flex-[2]">
-                      <label className="block text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">Amount</label>
-                      <div className="field-input text-sm font-semibold" style={{ color: '#7C3AED' }}>{fmt(item.qty * item.rate)}</div>
+                    <div>
+                      <label className="block text-[9px] font-bold uppercase tracking-widest text-gray-400 mb-1">Amount</label>
+                      <div className="rounded-lg px-3 py-2 text-sm font-bold text-indigo-600"
+                        style={{ background: '#f5f3ff', border: '1px solid #e0d9ff' }}>
+                        {fmt(item.qty * item.rate)}
+                      </div>
                     </div>
                   </div>
                 </div>
               ))}
 
-              <button
-                onClick={addItem}
-                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold text-gray-400 transition-colors hover:text-purple-600 hover:border-purple-300"
-                style={{ border: '1px dashed #e5e7eb' }}
-              >
+              <button onClick={addItem}
+                className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-semibold text-gray-400 hover:text-indigo-600 transition-colors"
+                style={{ border: '1.5px dashed #e5e7eb' }}>
                 <Plus size={12} /> Add line item
               </button>
 
-              <div className="rounded-xl p-3 space-y-1.5" style={{ background: '#f9fafb', border: '1px solid #e5e7eb' }}>
+              <div className="rounded-xl p-3 space-y-1.5" style={{ background: '#f8f7ff', border: '1px solid #e0d9ff' }}>
                 <div className="flex justify-between text-xs text-gray-500"><span>Subtotal</span><span>{fmt(subtotal)}</span></div>
                 <div className="flex justify-between text-xs text-gray-500"><span>VAT</span><span>{fmt(vat)}</span></div>
-                <div className="flex justify-between text-sm font-bold pt-1.5" style={{ borderTop: '1px solid #e5e7eb', color: '#111827' }}>
-                  <span>Total Due</span><span style={{ color: '#7C3AED' }}>{fmt(total)}</span>
+                <div className="flex justify-between text-sm font-bold pt-2" style={{ borderTop: '1px solid #e0d9ff' }}>
+                  <span className="text-gray-800">Total Due</span>
+                  <span className="text-indigo-600">{fmt(total)}</span>
                 </div>
               </div>
             </div>
 
             {/* Notes */}
-            <div className="bg-white rounded-2xl p-5 shadow-sm">
-              <p className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Notes</p>
-              <textarea
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                rows={3}
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+              <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-3">Notes</p>
+              <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3}
                 placeholder="Additional notes for the client…"
-                className="field-input w-full text-sm resize-none"
-              />
+                className={`${inp} resize-none`} />
             </div>
 
-            <button
-              onClick={() => window.print()}
+            <button onClick={() => window.print()}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold text-white"
-              style={{ background: 'linear-gradient(135deg,#4c1d95,#7C3AED)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}
-            >
+              style={{ background: 'linear-gradient(135deg,#1e1b4b,#4f46e5)', boxShadow: '0 4px 20px rgba(79,70,229,0.4)' }}>
               <Printer size={15} /> Print / Save PDF
             </button>
           </div>
