@@ -55,6 +55,50 @@ interface Props {
   prefill: { name: string; email: string; company: string; phone: string; ncr: string };
 }
 
+interface DirectorFields { name: string; id_number: string; email: string; }
+
+function validateStep(step: Step, fields: {
+  name: string; company: string; phone: string; ncr: string;
+  directors: DirectorFields[];
+  docFiles: Record<string, File | null>;
+  agrAccepted: boolean; agrSignature: string;
+}): string[] {
+  const errors: string[] = [];
+
+  if (step === 'Details') {
+    if (!fields.name.trim())    errors.push('Contact name is required.');
+    if (!fields.company.trim()) errors.push('Company name is required.');
+    if (!fields.phone.trim())   errors.push('Phone number is required.');
+    if (!fields.ncr.trim())     errors.push('NCR registration number is required. If pending, enter "NCR Pending — Applied".');
+  }
+
+  if (step === 'Directors') {
+    const valid = fields.directors.filter(d => d.name.trim() && d.id_number.trim());
+    if (valid.length === 0)
+      errors.push('At least one director with full name and ID number is required for FICA compliance.');
+    fields.directors.forEach((d, i) => {
+      if (d.name.trim() && !d.id_number.trim())
+        errors.push(`Director ${i + 1}: ID number is required.`);
+      if (!d.name.trim() && d.id_number.trim())
+        errors.push(`Director ${i + 1}: Full name is required.`);
+    });
+  }
+
+  if (step === 'Documents') {
+    REQUIRED_DOCS.filter(d => d.required).forEach(doc => {
+      if (!fields.docFiles[doc.id])
+        errors.push(`${doc.label} is required.`);
+    });
+  }
+
+  if (step === 'Agreement') {
+    if (!fields.agrAccepted)          errors.push('You must accept the agreement terms.');
+    if (!fields.agrSignature.trim())  errors.push('Please type your full name as your digital signature.');
+  }
+
+  return errors;
+}
+
 export function OnboardingForm({ token, leadId, prefill }: Props) {
   const [step, setStep]     = useState<Step>('Details');
   const [error, setError]   = useState('');
@@ -70,7 +114,7 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
   const [ncr, setNcr]           = useState(prefill.ncr);
 
   // Step 2 — Directors
-  const [directors, setDirectors] = useState([{ name: '', id_number: '', email: '' }]);
+  const [directors, setDirectors] = useState<DirectorFields[]>([{ name: '', id_number: '', email: '' }]);
 
   // Step 3 — Documents
   const [docFiles, setDocFiles] = useState<Record<string, File | null>>({});
@@ -79,35 +123,51 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
   const [agrAccepted,  setAgrAccepted]  = useState(false);
   const [agrSignature, setAgrSignature] = useState('');
 
+  // Per-step inline validation errors (shown after user attempts Next)
+  const [stepErrors, setStepErrors] = useState<string[]>([]);
+
   const stepIndex = STEPS.indexOf(step);
+  const currentFields = { name, company, phone, ncr, directors, docFiles, agrAccepted, agrSignature };
 
   function addDirector() {
     setDirectors(p => [...p, { name: '', id_number: '', email: '' }]);
   }
-  function updateDirector(i: number, k: keyof typeof directors[0], v: string) {
+  function updateDirector(i: number, k: keyof DirectorFields, v: string) {
     setDirectors(p => p.map((d, idx) => idx === i ? { ...d, [k]: v } : d));
   }
   function removeDirector(i: number) {
     setDirectors(p => p.filter((_, idx) => idx !== i));
   }
-
   function setDoc(id: string, file: File | null) {
     setDocFiles(p => ({ ...p, [id]: file }));
   }
 
-  async function uploadDocs(clientId?: string) {
+  function tryNext() {
+    const errs = validateStep(step, currentFields);
+    if (errs.length > 0) { setStepErrors(errs); return; }
+    setStepErrors([]);
+    setStep(STEPS[stepIndex + 1] ?? step);
+  }
+
+  async function uploadDocs() {
     const entries = Object.entries(docFiles).filter(([, f]) => f != null);
     await Promise.allSettled(entries.map(([docType, file]) => {
       const fd = new FormData();
       fd.append('token',    token);
       fd.append('doc_type', docType);
       fd.append('file',     file!);
-      if (clientId) fd.append('client_id', clientId);
       return fetch(`/api/onboard/${token}/upload`, { method: 'POST', body: fd });
     }));
   }
 
   async function submitApplication() {
+    // Final guard — re-validate all steps before submitting
+    const allErrors: string[] = [];
+    (['Details', 'Directors', 'Documents', 'Agreement'] as Step[]).forEach(s => {
+      allErrors.push(...validateStep(s, currentFields));
+    });
+    if (allErrors.length > 0) { setError(allErrors[0]); return; }
+
     setSaving(true);
     setError('');
     try {
@@ -117,7 +177,7 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
         body: JSON.stringify({
           lead_id:    leadId,
           name, company, legal_name: legalName, phone, ncr_number: ncr,
-          directors,
+          directors: directors.filter(d => d.name.trim() && d.id_number.trim()),
           agreement_accepted:  agrAccepted,
           agreement_signature: agrSignature.trim(),
           agreement_signed_at: new Date().toISOString(),
@@ -157,6 +217,7 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
   return (
     <main className="min-h-screen py-16 px-4" style={{ background: 'var(--color-bg)' }}>
       <div className="max-w-2xl mx-auto">
+
         {/* Header */}
         <div className="mb-8">
           <p className="text-sm font-semibold mb-1" style={{ color: 'var(--color-brand)' }}>AlgoLend Application</p>
@@ -191,23 +252,23 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
               <h2 className="text-lg font-bold mb-4" style={{ color: 'var(--color-ink)' }}>Company details</h2>
               <div className="grid grid-cols-2 gap-4">
                 <OField label="Contact name *">
-                  <input required value={name} onChange={e => setName(e.target.value)} placeholder="Jane Smith" className="o-input" />
+                  <input value={name} onChange={e => setName(e.target.value)} placeholder="Jane Smith" className="o-input" />
                 </OField>
                 <OField label="Email">
                   <input value={email} disabled className="o-input opacity-50 cursor-not-allowed" />
                 </OField>
               </div>
               <OField label="Company name *">
-                <input required value={company} onChange={e => setCompany(e.target.value)} placeholder="BridgeCapital Finance (Pty) Ltd" className="o-input" />
+                <input value={company} onChange={e => setCompany(e.target.value)} placeholder="BridgeCapital Finance (Pty) Ltd" className="o-input" />
               </OField>
-              <OField label="Legal / registered name" hint="If different from company name">
+              <OField label="Legal / registered name" hint="If different from trading name">
                 <input value={legalName} onChange={e => setLegal(e.target.value)} placeholder="BridgeCapital Finance (Pty) Ltd" className="o-input" />
               </OField>
               <div className="grid grid-cols-2 gap-4">
-                <OField label="Phone number">
+                <OField label="Phone number *">
                   <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+27 82 000 0000" className="o-input" />
                 </OField>
-                <OField label="NCR registration number">
+                <OField label="NCR registration number *" hint='If pending, enter "NCR Pending — Applied"'>
                   <input value={ncr} onChange={e => setNcr(e.target.value)} placeholder="NCRCP12345" className="o-input font-mono" />
                 </OField>
               </div>
@@ -217,10 +278,12 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
           {/* Step 2 — Directors */}
           {step === 'Directors' && (
             <div className="space-y-4">
-              <h2 className="text-lg font-bold mb-4" style={{ color: 'var(--color-ink)' }}>Director information</h2>
-              <p className="text-sm mb-4" style={{ color: 'var(--color-ink-soft)' }}>
-                Add all directors of the company. This is required for FICA compliance.
-              </p>
+              <div>
+                <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--color-ink)' }}>Director information</h2>
+                <p className="text-sm mb-4" style={{ color: 'var(--color-ink-soft)' }}>
+                  Add all directors. Full name and SA ID number are required per director for FICA compliance.
+                </p>
+              </div>
               {directors.map((d, i) => (
                 <div key={i} className="rounded-xl p-4 space-y-3" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
                   <div className="flex items-center justify-between mb-1">
@@ -233,11 +296,11 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
                     <OField label="Full name *">
                       <input value={d.name} onChange={e => updateDirector(i, 'name', e.target.value)} placeholder="Jane Smith" className="o-input" />
                     </OField>
-                    <OField label="ID number *">
-                      <input value={d.id_number} onChange={e => updateDirector(i, 'id_number', e.target.value)} placeholder="8001015009087" className="o-input font-mono" />
+                    <OField label="SA ID number *">
+                      <input value={d.id_number} onChange={e => updateDirector(i, 'id_number', e.target.value)} placeholder="8001015009087" className="o-input font-mono" maxLength={13} />
                     </OField>
                   </div>
-                  <OField label="Email address">
+                  <OField label="Email address" hint="Optional — for correspondence">
                     <input type="email" value={d.email} onChange={e => updateDirector(i, 'email', e.target.value)} placeholder="jane@company.co.za" className="o-input" />
                   </OField>
                 </div>
@@ -253,16 +316,19 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
           {/* Step 3 — Documents */}
           {step === 'Documents' && (
             <div className="space-y-3">
-              <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--color-ink)' }}>Upload documents</h2>
-              <p className="text-sm mb-4" style={{ color: 'var(--color-ink-soft)' }}>
-                Required for compliance verification. All files are encrypted and only accessible to Mint Platforms staff.
-              </p>
+              <div>
+                <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--color-ink)' }}>Upload documents</h2>
+                <p className="text-sm mb-4" style={{ color: 'var(--color-ink-soft)' }}>
+                  All 4 required documents must be uploaded before proceeding. Files are encrypted and accessible only to Mint Platforms staff.
+                </p>
+              </div>
               {REQUIRED_DOCS.map((doc) => {
                 const file = docFiles[doc.id] ?? null;
                 return (
                   <label key={doc.id} className="block cursor-pointer">
                     <div className="flex items-center gap-3 px-4 py-3 rounded-xl border transition-all"
-                      style={file ? { borderColor: '#6EE7B7', background: '#F0FDF4' }
+                      style={file
+                        ? { borderColor: '#6EE7B7', background: '#F0FDF4' }
                         : { borderColor: 'var(--color-border)', background: 'var(--color-surface-2)' }}>
                       <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-base"
                         style={{ background: file ? '#D1FAE5' : 'var(--color-surface-3)' }}>
@@ -271,7 +337,10 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium" style={{ color: 'var(--color-ink)' }}>
                           {doc.label}
-                          {doc.required && <span className="ml-1.5 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ background: '#FEF2F2', color: '#B91C1C' }}>Required</span>}
+                          {doc.required
+                            ? <span className="ml-1.5 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ background: '#FEF2F2', color: '#B91C1C' }}>Required</span>
+                            : <span className="ml-1.5 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded" style={{ background: 'var(--color-surface-3)', color: 'var(--color-ink-muted)' }}>Optional</span>
+                          }
                         </p>
                         <p className="text-xs truncate" style={{ color: file ? '#059669' : 'var(--color-ink-muted)' }}>
                           {file ? file.name : doc.hint}
@@ -290,7 +359,7 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
                 );
               })}
               <p className="text-xs pt-1" style={{ color: 'var(--color-ink-muted)' }}>
-                Accepted: PDF, JPG, PNG, Word. Missing documents can be sent to <strong>accounts@algolend.co.za</strong>.
+                Accepted: PDF, JPG, PNG, Word. Difficulty uploading? Email files to <strong>accounts@algolend.co.za</strong> with your company name.
               </p>
             </div>
           )}
@@ -301,51 +370,33 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
               <div>
                 <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--color-ink)' }}>Service Agreement</h2>
                 <p className="text-sm" style={{ color: 'var(--color-ink-soft)' }}>
-                  Please read the agreement carefully before signing.
+                  Read the full agreement before signing. Both the checkbox and your typed name are required.
                 </p>
               </div>
 
-              {/* Scrollable agreement text */}
-              <div
-                className="rounded-xl p-5 text-xs leading-relaxed font-mono overflow-y-auto"
-                style={{
-                  maxHeight: 280,
-                  background: 'var(--color-surface-2)',
-                  border: '1px solid var(--color-border)',
-                  color: 'var(--color-ink-soft)',
-                  whiteSpace: 'pre-wrap',
-                }}
-              >
+              <div className="rounded-xl p-5 text-xs leading-relaxed font-mono overflow-y-auto"
+                style={{ maxHeight: 280, background: 'var(--color-surface-2)', border: '1px solid var(--color-border)', color: 'var(--color-ink-soft)', whiteSpace: 'pre-wrap' }}>
                 {AGREEMENT_TEXT}
               </div>
 
-              {/* Accept checkbox */}
               <label className="flex items-start gap-3 cursor-pointer">
                 <div className="mt-0.5 shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={agrAccepted}
-                    onChange={e => setAgrAccepted(e.target.checked)}
-                    className="w-4 h-4 rounded accent-violet-600 cursor-pointer"
-                  />
+                  <input type="checkbox" checked={agrAccepted} onChange={e => setAgrAccepted(e.target.checked)}
+                    className="w-4 h-4 rounded accent-violet-600 cursor-pointer" />
                 </div>
                 <span className="text-sm" style={{ color: 'var(--color-ink)' }}>
                   I have read and agree to the terms of this Service Agreement on behalf of <strong>{company || 'my company'}</strong>.
                 </span>
               </label>
 
-              {/* Digital signature */}
-              <OField
-                label="Full name (digital signature)"
-                hint="Type your full name exactly as it appears on your ID"
-              >
+              <OField label="Full name (digital signature) *" hint="Type your full name exactly as it appears on your ID">
                 <input
                   value={agrSignature}
                   onChange={e => setAgrSignature(e.target.value)}
                   placeholder={name || 'Your full name'}
                   className="o-input"
                   disabled={!agrAccepted}
-                  style={{ opacity: agrAccepted ? 1 : 0.4 }}
+                  style={{ fontStyle: 'italic', opacity: agrAccepted ? 1 : 0.4 }}
                 />
               </OField>
 
@@ -362,15 +413,15 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
             <div className="space-y-5">
               <h2 className="text-lg font-bold mb-4" style={{ color: 'var(--color-ink)' }}>Review & submit</h2>
               <Section title="Company">
-                <Row label="Name"          value={company} />
-                {legalName && <Row label="Legal name"    value={legalName} />}
-                <Row label="Contact"       value={`${name} · ${email}`} />
-                {phone && <Row label="Phone"  value={phone} />}
-                {ncr   && <Row label="NCR"    value={ncr} mono />}
+                <Row label="Name"      value={company} />
+                {legalName && <Row label="Legal name" value={legalName} />}
+                <Row label="Contact"   value={`${name} · ${email}`} />
+                <Row label="Phone"     value={phone} />
+                <Row label="NCR"       value={ncr} mono />
               </Section>
               <Section title="Directors">
-                {directors.map((d, i) => (
-                  <Row key={i} label={`Director ${i + 1}`} value={`${d.name}${d.id_number ? ` · ${d.id_number}` : ''}`} />
+                {directors.filter(d => d.name.trim()).map((d, i) => (
+                  <Row key={i} label={`Director ${i + 1}`} value={`${d.name} · ${d.id_number}`} />
                 ))}
               </Section>
               <Section title="Documents">
@@ -381,7 +432,7 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
                 ))}
               </Section>
               <Section title="Agreement">
-                <Row label="Status"    value={agrAccepted && agrSignature.trim() ? '✓ Signed' : '⚠ Not yet signed'} warn={!agrAccepted || !agrSignature.trim()} />
+                <Row label="Status" value={agrAccepted && agrSignature.trim() ? '✓ Signed' : '⚠ Not yet signed'} warn={!agrAccepted || !agrSignature.trim()} />
                 {agrSignature.trim() && <Row label="Signed by" value={agrSignature.trim()} />}
               </Section>
               {error && (
@@ -389,12 +440,21 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
               )}
             </div>
           )}
+
+          {/* Inline step validation errors */}
+          {stepErrors.length > 0 && step !== 'Review' && (
+            <div className="mt-5 rounded-xl px-4 py-3 space-y-1" style={{ background: '#FEF2F2', border: '1px solid #FECACA' }}>
+              {stepErrors.map((e, i) => (
+                <p key={i} className="text-sm" style={{ color: '#B91C1C' }}>• {e}</p>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Footer nav */}
         <div className="flex justify-between items-center mt-6">
           <button
-            onClick={() => setStep(STEPS[stepIndex - 1] ?? step)}
+            onClick={() => { setStepErrors([]); setStep(STEPS[stepIndex - 1] ?? step); }}
             disabled={stepIndex === 0}
             className="px-5 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-30"
             style={{ border: '1px solid var(--color-border)', color: 'var(--color-ink-soft)' }}>
@@ -402,12 +462,8 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
           </button>
           {step !== 'Review' ? (
             <button
-              onClick={() => setStep(STEPS[stepIndex + 1] ?? step)}
-              disabled={
-                (step === 'Details'    && (!name.trim() || !company.trim())) ||
-                (step === 'Agreement'  && (!agrAccepted || !agrSignature.trim()))
-              }
-              className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity disabled:opacity-40"
+              onClick={tryNext}
+              className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity"
               style={{ background: 'var(--color-brand)' }}>
               Next →
             </button>
