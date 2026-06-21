@@ -119,7 +119,7 @@ export default function MintInvoicePage() {
           <div className="inv-card bg-white rounded-2xl shadow-xl overflow-hidden">
 
             {/* ── Dark header band ── */}
-            <div style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #3730a3 100%)' }} className="inv-header px-10 py-8">
+            <div style={{ background: 'linear-gradient(135deg, #4c1d95 0%, #7C3AED 100%)' }} className="inv-header px-10 py-8">
               <div className="flex items-start justify-between">
                 <div>
                   <Image src="/mint-logo-white.png" alt="Mint Platforms" width={140} height={36} unoptimized
@@ -208,7 +208,7 @@ export default function MintInvoicePage() {
                   <p className="text-[10px] text-gray-400 -mt-1 mb-1">Not a registered VAT vendor</p>
                 )}
                 <div className="mt-2 pt-3 flex justify-between items-center rounded-xl px-4 py-3"
-                  style={{ background: 'linear-gradient(135deg,#1e1b4b,#3730a3)' }}>
+                  style={{ background: 'linear-gradient(135deg,#4c1d95,#7C3AED)' }}>
                   <span className="text-sm font-bold text-indigo-200">Total Due</span>
                   <span className="text-lg font-bold text-white">{fmt(total)}</span>
                 </div>
@@ -391,7 +391,7 @@ export default function MintInvoicePage() {
 
             <button onClick={() => window.print()}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold text-white"
-              style={{ background: 'linear-gradient(135deg,#1e1b4b,#4f46e5)', boxShadow: '0 4px 20px rgba(79,70,229,0.4)' }}>
+              style={{ background: 'linear-gradient(135deg,#4c1d95,#7C3AED)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
               <Printer size={15} /> Print / Save PDF
             </button>
           </div>
