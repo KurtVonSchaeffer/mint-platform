@@ -91,7 +91,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params;
 
-  let body: { status?: string; features?: Record<string, boolean>; api_quota?: number; topup?: { units: number; price_per_1k_cents: number }; monthly_fee_cents?: number; tier?: string };
+  let body: { status?: string; features?: Record<string, boolean>; api_quota?: number; topup?: { units: number; price_per_1k_cents: number }; monthly_fee_cents?: number; tier?: string; name?: string; contact_name?: string; contact_email?: string; domain?: string; ncr_number?: string };
   try {
     body = await req.json();
   } catch {
@@ -99,6 +99,19 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   }
 
   const errors: string[] = [];
+
+  // ── Client details update ────────────────────────────────────────────
+  if (body.name !== undefined || body.contact_name !== undefined || body.contact_email !== undefined || body.domain !== undefined || body.ncr_number !== undefined) {
+    const patch: Record<string, unknown> = {};
+    if (body.name          !== undefined) patch.name          = body.name.trim();
+    if (body.contact_name  !== undefined) patch.contact_name  = body.contact_name.trim() || null;
+    if (body.contact_email !== undefined) patch.contact_email = body.contact_email.trim();
+    if (body.domain        !== undefined) patch.domain        = body.domain.trim() || null;
+    if (body.ncr_number    !== undefined) patch.ncr_number    = body.ncr_number.trim() || null;
+    const { error } = await supabaseAdmin.from('clients').update(patch).eq('id', id);
+    if (error) { console.error('[clients] details update failed', error); errors.push(error.message); }
+    else { logAudit({ action: 'client.update', resourceType: 'client', resourceId: id, meta: patch }); }
+  }
 
   // ── Status change ────────────────────────────────────────────────────
   if (body.status !== undefined) {

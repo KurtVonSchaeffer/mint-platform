@@ -86,13 +86,19 @@ export default function ClientDetailPage() {
   const [usage,      setUsage]      = useState<UsageRow[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [toast,      setToast]      = useState<{ kind: ToastKind; message: string } | null>(null);
-  const [activeTab,  setActiveTab]  = useState<'invoices' | 'usage' | 'billing' | 'features' | 'marketplace' | 'agreement'>('invoices');
+  const [activeTab,  setActiveTab]  = useState<'details' | 'invoices' | 'usage' | 'billing' | 'features' | 'marketplace' | 'agreement'>('invoices');
   const [agreements, setAgreements] = useState<AgreementDoc[]>([]);
   const [agrUploading, setAgrUploading] = useState(false);
   const [topupOpen,  setTopupOpen]  = useState(false);
   const [topupUnits, setTopupUnits] = useState(5000);
   const [topupPrice, setTopupPrice] = useState(50000); // R500 per 1k calls in cents
   const [topupSaving, setTopupSaving] = useState(false);
+  const [detailName,   setDetailName]   = useState('');
+  const [detailContact, setDetailContact] = useState('');
+  const [detailEmail,  setDetailEmail]  = useState('');
+  const [detailDomain, setDetailDomain] = useState('');
+  const [detailNcr,    setDetailNcr]    = useState('');
+  const [detailSaving, setDetailSaving] = useState(false);
   const [billingFee,  setBillingFee]  = useState('');
   const [billingTier, setBillingTier] = useState<'core' | 'growth' | 'enterprise' | ''>('');
   const [billingQuota, setBillingQuota] = useState('');
@@ -141,6 +147,11 @@ export default function ClientDetailPage() {
       setBillingFee(String(Math.round(data.client.monthly_fee_cents / 100)));
       setBillingTier(data.client.tier);
       setBillingQuota(String(data.client.api_quota ?? 10000));
+      setDetailName(data.client.name);
+      setDetailContact(data.client.contact_name ?? '');
+      setDetailEmail(data.client.contact_email);
+      setDetailDomain(data.client.domain ?? '');
+      setDetailNcr(data.client.ncr_number ?? '');
     } catch {
       setToast({ kind: 'error', message: 'Could not load client data.' });
     } finally {
@@ -361,6 +372,7 @@ export default function ClientDetailPage() {
         {/* Tabs */}
         <div className="flex items-center gap-1" style={{ borderBottom: '1px solid var(--color-border2)', paddingBottom: '0' }}>
           {([
+            { id: 'details',     label: 'Details',     icon: Building2,   count: null },
             { id: 'invoices',    label: 'Invoices',    icon: Receipt,     count: invoices.length },
             { id: 'usage',       label: 'Usage',       icon: BarChart3,   count: null },
             { id: 'billing',     label: 'Billing',     icon: CreditCard,  count: null },
@@ -391,6 +403,58 @@ export default function ClientDetailPage() {
             </button>
           ))}
         </div>
+
+        {/* ── Details tab ──────────────────────────────────────────────── */}
+        {activeTab === 'details' && (
+          <div className="bento-card p-6 max-w-xl space-y-4">
+            <p className="eyebrow mb-2">Client Details</p>
+            {[
+              { label: 'Company name',    val: detailName,    set: setDetailName,    placeholder: 'Zwane Official' },
+              { label: 'Contact person',  val: detailContact, set: setDetailContact, placeholder: 'Sipho Zwane' },
+              { label: 'Contact email',   val: detailEmail,   set: setDetailEmail,   placeholder: 'admin@zwaneofficial.co.za', type: 'email' },
+              { label: 'Custom domain',   val: detailDomain,  set: setDetailDomain,  placeholder: 'zwane-official.algolend.co.za' },
+              { label: 'NCR number',      val: detailNcr,     set: setDetailNcr,     placeholder: 'NCR123456', type: 'text' },
+            ].map(({ label, val, set, placeholder, type }) => (
+              <div key={label}>
+                <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--color-text2)' }}>{label}</label>
+                <input
+                  type={type ?? 'text'}
+                  value={val}
+                  onChange={e => set(e.target.value)}
+                  placeholder={placeholder}
+                  className="field-input"
+                />
+              </div>
+            ))}
+            <button
+              onClick={async () => {
+                setDetailSaving(true);
+                try {
+                  const res = await fetch(`/api/clients/${params.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      name:          detailName,
+                      contact_name:  detailContact,
+                      contact_email: detailEmail,
+                      domain:        detailDomain,
+                      ncr_number:    detailNcr,
+                    }),
+                  });
+                  if (!res.ok) throw new Error((await res.json()).error);
+                  setClient(prev => prev ? { ...prev, name: detailName, contact_name: detailContact, contact_email: detailEmail, domain: detailDomain || null, ncr_number: detailNcr || null } : prev);
+                  setToast({ kind: 'success', message: 'Client details updated.' });
+                } catch (err) {
+                  setToast({ kind: 'error', message: `Failed to save: ${err instanceof Error ? err.message : err}` });
+                } finally { setDetailSaving(false); }
+              }}
+              disabled={detailSaving}
+              className="btn-purple btn-shine w-full inline-flex items-center justify-center gap-2 disabled:opacity-60"
+            >
+              {detailSaving ? <><Loader2 size={14} className="animate-spin" /> Saving…</> : <><Save size={14} /> Save details</>}
+            </button>
+          </div>
+        )}
 
         {/* ── Invoices tab ─────────────────────────────────────────────── */}
         {activeTab === 'invoices' && (
@@ -456,16 +520,16 @@ export default function ClientDetailPage() {
               {/* Monthly fee */}
               <div>
                 <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text2)' }}>
-                  Monthly Fee (R)
+                  Monthly Fee
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold" style={{ color: 'var(--color-text3)' }}>R</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold pointer-events-none" style={{ color: 'var(--color-text3)' }}>R</span>
                   <input
                     type="number" min={0} step={100}
                     value={billingFee}
                     onChange={e => setBillingFee(e.target.value)}
                     onFocus={e => e.target.select()}
-                    className="field-input pl-7 font-mono"
+                    className="field-input pl-8 font-mono"
                     placeholder="22000"
                   />
                 </div>
