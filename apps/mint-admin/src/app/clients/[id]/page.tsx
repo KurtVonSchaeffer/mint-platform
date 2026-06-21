@@ -501,6 +501,52 @@ export default function ClientDetailPage() {
                 </div>
               </div>
 
+              {/* Status */}
+              <div>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text2)' }}>
+                  Account Status
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {(['trial', 'active', 'suspended', 'churned'] as const).map(s => {
+                    const colors: Record<string, { bg: string; color: string; activeBg: string }> = {
+                      trial:     { bg: 'rgba(14,165,233,0.08)',   color: 'var(--color-sky)',   activeBg: 'rgba(14,165,233,0.2)'   },
+                      active:    { bg: 'rgba(52,211,153,0.08)',   color: 'var(--color-green)', activeBg: 'rgba(52,211,153,0.2)'   },
+                      suspended: { bg: 'rgba(248,113,113,0.08)',  color: 'var(--color-red)',   activeBg: 'rgba(248,113,113,0.2)'  },
+                      churned:   { bg: 'rgba(156,163,175,0.08)',  color: 'var(--color-text3)', activeBg: 'rgba(156,163,175,0.2)'  },
+                    };
+                    const c = colors[s];
+                    const isActive = (billingTier ? client.status : client.status) === s;
+                    return (
+                      <button
+                        key={s}
+                        onClick={async () => {
+                          const res = await fetch(`/api/clients/${params.id}`, {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ status: s }),
+                          });
+                          if (!res.ok) { setToast({ kind: 'error', message: 'Failed to update status' }); return; }
+                          setClient(prev => prev ? { ...prev, status: s } : prev);
+                          setToast({ kind: 'success', message: `Status changed to ${s}.` });
+                        }}
+                        className="py-2 rounded-xl text-xs font-semibold capitalize transition-all"
+                        style={client.status === s ? {
+                          background: c.activeBg, color: c.color, border: `1px solid ${c.color}`,
+                        } : {
+                          background: c.bg, color: c.color, border: '1px solid transparent',
+                          opacity: 0.6,
+                        }}
+                      >
+                        {s}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-[10px] mt-1" style={{ color: 'var(--color-text3)' }}>
+                  Currently <strong>{client.status}</strong> — click any status to change immediately
+                </p>
+              </div>
+
               {/* API Quota */}
               <div>
                 <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text2)' }}>
