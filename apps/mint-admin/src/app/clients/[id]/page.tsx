@@ -896,11 +896,16 @@ export default function ClientDetailPage() {
                   {sig ? (
                     <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.2)' }}>
                       <CheckCircle2 size={18} style={{ color: 'var(--color-green)', flexShrink: 0, marginTop: 1 }} />
-                      <div>
-                        <p className="text-sm font-semibold" style={{ color: 'var(--color-green)' }}>Signed digitally</p>
-                        <p className="text-xs mt-0.5" style={{ color: 'var(--color-text3)' }}>
-                          Signed by <strong style={{ color: 'var(--color-text)' }}>{sig}</strong> on {fmtDate(signedAt)}
-                        </p>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold mb-2" style={{ color: 'var(--color-green)' }}>Signed digitally</p>
+                        {sig.startsWith('data:image') ? (
+                          <div className="rounded-lg px-4 py-2 inline-block mb-2" style={{ background: '#fff', border: '1px solid var(--color-border)' }}>
+                            <img src={sig} alt="Signature" style={{ maxHeight: 56, maxWidth: 220, display: 'block' }} />
+                          </div>
+                        ) : (
+                          <p className="text-sm italic mb-2" style={{ color: 'var(--color-text)' }}>{sig}</p>
+                        )}
+                        <p className="text-xs" style={{ color: 'var(--color-text3)' }}>{fmtDate(signedAt)}</p>
                       </div>
                     </div>
                   ) : (

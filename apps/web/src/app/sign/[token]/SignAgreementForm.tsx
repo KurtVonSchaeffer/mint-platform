@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { CheckCircle2, FileText, Pen } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { CheckCircle2, FileText } from 'lucide-react';
+import { SignaturePad, type SignaturePadHandle } from '@/components/SignaturePad';
 
 const AGREEMENT_TEXT = `SERVICE AGREEMENT
 
@@ -50,14 +51,17 @@ interface Props {
 }
 
 export function SignAgreementForm({ token, leadId, clientName, contactName, alreadySigned, signedBy, signedAt }: Props) {
-  const [accepted,  setAccepted]  = useState(false);
-  const [signature, setSignature] = useState('');
-  const [saving,    setSaving]    = useState(false);
-  const [done,      setDone]      = useState(alreadySigned);
-  const [error,     setError]     = useState('');
+  const [accepted, setAccepted] = useState(false);
+  const [saving,   setSaving]   = useState(false);
+  const [done,     setDone]     = useState(alreadySigned);
+  const [error,    setError]    = useState('');
+  const sigPadRef = useRef<SignaturePadHandle>(null);
 
   async function sign() {
-    if (!accepted || !signature.trim()) return;
+    if (!accepted || sigPadRef.current?.isEmpty()) {
+      setError(!accepted ? 'Please accept the terms first.' : 'Please draw your signature above.');
+      return;
+    }
     setSaving(true);
     setError('');
     try {
@@ -66,7 +70,7 @@ export function SignAgreementForm({ token, leadId, clientName, contactName, alre
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           agreement_accepted:  true,
-          agreement_signature: signature.trim(),
+          agreement_signature: sigPadRef.current?.toDataURL() ?? '',
           agreement_signed_at: new Date().toISOString(),
         }),
       });
@@ -112,16 +116,16 @@ export function SignAgreementForm({ token, leadId, clientName, contactName, alre
           /* ── Already signed ── */
           <div style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 16, padding: 32, textAlign: 'center' }}>
             <CheckCircle2 size={40} color="#34d399" style={{ marginBottom: 16 }} />
-            <p style={{ fontSize: 18, fontWeight: 700, color: '#34d399', margin: '0 0 8px' }}>Agreement Signed</p>
-            <p style={{ fontSize: 13, color: '#71717a', margin: '0 0 4px' }}>
-              Signed by <strong style={{ color: '#e4e4e7' }}>{signedBy ?? signature}</strong>
-            </p>
-            {(signedAt || done) && (
-              <p style={{ fontSize: 12, color: '#52525b', margin: 0 }}>
-                {signedAt ? fmtDate(signedAt) : fmtDate(new Date().toISOString())}
-              </p>
+            <p style={{ fontSize: 18, fontWeight: 700, color: '#34d399', margin: '0 0 16px' }}>Agreement Signed</p>
+            {signedBy?.startsWith('data:image') && (
+              <div style={{ background: '#fff', borderRadius: 8, padding: '8px 16px', display: 'inline-block', marginBottom: 12 }}>
+                <img src={signedBy} alt="Signature" style={{ maxHeight: 60, maxWidth: 240 }} />
+              </div>
             )}
-            <p style={{ fontSize: 13, color: '#71717a', marginTop: 20 }}>
+            {signedAt && (
+              <p style={{ fontSize: 12, color: '#52525b', margin: '0 0 16px' }}>{fmtDate(signedAt)}</p>
+            )}
+            <p style={{ fontSize: 13, color: '#71717a', margin: 0 }}>
               Thank you. Your account manager will be in touch shortly to complete your onboarding.
             </p>
           </div>
@@ -147,31 +151,30 @@ export function SignAgreementForm({ token, leadId, clientName, contactName, alre
               </span>
             </label>
 
-            {/* Signature input */}
+            {/* Drawn signature */}
             <div style={{ marginBottom: 24 }}>
-              <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#71717a', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                Digital Signature — type your full name
-              </label>
-              <div style={{ position: 'relative' }}>
-                <Pen size={14} color="#52525b" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-                <input
-                  type="text"
-                  value={signature}
-                  onChange={e => setSignature(e.target.value)}
-                  placeholder={contactName ?? 'Your full name'}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Your signature *
+                </label>
+                <button
+                  type="button"
+                  onClick={() => sigPadRef.current?.clear()}
                   disabled={!accepted}
                   style={{
-                    width: '100%', boxSizing: 'border-box',
-                    background: accepted ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)',
-                    border: `1px solid ${accepted ? 'rgba(124,58,237,0.4)' : 'rgba(255,255,255,0.08)'}`,
-                    borderRadius: 10, padding: '12px 14px 12px 36px',
-                    color: '#fafafa', fontSize: 15, fontStyle: 'italic',
-                    opacity: accepted ? 1 : 0.4, outline: 'none',
-                  }}
-                />
+                    fontSize: 11, padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.12)',
+                    background: 'transparent', color: '#71717a', cursor: accepted ? 'pointer' : 'not-allowed',
+                    opacity: accepted ? 1 : 0.4,
+                  }}>
+                  Clear
+                </button>
               </div>
-              <p style={{ fontSize: 11, color: '#52525b', marginTop: 6 }}>
-                By typing your name above you are creating a legally binding digital signature.
+              {/* Wrap SignaturePad to override its light background for the dark theme */}
+              <div style={{ borderRadius: 10, overflow: 'hidden' }}>
+                <SignaturePad ref={sigPadRef} disabled={!accepted} />
+              </div>
+              <p style={{ fontSize: 11, color: '#3f3f46', marginTop: 6 }}>
+                By signing above you are creating a legally binding digital signature.
               </p>
             </div>
 
@@ -183,7 +186,7 @@ export function SignAgreementForm({ token, leadId, clientName, contactName, alre
 
             <button
               onClick={sign}
-              disabled={!accepted || !signature.trim() || saving}
+              disabled={saving}
               style={{
                 width: '100%', padding: '14px', borderRadius: 12, border: 'none', cursor: 'pointer',
                 background: (!accepted || !signature.trim()) ? 'rgba(124,58,237,0.3)' : 'linear-gradient(135deg,#7C3AED,#9B5CF6)',

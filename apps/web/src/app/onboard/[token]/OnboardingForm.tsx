@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { SignaturePad, type SignaturePadHandle } from '@/components/SignaturePad';
 
 const STEPS = ['Details', 'Directors', 'Documents', 'Agreement', 'Review'] as const;
 type Step = (typeof STEPS)[number];
@@ -121,13 +122,16 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
 
   // Step 4 — Agreement
   const [agrAccepted,  setAgrAccepted]  = useState(false);
-  const [agrSignature, setAgrSignature] = useState('');
+  const sigPadRef = useRef<SignaturePadHandle>(null);
 
   // Per-step inline validation errors (shown after user attempts Next)
   const [stepErrors, setStepErrors] = useState<string[]>([]);
 
   const stepIndex = STEPS.indexOf(step);
-  const currentFields = { name, company, phone, ncr, directors, docFiles, agrAccepted, agrSignature };
+
+  function isSigEmpty() { return sigPadRef.current?.isEmpty() ?? true; }
+
+  const currentFields = { name, company, phone, ncr, directors, docFiles, agrAccepted, agrSignature: isSigEmpty() ? '' : 'signed' };
 
   function addDirector() {
     setDirectors(p => [...p, { name: '', id_number: '', email: '' }]);
@@ -179,7 +183,7 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
           name, company, legal_name: legalName, phone, ncr_number: ncr,
           directors: directors.filter(d => d.name.trim() && d.id_number.trim()),
           agreement_accepted:  agrAccepted,
-          agreement_signature: agrSignature.trim(),
+          agreement_signature: sigPadRef.current?.toDataURL() ?? '',
           agreement_signed_at: new Date().toISOString(),
         }),
       });
@@ -389,22 +393,20 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
                 </span>
               </label>
 
-              <OField label="Full name (digital signature) *" hint="Type your full name exactly as it appears on your ID">
-                <input
-                  value={agrSignature}
-                  onChange={e => setAgrSignature(e.target.value)}
-                  placeholder={name || 'Your full name'}
-                  className="o-input"
-                  disabled={!agrAccepted}
-                  style={{ fontStyle: 'italic', opacity: agrAccepted ? 1 : 0.4 }}
-                />
-              </OField>
-
-              {agrAccepted && agrSignature.trim() && (
-                <div className="rounded-xl px-4 py-3 text-xs" style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', color: '#15803D' }}>
-                  ✓ Signed by <strong>{agrSignature.trim()}</strong> on {new Date().toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-semibold" style={{ color: 'var(--color-ink-soft)' }}>Your signature *</label>
+                  <button
+                    type="button"
+                    onClick={() => sigPadRef.current?.clear()}
+                    disabled={!agrAccepted}
+                    className="text-xs px-2.5 py-1 rounded-lg transition-colors disabled:opacity-30"
+                    style={{ border: '1px solid var(--color-border)', color: 'var(--color-ink-muted)' }}>
+                    Clear
+                  </button>
                 </div>
-              )}
+                <SignaturePad ref={sigPadRef} disabled={!agrAccepted} />
+              </div>
             </div>
           )}
 
@@ -432,8 +434,7 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
                 ))}
               </Section>
               <Section title="Agreement">
-                <Row label="Status" value={agrAccepted && agrSignature.trim() ? '✓ Signed' : '⚠ Not yet signed'} warn={!agrAccepted || !agrSignature.trim()} />
-                {agrSignature.trim() && <Row label="Signed by" value={agrSignature.trim()} />}
+                <Row label="Status" value={agrAccepted && !isSigEmpty() ? '✓ Signed' : '⚠ Not yet signed'} warn={!agrAccepted || isSigEmpty()} />
               </Section>
               {error && (
                 <p className="text-sm px-4 py-3 rounded-xl" style={{ background: '#FEF2F2', color: '#B91C1C' }}>{error}</p>

@@ -257,6 +257,9 @@ importers:
       resend:
         specifier: ^6.12.4
         version: 6.14.0
+      signature_pad:
+        specifier: ^5.1.3
+        version: 5.1.3
       simple-icons:
         specifier: ^16.21.0
         version: 16.23.0
@@ -3439,6 +3442,9 @@ packages:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
 
+  signature_pad@5.1.3:
+    resolution: {integrity: sha512-zyxW5vuJVnQdGcU+kAj9FYl7WaAunY3kA5S7mPg0xJiujL9+sPAWfSQHS5tXaJXDUa4FuZeKhfdCDQ6K3wfkpQ==}
+
   simple-icons@16.23.0:
     resolution: {integrity: sha512-08MaTpxj9zGYUIe38tfELYkaHiGE1YgbrbXmTBf+GPxi5mEqLSORQqOXrP0QKPdaFuzEDSmW5o4xkbLlFhmdCw==}
     engines: {node: '>=0.12.18'}
@@ -6405,6 +6411,8 @@ snapshots:
       side-channel-weakmap: 1.0.2
 
   signal-exit@4.1.0: {}
+
+  signature_pad@5.1.3: {}
 
   simple-icons@16.23.0: {}
 

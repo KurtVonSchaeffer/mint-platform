@@ -17,6 +17,7 @@
     "react": "^19",
     "react-dom": "^19",
     "resend": "^6.12.4",
+    "signature_pad": "^5.1.3",
     "simple-icons": "^16.21.0",
     "tailwind-merge": "^3"
   },
