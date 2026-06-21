@@ -86,8 +86,9 @@ export default function ClientDetailPage() {
   const [usage,      setUsage]      = useState<UsageRow[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [toast,      setToast]      = useState<{ kind: ToastKind; message: string } | null>(null);
-  const [activeTab,  setActiveTab]  = useState<'details' | 'invoices' | 'usage' | 'billing' | 'features' | 'marketplace' | 'agreement'>('invoices');
+  const [activeTab,  setActiveTab]  = useState<'details' | 'invoices' | 'usage' | 'billing' | 'features' | 'marketplace' | 'agreement' | 'documents'>('invoices');
   const [agreements, setAgreements] = useState<AgreementDoc[]>([]);
+  const [documents,  setDocuments]  = useState<AgreementDoc[]>([]);
   const [lead, setLead] = useState<{ id: string; onboarding_token: string; onboarding_status: string; onboarding_data: Record<string, unknown>; created_at: string } | null>(null);
   const [agrUploading, setAgrUploading] = useState(false);
   const [topupOpen,  setTopupOpen]  = useState(false);
@@ -145,6 +146,7 @@ export default function ClientDetailPage() {
       setInvoices(data.invoices);
       setUsage(data.usage);
       setAgreements(data.agreements ?? []);
+      setDocuments(data.documents ?? []);
       setLead(data.lead ?? null);
       setBillingFee(String(Math.round(data.client.monthly_fee_cents / 100)));
       setBillingTier(data.client.tier);
@@ -380,6 +382,7 @@ export default function ClientDetailPage() {
             { id: 'billing',     label: 'Billing',     icon: CreditCard,  count: null },
             { id: 'features',    label: 'Features',    icon: Activity,    count: enabledFeatures.length },
             { id: 'marketplace', label: 'Marketplace', icon: Store,       count: null },
+            { id: 'documents',   label: 'Documents',   icon: Upload,      count: documents.length > 0 ? documents.length : null },
             { id: 'agreement',   label: 'Agreement',   icon: FileText,    count: agreements.length > 0 ? agreements.length : null },
           ] as const).map(tab => (
             <button
@@ -814,6 +817,64 @@ export default function ClientDetailPage() {
                 clientId={client.id}
                 onToast={(kind, message) => setToast({ kind, message })}
               />
+            )}
+          </div>
+        )}
+
+        {/* ── Documents tab ────────────────────────────────────────── */}
+        {activeTab === 'documents' && (
+          <div className="space-y-3">
+            {documents.length === 0 ? (
+              <div className="bento-card p-12 text-center">
+                <Upload size={20} className="mx-auto mb-3" style={{ color: 'var(--color-text3)' }} />
+                <p className="text-sm" style={{ color: 'var(--color-text3)' }}>No documents uploaded yet. Documents appear here once the client completes their onboarding form.</p>
+              </div>
+            ) : (
+              <div className="bento-card overflow-hidden">
+                <div className="px-5 py-4 border-b" style={{ borderColor: 'var(--color-border2)' }}>
+                  <p className="text-xs font-semibold" style={{ color: 'var(--color-text2)' }}>{documents.length} document{documents.length !== 1 ? 's' : ''} on file</p>
+                </div>
+                {documents.map((doc) => {
+                  const TYPE_LABELS: Record<string, string> = {
+                    cipc_cert:          'CIPC Registration Certificate',
+                    director_id:        'Director ID Copy',
+                    ncr_cert:           'NCR Lending Licence',
+                    bank_statement:     '3-Month Bank Statements',
+                    signed_sla:         'Signed Service Agreement',
+                    onboarding_agreement: 'Service Agreement (Admin Upload)',
+                  };
+                  const label = TYPE_LABELS[doc.type] ?? doc.type.replace(/_/g, ' ');
+                  return (
+                    <div key={doc.id} className="flex items-center gap-4 px-5 py-4 border-b last:border-0" style={{ borderColor: 'var(--color-border2)' }}>
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.1)' }}>
+                        <FileText size={15} style={{ color: 'var(--color-violet)' }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>{label}</p>
+                        <p className="text-[11px] mt-0.5 truncate" style={{ color: 'var(--color-text3)' }}>{doc.file_name} · {fmtDate(doc.created_at)}</p>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full shrink-0"
+                        style={doc.status === 'approved'
+                          ? { background: 'rgba(52,211,153,0.1)', color: 'var(--color-green)' }
+                          : { background: 'rgba(251,191,36,0.1)', color: 'var(--color-amber)' }}>
+                        {doc.status}
+                      </span>
+                      <button
+                        onClick={async () => {
+                          const res = await fetch(`/api/documents/url?path=${encodeURIComponent(doc.storage_path)}`);
+                          if (!res.ok) { setToast({ kind: 'error', message: 'Could not generate download link' }); return; }
+                          const { url } = await res.json();
+                          window.open(url, '_blank');
+                        }}
+                        className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                        style={{ background: 'rgba(124,58,237,0.08)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.2)' }}
+                      >
+                        View
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}

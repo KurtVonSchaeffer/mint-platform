@@ -69,12 +69,8 @@ export async function GET(_req: NextRequest, { params }: Params) {
       .order('month', { ascending: false })
       .limit(60),
 
-    supabaseAdmin
-      .from('documents')
-      .select('id, type, file_name, storage_path, status, created_at')
-      .eq('client_id', id)
-      .eq('type', 'onboarding_agreement')
-      .order('created_at', { ascending: false }),
+    // placeholder — replaced below after we have the lead
+    Promise.resolve({ data: [], error: null }),
 
     supabaseAdmin
       .from('leads')
@@ -87,11 +83,28 @@ export async function GET(_req: NextRequest, { params }: Params) {
 
   if (clientRes.error) return NextResponse.json({ error: clientRes.error.message }, { status: 404 });
 
+  // Fetch ALL documents: by client_id (admin-uploaded) OR by lead_id (onboarding uploads)
+  const leadId = leadRes.data?.id ?? null;
+  const docsQuery = leadId
+    ? supabaseAdmin
+        .from('documents')
+        .select('id, type, file_name, storage_path, status, created_at, lead_id, client_id')
+        .or(`client_id.eq.${id},lead_id.eq.${leadId}`)
+        .order('created_at', { ascending: false })
+    : supabaseAdmin
+        .from('documents')
+        .select('id, type, file_name, storage_path, status, created_at, lead_id, client_id')
+        .eq('client_id', id)
+        .order('created_at', { ascending: false });
+
+  const { data: allDocs } = await docsQuery;
+
   return NextResponse.json({
     client:     clientRes.data,
     invoices:   invoicesRes.data ?? [],
     usage:      usageRes.data ?? [],
-    agreements: agreementsRes.data ?? [],
+    agreements: (allDocs ?? []).filter(d => d.type === 'onboarding_agreement'),
+    documents:  allDocs ?? [],
     lead:       leadRes.data ?? null,
   });
 }
