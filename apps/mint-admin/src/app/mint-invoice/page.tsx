@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Plus, Trash2, ArrowLeft, Printer } from 'lucide-react';
@@ -56,6 +56,14 @@ export default function MintInvoicePage() {
   const [notes,       setNotes]       = useState('');
   const [items, setItems] = useState<LineItem[]>([{ id: 1, desc: '', sub: '', qty: 1, rate: 0 }]);
 
+  // Auto-set document title → browser uses this as the default PDF filename
+  useEffect(() => {
+    const name = clientName.trim() || 'Invoice';
+    const date = fmtDate(invoiceDate);
+    document.title = `${name} — ${date}`;
+    return () => { document.title = 'AlgoLend — Admin Console'; };
+  }, [clientName, invoiceDate]);
+
   const addItem    = () => setItems(p => [...p, { id: nextId++, desc: '', sub: '', qty: 1, rate: 0 }]);
   const removeItem = (id: number) => setItems(p => p.filter(i => i.id !== id));
   const update     = (id: number, f: keyof LineItem, v: string | number) =>
@@ -74,7 +82,13 @@ export default function MintInvoicePage() {
           body { background: white !important; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .print-root { display: block !important; padding: 0 !important; max-width: none !important; }
           .inv-card { box-shadow: none !important; border-radius: 0 !important; width: 100% !important; }
-          @page { margin: 10mm; size: A4; }
+          .inv-header { padding: 20px 32px !important; }
+          .inv-header-meta { margin-top: 12px !important; padding-top: 12px !important; }
+          .inv-section { padding: 16px 32px !important; }
+          .inv-section-sm { padding: 10px 32px !important; }
+          .inv-banking { margin: 0 32px 16px !important; }
+          .inv-footer { padding: 10px 32px !important; }
+          @page { margin: 8mm; size: A4; }
         }
         body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       `}</style>
@@ -105,7 +119,7 @@ export default function MintInvoicePage() {
           <div className="inv-card bg-white rounded-2xl shadow-xl overflow-hidden">
 
             {/* ── Dark header band ── */}
-            <div style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #3730a3 100%)' }} className="px-10 py-8">
+            <div style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #3730a3 100%)' }} className="inv-header px-10 py-8">
               <div className="flex items-start justify-between">
                 <div>
                   <Image src="/mint-logo-white.png" alt="Mint Platforms" width={140} height={36} unoptimized
@@ -119,7 +133,7 @@ export default function MintInvoicePage() {
               </div>
 
               {/* Meta strip inside header */}
-              <div className="mt-6 pt-5 border-t border-indigo-700/60 grid grid-cols-3 gap-4">
+              <div className="inv-header-meta mt-6 pt-5 border-t border-indigo-700/60 grid grid-cols-3 gap-4">
                 {[
                   { l: 'Invoice Date', v: fmtDate(invoiceDate) },
                   { l: 'Due Date',     v: fmtDate(dueDate) },
@@ -134,7 +148,7 @@ export default function MintInvoicePage() {
             </div>
 
             {/* ── FROM / BILL TO ── */}
-            <div className="px-10 py-8 grid grid-cols-2 gap-8" style={{ borderBottom: '1px solid #f0f0f5' }}>
+            <div className="inv-section px-10 py-8 grid grid-cols-2 gap-8" style={{ borderBottom: '1px solid #f0f0f5' }}>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">From</p>
                 <p className="text-sm font-bold text-gray-900">{FROM.company}</p>
@@ -154,7 +168,7 @@ export default function MintInvoicePage() {
             </div>
 
             {/* ── Line items table ── */}
-            <div className="px-10 py-6">
+            <div className="inv-section px-10 py-6">
               <table className="w-full text-sm">
                 <thead>
                   <tr style={{ background: '#f8f7ff' }}>
@@ -181,7 +195,7 @@ export default function MintInvoicePage() {
             </div>
 
             {/* ── Totals ── */}
-            <div className="px-10 pb-8 flex justify-end">
+            <div className="inv-section-sm px-10 pb-8 flex justify-end">
               <div className="w-64">
                 <div className="flex justify-between text-sm text-gray-500 py-1.5">
                   <span>Subtotal</span><span className="font-medium text-gray-700">{fmt(subtotal)}</span>
@@ -210,7 +224,7 @@ export default function MintInvoicePage() {
             )}
 
             {/* ── Payment details ── */}
-            <div className="mx-10 mb-8 rounded-xl overflow-hidden" style={{ border: '1px solid #e5e7eb' }}>
+            <div className="inv-banking mx-10 mb-8 rounded-xl overflow-hidden" style={{ border: '1px solid #e5e7eb' }}>
               <div className="px-5 py-3" style={{ background: '#f8f7ff', borderBottom: '1px solid #e5e7eb' }}>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-400">Payment Details</p>
               </div>
@@ -235,7 +249,7 @@ export default function MintInvoicePage() {
             </div>
 
             {/* ── Footer ── */}
-            <div className="px-10 py-4 flex items-center justify-between text-xs text-gray-400"
+            <div className="inv-footer px-10 py-4 flex items-center justify-between text-xs text-gray-400"
               style={{ borderTop: '1px solid #f3f4f6' }}>
               <span>{FROM.company} · Reg. {FROM.reg}</span>
               <span>{FROM.email}</span>
