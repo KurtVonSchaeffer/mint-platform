@@ -1,6 +1,7 @@
 
 
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'wouter';
 
 import { ArrowRight, Sparkles } from 'lucide-react';
 
