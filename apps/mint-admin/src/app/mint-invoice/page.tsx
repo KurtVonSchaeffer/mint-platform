@@ -33,12 +33,18 @@ interface LineItem {
 /* ── Helpers ─────────────────────────────────────────────────── */
 let nextId = 2;
 
-function today() {
-  return new Date().toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+function toISO(d: Date) {
+  return d.toISOString().slice(0, 10); // "YYYY-MM-DD"
 }
+function today() { return toISO(new Date()); }
 function defaultDue() {
   const d = new Date();
   d.setMonth(d.getMonth() + 1);
+  return toISO(d);
+}
+function fmtDate(iso: string) {
+  if (!iso) return '';
+  const d = new Date(iso + 'T00:00:00');
   return d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 function invoiceNo(client: string, seq: number) {
@@ -159,8 +165,8 @@ export default function MintInvoicePage() {
               <div className="grid grid-cols-3">
                 {[
                   { label: 'Invoice Number', value: invNo },
-                  { label: 'Invoice Date',   value: invoiceDate },
-                  { label: 'Due Date',       value: dueDate },
+                  { label: 'Invoice Date',   value: fmtDate(invoiceDate) },
+                  { label: 'Due Date',       value: fmtDate(dueDate) },
                 ].map((m, i) => (
                   <div key={m.label} className="px-5 py-4" style={{ borderRight: i < 2 ? '1px solid #e5e7eb' : 'none' }}>
                     <p className="inv-label">{m.label}</p>
@@ -272,11 +278,11 @@ export default function MintInvoicePage() {
               </div>
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Date</label>
-                <input value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} className="field-input w-full text-sm" />
+                <input type="date" value={invoiceDate} onChange={e => setInvoiceDate(e.target.value)} className="field-input w-full text-sm" />
               </div>
               <div>
                 <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Due Date</label>
-                <input value={dueDate} onChange={e => setDueDate(e.target.value)} className="field-input w-full text-sm" />
+                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="field-input w-full text-sm" />
               </div>
             </div>
 
@@ -346,11 +352,24 @@ export default function MintInvoicePage() {
                   <div className="flex gap-2 pl-6">
                     <div className="flex-1">
                       <label className="block text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">Qty</label>
-                      <input type="number" min={1} value={item.qty} onChange={e => update(item.id, 'qty', Number(e.target.value))} className="field-input w-full text-sm" />
+                      <input
+                        type="number" min={1}
+                        value={item.qty || ''}
+                        onFocus={e => e.target.select()}
+                        onChange={e => update(item.id, 'qty', e.target.value === '' ? 1 : Number(e.target.value))}
+                        className="field-input w-full text-sm"
+                      />
                     </div>
                     <div className="flex-[2]">
                       <label className="block text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">Rate (R)</label>
-                      <input type="number" min={0} step={0.01} value={item.rate} onChange={e => update(item.id, 'rate', Number(e.target.value))} className="field-input w-full text-sm" />
+                      <input
+                        type="number" min={0} step={0.01}
+                        value={item.rate || ''}
+                        placeholder="0.00"
+                        onFocus={e => e.target.select()}
+                        onChange={e => update(item.id, 'rate', e.target.value === '' ? 0 : Number(e.target.value))}
+                        className="field-input w-full text-sm"
+                      />
                     </div>
                     <div className="flex-[2]">
                       <label className="block text-[9px] font-bold uppercase tracking-wider text-gray-400 mb-1">Amount</label>
