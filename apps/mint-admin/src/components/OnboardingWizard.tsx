@@ -263,12 +263,16 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
               ))}
               <Field label="Custom monthly fee (ZAR)" hint="Override the tier default if negotiated differently">
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: 'var(--color-text3)' }}>R</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold pointer-events-none" style={{ color: 'var(--color-text3)' }}>R</span>
                   <input
                     type="number"
-                    value={monthlyFeeCents / 100}
+                    min={0}
+                    step={500}
+                    value={monthlyFeeCents === 0 ? '' : monthlyFeeCents / 100}
+                    placeholder="0"
+                    onFocus={e => e.target.select()}
                     onChange={(e) => setMonthlyFeeCents(Math.round(parseFloat(e.target.value || '0') * 100))}
-                    className="field-input pl-7"
+                    className="field-input pl-8"
                   />
                 </div>
               </Field>
