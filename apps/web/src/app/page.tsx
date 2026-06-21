@@ -37,10 +37,6 @@ const integrations = [
   { name: 'SACRRA',       sub: 'Bureau Reporting' },
   { name: 'E-Contracts',  sub: 'E-Signatures' },
   { name: 'Sure Systems', sub: 'EFT & Payments' },
-  { name: 'Resend',       sub: 'Transactional Mail' },
-  { name: 'OpenPGP',      sub: 'Bureau Encryption' },
-  { name: 'Supabase',     sub: 'Data Platform' },
-  { name: 'Vercel',       sub: 'Infrastructure' },
 ];
 
 
@@ -167,10 +163,18 @@ export default function HomePage() {
       </section>
 
       {/* ── STATS ───────────────────────────────────────────────────── */}
-      <section className="bg-[var(--color-bg)]">
-        <div className="max-w-[1200px] mx-auto px-6 py-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-8">
-          {stats.map((s) => (
-            <AnimatedStat key={s.label} value={s.value} label={s.label} />
+      <section className="bg-[var(--color-bg)] border-b border-[var(--color-border-soft)]">
+        <div className="max-w-[1200px] mx-auto px-6 py-20 grid grid-cols-2 lg:grid-cols-4">
+          {stats.map((s, i) => (
+            <div
+              key={s.label}
+              className="px-6 py-2"
+              style={{
+                borderLeft: i > 0 ? '1px solid var(--color-border)' : undefined,
+              }}
+            >
+              <AnimatedStat value={s.value} label={s.label} />
+            </div>
           ))}
         </div>
       </section>
