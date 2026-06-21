@@ -95,12 +95,23 @@ export default function MintInvoicePage() {
         @media print {
           .no-print { display: none !important; }
           body { background: white !important; margin: 0; }
-          .print-root { padding: 0 !important; max-width: none !important; }
-          .invoice-card { box-shadow: none !important; border: none !important; border-radius: 0 !important; }
+          .print-root {
+            display: block !important;
+            padding: 0 !important;
+            max-width: none !important;
+          }
+          .invoice-card {
+            box-shadow: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            width: 100% !important;
+          }
+          @page { margin: 12mm; }
         }
         .inv-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9ca3af; margin-bottom: 4px; }
         .inv-td { padding: 14px 12px; border-bottom: 1px solid #f3f4f6; font-size: 14px; vertical-align: top; }
         .inv-th { padding: 10px 12px; font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: #9ca3af; border-bottom: 2px solid #e5e7eb; }
+        .inv-no { white-space: nowrap; overflow-wrap: anywhere; }
       `}</style>
 
       <div className="min-h-screen" style={{ background: '#f1f5f9' }}>
@@ -135,8 +146,8 @@ export default function MintInvoicePage() {
                   <Image src="/mint-logo.svg" alt="Mint Platforms" width={160} height={44} unoptimized style={{ height: 44, width: 'auto' }} />
                 </div>
                 <div className="text-right">
-                  <h1 className="text-4xl font-bold" style={{ color: '#4c1d95' }}>Tax Invoice</h1>
-                  <p className="text-sm font-bold mt-1" style={{ color: '#7C3AED' }}>{invNo}</p>
+                  <h1 className="text-3xl font-bold whitespace-nowrap" style={{ color: '#4c1d95' }}>Tax Invoice</h1>
+                  <p className="text-sm font-bold mt-1 inv-no" style={{ color: '#7C3AED' }}>{invNo}</p>
                 </div>
               </div>
               <div className="mt-6" style={{ height: 2, background: 'linear-gradient(90deg,#4c1d95,#a78bfa)' }} />
@@ -170,7 +181,7 @@ export default function MintInvoicePage() {
                 ].map((m, i) => (
                   <div key={m.label} className="px-5 py-4" style={{ borderRight: i < 2 ? '1px solid #e5e7eb' : 'none' }}>
                     <p className="inv-label">{m.label}</p>
-                    <p className="text-sm font-bold text-gray-900">{m.value}</p>
+                    <p className="text-sm font-bold text-gray-900 inv-no">{m.value}</p>
                   </div>
                 ))}
               </div>
@@ -243,7 +254,7 @@ export default function MintInvoicePage() {
                 ].map(d => (
                   <div key={d.l}>
                     <p className="inv-label">{d.l}</p>
-                    <p className="text-sm font-bold text-gray-900">{d.v}</p>
+                    <p className="text-sm font-bold text-gray-900 inv-no">{d.v}</p>
                   </div>
                 ))}
               </div>
