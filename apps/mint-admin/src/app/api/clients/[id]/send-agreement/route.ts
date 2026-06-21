@@ -33,7 +33,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
         name:               client.contact_name ?? client.name,
         email:              client.contact_email,
         company:            client.name,
-        source:             'admin-agreement',
+        source:             'manual',
         status:             'new',
         onboarding_status:  'started',
         onboarding_data:    {},
