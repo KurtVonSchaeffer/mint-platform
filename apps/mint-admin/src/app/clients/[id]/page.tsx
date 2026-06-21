@@ -10,7 +10,7 @@ import { MarketplaceApplications } from '@/components/MarketplaceApplications';
 import {
   ArrowLeft, ExternalLink, Mail, Receipt, CheckCircle, AlertCircle,
   Clock, Send, Loader2, Activity, BarChart3, Building2, Calendar,
-  PlusCircle, X, Zap, Store, CheckCircle2, XCircle, FileText, Upload, CreditCard, Save, ScrollText,
+  PlusCircle, X, Zap, Store, CheckCircle2, XCircle, FileText, Upload, CreditCard, Save, ScrollText, Copy, Link2,
 } from 'lucide-react';
 
 // ─── Types ─────────────────────────────────────────────────────────────
@@ -88,6 +88,7 @@ export default function ClientDetailPage() {
   const [toast,      setToast]      = useState<{ kind: ToastKind; message: string } | null>(null);
   const [activeTab,  setActiveTab]  = useState<'details' | 'invoices' | 'usage' | 'billing' | 'features' | 'marketplace' | 'agreement'>('invoices');
   const [agreements, setAgreements] = useState<AgreementDoc[]>([]);
+  const [lead, setLead] = useState<{ id: string; onboarding_token: string; onboarding_status: string; onboarding_data: Record<string, unknown>; created_at: string } | null>(null);
   const [agrUploading, setAgrUploading] = useState(false);
   const [topupOpen,  setTopupOpen]  = useState(false);
   const [topupUnits, setTopupUnits] = useState(5000);
@@ -144,6 +145,7 @@ export default function ClientDetailPage() {
       setInvoices(data.invoices);
       setUsage(data.usage);
       setAgreements(data.agreements ?? []);
+      setLead(data.lead ?? null);
       setBillingFee(String(Math.round(data.client.monthly_fee_cents / 100)));
       setBillingTier(data.client.tier);
       setBillingQuota(String(data.client.api_quota ?? 10000));
@@ -819,33 +821,139 @@ export default function ClientDetailPage() {
         {/* ── Agreement tab ────────────────────────────────────────── */}
         {activeTab === 'agreement' && (
           <div className="space-y-4">
-            {/* Status banner */}
-            <div
-              className="bento-card p-5 flex items-start gap-4"
-              style={agreements.length > 0
-                ? { borderColor: 'rgba(52,211,153,0.25)', background: 'rgba(52,211,153,0.03)' }
-                : { borderColor: 'rgba(251,191,36,0.25)', background: 'rgba(251,191,36,0.03)' }}
-            >
-              {agreements.length > 0
-                ? <CheckCircle2 size={20} style={{ color: 'var(--color-green)', flexShrink: 0 }} />
-                : <AlertCircle  size={20} style={{ color: 'var(--color-amber)', flexShrink: 0 }} />}
-              <div>
-                <p className="font-semibold text-sm" style={{ color: agreements.length > 0 ? 'var(--color-green)' : 'var(--color-amber)' }}>
-                  {agreements.length > 0 ? 'Onboarding agreement on file' : 'Onboarding agreement not yet uploaded'}
-                </p>
-                <p className="text-xs mt-0.5" style={{ color: 'var(--color-text3)' }}>
-                  {agreements.length > 0
-                    ? `${agreements.length} document${agreements.length > 1 ? 's' : ''} uploaded · last on ${fmtDate(agreements[0].created_at)}`
-                    : 'Upload the signed agreement PDF once the client has reviewed and signed it.'}
-                </p>
-              </div>
+
+            {/* ── 1. Digital signature status ── */}
+            {(() => {
+              const sig = lead?.onboarding_data?.agreement_signature as string | undefined;
+              const signedAt = lead?.onboarding_data?.agreement_signed_at as string | undefined;
+              const onboardingLink = lead ? `https://algolend.co.za/onboard/${lead.onboarding_token}` : null;
+
+              return (
+                <div className="bento-card p-5 space-y-4">
+                  <p className="eyebrow">Digital Signature</p>
+
+                  {sig ? (
+                    <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(52,211,153,0.06)', border: '1px solid rgba(52,211,153,0.2)' }}>
+                      <CheckCircle2 size={18} style={{ color: 'var(--color-green)', flexShrink: 0, marginTop: 1 }} />
+                      <div>
+                        <p className="text-sm font-semibold" style={{ color: 'var(--color-green)' }}>Signed digitally</p>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--color-text3)' }}>
+                          Signed by <strong style={{ color: 'var(--color-text)' }}>{sig}</strong> on {fmtDate(signedAt)}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.2)' }}>
+                      <AlertCircle size={18} style={{ color: 'var(--color-amber)', flexShrink: 0, marginTop: 1 }} />
+                      <div>
+                        <p className="text-sm font-semibold" style={{ color: 'var(--color-amber)' }}>Not yet signed digitally</p>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--color-text3)' }}>
+                          {lead ? 'Onboarding link has been sent — waiting for client to sign.' : 'No onboarding link created yet. Click "Send agreement" to generate one.'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Onboarding link — always show so admin can copy it */}
+                  {onboardingLink && (
+                    <div>
+                      <p className="text-[11px] font-semibold mb-1.5" style={{ color: 'var(--color-text3)' }}>ONBOARDING LINK</p>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 text-xs px-3 py-2 rounded-lg truncate font-mono" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>
+                          {onboardingLink}
+                        </code>
+                        <button
+                          onClick={() => { navigator.clipboard.writeText(onboardingLink); setToast({ kind: 'success', message: 'Link copied!' }); }}
+                          className="p-2 rounded-lg transition-colors shrink-0"
+                          style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
+                          title="Copy link"
+                        >
+                          <Copy size={13} />
+                        </button>
+                        <a href={onboardingLink} target="_blank" rel="noreferrer"
+                          className="p-2 rounded-lg transition-colors shrink-0"
+                          style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
+                          title="Open link"
+                        >
+                          <ExternalLink size={13} />
+                        </a>
+                      </div>
+                      <p className="text-[10px] mt-1" style={{ color: 'var(--color-text3)' }}>
+                        Share this link with the client if the email didn't arrive. It opens the agreement + onboarding form.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Send / resend button */}
+                  <button
+                    onClick={async () => {
+                      setAgrSending(true);
+                      try {
+                        const res = await fetch(`/api/clients/${params.id}/send-agreement`, { method: 'POST' });
+                        if (!res.ok) throw new Error((await res.json()).error);
+                        const d = await res.json();
+                        setToast({ kind: 'success', message: `Agreement link sent to ${client.contact_email}` });
+                        load();
+                      } catch (err) {
+                        setToast({ kind: 'error', message: `Failed to send: ${err instanceof Error ? err.message : err}` });
+                      } finally { setAgrSending(false); }
+                    }}
+                    disabled={agrSending}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-60"
+                    style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.25)' }}
+                  >
+                    {agrSending ? <Loader2 size={13} className="animate-spin" /> : <ScrollText size={13} />}
+                    {agrSending ? 'Sending…' : lead ? 'Resend agreement email' : 'Send agreement email'}
+                  </button>
+                </div>
+              );
+            })()}
+
+            {/* ── 2. Agreement preview ── */}
+            <div className="bento-card p-5 space-y-3">
+              <p className="eyebrow">Agreement Text (what the client will see)</p>
+              <pre className="text-xs leading-relaxed whitespace-pre-wrap overflow-y-auto max-h-72 p-4 rounded-xl font-mono" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}>
+{`SERVICE AGREEMENT
+
+This Service Agreement ("Agreement") is entered into between Mint Platforms (Pty) Ltd, Registration No. 2024/123456/07, ("Service Provider") and the Client identified in this application ("Client").
+
+1. SERVICES
+The Service Provider agrees to provide the AlgoLend lending management platform ("Platform") to the Client, including loan origination, borrower management, bureau integrations, and related services as specified in the selected service tier.
+
+2. SUBSCRIPTION FEES
+The Client agrees to pay the monthly subscription fee applicable to their selected tier. Fees are invoiced monthly in advance and due within 30 days of invoice date. Late payments attract interest at prime + 2% per annum.
+
+3. TERM AND TERMINATION
+This Agreement commences on the activation date and continues month-to-month unless either party provides 30 days written notice of termination. The Service Provider may terminate immediately for non-payment or breach of this Agreement.
+
+4. ACCEPTABLE USE
+The Client agrees to use the Platform solely for lawful lending activities and in compliance with all applicable South African laws, including the National Credit Act 34 of 2005, POPIA, FICA, and any applicable NCR regulations. The Client warrants that they hold all required licences.
+
+5. DATA AND PRIVACY
+The Service Provider will process personal data on behalf of the Client in accordance with POPIA. The Client remains the responsible party for all borrower data processed through the Platform.
+
+6. INTELLECTUAL PROPERTY
+The Platform and all related intellectual property remain the exclusive property of the Service Provider. This Agreement grants the Client a non-exclusive, non-transferable licence to use the Platform for the duration of the Agreement.
+
+7. LIMITATION OF LIABILITY
+The Service Provider's liability is limited to the fees paid in the 3 months preceding any claim.
+
+8. SUPPORT
+Technical support during business hours (08:00–17:00 SAST, Monday–Friday). Critical issues addressed within 4 business hours.
+
+9. CONFIDENTIALITY
+Both parties agree to keep confidential all proprietary information disclosed under this Agreement.
+
+10. GOVERNING LAW
+Governed by the laws of the Republic of South Africa. Disputes resolved in Gauteng courts.`}
+              </pre>
             </div>
 
-            {/* Upload */}
+            {/* ── 3. Manual upload (already signed paper) ── */}
             <div className="bento-card p-5 space-y-3">
-              <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Upload signed agreement</p>
+              <p className="eyebrow">Upload Signed PDF</p>
               <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
-                PDF only. The document will be stored securely and associated with this client's account.
+                If the client signed a paper copy or sent you a signed PDF, upload it here to keep it on record.
               </p>
               <label
                 className="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer transition-colors"
@@ -853,15 +961,9 @@ export default function ClientDetailPage() {
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.4)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)'; }}
                 onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border2)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; }}
               >
-                {agrUploading
-                  ? <Loader2 size={15} className="animate-spin" />
-                  : <Upload size={15} />}
-                <span className="text-sm">{agrUploading ? 'Uploading…' : 'Choose PDF file to upload'}</span>
-                <input
-                  type="file"
-                  accept=".pdf"
-                  className="sr-only"
-                  disabled={agrUploading}
+                {agrUploading ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
+                <span className="text-sm">{agrUploading ? 'Uploading…' : 'Choose PDF to upload'}</span>
+                <input type="file" accept=".pdf" className="sr-only" disabled={agrUploading}
                   onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (!file || !client) return;
@@ -873,39 +975,32 @@ export default function ClientDetailPage() {
                       form.append('file', file);
                       const res = await fetch('/api/documents/upload', { method: 'POST', body: form });
                       if (!res.ok) throw new Error(await res.text());
-                      setToast({ kind: 'success', message: 'Agreement uploaded successfully.' });
+                      setToast({ kind: 'success', message: 'Agreement uploaded.' });
                       load();
                     } catch (err) {
                       setToast({ kind: 'error', message: `Upload failed: ${err instanceof Error ? err.message : String(err)}` });
-                    } finally {
-                      setAgrUploading(false);
-                      e.target.value = '';
-                    }
+                    } finally { setAgrUploading(false); e.target.value = ''; }
                   }}
                 />
               </label>
+              {agreements.length > 0 && (
+                <div className="divide-y rounded-xl overflow-hidden" style={{ border: '1px solid var(--color-border2)' }}>
+                  {agreements.map(doc => (
+                    <div key={doc.id} className="flex items-center gap-3 px-4 py-3">
+                      <FileText size={13} style={{ color: 'var(--color-violet)', flexShrink: 0 }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium truncate" style={{ color: 'var(--color-text)' }}>{doc.file_name}</p>
+                        <p className="text-[10px]" style={{ color: 'var(--color-text3)' }}>Uploaded {fmtDate(doc.created_at)}</p>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style={{ background: 'rgba(52,211,153,0.1)', color: 'var(--color-green)' }}>
+                        {doc.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Document list */}
-            {agreements.length > 0 && (
-              <div className="bento-card divide-y" style={{ '--tw-divide-opacity': 1 } as React.CSSProperties}>
-                {agreements.map(doc => (
-                  <div key={doc.id} className="flex items-center gap-3 px-5 py-3">
-                    <FileText size={14} style={{ color: 'var(--color-violet)', flexShrink: 0 }} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate" style={{ color: 'var(--color-text)' }}>{doc.file_name}</p>
-                      <p className="text-[10px]" style={{ color: 'var(--color-text3)' }}>Uploaded {fmtDate(doc.created_at)}</p>
-                    </div>
-                    <span
-                      className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
-                      style={{ background: 'rgba(52,211,153,0.1)', color: 'var(--color-green)', border: '1px solid rgba(52,211,153,0.2)' }}
-                    >
-                      {doc.status}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         )}
 

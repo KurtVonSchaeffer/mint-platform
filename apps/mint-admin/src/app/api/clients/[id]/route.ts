@@ -48,7 +48,7 @@ type Params = { params: Promise<{ id: string }> };
 export async function GET(_req: NextRequest, { params }: Params) {
   const { id } = await params;
 
-  const [clientRes, invoicesRes, usageRes, agreementsRes] = await Promise.all([
+  const [clientRes, invoicesRes, usageRes, agreementsRes, leadRes] = await Promise.all([
     supabaseAdmin
       .from('clients')
       .select('id, name, slug, subdomain, domain, tier, status, contact_email, contact_name, monthly_fee_cents, primary_color, secondary_color, ncr_number, created_at, activated_at, api_quota, client_features(flag, enabled)')
@@ -75,6 +75,14 @@ export async function GET(_req: NextRequest, { params }: Params) {
       .eq('client_id', id)
       .eq('type', 'onboarding_agreement')
       .order('created_at', { ascending: false }),
+
+    supabaseAdmin
+      .from('leads')
+      .select('id, onboarding_token, onboarding_status, onboarding_data, created_at')
+      .eq('email', (await supabaseAdmin.from('clients').select('contact_email').eq('id', id).single()).data?.contact_email ?? '')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
 
   if (clientRes.error) return NextResponse.json({ error: clientRes.error.message }, { status: 404 });
@@ -84,6 +92,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     invoices:   invoicesRes.data ?? [],
     usage:      usageRes.data ?? [],
     agreements: agreementsRes.data ?? [],
+    lead:       leadRes.data ?? null,
   });
 }
 
