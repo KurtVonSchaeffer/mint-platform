@@ -826,7 +826,7 @@ export default function ClientDetailPage() {
             {(() => {
               const sig = lead?.onboarding_data?.agreement_signature as string | undefined;
               const signedAt = lead?.onboarding_data?.agreement_signed_at as string | undefined;
-              const onboardingLink = lead ? `https://algolend.co.za/onboard/${lead.onboarding_token}` : null;
+              const onboardingLink = lead ? `https://algolend.co.za/sign/${lead.onboarding_token}` : null;
 
               return (
                 <div className="bento-card p-5 space-y-4">

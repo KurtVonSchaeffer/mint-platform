@@ -45,7 +45,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     lead = newLead;
   }
 
-  const link = `${BASE_URL}/onboard/${lead.onboarding_token}`;
+  const link = `${BASE_URL}/sign/${lead.onboarding_token}`;
 
   await resend.emails.send({
     from:    process.env.RESEND_FROM_EMAIL ?? 'accounts@algolend.co.za',
