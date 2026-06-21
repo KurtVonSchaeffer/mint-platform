@@ -36,6 +36,7 @@ minimumReleaseAgeExclude:
 
 packages:
   - apps/mint-admin
+  - apps/web
   - artifacts/*
   - lib/*
   - lib/integrations/*

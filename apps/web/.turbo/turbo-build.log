@@ -1,0 +1,55 @@
+
+> @mint/web@0.0.0 build /Users/kurtvonschaeffer/mint-platform/apps/web
+> next build
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/kurtvonschaeffer/package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /Users/kurtvonschaeffer/mint-platform/apps/web/package-lock.json
+   * /Users/kurtvonschaeffer/mint-platform/pnpm-lock.yaml
+
+   ▲ Next.js 15.5.18
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 5.8s
+   Linting and checking validity of types ...
+   Collecting page data ...
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+   Generating static pages (0/12) ...
+   Generating static pages (3/12) 
+   Generating static pages (6/12) 
+   Generating static pages (9/12) 
+ ✓ Generating static pages (12/12)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                    89.6 kB         200 kB
+├ ○ /_not-found                            989 B         103 kB
+├ ○ /admin-tour                            171 B         111 kB
+├ ƒ /api/leads                             135 B         102 kB
+├ ƒ /api/og                                135 B         102 kB
+├ ƒ /api/onboard/[token]/submit            135 B         102 kB
+├ ƒ /api/onboard/[token]/upload            135 B         102 kB
+├ ƒ /api/onboard/start                     135 B         102 kB
+├ ○ /apply                               5.11 kB         111 kB
+├ ○ /demo                                8.76 kB         114 kB
+├ ○ /icon.svg                                0 B            0 B
+├ ○ /intro                               4.23 kB         106 kB
+├ ƒ /onboard/[token]                     3.81 kB         106 kB
+├ ○ /privacy                               162 B         106 kB
+└ ○ /terms                                 162 B         106 kB
++ First Load JS shared by all             102 kB
+  ├ chunks/59-a876fa256b5d0391.js          46 kB
+  ├ chunks/9ff9858c-dbfdd29d6adf2c72.js  54.2 kB
+  └ other shared chunks (total)          1.92 kB
+
+
+ƒ Middleware                             34.4 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
