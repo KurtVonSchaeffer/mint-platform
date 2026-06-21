@@ -9,7 +9,7 @@ import { ALL_FEATURES, FEATURE_LABELS } from '@/lib/features';
 import Link from 'next/link';
 import {
   Power, Settings2, ExternalLink, X, Search, Plus, Zap, Building2, Mail, Loader2, Download,
-  LayoutGrid, Table2,
+  LayoutGrid, Table2, Trash2,
 } from 'lucide-react';
 
 interface ClientFeature { flag: string; enabled: boolean; }
@@ -51,6 +51,8 @@ export default function ClientsPage() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'suspended' | 'trial'>('all');
   const [toast, setToast] = useState<{ kind: ToastKind; message: string } | null>(null);
   const [pendingConfirm, setPendingConfirm] = useState<Client | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<Client | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [viewMode, setViewMode] = useState<'card' | 'table'>('card');
 
@@ -101,6 +103,22 @@ export default function ClientsPage() {
         prev.map((c) => (c.id === pendingConfirm.id ? { ...c, status: pendingConfirm.status } : c)),
       );
       setToast({ kind: 'error', message: `Failed to update status: ${err}` });
+    }
+  }
+
+  async function confirmDelete() {
+    if (!pendingDelete) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/clients/${pendingDelete.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error((await res.json()).error);
+      setClients(prev => prev.filter(c => c.id !== pendingDelete.id));
+      setToast({ kind: 'success', message: `${pendingDelete.name} has been permanently deleted.` });
+    } catch (err) {
+      setToast({ kind: 'error', message: `Failed to delete: ${err}` });
+    } finally {
+      setDeleting(false);
+      setPendingDelete(null);
     }
   }
 
@@ -227,6 +245,51 @@ export default function ClientsPage() {
                   color: 'var(--color-text2)',
                   background: 'transparent',
                 }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {/* Delete confirmation modal */}
+      {pendingDelete ? (
+        <div
+          className="fixed inset-0 confirm-backdrop z-40 flex items-center justify-center p-6"
+          style={{ animation: 'fade-in 0.2s ease-out both' }}
+          onClick={() => setPendingDelete(null)}
+        >
+          <div
+            className="bento-card max-w-md w-full p-7"
+            onClick={(e) => e.stopPropagation()}
+            style={{ animation: 'scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) both' }}
+          >
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5"
+              style={{ background: 'rgba(248,113,113,0.12)', color: 'var(--color-red)' }}>
+              <Trash2 size={18} />
+            </div>
+            <h3 className="text-xl font-bold mb-2 tracking-tight" style={{ color: 'var(--color-text)' }}>
+              Delete {pendingDelete.name}?
+            </h3>
+            <p className="text-sm leading-relaxed mb-6" style={{ color: 'var(--color-text3)' }}>
+              This permanently removes the client and all their data from the database. This cannot be undone.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="btn-shine flex-1 py-2.5 rounded-xl text-sm font-semibold text-white disabled:opacity-60"
+                style={{ background: 'linear-gradient(135deg, #dc2626, #ef4444)', boxShadow: '0 4px 20px rgba(248,113,113,0.35)' }}
+              >
+                {deleting ? 'Deleting…' : 'Yes, delete permanently'}
+              </button>
+              <button
+                onClick={() => setPendingDelete(null)}
+                className="px-5 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)', background: 'transparent' }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
               >
@@ -435,6 +498,13 @@ export default function ClientsPage() {
                           onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}>
                           {c.status === 'active' ? 'Suspend' : 'Reactivate'}
                         </button>
+                        <button onClick={() => setPendingDelete(c)} title="Delete client"
+                          className="p-1.5 rounded-lg transition-colors"
+                          style={{ border: '1px solid rgba(248,113,113,0.2)', color: 'var(--color-red)' }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.1)'; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                          <Trash2 size={13} />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -533,6 +603,13 @@ export default function ClientsPage() {
                       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = c.status === 'active' ? 'rgba(248,113,113,0.1)' : 'rgba(52,211,153,0.1)'; }}>
                       <Power size={13} />
                       {c.status === 'active' ? 'Suspend' : 'Reactivate'}
+                    </button>
+                    <button onClick={e => { e.preventDefault(); setPendingDelete(c); }} title="Delete client"
+                      className="relative z-10 p-2 rounded-xl transition-colors"
+                      style={{ border: '1px solid rgba(248,113,113,0.2)', color: 'var(--color-red)' }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.1)'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 </div>

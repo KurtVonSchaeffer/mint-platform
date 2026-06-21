@@ -51,7 +51,12 @@ export default function MintInvoicePage() {
   const [clientEmail, setClientEmail] = useState('');
   const [invoiceDate, setInvoiceDate] = useState(today());
   const [dueDate,     setDueDate]     = useState(defaultDue());
-  const [invoiceSeq,  setInvoiceSeq]  = useState(1);
+  const [invoiceSeq,  setInvoiceSeq]  = useState(() => {
+    try {
+      const last = parseInt(localStorage.getItem('mint_invoice_seq') ?? '0', 10);
+      return (isNaN(last) ? 0 : last) + 1;
+    } catch { return 1; }
+  });
   const [vatEnabled,  setVatEnabled]  = useState(false);
   const [notes,       setNotes]       = useState('');
   const [items, setItems] = useState<LineItem[]>([{ id: 1, desc: '', sub: '', qty: 1, rate: 0 }]);
@@ -105,7 +110,7 @@ export default function MintInvoicePage() {
             <p className="text-sm font-semibold text-gray-700">Invoice Creator</p>
           </div>
           <button
-            onClick={() => window.print()}
+            onClick={() => { try { localStorage.setItem('mint_invoice_seq', String(invoiceSeq)); } catch {} window.print(); }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
             style={{ background: 'linear-gradient(135deg,#4c1d95,#7C3AED)' }}
           >
@@ -389,7 +394,7 @@ export default function MintInvoicePage() {
                 className={`${inp} resize-none`} />
             </div>
 
-            <button onClick={() => window.print()}
+            <button onClick={() => { try { localStorage.setItem('mint_invoice_seq', String(invoiceSeq)); } catch {} window.print(); }}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold text-white"
               style={{ background: 'linear-gradient(135deg,#4c1d95,#7C3AED)', boxShadow: '0 4px 20px rgba(124,58,237,0.4)' }}>
               <Printer size={15} /> Print / Save PDF
