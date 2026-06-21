@@ -189,7 +189,7 @@ export function SignAgreementForm({ token, leadId, clientName, contactName, alre
               disabled={saving}
               style={{
                 width: '100%', padding: '14px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                background: (!accepted || !signature.trim()) ? 'rgba(124,58,237,0.3)' : 'linear-gradient(135deg,#7C3AED,#9B5CF6)',
+                background: (!accepted || sigPadRef.current?.isEmpty() !== false) ? 'rgba(124,58,237,0.3)' : 'linear-gradient(135deg,#7C3AED,#9B5CF6)',
                 color: '#fff', fontSize: 15, fontWeight: 700,
                 opacity: saving ? 0.7 : 1,
               }}
