@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AlgoLend — Lender Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --brand: #7C3AED;
+      --brand-soft: rgba(124,58,237,0.12);
+      --brand-light: #A78BFA;
+    }
+    * { font-family: 'Inter', sans-serif; box-sizing: border-box; }
+    body { background: #F8F9FC; margin: 0; overflow: hidden; }
+
+    .sidebar { background: #ffffff; border-right: 1px solid rgba(0,0,0,0.06); box-shadow: 4px 0 24px rgba(0,0,0,0.04); }
+    .nav-active { background: linear-gradient(135deg, rgba(124,58,237,0.1) 0%, rgba(124,58,237,0.06) 100%); color: var(--brand); box-shadow: inset 0 0 0 1px rgba(124,58,237,0.15); border-radius: 12px; }
+    .bento { background: white; border: 1px solid rgba(0,0,0,0.06); border-radius: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+    .badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+    .badge-active { background: rgba(52,211,153,0.1); color: #059669; }
+    .badge-trial { background: rgba(96,165,250,0.1); color: #2563EB; }
+    .badge-growth { background: rgba(124,58,237,0.1); color: #7C3AED; }
+    .badge-core { background: rgba(148,163,184,0.12); color: #64748B; }
+    .stat-card { background: white; border: 1px solid rgba(0,0,0,0.05); border-radius: 18px; padding: 20px; position: relative; overflow: hidden; }
+    .progress-bar { height: 4px; border-radius: 2px; background: rgba(0,0,0,0.06); overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 2px; }
+    .pulse { width:8px; height:8px; border-radius:50%; background:#34D399; box-shadow:0 0 0 2px rgba(52,211,153,0.3); display:inline-block; }
+    .mono { font-family: 'SF Mono', 'Fira Code', monospace; }
+  </style>
+</head>
+<body class="flex h-screen overflow-hidden">
+
+  <!-- Sidebar -->
+  <aside class="sidebar flex flex-col w-64 h-full flex-shrink-0">
+    <!-- Logo -->
+    <div class="flex items-center h-16 px-5 border-b border-gray-100">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+        <path d="M 6 30 L 6 14 C 6 8.48 10.48 4 16 4 C 21.52 4 26 8.48 26 14 L 26 30" stroke="#7C3AED" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+        <circle cx="16" cy="15" r="5.5" fill="#0F1629"/>
+      </svg>
+      <span class="ml-2.5 text-base font-bold tracking-tight text-gray-900">AlgoLend</span>
+    </div>
+
+    <!-- Nav -->
+    <nav class="flex-1 py-3 px-3 space-y-0.5 overflow-y-auto">
+      <a class="nav-active flex items-center gap-3 px-3 py-2.5 text-sm font-semibold" href="#">
+        <span class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:rgba(124,58,237,0.1)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        </span>
+        <span style="color:#7C3AED">Dashboard</span>
+      </a>
+      <a class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl" href="#">
+        <span class="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-50">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </span>
+        Applications
+      </a>
+      <a class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl" href="#">
+        <span class="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-50">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+        </span>
+        Loan Book
+      </a>
+      <a class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl" href="#">
+        <span class="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-50">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+        </span>
+        Payments
+      </a>
+      <a class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl" href="#">
+        <span class="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-50">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </span>
+        Compliance
+      </a>
+      <a class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl" href="#">
+        <span class="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-50">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </span>
+        Analytics
+      </a>
+      <a class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl" href="#">
+        <span class="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-50">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+        </span>
+        Team
+      </a>
+      <a class="flex items-center gap-3 px-3 py-2.5 text-sm font-medium text-gray-500 hover:bg-gray-50 rounded-xl" href="#">
+        <span class="w-8 h-8 rounded-lg flex items-center justify-center bg-gray-50">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        </span>
+        Settings
+      </a>
+    </nav>
+
+    <!-- User -->
+    <div class="p-3 border-t border-gray-100">
+      <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-gray-50">
+        <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white flex-shrink-0" style="background:#7C3AED">TM</div>
+        <div class="flex-1 min-w-0">
+          <p class="text-xs font-semibold text-gray-900 truncate">Thabo Mokoena</p>
+          <p class="text-[10px] text-gray-400 capitalize">Admin</p>
+        </div>
+      </div>
+      <p class="text-center mt-2" style="font-size:10px;color:#cbd5e1">Powered by <strong style="color:#94a3b8">Mint Platforms</strong></p>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-1 overflow-y-auto bg-gray-50 p-6">
+
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-widest text-purple-500 mb-1">AlgoLend Platform</p>
+        <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Lender Dashboard</h1>
+        <p class="text-sm text-gray-400 mt-0.5">Wednesday, 4 June 2026 &middot; All systems operational</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs mono" style="background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.2);color:#059669">
+          <span class="pulse"></span> Live &middot; 14ms
+        </div>
+        <button class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-white" style="background:#7C3AED">
+          New Application
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI row -->
+    <div class="grid grid-cols-4 gap-4 mb-5">
+      <!-- Active loans -->
+      <div class="stat-card">
+        <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,rgba(124,58,237,0.14) 0%,transparent 70%);filter:blur(12px)"></div>
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:rgba(124,58,237,0.1)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          </div>
+        </div>
+        <p class="text-2xl font-bold text-gray-900 mono mb-0.5">47</p>
+        <p class="text-xs text-gray-400">Active loans</p>
+        <div class="mt-3 flex items-center gap-1.5 text-xs font-semibold" style="color:#10b981">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          +6 this month
+        </div>
+      </div>
+      <!-- Portfolio value -->
+      <div class="stat-card">
+        <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,rgba(52,211,153,0.14) 0%,transparent 70%);filter:blur(12px)"></div>
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:rgba(52,211,153,0.1)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+        </div>
+        <p class="text-2xl font-bold text-gray-900 mono mb-0.5">R 12.4m</p>
+        <p class="text-xs text-gray-400">Portfolio value</p>
+        <div class="mt-3 flex items-center gap-1.5 text-xs font-semibold" style="color:#10b981">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          +R 890k this month
+        </div>
+      </div>
+      <!-- Pending decisions -->
+      <div class="stat-card">
+        <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,rgba(251,191,36,0.14) 0%,transparent 70%);filter:blur(12px)"></div>
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:rgba(251,191,36,0.1)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+        </div>
+        <p class="text-2xl font-bold text-gray-900 mono mb-0.5">8</p>
+        <p class="text-xs text-gray-400">Pending decisions</p>
+        <div class="mt-3 flex items-center gap-1.5 text-xs font-semibold" style="color:#d97706">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          &lt; 24hr avg wait
+        </div>
+      </div>
+      <!-- Collections -->
+      <div class="stat-card">
+        <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,rgba(96,165,250,0.14) 0%,transparent 70%);filter:blur(12px)"></div>
+        <div class="flex items-center justify-between mb-4">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:rgba(96,165,250,0.1)">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+        </div>
+        <p class="text-2xl font-bold text-gray-900 mono mb-0.5">94.2%</p>
+        <p class="text-xs text-gray-400">Collection rate</p>
+        <div class="mt-3 flex items-center gap-1.5 text-xs font-semibold" style="color:#3b82f6">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          +1.2% vs last month
+        </div>
+      </div>
+    </div>
+
+    <!-- Mid row: Applications pipeline + Credit profile -->
+    <div class="grid grid-cols-5 gap-4 mb-4">
+
+      <!-- Pipeline -->
+      <div class="bento p-5 col-span-3">
+        <div class="flex items-center justify-between mb-4">
+          <p class="text-sm font-semibold text-gray-700">Recent Applications</p>
+          <a href="#" class="text-xs font-semibold mono" style="color:#7C3AED">View all &rarr;</a>
+        </div>
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-xs text-gray-400 uppercase tracking-wide border-b border-gray-100">
+              <th class="text-left pb-2 font-medium">Applicant</th>
+              <th class="text-left pb-2 font-medium">Product</th>
+              <th class="text-right pb-2 font-medium">Amount</th>
+              <th class="text-right pb-2 font-medium">Status</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            <tr>
+              <td class="py-2.5">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full text-xs font-bold text-white flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#7C3AED,#A78BFA)">NK</div>
+                  <div><p class="font-medium text-gray-800">Nkosi Trading CC</p><p class="text-[11px] text-gray-400">Sipho Nkosi</p></div>
+                </div>
+              </td>
+              <td class="py-2.5 text-gray-500 text-xs">Working Capital</td>
+              <td class="py-2.5 text-right font-mono font-semibold text-gray-800">R 850,000</td>
+              <td class="py-2.5 text-right"><span class="badge badge-active">Active</span></td>
+            </tr>
+            <tr>
+              <td class="py-2.5">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full text-xs font-bold text-white flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#10b981,#6ee7b7)">MP</div>
+                  <div><p class="font-medium text-gray-800">Molefe Properties</p><p class="text-[11px] text-gray-400">Dineo Molefe</p></div>
+                </div>
+              </td>
+              <td class="py-2.5 text-gray-500 text-xs">Term Loan</td>
+              <td class="py-2.5 text-right font-mono font-semibold text-gray-800">R 1,200,000</td>
+              <td class="py-2.5 text-right"><span class="badge" style="background:rgba(251,191,36,0.12);color:#d97706">Under Review</span></td>
+            </tr>
+            <tr>
+              <td class="py-2.5">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full text-xs font-bold text-white flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#3b82f6,#93c5fd)">ZB</div>
+                  <div><p class="font-medium text-gray-800">Zulu Build Supplies</p><p class="text-[11px] text-gray-400">Thandi Zulu</p></div>
+                </div>
+              </td>
+              <td class="py-2.5 text-gray-500 text-xs">Invoice Finance</td>
+              <td class="py-2.5 text-right font-mono font-semibold text-gray-800">R 480,000</td>
+              <td class="py-2.5 text-right"><span class="badge badge-trial">Pending KYC</span></td>
+            </tr>
+            <tr>
+              <td class="py-2.5">
+                <div class="flex items-center gap-2">
+                  <div class="w-7 h-7 rounded-full text-xs font-bold text-white flex items-center justify-center flex-shrink-0" style="background:linear-gradient(135deg,#f59e0b,#fde68a)">PH</div>
+                  <div><p class="font-medium text-gray-800">Phiri Holdings</p><p class="text-[11px] text-gray-400">Moses Phiri</p></div>
+                </div>
+              </td>
+              <td class="py-2.5 text-gray-500 text-xs">Working Capital</td>
+              <td class="py-2.5 text-right font-mono font-semibold text-gray-800">R 320,000</td>
+              <td class="py-2.5 text-right"><span class="badge badge-active">Active</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Credit + compliance -->
+      <div class="bento p-5 col-span-2 flex flex-col gap-4">
+        <div>
+          <p class="text-sm font-semibold text-gray-700 mb-3">Portfolio Health</p>
+          <div class="space-y-3">
+            <div>
+              <div class="flex justify-between text-xs mb-1"><span class="text-gray-500">On Schedule</span><span class="font-semibold text-gray-700">38 / 47</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:81%;background:linear-gradient(90deg,#10b981,#6ee7b7)"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs mb-1"><span class="text-gray-500">1-30 Days Late</span><span class="font-semibold text-gray-700">6 / 47</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:13%;background:linear-gradient(90deg,#f59e0b,#fde68a)"></div></div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs mb-1"><span class="text-gray-500">NPA (&gt;90 Days)</span><span class="font-semibold text-gray-700">3 / 47</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:6%;background:linear-gradient(90deg,#ef4444,#fca5a5)"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-100 pt-4">
+          <p class="text-sm font-semibold text-gray-700 mb-3">Compliance</p>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-md flex items-center justify-center" style="background:rgba(52,211,153,0.1)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <span class="text-xs text-gray-600">SACRRA Jun submission</span>
+              </div>
+              <span class="text-[10px] font-semibold" style="color:#10b981">Done</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-md flex items-center justify-center" style="background:rgba(52,211,153,0.1)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+                <span class="text-xs text-gray-600">NCA disclosures</span>
+              </div>
+              <span class="text-[10px] font-semibold" style="color:#10b981">Current</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-md flex items-center justify-center" style="background:rgba(251,191,36,0.1)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                </div>
+                <span class="text-xs text-gray-600">Experian key renewal</span>
+              </div>
+              <span class="text-[10px] font-semibold" style="color:#d97706">Due 15 Jun</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="border-t border-gray-100 pt-4">
+          <p class="text-xs font-medium text-gray-400 mb-2 uppercase tracking-wider">Integrations</p>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div class="rounded-xl py-2 px-1" style="background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.15)">
+              <p class="text-[10px] font-bold" style="color:#059669">TruID</p>
+              <p class="text-[9px] text-gray-400">Active</p>
+            </div>
+            <div class="rounded-xl py-2 px-1" style="background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.15)">
+              <p class="text-[10px] font-bold" style="color:#059669">Experian</p>
+              <p class="text-[9px] text-gray-400">Active</p>
+            </div>
+            <div class="rounded-xl py-2 px-1" style="background:rgba(52,211,153,0.07);border:1px solid rgba(52,211,153,0.15)">
+              <p class="text-[10px] font-bold" style="color:#059669">DocuSeal</p>
+              <p class="text-[9px] text-gray-400">Active</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom: Income chart approximation -->
+    <div class="bento p-5">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <p class="text-sm font-semibold text-gray-700">Monthly Collections</p>
+          <p class="text-xs text-gray-400">Jan &ndash; Jun 2026</p>
+        </div>
+        <div class="flex items-center gap-2 text-xs mono font-semibold" style="color:#7C3AED">R 1.84m collected in June</div>
+      </div>
+      <div class="flex items-end gap-3 h-20 px-2">
+        <div class="flex flex-col items-center gap-1 flex-1">
+          <div class="w-full rounded-t-lg" style="height:48%;background:linear-gradient(0deg,rgba(124,58,237,0.3),rgba(124,58,237,0.15))"></div>
+          <p class="text-[10px] text-gray-400">Jan</p>
+        </div>
+        <div class="flex flex-col items-center gap-1 flex-1">
+          <div class="w-full rounded-t-lg" style="height:60%;background:linear-gradient(0deg,rgba(124,58,237,0.4),rgba(124,58,237,0.2))"></div>
+          <p class="text-[10px] text-gray-400">Feb</p>
+        </div>
+        <div class="flex flex-col items-center gap-1 flex-1">
+          <div class="w-full rounded-t-lg" style="height:52%;background:linear-gradient(0deg,rgba(124,58,237,0.35),rgba(124,58,237,0.15))"></div>
+          <p class="text-[10px] text-gray-400">Mar</p>
+        </div>
+        <div class="flex flex-col items-center gap-1 flex-1">
+          <div class="w-full rounded-t-lg" style="height:72%;background:linear-gradient(0deg,rgba(124,58,237,0.5),rgba(124,58,237,0.25))"></div>
+          <p class="text-[10px] text-gray-400">Apr</p>
+        </div>
+        <div class="flex flex-col items-center gap-1 flex-1">
+          <div class="w-full rounded-t-lg" style="height:80%;background:linear-gradient(0deg,rgba(124,58,237,0.6),rgba(124,58,237,0.3))"></div>
+          <p class="text-[10px] text-gray-400">May</p>
+        </div>
+        <div class="flex flex-col items-center gap-1 flex-1">
+          <div class="w-full rounded-t-lg" style="height:100%;background:linear-gradient(0deg,#7C3AED,rgba(124,58,237,0.5))"></div>
+          <p class="text-[10px] font-bold" style="color:#7C3AED">Jun</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</body>
+</html>
