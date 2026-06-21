@@ -10,7 +10,7 @@ import { MarketplaceApplications } from '@/components/MarketplaceApplications';
 import {
   ArrowLeft, ExternalLink, Mail, Receipt, CheckCircle, AlertCircle,
   Clock, Send, Loader2, Activity, BarChart3, Building2, Calendar,
-  PlusCircle, X, Zap, Store, CheckCircle2, XCircle, FileText, Upload,
+  PlusCircle, X, Zap, Store, CheckCircle2, XCircle, FileText, Upload, CreditCard, Save,
 } from 'lucide-react';
 
 // ─── Types ─────────────────────────────────────────────────────────────
@@ -86,13 +86,17 @@ export default function ClientDetailPage() {
   const [usage,      setUsage]      = useState<UsageRow[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [toast,      setToast]      = useState<{ kind: ToastKind; message: string } | null>(null);
-  const [activeTab,  setActiveTab]  = useState<'invoices' | 'usage' | 'features' | 'marketplace' | 'agreement'>('invoices');
+  const [activeTab,  setActiveTab]  = useState<'invoices' | 'usage' | 'billing' | 'features' | 'marketplace' | 'agreement'>('invoices');
   const [agreements, setAgreements] = useState<AgreementDoc[]>([]);
   const [agrUploading, setAgrUploading] = useState(false);
   const [topupOpen,  setTopupOpen]  = useState(false);
   const [topupUnits, setTopupUnits] = useState(5000);
   const [topupPrice, setTopupPrice] = useState(50000); // R500 per 1k calls in cents
   const [topupSaving, setTopupSaving] = useState(false);
+  const [billingFee,  setBillingFee]  = useState('');
+  const [billingTier, setBillingTier] = useState<'core' | 'growth' | 'enterprise' | ''>('');
+  const [billingQuota, setBillingQuota] = useState('');
+  const [billingSaving, setBillingSaving] = useState(false);
 
   type MpPolicy = { id: string; active: boolean; display_name: string; base_rate_pct: number; min_credit_score: number; min_amount: number; max_amount: number; tagline: string | null };
   const [mpPolicy,  setMpPolicy]  = useState<MpPolicy | null | undefined>(undefined); // undefined=unloaded
@@ -133,6 +137,9 @@ export default function ClientDetailPage() {
       setInvoices(data.invoices);
       setUsage(data.usage);
       setAgreements(data.agreements ?? []);
+      setBillingFee(String(Math.round(data.client.monthly_fee_cents / 100)));
+      setBillingTier(data.client.tier);
+      setBillingQuota(String(data.client.api_quota ?? 10000));
     } catch {
       setToast({ kind: 'error', message: 'Could not load client data.' });
     } finally {
@@ -161,6 +168,36 @@ export default function ClientDetailPage() {
       setToast({ kind: 'error', message: `Top-up failed: ${err instanceof Error ? err.message : err}` });
     } finally {
       setTopupSaving(false);
+    }
+  }
+
+  async function saveBilling() {
+    if (!client) return;
+    setBillingSaving(true);
+    try {
+      const fee = Math.round(parseFloat(billingFee) * 100);
+      const quota = parseInt(billingQuota, 10);
+      const res = await fetch(`/api/clients/${params.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          monthly_fee_cents: isNaN(fee) ? undefined : fee,
+          tier: billingTier || undefined,
+          api_quota: isNaN(quota) ? undefined : quota,
+        }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      setClient(prev => prev ? {
+        ...prev,
+        monthly_fee_cents: isNaN(fee) ? prev.monthly_fee_cents : fee,
+        tier: (billingTier || prev.tier) as typeof prev.tier,
+        api_quota: isNaN(quota) ? prev.api_quota : quota,
+      } : prev);
+      setToast({ kind: 'success', message: 'Billing settings saved.' });
+    } catch (err) {
+      setToast({ kind: 'error', message: `Failed to save: ${err instanceof Error ? err.message : err}` });
+    } finally {
+      setBillingSaving(false);
     }
   }
 
@@ -303,11 +340,12 @@ export default function ClientDetailPage() {
         {/* Tabs */}
         <div className="flex items-center gap-1" style={{ borderBottom: '1px solid var(--color-border2)', paddingBottom: '0' }}>
           {([
-            { id: 'invoices',    label: 'Invoices',    icon: Receipt,   count: invoices.length },
-            { id: 'usage',       label: 'Usage',       icon: BarChart3, count: null },
-            { id: 'features',    label: 'Features',    icon: Activity,  count: enabledFeatures.length },
-            { id: 'marketplace', label: 'Marketplace', icon: Store,     count: null },
-            { id: 'agreement',   label: 'Agreement',   icon: FileText,  count: agreements.length > 0 ? agreements.length : null },
+            { id: 'invoices',    label: 'Invoices',    icon: Receipt,     count: invoices.length },
+            { id: 'usage',       label: 'Usage',       icon: BarChart3,   count: null },
+            { id: 'billing',     label: 'Billing',     icon: CreditCard,  count: null },
+            { id: 'features',    label: 'Features',    icon: Activity,    count: enabledFeatures.length },
+            { id: 'marketplace', label: 'Marketplace', icon: Store,       count: null },
+            { id: 'agreement',   label: 'Agreement',   icon: FileText,    count: agreements.length > 0 ? agreements.length : null },
           ] as const).map(tab => (
             <button
               key={tab.id}
@@ -385,6 +423,110 @@ export default function ClientDetailPage() {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* ── Billing tab ──────────────────────────────────────────────── */}
+        {activeTab === 'billing' && (
+          <div className="max-w-lg space-y-5">
+            <div className="bento-card p-6 space-y-5">
+              <p className="eyebrow">Custom Pricing</p>
+
+              {/* Monthly fee */}
+              <div>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text2)' }}>
+                  Monthly Fee (R)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold" style={{ color: 'var(--color-text3)' }}>R</span>
+                  <input
+                    type="number" min={0} step={100}
+                    value={billingFee}
+                    onChange={e => setBillingFee(e.target.value)}
+                    onFocus={e => e.target.select()}
+                    className="field-input pl-7 font-mono"
+                    placeholder="22000"
+                  />
+                </div>
+                <p className="text-[10px] mt-1" style={{ color: 'var(--color-text3)' }}>
+                  Currently {fmt(client.monthly_fee_cents)} / month
+                </p>
+              </div>
+
+              {/* Tier */}
+              <div>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text2)' }}>
+                  Tier
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(['core', 'growth', 'enterprise'] as const).map(t => (
+                    <button
+                      key={t}
+                      onClick={() => setBillingTier(t)}
+                      className="py-2 rounded-xl text-xs font-semibold capitalize transition-all"
+                      style={billingTier === t ? {
+                        background: 'linear-gradient(135deg, var(--color-purple), var(--color-purple2))',
+                        color: '#fff',
+                        boxShadow: '0 2px 12px rgba(124,58,237,0.35)',
+                      } : {
+                        background: 'rgba(255,255,255,0.04)',
+                        color: 'var(--color-text3)',
+                        border: '1px solid var(--color-border2)',
+                      }}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* API Quota */}
+              <div>
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-text2)' }}>
+                  API Call Quota (per month)
+                </label>
+                <select
+                  value={billingQuota}
+                  onChange={e => setBillingQuota(e.target.value)}
+                  className="field-input font-mono cursor-pointer"
+                >
+                  {[1000, 2000, 5000, 10000, 25000, 50000, 100000, 250000, 500000].map(q => (
+                    <option key={q} value={q}>{q.toLocaleString()} calls / mo</option>
+                  ))}
+                </select>
+                <p className="text-[10px] mt-1" style={{ color: 'var(--color-text3)' }}>
+                  Currently {(client.api_quota ?? 10000).toLocaleString()} calls / month
+                </p>
+              </div>
+
+              <button
+                onClick={saveBilling}
+                disabled={billingSaving}
+                className="btn-purple btn-shine w-full inline-flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {billingSaving
+                  ? <><Loader2 size={14} className="animate-spin" /> Saving…</>
+                  : <><Save size={14} /> Save billing settings</>}
+              </button>
+            </div>
+
+            {/* Summary */}
+            <div className="bento-card p-5">
+              <p className="eyebrow mb-3">Current Billing Summary</p>
+              <div className="space-y-2">
+                {[
+                  { l: 'Monthly fee',   v: fmt(client.monthly_fee_cents) },
+                  { l: 'Tier',          v: client.tier.charAt(0).toUpperCase() + client.tier.slice(1) },
+                  { l: 'API quota',     v: `${(client.api_quota ?? 10000).toLocaleString()} calls / mo` },
+                  { l: 'Total invoiced', v: fmt(invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.total_cents, 0)) },
+                ].map(row => (
+                  <div key={row.l} className="flex items-center justify-between py-2" style={{ borderBottom: '1px solid var(--color-border2)' }}>
+                    <span className="text-xs" style={{ color: 'var(--color-text3)' }}>{row.l}</span>
+                    <span className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>{row.v}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 

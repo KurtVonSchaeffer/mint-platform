@@ -91,7 +91,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params;
 
-  let body: { status?: string; features?: Record<string, boolean>; api_quota?: number; topup?: { units: number; price_per_1k_cents: number } };
+  let body: { status?: string; features?: Record<string, boolean>; api_quota?: number; topup?: { units: number; price_per_1k_cents: number }; monthly_fee_cents?: number; tier?: string };
   try {
     body = await req.json();
   } catch {
@@ -158,6 +158,20 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       console.error('[clients] quota update failed', error);
       errors.push(error.message);
     }
+  }
+
+  // ── Billing update (monthly fee + tier) ──────────────────────────────
+  if (body.monthly_fee_cents !== undefined || body.tier !== undefined) {
+    const patch: Record<string, unknown> = {};
+    if (body.monthly_fee_cents !== undefined) patch.monthly_fee_cents = Math.max(0, Math.round(body.monthly_fee_cents));
+    if (body.tier !== undefined) {
+      const allowed = ['core', 'growth', 'enterprise'];
+      if (!allowed.includes(body.tier)) return NextResponse.json({ error: 'invalid tier' }, { status: 422 });
+      patch.tier = body.tier;
+    }
+    const { error } = await supabaseAdmin.from('clients').update(patch).eq('id', id);
+    if (error) { console.error('[clients] billing update failed', error); errors.push(error.message); }
+    else { logAudit({ action: 'client.update', resourceType: 'client', resourceId: id, meta: patch }); }
   }
 
   // ── Quota top-up ─────────────────────────────────────────────────────
