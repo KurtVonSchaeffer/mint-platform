@@ -576,6 +576,13 @@ export default function ClientsPage() {
                     </div>
                   </div>
                   <div className="relative z-10 flex items-center gap-2 shrink-0">
+                    <Link href={`/clients/${c.id}`}
+                      className="relative z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all"
+                      style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.25)' }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.2)'; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.1)'; }}>
+                      View details →
+                    </Link>
                     <a href={`https://vercel.com/mint-platforms/${c.slug}`} target="_blank" rel="noreferrer" title="Vercel project"
                       className="p-2 rounded-xl transition-colors"
                       style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
