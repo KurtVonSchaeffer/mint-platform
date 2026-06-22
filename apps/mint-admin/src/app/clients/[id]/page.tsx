@@ -528,13 +528,14 @@ export default function ClientDetailPage() {
                   Monthly Fee
                 </label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold pointer-events-none" style={{ color: 'var(--color-text3)' }}>R</span>
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold pointer-events-none select-none" style={{ color: 'var(--color-text3)' }}>R</span>
                   <input
                     type="number" min={0} step={100}
                     value={billingFee}
                     onChange={e => setBillingFee(e.target.value)}
                     onFocus={e => e.target.select()}
-                    className="field-input pl-8 font-mono"
+                    className="field-input font-mono"
+                    style={{ paddingLeft: '2rem' }}
                     placeholder="22000"
                   />
                 </div>
