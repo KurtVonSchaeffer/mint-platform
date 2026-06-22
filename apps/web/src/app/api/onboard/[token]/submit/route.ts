@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { createHash } from 'crypto';
+import { AGREEMENT_TEXT, AGREEMENT_VERSION } from '@/lib/agreement';
 
 function getSupabase() {
   return createClient(
@@ -32,6 +34,8 @@ export async function POST(
     return NextResponse.json({ error: 'Application already submitted' }, { status: 409 });
   }
 
+  const agreementHash = createHash('sha256').update(AGREEMENT_TEXT, 'utf8').digest('hex');
+
   const { error } = await supabase
     .from('leads')
     .update({
@@ -39,13 +43,15 @@ export async function POST(
       company:           String(body.company ?? '').trim() || undefined,
       onboarding_status: 'complete',
       onboarding_data: {
-        legal_name:          body.legal_name,
-        phone:               body.phone,
-        ncr_number:          body.ncr_number,
-        directors:           body.directors,
-        agreement_accepted:  body.agreement_accepted ?? false,
-        agreement_signature: body.agreement_signature ?? null,
-        agreement_signed_at: body.agreement_signed_at ?? null,
+        legal_name:           body.legal_name,
+        phone:                body.phone,
+        ncr_number:           body.ncr_number,
+        directors:            body.directors,
+        agreement_accepted:   body.agreement_accepted ?? false,
+        agreement_signature:  body.agreement_signature ?? null,
+        agreement_signed_at:  body.agreement_signed_at ?? null,
+        agreement_version:    AGREEMENT_VERSION,
+        agreement_text_hash:  agreementHash,
       },
     })
     .eq('id', lead.id);
