@@ -25,10 +25,10 @@ import { PricingSection } from '@/components/PricingSection';
 /* ─── Content ─────────────────────────────────────────────────────── */
 
 const stats = [
-  { value: '2–3 wks',  label: 'avg implementation time' },
-  { value: '1 Database', label: 'dedicated per deployment' },
-  { value: '99.9%',    label: 'platform uptime SLA' },
-  { value: '< 48hr',   label: 'avg credit decision' },
+  { value: '2–3 wks', label: 'avg implementation time' },
+  { value: '1',       label: 'dedicated database per client' },
+  { value: '99.9%',   label: 'platform uptime SLA' },
+  { value: '< 48hr',  label: 'avg credit decision' },
 ];
 
 const integrations = [
@@ -164,11 +164,11 @@ export default function HomePage() {
 
       {/* ── STATS ───────────────────────────────────────────────────── */}
       <section className="bg-[var(--color-bg)] border-b border-[var(--color-border-soft)]">
-        <div className="max-w-[1200px] mx-auto px-6 py-20 grid grid-cols-2 lg:grid-cols-4">
+        <div className="max-w-[1200px] mx-auto px-6 py-20 grid grid-cols-2 lg:grid-cols-4 items-start">
           {stats.map((s, i) => (
             <div
               key={s.label}
-              className="px-6 py-2"
+              className="px-8 py-2"
               style={{
                 borderLeft: i > 0 ? '1px solid var(--color-border)' : undefined,
               }}
