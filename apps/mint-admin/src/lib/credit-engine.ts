@@ -108,9 +108,11 @@ export function evaluatePolicy(
   // Amount clamping
   const amount = Math.min(Math.max(request.amount, policy.minAmount), policy.maxAmount);
 
-  // Rate from score bands (highest minScore first)
-  const sorted = [...policy.rateBands].sort((a, b) => b.minScore - a.minScore);
-  const band   = sorted.find(b => profile.creditScore >= b.minScore);
+  // Rate from score bands — highest minScore first; on tie, lowest rateAdjustment wins (best rate for borrower)
+  const sorted = [...policy.rateBands].sort((a, b) =>
+    b.minScore - a.minScore || (a.rateAdjustment ?? 0) - (b.rateAdjustment ?? 0),
+  );
+  const band = sorted.find(b => profile.creditScore >= b.minScore);
   if (!band || band.rateAdjustment === null)
     return decline('Credit profile does not qualify for available rate bands');
 

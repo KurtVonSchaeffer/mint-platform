@@ -22,6 +22,11 @@ export async function GET() {
   return NextResponse.json({ policies: data ?? [] });
 }
 
+// NCA Regulations: initiation fee may not exceed 15 % of the principal amount
+const NCA_MAX_INITIATION_FEE_PCT = 15;
+// NCA Regulations: monthly service fee cap (R69 + VAT = R79.35 at 15% VAT)
+const NCA_MAX_MONTHLY_SERVICE_FEE = 80;
+
 /** POST /api/lender-policies — create or upsert a lender policy */
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -29,6 +34,26 @@ export async function POST(req: NextRequest) {
 
   if (!client_id) {
     return NextResponse.json({ error: 'client_id required' }, { status: 422 });
+  }
+
+  // NCA compliance gates
+  if (rest.initiation_fee_pct !== undefined && Number(rest.initiation_fee_pct) > NCA_MAX_INITIATION_FEE_PCT) {
+    return NextResponse.json(
+      { error: `initiation_fee_pct may not exceed ${NCA_MAX_INITIATION_FEE_PCT}% (NCA Regulations)` },
+      { status: 422 },
+    );
+  }
+  if (rest.monthly_service_fee !== undefined && Number(rest.monthly_service_fee) > NCA_MAX_MONTHLY_SERVICE_FEE) {
+    return NextResponse.json(
+      { error: `monthly_service_fee may not exceed R${NCA_MAX_MONTHLY_SERVICE_FEE} (NCA Regulations)` },
+      { status: 422 },
+    );
+  }
+  if (rest.base_rate_pct !== undefined && Number(rest.base_rate_pct) < 0) {
+    return NextResponse.json({ error: 'base_rate_pct must be non-negative' }, { status: 422 });
+  }
+  if (rest.max_dsr_pct !== undefined && (Number(rest.max_dsr_pct) <= 0 || Number(rest.max_dsr_pct) > 100)) {
+    return NextResponse.json({ error: 'max_dsr_pct must be between 1 and 100' }, { status: 422 });
   }
 
   const { data, error } = await supabaseAdmin

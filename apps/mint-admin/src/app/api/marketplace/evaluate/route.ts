@@ -79,8 +79,12 @@ function checkRateLimit(req: NextRequest): boolean {
 
 // ── Auth ──────────────────────────────────────────────────────────────
 function isAuthorised(req: NextRequest): boolean {
-  // Internal admin simulator — always allowed (admin is behind Supabase auth)
-  if (req.headers.get('x-admin-simulate') === '1') return true;
+  // Internal admin simulator path — requires a matching ADMIN_SIMULATE_SECRET
+  // so an external caller who knows the header name cannot bypass auth.
+  if (req.headers.get('x-admin-simulate') === '1') {
+    const secret = process.env.ADMIN_SIMULATE_SECRET;
+    return !!secret && req.headers.get('x-admin-simulate-secret') === secret;
+  }
   const apiKey = process.env.MINT_API_KEY;
   if (!apiKey) return true; // dev mode — no key required locally
   const auth = req.headers.get('authorization') ?? '';
@@ -124,6 +128,21 @@ export async function POST(req: NextRequest) {
       error: 'Required: creditScore, monthlyIncome, requestedAmount, termMonths',
     }, { status: 422, headers: CORS });
   }
+
+  // ── 2b. Numeric range validation ────────────────────────────────────────
+  const cs  = Number(creditScore);
+  const inc = Number(monthlyIncome);
+  const amt = Number(requestedAmount);
+  const trm = Number(termMonths);
+
+  if (!Number.isFinite(cs)  || cs  < 0   || cs  > 999)
+    return NextResponse.json({ error: 'creditScore must be 0–999' }, { status: 422, headers: CORS });
+  if (!Number.isFinite(inc) || inc <= 0)
+    return NextResponse.json({ error: 'monthlyIncome must be greater than 0' }, { status: 422, headers: CORS });
+  if (!Number.isFinite(amt) || amt <= 0)
+    return NextResponse.json({ error: 'requestedAmount must be greater than 0' }, { status: 422, headers: CORS });
+  if (!Number.isInteger(trm) || trm < 1 || trm > 360)
+    return NextResponse.json({ error: 'termMonths must be an integer between 1 and 360' }, { status: 422, headers: CORS });
 
   // ── 3. Build AlgoLend CreditProfile from MINT's data ─────────────────
   const profile: CreditProfile = {
