@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 function getSupabase() {
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -11,33 +14,50 @@ function getSupabase() {
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const body = await req.json();
+
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return NextResponse.json({ error: 'Server misconfiguration — missing Supabase env vars' }, { status: 500 });
+  }
+
+  let body: { agreement_signature?: string; agreement_signed_at?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+  }
+
+  if (!body.agreement_signature) {
+    return NextResponse.json({ error: 'Signature is required' }, { status: 400 });
+  }
 
   const supabase = getSupabase();
 
-  const { data: lead } = await supabase
+  const { data: lead, error: leadErr } = await supabase
     .from('leads')
     .select('id, onboarding_data')
     .eq('onboarding_token', token)
-    .single();
+    .maybeSingle();
 
-  if (!lead) return NextResponse.json({ error: 'Invalid or expired link' }, { status: 404 });
+  if (leadErr) return NextResponse.json({ error: leadErr.message }, { status: 500 });
+  if (!lead)   return NextResponse.json({ error: 'Invalid or expired link' }, { status: 404 });
 
   const existing = (lead.onboarding_data ?? {}) as Record<string, unknown>;
+  const signedAt = body.agreement_signed_at ?? new Date().toISOString();
 
-  const { error } = await supabase
+  const { error: updateErr } = await supabase
     .from('leads')
     .update({
+      onboarding_status: 'completed',
       onboarding_data: {
         ...existing,
         agreement_accepted:  true,
         agreement_signature: body.agreement_signature,
-        agreement_signed_at: body.agreement_signed_at ?? new Date().toISOString(),
+        agreement_signed_at: signedAt,
       },
     })
     .eq('id', lead.id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, signed_at: signedAt });
 }
