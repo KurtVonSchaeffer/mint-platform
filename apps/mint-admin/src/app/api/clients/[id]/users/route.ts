@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { sendEmail, userInviteEmail } from '@/lib/email';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -64,11 +65,30 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: authErr.message }, { status: isDup ? 409 : 500 });
   }
 
-  // If no password set, send invite link so user can set their own
+  // If no password set, generate an invite link and send via Resend
+  // (bypasses Supabase's 3/hr SMTP limit and sends from our own domain)
   if (!password) {
-    await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
-      data: { full_name: full_name ?? email.split('@')[0], role, client_id: id },
-    }).catch(() => {});
+    const { data: linkData, error: linkErr } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'invite',
+      email,
+      options: { data: { full_name: full_name ?? email.split('@')[0], role, client_id: id } },
+    });
+
+    if (!linkErr && linkData?.properties?.action_link) {
+      await sendEmail({
+        to:      email,
+        subject: `You're invited to ${client.name} on AlgoLend`,
+        html:    userInviteEmail({
+          fullName:   full_name ?? email.split('@')[0],
+          email,
+          clientName: client.name,
+          role,
+          inviteUrl:  linkData.properties.action_link,
+        }),
+      });
+    } else {
+      console.error('[users/invite] generateLink failed:', linkErr?.message);
+    }
   }
 
   return NextResponse.json({ user: authUser.user }, { status: 201 });

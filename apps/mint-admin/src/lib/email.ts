@@ -252,6 +252,52 @@ export function upgradeRequestEmail(req: {
 </body></html>`;
 }
 
+export function userInviteEmail(inv: {
+  fullName: string;
+  email: string;
+  clientName: string;
+  role: string;
+  inviteUrl: string;
+}) {
+  const roleLabel: Record<string, string> = {
+    loan_officer: 'Loan Officer',
+    admin:        'Administrator',
+    viewer:       'Viewer',
+  };
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:40px 32px;text-align:center">
+    <p style="color:#fff;font-size:26px;font-weight:700;margin:0">You're invited to AlgoLend</p>
+    <p style="color:rgba(255,255,255,0.8);margin:8px 0 0;font-size:14px">${inv.clientName}</p>
+  </div>
+  <div style="padding:32px">
+    <p style="font-size:16px;margin:0 0 16px">Hi ${inv.fullName},</p>
+    <p style="color:#555;line-height:1.6;margin:0 0 24px">
+      You've been invited to join <strong>${inv.clientName}</strong> on the AlgoLend platform as a
+      <strong>${roleLabel[inv.role] ?? inv.role}</strong>. Click the button below to set your password and get started.
+    </p>
+    <div style="text-align:center;margin:28px 0">
+      <a href="${inv.inviteUrl}" style="background:#7C3AED;color:#fff;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block">
+        Accept invitation →
+      </a>
+    </div>
+    <p style="color:#888;font-size:13px;text-align:center;margin:0">
+      This link expires in 24 hours. If you didn't expect this email, you can safely ignore it.
+    </p>
+    <hr style="border:none;border-top:1px solid #eee;margin:28px 0">
+    <p style="color:#aaa;font-size:12px;margin:0">
+      Invited to: ${inv.email}<br>
+      Platform: <a href="https://admin.algolend.co.za" style="color:#7C3AED">admin.algolend.co.za</a>
+    </p>
+  </div>
+  <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
+    AlgoLend · Mint Platforms (Pty) Ltd
+  </div>
+</div>
+</body></html>`;
+}
+
 export function welcomeClientEmail(client: {
   name: string; contact: string; slug: string; portalUrl: string;
 }) {
