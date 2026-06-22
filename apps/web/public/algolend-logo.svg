@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 56" fill="none">
+  <defs>
+    <linearGradient id="arch" x1="6" y1="54" x2="34" y2="2" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#6D28D9"/>
+      <stop offset="55%"  stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#A78BFA"/>
+    </linearGradient>
+  </defs>
+  <!-- Arch icon -->
+  <path d="M 6 56 L 6 18 Q 6 2 20 2 Q 34 2 34 18 L 34 56"
+    stroke="url(#arch)" stroke-width="7.5" fill="none" stroke-linecap="butt"/>
+  <circle cx="20" cy="18" r="9" fill="#090B16"/>
+  <!-- Wordmark: "AlgoLend" -->
+  <text x="50" y="40"
+    font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+    font-size="32" font-weight="300" letter-spacing="-0.5"
+    fill="white">AlgoLend</text>
+</svg>

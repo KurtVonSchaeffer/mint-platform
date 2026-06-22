@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef } from 'react';
-import { CheckCircle2, FileText } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
+import Image from 'next/image';
 import { SignaturePad, type SignaturePadHandle } from '@/components/SignaturePad';
 
 const AGREEMENT_TEXT = `SERVICE AGREEMENT
@@ -41,16 +42,16 @@ This Agreement is governed by the laws of the Republic of South Africa. Disputes
 By signing below, the Client confirms they have read, understood, and agree to be bound by the terms of this Agreement.`;
 
 interface Props {
-  token:        string;
-  leadId:       string;
-  clientName:   string;
-  contactName:  string;
+  token:         string;
+  leadId:        string;
+  clientName:    string;
+  contactName:   string;
   alreadySigned: boolean;
-  signedBy?:    string;
-  signedAt?:    string;
+  signedBy?:     string;
+  signedAt?:     string;
 }
 
-export function SignAgreementForm({ token, leadId, clientName, contactName, alreadySigned, signedBy, signedAt }: Props) {
+export function SignAgreementForm({ token, clientName, alreadySigned, signedBy, signedAt }: Props) {
   const [accepted, setAccepted] = useState(false);
   const [saving,   setSaving]   = useState(false);
   const [done,     setDone]     = useState(alreadySigned);
@@ -58,15 +59,13 @@ export function SignAgreementForm({ token, leadId, clientName, contactName, alre
   const sigPadRef = useRef<SignaturePadHandle>(null);
 
   async function sign() {
-    if (!accepted || sigPadRef.current?.isEmpty()) {
-      setError(!accepted ? 'Please accept the terms first.' : 'Please draw your signature above.');
-      return;
-    }
+    if (!accepted) { setError('Please accept the terms first.'); return; }
+    if (sigPadRef.current?.isEmpty()) { setError('Please draw your signature above.'); return; }
     setSaving(true);
     setError('');
     try {
       const res = await fetch(`/api/sign/${token}`, {
-        method: 'POST',
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           agreement_accepted:  true,
@@ -88,117 +87,128 @@ export function SignAgreementForm({ token, leadId, clientName, contactName, alre
     : '';
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0a0a0f', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', color: '#e4e4e7' }}>
-      {/* Header */}
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg,#7C3AED,#9B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <FileText size={16} color="#fff" />
-        </div>
-        <div>
-          <p style={{ fontWeight: 700, fontSize: 15, margin: 0 }}>AlgoLend</p>
-          <p style={{ fontSize: 11, color: '#71717a', margin: 0 }}>Service Agreement</p>
-        </div>
-      </div>
+    <div style={{ minHeight: '100vh', background: '#07070f', fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif', color: '#e4e4e7' }}>
 
-      <div style={{ maxWidth: 680, margin: '0 auto', padding: '32px 24px' }}>
+      {/* Top nav */}
+      <nav style={{ borderBottom: '1px solid rgba(255,255,255,0.07)', padding: '0 32px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Image src="/algolend-logo.svg" alt="AlgoLend" width={120} height={28} priority />
+        <span style={{ fontSize: 12, color: '#52525b', letterSpacing: '0.06em', textTransform: 'uppercase', fontWeight: 600 }}>Service Agreement</span>
+      </nav>
 
-        {/* Title */}
-        <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, margin: '0 0 6px', color: '#fafafa' }}>
-            Service Agreement
-          </h1>
-          <p style={{ fontSize: 14, color: '#71717a', margin: 0 }}>
-            {clientName} · Please read carefully before signing
-          </p>
-        </div>
+      {/* Content */}
+      <div style={{ maxWidth: 660, margin: '0 auto', padding: '48px 24px 80px' }}>
 
         {done ? (
-          /* ── Already signed ── */
-          <div style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.25)', borderRadius: 16, padding: 32, textAlign: 'center' }}>
-            <CheckCircle2 size={40} color="#34d399" style={{ marginBottom: 16 }} />
-            <p style={{ fontSize: 18, fontWeight: 700, color: '#34d399', margin: '0 0 16px' }}>Agreement Signed</p>
+          /* ── Signed confirmation ── */
+          <div style={{ textAlign: 'center', paddingTop: 40 }}>
+            <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(52,211,153,0.12)', border: '1px solid rgba(52,211,153,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+              <CheckCircle2 size={28} color="#34d399" />
+            </div>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#fafafa', margin: '0 0 8px' }}>Agreement signed</h1>
+            <p style={{ fontSize: 14, color: '#71717a', margin: '0 0 32px' }}>
+              Thank you — your account manager will be in touch shortly.
+            </p>
             {signedBy?.startsWith('data:image') && (
-              <div style={{ background: '#fff', borderRadius: 8, padding: '8px 16px', display: 'inline-block', marginBottom: 12 }}>
-                <img src={signedBy} alt="Signature" style={{ maxHeight: 60, maxWidth: 240 }} />
+              <div style={{ background: '#fff', borderRadius: 12, padding: '12px 24px', display: 'inline-block', marginBottom: 12 }}>
+                <img src={signedBy} alt="Your signature" style={{ maxHeight: 64, maxWidth: 260, display: 'block' }} />
               </div>
             )}
             {signedAt && (
-              <p style={{ fontSize: 12, color: '#52525b', margin: '0 0 16px' }}>{fmtDate(signedAt)}</p>
+              <p style={{ fontSize: 12, color: '#3f3f46', marginTop: 8 }}>Signed {fmtDate(signedAt)}</p>
             )}
-            <p style={{ fontSize: 13, color: '#71717a', margin: 0 }}>
-              Thank you. Your account manager will be in touch shortly to complete your onboarding.
-            </p>
           </div>
         ) : (
           <>
+            {/* Page header */}
+            <div style={{ marginBottom: 32, paddingBottom: 24, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+              <p style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#7C3AED', margin: '0 0 8px' }}>
+                Service Agreement
+              </p>
+              <h1 style={{ fontSize: 28, fontWeight: 700, color: '#fafafa', margin: '0 0 6px', letterSpacing: '-0.3px' }}>
+                {clientName}
+              </h1>
+              <p style={{ fontSize: 14, color: '#52525b', margin: 0 }}>
+                Please read the full agreement below before signing.
+              </p>
+            </div>
+
             {/* Agreement text */}
-            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 20, marginBottom: 24, maxHeight: 360, overflowY: 'auto' }}>
-              <pre style={{ margin: 0, fontFamily: 'inherit', fontSize: 13, lineHeight: 1.75, color: '#a1a1aa', whiteSpace: 'pre-wrap' }}>
+            <div style={{
+              background: 'rgba(255,255,255,0.025)',
+              border: '1px solid rgba(255,255,255,0.07)',
+              borderRadius: 14,
+              padding: '20px 24px',
+              marginBottom: 28,
+              maxHeight: 340,
+              overflowY: 'auto',
+            }}>
+              <pre style={{ margin: 0, fontFamily: 'inherit', fontSize: 13, lineHeight: 1.8, color: '#71717a', whiteSpace: 'pre-wrap' }}>
                 {AGREEMENT_TEXT}
               </pre>
             </div>
 
             {/* Accept checkbox */}
-            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer', marginBottom: 20 }}>
+            <label style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer', marginBottom: 28, padding: '16px', background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.15)', borderRadius: 12 }}>
               <input
                 type="checkbox"
                 checked={accepted}
                 onChange={e => setAccepted(e.target.checked)}
-                style={{ marginTop: 3, accentColor: '#7C3AED', width: 16, height: 16, flexShrink: 0 }}
+                style={{ marginTop: 2, accentColor: '#7C3AED', width: 16, height: 16, flexShrink: 0, cursor: 'pointer' }}
               />
-              <span style={{ fontSize: 13, color: '#a1a1aa', lineHeight: 1.5 }}>
+              <span style={{ fontSize: 13, color: '#a1a1aa', lineHeight: 1.6 }}>
                 I, on behalf of <strong style={{ color: '#e4e4e7' }}>{clientName}</strong>, have read, understood, and agree to be bound by the terms of this Service Agreement.
               </span>
             </label>
 
-            {/* Drawn signature */}
+            {/* Signature */}
             <div style={{ marginBottom: 24 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#71717a', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Your signature *
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                  Draw your signature
                 </label>
                 <button
                   type="button"
                   onClick={() => sigPadRef.current?.clear()}
                   disabled={!accepted}
                   style={{
-                    fontSize: 11, padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(255,255,255,0.12)',
-                    background: 'transparent', color: '#71717a', cursor: accepted ? 'pointer' : 'not-allowed',
-                    opacity: accepted ? 1 : 0.4,
+                    fontSize: 11, padding: '4px 12px', borderRadius: 6,
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    background: 'transparent', color: '#52525b',
+                    cursor: accepted ? 'pointer' : 'not-allowed',
+                    opacity: accepted ? 1 : 0.35,
                   }}>
                   Clear
                 </button>
               </div>
-              {/* Wrap SignaturePad to override its light background for the dark theme */}
-              <div style={{ borderRadius: 10, overflow: 'hidden' }}>
-                <SignaturePad ref={sigPadRef} disabled={!accepted} />
-              </div>
-              <p style={{ fontSize: 11, color: '#3f3f46', marginTop: 6 }}>
-                By signing above you are creating a legally binding digital signature.
+              <SignaturePad ref={sigPadRef} disabled={!accepted} />
+              <p style={{ fontSize: 11, color: '#3f3f46', marginTop: 8 }}>
+                By signing above you are creating a legally binding digital signature under the ECT Act.
               </p>
             </div>
 
             {error && (
-              <p style={{ fontSize: 13, color: '#f87171', marginBottom: 16, padding: '10px 14px', background: 'rgba(248,113,113,0.08)', borderRadius: 8, border: '1px solid rgba(248,113,113,0.2)' }}>
+              <div style={{ fontSize: 13, color: '#f87171', marginBottom: 20, padding: '12px 16px', background: 'rgba(248,113,113,0.07)', borderRadius: 10, border: '1px solid rgba(248,113,113,0.18)' }}>
                 {error}
-              </p>
+              </div>
             )}
 
             <button
               onClick={sign}
               disabled={saving}
               style={{
-                width: '100%', padding: '14px', borderRadius: 12, border: 'none', cursor: 'pointer',
-                background: (!accepted || sigPadRef.current?.isEmpty() !== false) ? 'rgba(124,58,237,0.3)' : 'linear-gradient(135deg,#7C3AED,#9B5CF6)',
-                color: '#fff', fontSize: 15, fontWeight: 700,
+                width: '100%', padding: '15px', borderRadius: 12, border: 'none', cursor: saving ? 'wait' : 'pointer',
+                background: 'linear-gradient(135deg, #6D28D9, #7C3AED)',
+                color: '#fff', fontSize: 15, fontWeight: 700, letterSpacing: '-0.1px',
+                boxShadow: '0 8px 24px -6px rgba(124,58,237,0.5)',
                 opacity: saving ? 0.7 : 1,
+                transition: 'opacity 0.15s, transform 0.1s',
               }}
             >
-              {saving ? 'Saving signature…' : 'Sign Agreement'}
+              {saving ? 'Saving…' : 'Sign Agreement →'}
             </button>
 
             <p style={{ fontSize: 11, color: '#3f3f46', textAlign: 'center', marginTop: 16 }}>
-              Your signature and timestamp will be recorded securely. A copy will be emailed to you.
+              Secured by Mint Platforms · accounts@algolend.co.za
             </p>
           </>
         )}
