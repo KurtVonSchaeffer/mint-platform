@@ -68,9 +68,9 @@ export default function SimulatePage() {
     setLoading(true);
     setResult(null);
     try {
-      const res = await fetch('/api/marketplace/evaluate', {
+      const res = await fetch('/api/marketplace/simulate', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Admin-Simulate': '1' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...form }),
       });
       const json = await res.json();
