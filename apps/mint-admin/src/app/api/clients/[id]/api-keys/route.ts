@@ -23,9 +23,17 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   return NextResponse.json({ keys: data ?? [] });
 }
 
-/** POST /api/clients/[id]/api-keys — generate a new key */
+/**
+ * POST /api/clients/[id]/api-keys — generate a new key.
+ *
+ * Pass ?rotate=true to atomically revoke all existing active keys before
+ * creating the new one. Use this for key rotation so there is never a
+ * window where both old and new keys are simultaneously valid.
+ */
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  const rotate = req.nextUrl.searchParams.get('rotate') === 'true';
+
   let body: { name?: string };
   try { body = await req.json(); }
   catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }); }
@@ -41,6 +49,16 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     .single();
   if (!client) return NextResponse.json({ error: 'Client not found' }, { status: 404 });
 
+  // Rotate: revoke all active keys before issuing a new one
+  if (rotate) {
+    const { error: revokeErr } = await supabaseAdmin
+      .from('client_api_keys')
+      .update({ revoked_at: new Date().toISOString() })
+      .eq('client_id', id)
+      .is('revoked_at', null);
+    if (revokeErr) return NextResponse.json({ error: revokeErr.message }, { status: 500 });
+  }
+
   // Generate: "alg_" prefix + 32 random hex chars
   const raw = `alg_${randomBytes(16).toString('hex')}`;
   const prefix = raw.slice(0, 12);   // "alg_" + 8 chars
@@ -54,8 +72,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   if (insertErr) return NextResponse.json({ error: insertErr.message }, { status: 500 });
 
-  // Return raw key ONCE — never stored, cannot be retrieved again
-  return NextResponse.json({ ...keyRow, key: raw, warning: 'Save this key now — it will not be shown again.' }, { status: 201 });
+  return NextResponse.json({
+    ...keyRow,
+    key:     raw,
+    rotated: rotate,
+    warning: 'Save this key now — it will not be shown again.',
+  }, { status: 201 });
 }
 
 /** DELETE /api/clients/[id]/api-keys/[keyId] — revoke a key */

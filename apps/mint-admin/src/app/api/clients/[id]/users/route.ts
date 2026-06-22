@@ -29,6 +29,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const { email, full_name, role = 'loan_officer', password } = body;
   if (!email) return NextResponse.json({ error: 'email is required' }, { status: 422 });
 
+  const ASSIGNABLE_ROLES = ['loan_officer', 'admin', 'viewer'];
+  if (!ASSIGNABLE_ROLES.includes(role)) {
+    return NextResponse.json(
+      { error: `role must be one of: ${ASSIGNABLE_ROLES.join(', ')}` },
+      { status: 422 },
+    );
+  }
+
   // Verify client exists
   const { data: client } = await supabaseAdmin
     .from('clients')
