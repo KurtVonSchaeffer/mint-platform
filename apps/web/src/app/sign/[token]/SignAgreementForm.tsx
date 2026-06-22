@@ -60,7 +60,7 @@ export function SignAgreementForm({ token, clientName, alreadySigned, signedBy, 
 
   async function sign() {
     if (!accepted) { setError('Please accept the terms first.'); return; }
-    if (sigPadRef.current?.isEmpty()) { setError('Please draw your signature above.'); return; }
+    if (!sigPadRef.current || sigPadRef.current.isEmpty()) { setError('Please draw your signature above.'); return; }
     setSaving(true);
     setError('');
     try {
