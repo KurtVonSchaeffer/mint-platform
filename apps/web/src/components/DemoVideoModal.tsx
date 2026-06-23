@@ -2,19 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Play, ExternalLink } from 'lucide-react';
+import { X } from 'lucide-react';
 
 interface Props {
   onClose: () => void;
 }
 
-/**
- * Demo video modal.
- * - DEMO_VIDEO_URL: optional embed link (Loom/YouTube) — takes priority if set.
- * - DEMO_VIDEO_SRC: local self-hosted file in /public, played natively.
- * Falls back to a polished placeholder if neither is set.
- */
-const DEMO_VIDEO_URL = ''; // e.g. 'https://www.loom.com/embed/xxxx' or 'https://www.youtube-nocookie.com/embed/xxxx'
+// Swap to a Loom/YouTube embed URL to override the self-hosted video
+const DEMO_VIDEO_URL = ''; // e.g. 'https://www.loom.com/embed/xxxx'
 const DEMO_VIDEO_SRC = '/videos/algolend-showcase-v5.mp4';
 
 export function DemoVideoModal({ onClose }: Props) {
@@ -85,7 +80,7 @@ export function DemoVideoModal({ onClose }: Props) {
               allowFullScreen
               title="AlgoLend Platform Demo"
             />
-          ) : DEMO_VIDEO_SRC ? (
+          ) : (
             <video
               className="w-full h-full"
               src={DEMO_VIDEO_SRC}
@@ -97,56 +92,6 @@ export function DemoVideoModal({ onClose }: Props) {
             >
               Your browser does not support the video tag.
             </video>
-          ) : (
-            /* ── Placeholder until recording is ready ── */
-            <div className="w-full h-full flex flex-col items-center justify-center gap-8 px-8 text-center"
-              style={{ background: 'linear-gradient(135deg, #0A0514 0%, #130827 50%, #090B18 100%)' }}>
-              {/* Glow */}
-              <div className="absolute inset-0 pointer-events-none" aria-hidden>
-                <div className="absolute top-1/4 left-1/3 w-96 h-96 rounded-full"
-                  style={{ background: 'radial-gradient(circle, rgba(124,58,237,0.3) 0%, transparent 70%)', filter: 'blur(60px)' }} />
-              </div>
-
-              {/* Play button */}
-              <div className="relative">
-                <div className="w-20 h-20 rounded-full flex items-center justify-center"
-                  style={{ background: 'linear-gradient(135deg, #7C3AED, #9B5CF6)', boxShadow: '0 0 40px rgba(124,58,237,0.5)' }}>
-                  <Play size={28} fill="white" className="text-white ml-1" />
-                </div>
-                {/* Pulse ring */}
-                <div className="absolute inset-0 rounded-full animate-ping"
-                  style={{ background: 'rgba(124,58,237,0.3)', animationDuration: '2s' }} />
-              </div>
-
-              <div className="relative space-y-3 max-w-md">
-                <p className="text-2xl font-semibold text-white tracking-tight">
-                  Demo video coming soon
-                </p>
-                <p className="text-white/50 text-sm leading-relaxed">
-                  We're recording a full walkthrough of the AlgoLend platform —
-                  credit engine, borrower portal, SACRRA reporting, and admin console.
-                </p>
-              </div>
-
-              <div className="relative flex flex-col sm:flex-row gap-3">
-                <a
-                  href="#enquire"
-                  onClick={handleClose}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-semibold text-white transition-all hover:-translate-y-0.5"
-                  style={{ background: 'linear-gradient(135deg, #7C3AED, #9B5CF6)', boxShadow: '0 8px 32px rgba(124,58,237,0.4)' }}
-                >
-                  Book a live walk-through
-                </a>
-                <a
-                  href="https://app.algolend.co.za"
-                  target="_blank"
-                  rel="noopener"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium text-white/70 hover:text-white transition-colors border border-white/15 hover:border-white/30"
-                >
-                  <ExternalLink size={14} /> Try live demo
-                </a>
-              </div>
-            </div>
           )}
         </div>
 
