@@ -8,4 +8,4 @@
 node_modules/
 apps/web/
 package-lock.json
-screenshots/
+/screenshots/
