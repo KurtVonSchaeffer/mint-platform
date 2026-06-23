@@ -49,6 +49,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: 'https://algolend.co.za',
   },
+  verification: {
+    google: 'n7kDIxVL-h_NQs9FbxmuJvrwe0vDi1Bd5IyykRdPvlI',
+  },
   icons: {
     icon: [
       { url: '/favicon.svg', type: 'image/svg+xml' },
