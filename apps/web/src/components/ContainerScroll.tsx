@@ -21,18 +21,28 @@ export const ContainerScroll = ({
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const scaleDimensions = () => (isMobile ? [0.7, 0.9] : [1.05, 1]);
-
   const rotate    = useTransform(scrollYProgress, [0, 1], [20, 0]);
-  const scale     = useTransform(scrollYProgress, [0, 1], scaleDimensions());
+  const scale     = useTransform(scrollYProgress, [0, 1], [1.05, 1]);
   const translate = useTransform(scrollYProgress, [0, 1], [0, -100]);
+
+  // Skip scroll-linked 3D physics on mobile — too expensive on low-end devices
+  if (isMobile) {
+    return (
+      <div className="flex flex-col items-center py-10 px-2">
+        <div className="mb-6 text-center">{titleComponent}</div>
+        <div className="w-full rounded-[20px] overflow-hidden border-2 border-[#6C6C6C] bg-[#0d0b1a] shadow-2xl">
+          {children}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
-      className="h-[50rem] md:h-[80rem] flex items-center justify-center relative p-2 md:p-20"
+      className="h-[80rem] flex items-center justify-center relative p-20"
       ref={containerRef}
     >
-      <div className="py-10 md:py-40 w-full relative" style={{ perspective: "1000px" }}>
+      <div className="py-40 w-full relative" style={{ perspective: "1000px" }}>
         <ScrollHeader translate={translate} titleComponent={titleComponent} />
         <ScrollCard rotate={rotate} translate={translate} scale={scale}>
           {children}

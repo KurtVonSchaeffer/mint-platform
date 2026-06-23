@@ -159,9 +159,9 @@ function LenderView() {
                   alt={`AlgoLend admin — ${s.label}`}
                   width={1400}
                   height={860}
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   className="w-full object-cover object-top"
                   style={{ height: '100%', filter: 'brightness(1.25) contrast(1.05)' }}
-                  unoptimized
                   priority={i === 0}
                 />
               </div>
@@ -304,9 +304,9 @@ function BorrowerView() {
                     alt={`AlgoLend borrower portal — ${s.label}`}
                     width={390}
                     height={1200}
+                    sizes="(max-width: 768px) 50vw, 25vw"
                     className="w-full object-cover object-top"
                     style={{ height: '100%' }}
-                    unoptimized
                     priority={i === 0}
                   />
                 </div>

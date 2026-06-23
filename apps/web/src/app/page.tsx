@@ -1,26 +1,31 @@
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import {
   ArrowUpRight, ArrowRight, Sparkles, Check,
   TrendingUp, Activity, Lock, Zap, Cpu, BarChart3,
 } from 'lucide-react';
 import { Reveal } from '@/components/Reveal';
-import { EnquireForm } from '@/components/EnquireForm';
 import { IntegrationLogo } from '@/components/IntegrationLogos';
-import {
-  CreditEngineCard, KycCard, OpenBankingCard,
-  EContractsCard, PortfolioCard, PortalCard,
-} from '@/components/PlatformCards';
 import { AnimatedHeadline } from '@/components/AnimatedHeadline';
 import { HeroVisual } from '@/components/HeroVisual';
-import { DualViewShowcase } from '@/components/DualViewShowcase';
-import { ContainerScroll } from '@/components/ContainerScroll';
-import { HeroDashboard } from '@/components/HeroDashboard';
 import { NavBar } from '@/components/NavBar';
 import { SeeItWorkButton } from '@/components/SeeItWorkButton';
 import { WatchIntroButton } from '@/components/WatchIntroButton';
-import { FaqSection } from '@/components/FaqSection';
 import { AnimatedStat } from '@/components/AnimatedStat';
-import { PricingSection } from '@/components/PricingSection';
+
+// Below-fold heavy components — lazy-loaded so they don't block initial paint
+const EnquireForm    = dynamic(() => import('@/components/EnquireForm').then(m => ({ default: m.EnquireForm })));
+const DualViewShowcase = dynamic(() => import('@/components/DualViewShowcase').then(m => ({ default: m.DualViewShowcase })));
+const ContainerScroll  = dynamic(() => import('@/components/ContainerScroll').then(m => ({ default: m.ContainerScroll })));
+const HeroDashboard    = dynamic(() => import('@/components/HeroDashboard').then(m => ({ default: m.HeroDashboard })));
+const FaqSection       = dynamic(() => import('@/components/FaqSection').then(m => ({ default: m.FaqSection })));
+const PricingSection   = dynamic(() => import('@/components/PricingSection').then(m => ({ default: m.PricingSection })));
+const CreditEngineCard = dynamic(() => import('@/components/PlatformCards').then(m => ({ default: m.CreditEngineCard })));
+const KycCard          = dynamic(() => import('@/components/PlatformCards').then(m => ({ default: m.KycCard })));
+const OpenBankingCard  = dynamic(() => import('@/components/PlatformCards').then(m => ({ default: m.OpenBankingCard })));
+const EContractsCard   = dynamic(() => import('@/components/PlatformCards').then(m => ({ default: m.EContractsCard })));
+const PortfolioCard    = dynamic(() => import('@/components/PlatformCards').then(m => ({ default: m.PortfolioCard })));
+const PortalCard       = dynamic(() => import('@/components/PlatformCards').then(m => ({ default: m.PortalCard })));
 
 /* ─── Content ─────────────────────────────────────────────────────── */
 

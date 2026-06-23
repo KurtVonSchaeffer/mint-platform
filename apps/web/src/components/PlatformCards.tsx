@@ -1,10 +1,6 @@
 'use client';
 
-/**
- * Platform feature cards with live @paper-design/shaders-react Warp backgrounds.
- * Extracted as a client component so the page stays a Server Component.
- */
-
+import { useEffect, useState } from 'react';
 import { Warp } from '@paper-design/shaders-react';
 import {
   Cpu, ShieldCheck, Landmark, FileSignature, BarChart3, Globe, Check,
@@ -46,22 +42,31 @@ const CARD_CONFIGS = {
 
 /* ─── Warp backdrop ──────────────────────────────────────────────────── */
 function WarpBg({ cfg }: { cfg: typeof CARD_CONFIGS[keyof typeof CARD_CONFIGS] }) {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    setIsMobile(window.matchMedia('(max-width: 768px)').matches);
+  }, []);
+
   return (
     <div className="absolute inset-0 rounded-[24px] overflow-hidden" aria-hidden>
-      <Warp
-        style={{ width: '100%', height: '100%' }}
-        colors={[...cfg.colors]}
-        proportion={cfg.proportion}
-        softness={cfg.softness}
-        distortion={cfg.distortion}
-        swirl={cfg.swirl}
-        swirlIterations={cfg.swirlIterations}
-        shape={cfg.shape}
-        shapeScale={cfg.shapeScale}
-        scale={1}
-        rotation={0}
-        speed={cfg.speed}
-      />
+      {/* Skip WebGL shader on mobile — GPU cost not worth it on small screens */}
+      {!isMobile && (
+        <Warp
+          style={{ width: '100%', height: '100%' }}
+          colors={[...cfg.colors]}
+          proportion={cfg.proportion}
+          softness={cfg.softness}
+          distortion={cfg.distortion}
+          swirl={cfg.swirl}
+          swirlIterations={cfg.swirlIterations}
+          shape={cfg.shape}
+          shapeScale={cfg.shapeScale}
+          scale={1}
+          rotation={0}
+          speed={cfg.speed}
+        />
+      )}
+      {isMobile && <div className="absolute inset-0 bg-[#1a1a2e]" />}
       {/* Dark overlay so text is legible */}
       <div className="absolute inset-0 bg-black/65" />
     </div>
