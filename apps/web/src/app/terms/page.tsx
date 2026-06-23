@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Terms of Service — AlgoLend',
   description: 'Terms of service for AlgoLend and Mint Platforms (Pty) Ltd.',
+  alternates: { canonical: 'https://algolend.co.za/terms' },
 };
 
 const LAST_UPDATED = '31 May 2026';

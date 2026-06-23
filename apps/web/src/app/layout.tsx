@@ -58,9 +58,63 @@ export const metadata: Metadata = {
   },
 };
 
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': 'https://algolend.co.za/#organization',
+      name: 'Mint Platforms (Pty) Ltd',
+      url: 'https://algolend.co.za',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://algolend.co.za/algolend-logo.svg',
+      },
+      contactPoint: {
+        '@type': 'ContactPoint',
+        contactType: 'sales',
+        areaServed: 'ZA',
+        availableLanguage: 'English',
+      },
+      areaServed: 'ZA',
+      description: 'End-to-end credit management platform for South African corporate lenders.',
+    },
+    {
+      '@type': 'SoftwareApplication',
+      '@id': 'https://algolend.co.za/#software',
+      name: 'AlgoLend',
+      applicationCategory: 'FinanceApplication',
+      operatingSystem: 'Web',
+      url: 'https://algolend.co.za',
+      publisher: { '@id': 'https://algolend.co.za/#organization' },
+      description: 'Fully branded lending platform — credit engine, KYC, open banking, e-contracts, and SACRRA reporting configured to your credit policy.',
+      featureList: [
+        'Credit Engine',
+        'KYC & Identity Verification',
+        'Open Banking (TruID)',
+        'E-Contracts & Digital Signatures',
+        'SACRRA Bureau Reporting',
+        'NCA Compliance',
+        'POPIA Data Protection',
+      ],
+      audience: {
+        '@type': 'Audience',
+        audienceType: 'Corporate Lenders',
+        geographicArea: { '@type': 'Country', name: 'South Africa' },
+      },
+    },
+  ],
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
+    <html lang="en-ZA" className={`${geist.variable} ${geistMono.variable}`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="antialiased">{children}</body>
     </html>
   );

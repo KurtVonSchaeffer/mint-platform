@@ -10,6 +10,7 @@ import {
 export const metadata: Metadata = {
   title: 'Admin Dashboard Tour — AlgoLend',
   description: 'A full walkthrough of the AlgoLend lender admin console — everything your underwriting team needs in one place.',
+  robots: { index: false, follow: false },
 };
 
 const sections = [

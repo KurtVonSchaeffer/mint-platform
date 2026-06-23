@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Privacy Policy — AlgoLend',
   description: 'Privacy policy for AlgoLend and Mint Platforms (Pty) Ltd.',
+  alternates: { canonical: 'https://algolend.co.za/privacy' },
 };
 
 const LAST_UPDATED = '31 May 2026';
