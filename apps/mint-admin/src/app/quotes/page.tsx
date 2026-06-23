@@ -4,19 +4,21 @@ import { useState, useEffect } from 'react';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { QuoteEditPanel, type QuoteEditState, type CustomItem } from '@/components/QuoteEditPanel';
+import { OnboardingWizard } from '@/components/OnboardingWizard';
 import {
   CHECK_CATALOG, VOLUME_TIERS, BRANCH_RATE, computeMonthlyFee, fmtR, fmtRc, rateWithMargin,
   type CheckId, type VolumeTierId,
 } from '@/lib/quote-pricing';
 import {
   FileText, Send, Download, Plus, CheckCircle, Clock, XCircle, X, Eye, Sparkles,
-  Pencil, Save,
+  Pencil, Save, UserPlus,
 } from 'lucide-react';
 
 type QuoteStatus = 'draft' | 'sent' | 'viewed' | 'accepted' | 'declined' | 'expired';
 
 interface Quote {
-  id:             string;
+  dbId:           string;       // UUID from DB (used for API calls)
+  id:             string;       // reference Q-YYYY-NNN (used for display)
   client:         string;
   contact:        string;
   email:          string;
@@ -33,6 +35,29 @@ interface Quote {
   acceptedAt?:    string;
 }
 
+// Map DB row → Quote
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function fromRow(row: any): Quote {
+  return {
+    dbId:           row.id,
+    id:             row.reference,
+    client:         row.client_name,
+    contact:        row.contact_name,
+    email:          row.contact_email,
+    setupFee:       Number(row.setup_fee),
+    monthlyFee:     Number(row.monthly_fee),
+    selectedChecks: (row.selected_checks ?? []) as CheckId[],
+    volumeTier:     (row.volume_tier ?? '0-50') as VolumeTierId,
+    branches:       row.branches ?? 1,
+    customItems:    (row.custom_items ?? []) as CustomItem[],
+    status:         row.status as QuoteStatus,
+    sentDate:       row.sent_at   ? row.sent_at.slice(0, 10)   : null,
+    validUntil:     row.valid_until ?? null,
+    viewedAt:       row.viewed_at  ? row.viewed_at.slice(0, 16).replace('T', ' ') : null,
+    acceptedAt:     row.accepted_at ? row.accepted_at.slice(0, 16).replace('T', ' ') : undefined,
+  };
+}
+
 const statusStyle: Record<QuoteStatus, { bg: string; border: string; color: string; icon: typeof Clock }> = {
   draft:    { bg: 'rgba(75,80,128,0.15)',   border: 'rgba(75,80,128,0.3)',    color: 'var(--color-text3)', icon: FileText    },
   sent:     { bg: 'rgba(96,165,250,0.1)',   border: 'rgba(96,165,250,0.25)',  color: 'var(--color-sky)',   icon: Send        },
@@ -47,146 +72,167 @@ function todayPlus(days: number) {
   return d.toISOString().slice(0, 10);
 }
 
-function blankQuote(id: string): Quote {
-  const tier: VolumeTierId = '0-50';
-  return {
-    id, client: 'New Prospect (Pty) Ltd', contact: 'Contact name',
-    email: 'contact@example.co.za', setupFee: 100000,
-    monthlyFee: computeMonthlyFee(['bureau', 'banking'], tier, 1),
-    selectedChecks: ['bureau', 'banking'], volumeTier: tier, branches: 1,
-    customItems: [], status: 'draft', sentDate: null, validUntil: null, viewedAt: null,
-  };
-}
-
-const INITIAL_QUOTES: Quote[] = [
-  { id: 'Q-2026-014', client: 'Horizon Credit (Pty) Ltd', contact: 'Tshepo Mokoena',  email: 'tshepo@horizoncredit.co.za', setupFee: 145000, selectedChecks: ['bureau','banking','liveness'],              volumeTier: '151-300',   branches: 2, customItems: [], monthlyFee: computeMonthlyFee(['bureau','banking','liveness'], '151-300', 2),              status: 'sent',     sentDate: '2026-05-21', validUntil: '2026-06-21', viewedAt: '2026-05-22 09:14' },
-  { id: 'Q-2026-013', client: 'Phakisa Microfinance',     contact: 'Lindiwe Khumalo', email: 'lindi@phakisa.co.za',         setupFee: 95000,  selectedChecks: ['bureau','contracts'],                        volumeTier: '50-150',    branches: 1, customItems: [], monthlyFee: computeMonthlyFee(['bureau','contracts'], '50-150', 1),                          status: 'viewed',   sentDate: '2026-05-18', validUntil: '2026-06-18', viewedAt: '2026-05-20 14:32' },
-  { id: 'Q-2026-012', client: 'Velocity Business Loans',  contact: 'Mandla Sithole',  email: 'mandla@velocityloans.co.za', setupFee: 220000, selectedChecks: ['cipc','bureau','banking','liveness','watchlist'], volumeTier: '1000-5000', branches: 5, customItems: [], monthlyFee: computeMonthlyFee(['cipc','bureau','banking','liveness','watchlist'], '1000-5000', 5), status: 'accepted', sentDate: '2026-05-10', validUntil: '2026-06-10', viewedAt: '2026-05-11 08:22', acceptedAt: '2026-05-15 16:08' },
-  { id: 'Q-2026-011', client: 'Imbali Finance',           contact: 'Bongi Dlamini',   email: 'bongi@imbalifinance.co.za',  setupFee: 75000,  selectedChecks: ['bureau'],                                    volumeTier: '0-50',      branches: 1, customItems: [], monthlyFee: computeMonthlyFee(['bureau'], '0-50', 1),                                            status: 'declined', sentDate: '2026-05-08', validUntil: '2026-06-08', viewedAt: '2026-05-09 11:45' },
-  { id: 'Q-2026-010', client: 'Stratus Capital Partners', contact: 'Naledi Mthembu',  email: 'naledi@stratuscapital.co.za',setupFee: 175000, selectedChecks: ['bureau','banking','liveness','address'],      volumeTier: '500-1000',  branches: 3, customItems: [], monthlyFee: computeMonthlyFee(['bureau','banking','liveness','address'], '500-1000', 3),          status: 'draft',    sentDate: null,          validUntil: null,          viewedAt: null },
-];
-
 export default function QuotesPage() {
-  const [quotes, setQuotes]       = useState<Quote[]>(INITIAL_QUOTES);
+  const [quotes, setQuotes]       = useState<Quote[]>([]);
+  const [loading, setLoading]     = useState(true);
   const [filter, setFilter]       = useState<'all' | QuoteStatus>('all');
   const [selected, setSelected]   = useState<Quote | null>(null);
-  const [editState, setEditState] = useState<QuoteEditState | null>(null);
-  const [toast, setToast]         = useState<{ kind: ToastKind; message: string } | null>(null);
+  const [editState, setEditState]     = useState<QuoteEditState | null>(null);
+  const [saving, setSaving]           = useState(false);
+  const [toast, setToast]             = useState<{ kind: ToastKind; message: string } | null>(null);
+  const [onboardQuote, setOnboardQuote] = useState<Quote | null>(null);
 
   function pushToast(kind: ToastKind, message: string) { setToast({ kind, message }); }
 
-  // Auto-create a prefilled draft when arriving from the pricing calculator
+  // Load from DB on mount
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('new') !== '1') return;
-    const raw = sessionStorage.getItem('new_quote_prefill');
-    sessionStorage.removeItem('new_quote_prefill');
-    const prefill = raw ? JSON.parse(raw) : null;
+    fetch('/api/quotes')
+      .then(r => r.json())
+      .then(({ quotes: rows }) => {
+        const mapped = (rows ?? []).map(fromRow);
+        setQuotes(mapped);
 
-    const id    = `Q-${new Date().getFullYear()}-${String(INITIAL_QUOTES.length + 11).padStart(3, '0')}`;
-    const draft: Quote = {
-      id,
-      client:         'New Prospect (Pty) Ltd',
-      contact:        'Contact name',
-      email:          'contact@example.co.za',
-      setupFee:       100000,
-      monthlyFee:     prefill?.monthlyFee ?? computeMonthlyFee(['bureau', 'banking'], '0-50', 1),
-      selectedChecks: prefill?.selectedChecks ?? ['bureau', 'banking'],
-      volumeTier:     prefill?.volumeTier    ?? '0-50',
-      branches:       prefill?.branches      ?? 1,
-      customItems:    [],
-      status:         'draft',
-      sentDate:       null,
-      validUntil:     null,
-      viewedAt:       null,
-    };
-    setQuotes(prev => [draft, ...prev]);
-    setSelected(draft);
-    setEditState({
-      client: draft.client, contact: draft.contact, email: draft.email,
-      setupFee: String(draft.setupFee),
-      monthlyFee: String(draft.monthlyFee),
-      selectedChecks: draft.selectedChecks,
-      volumeTier: draft.volumeTier,
-      branches: String(draft.branches),
-      customItems: [],
-    });
-    pushToast('success', `Draft ${id} created from pricing calculator.`);
-    // Clean URL
-    window.history.replaceState({}, '', '/quotes');
+        // Auto-create prefilled draft when arriving from the pricing calculator
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('new') === '1') {
+          const raw     = sessionStorage.getItem('new_quote_prefill');
+          sessionStorage.removeItem('new_quote_prefill');
+          const prefill = raw ? JSON.parse(raw) : null;
+          window.history.replaceState({}, '', '/quotes');
+          createQuote({
+            client:         prefill?.client,
+            contact:        prefill?.contact,
+            email:          prefill?.email,
+            monthlyFee:     prefill?.monthlyFee     ?? computeMonthlyFee(['bureau', 'banking'], '0-50', 1),
+            selectedChecks: prefill?.selectedChecks ?? ['bureau', 'banking'],
+            volumeTier:     prefill?.volumeTier     ?? '0-50',
+            branches:       prefill?.branches       ?? 1,
+          }, mapped);
+        }
+      })
+      .catch(() => pushToast('error', 'Failed to load quotes.'))
+      .finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function createQuote(prefill?: Partial<Quote> & { client?: string; contact?: string; email?: string }, existingQuotes?: Quote[]) {
+    const tier: VolumeTierId = (prefill?.volumeTier as VolumeTierId) ?? '0-50';
+    const payload = {
+      client:         prefill?.client   ?? 'New Prospect (Pty) Ltd',
+      contact:        prefill?.contact  ?? 'Contact name',
+      email:          prefill?.email    ?? 'contact@example.co.za',
+      setupFee:       100000,
+      monthlyFee:     prefill?.monthlyFee ?? computeMonthlyFee(['bureau', 'banking'], tier, 1),
+      selectedChecks: prefill?.selectedChecks ?? ['bureau', 'banking'],
+      volumeTier:     tier,
+      branches:       prefill?.branches ?? 1,
+      customItems:    [],
+      status:         'draft',
+    };
+    setSaving(true);
+    try {
+      const res  = await fetch('/api/quotes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      const draft = fromRow(data.quote);
+      setQuotes(prev => [draft, ...(existingQuotes ?? prev)]);
+      setSelected(draft);
+      setEditState({
+        client: draft.client, contact: draft.contact, email: draft.email,
+        setupFee: String(draft.setupFee), monthlyFee: String(draft.monthlyFee),
+        selectedChecks: draft.selectedChecks, volumeTier: draft.volumeTier,
+        branches: String(draft.branches), customItems: [],
+      });
+      pushToast('success', `Draft ${draft.id} created.`);
+    } catch (e) {
+      pushToast('error', `Failed to create quote: ${(e as Error).message}`);
+    } finally {
+      setSaving(false);
+    }
+  }
 
   function openEdit(q: Quote) {
     setEditState({
       client: q.client, contact: q.contact, email: q.email,
-      setupFee: String(q.setupFee),
-      monthlyFee: String(q.monthlyFee),
-      selectedChecks: q.selectedChecks,
-      volumeTier: q.volumeTier,
-      branches: String(q.branches),
-      customItems: q.customItems,
+      setupFee: String(q.setupFee), monthlyFee: String(q.monthlyFee),
+      selectedChecks: q.selectedChecks, volumeTier: q.volumeTier,
+      branches: String(q.branches), customItems: q.customItems,
     });
   }
 
-  function saveEdit(q: Quote) {
+  async function saveEdit(q: Quote) {
     if (!editState) return;
     const branches   = Math.max(1, parseInt(editState.branches, 10) || 1);
-    const setupFee   = Math.max(0, parseInt(editState.setupFee.replace(/\D/g,''), 10) || 0);
+    const setupFee   = Math.max(0, parseInt(editState.setupFee.replace(/\D/g, ''), 10) || 0);
     const flatFee    = Math.max(0, parseFloat(editState.monthlyFee) || 0);
     const branchExtra = branches > 1 ? (branches - 1) * BRANCH_RATE : 0;
     const customMo   = editState.customItems.filter((c) => c.recurring).reduce((s, c) => s + c.amount, 0);
     const monthly    = flatFee + branchExtra + customMo;
-    const updated: Quote = {
-      ...q,
-      client: editState.client.trim() || q.client,
-      contact: editState.contact.trim() || q.contact,
-      email: editState.email.trim() || q.email,
+    const patch = {
+      client:         editState.client.trim()   || q.client,
+      contact:        editState.contact.trim()  || q.contact,
+      email:          editState.email.trim()    || q.email,
       setupFee, monthlyFee: monthly,
       selectedChecks: editState.selectedChecks,
-      volumeTier: editState.volumeTier,
+      volumeTier:     editState.volumeTier,
       branches,
-      customItems: editState.customItems,
+      customItems:    editState.customItems,
     };
-    setQuotes((prev) => prev.map((x) => x.id === q.id ? updated : x));
-    setSelected(updated);
-    setEditState(null);
-    pushToast('success', `${q.id} updated.`);
-  }
-
-  function newQuote() {
-    const id    = `Q-${new Date().getFullYear()}-${String(quotes.length + 11).padStart(3, '0')}`;
-    const draft = blankQuote(id);
-    setQuotes((prev) => [draft, ...prev]);
-    setSelected(draft);
-    openEdit(draft);
-    pushToast('success', `Draft ${id} created.`);
-  }
-
-  async function sendQuote(q: Quote) {
-    const updated: Quote = { ...q, status: 'sent', sentDate: todayPlus(0), validUntil: todayPlus(30) };
-    setQuotes((prev) => prev.map((x) => x.id === q.id ? updated : x));
-    setSelected(updated);
+    setSaving(true);
     try {
-      const { quoteEmail } = await import('@/lib/email');
-      await fetch('/api/email', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: q.email, subject: `Your AlgoLend proposal — ${q.id}`, html: quoteEmail({ id: q.id, client: q.client, contact: q.contact, setupFee: q.setupFee, monthlyFee: q.monthlyFee, addOns: q.selectedChecks, validUntil: todayPlus(30) }) }),
-      });
-      pushToast('success', `Quote ${q.id} sent to ${q.email}.`);
-    } catch {
-      pushToast('info', `Quote ${q.id} marked sent.`);
+      const res  = await fetch(`/api/quotes/${q.dbId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      const updated = fromRow(data.quote);
+      setQuotes(prev => prev.map(x => x.dbId === q.dbId ? updated : x));
+      setSelected(updated);
+      setEditState(null);
+      pushToast('success', `${q.id} updated.`);
+    } catch (e) {
+      pushToast('error', `Save failed: ${(e as Error).message}`);
+    } finally {
+      setSaving(false);
     }
   }
 
-  function markAccepted(q: Quote) {
-    setQuotes((prev) => prev.map((x) => x.id === q.id ? { ...x, status: 'accepted', acceptedAt: new Date().toISOString() } : x));
+  async function patchStatus(q: Quote, patch: Record<string, unknown>) {
+    setSaving(true);
+    try {
+      const res  = await fetch(`/api/quotes/${q.dbId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      const updated = fromRow(data.quote);
+      setQuotes(prev => prev.map(x => x.dbId === q.dbId ? updated : x));
+      setSelected(updated);
+      return updated;
+    } catch (e) {
+      pushToast('error', `Update failed: ${(e as Error).message}`);
+      return null;
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function sendQuote(q: Quote) {
+    const until   = todayPlus(30);
+    const updated = await patchStatus(q, { status: 'sent', sentDate: todayPlus(0), validUntil: until });
+    if (!updated) return;
+    const html = `<p>Dear ${q.contact},</p><p>Please find your AlgoLend pricing proposal <strong>${q.id}</strong> below.</p><p><strong>Monthly fee:</strong> ${fmtR(q.monthlyFee)}/mo<br><strong>Implementation:</strong> ${fmtR(q.setupFee)}<br><strong>Valid until:</strong> ${until}</p><p>Reply to this email with any questions.</p><p>— Mint Platforms (Pty) Ltd</p>`;
+    fetch('/api/email', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ to: q.email, subject: `AlgoLend proposal ${q.id} — ${q.client}`, html }),
+    }).catch(() => null);
+    pushToast('success', `Quote ${q.id} sent to ${q.email}.`);
+  }
+
+  async function markAccepted(q: Quote) {
+    await patchStatus(q, { status: 'accepted', acceptedAt: new Date().toISOString() });
     pushToast('success', `${q.id} accepted.`);
     setSelected(null);
   }
 
-  function markDeclined(q: Quote) {
-    setQuotes((prev) => prev.map((x) => x.id === q.id ? { ...x, status: 'declined' } : x));
+  async function markDeclined(q: Quote) {
+    await patchStatus(q, { status: 'declined' });
     pushToast('info', `${q.id} declined.`);
     setSelected(null);
   }
@@ -208,6 +254,21 @@ export default function QuotesPage() {
   return (
     <Shell>
       {toast ? <Toast kind={toast.kind} message={toast.message} onClose={() => setToast(null)} /> : null}
+      {onboardQuote ? (
+        <OnboardingWizard
+          onClose={() => setOnboardQuote(null)}
+          onCreated={() => {
+            setOnboardQuote(null);
+            setSelected(null);
+            setToast({ kind: 'success', message: `${onboardQuote.client} activated as a new client.` });
+          }}
+          initialValues={{
+            name:         onboardQuote.client,
+            contactEmail: onboardQuote.email,
+            contactName:  onboardQuote.contact,
+          }}
+        />
+      ) : null}
 
       <div className="space-y-6 page-enter">
         <div className="flex items-start justify-between">
@@ -216,7 +277,7 @@ export default function QuotesPage() {
             <h1 className="headline text-3xl font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>Quotes</h1>
             <p className="text-sm mt-1.5" style={{ color: 'var(--color-text3)' }}>Custom pricing proposals for prospective lenders.</p>
           </div>
-          <button onClick={newQuote} className="btn-purple btn-shine inline-flex items-center gap-1.5"><Plus size={15} /> New quote</button>
+          <button onClick={() => createQuote()} disabled={saving} className="btn-purple btn-shine inline-flex items-center gap-1.5 disabled:opacity-50"><Plus size={15} /> New quote</button>
         </div>
 
         <div className="grid grid-cols-3 gap-4">
@@ -251,33 +312,42 @@ export default function QuotesPage() {
         </div>
 
         <div className="bento-card overflow-hidden p-0">
-          <table className="data-table">
-            <thead><tr>{['Quote','Client','Monthly','Volume','Status','Valid until',''].map((h) => <th key={h}>{h}</th>)}</tr></thead>
-            <tbody>
-              {filtered.map((q, i) => {
-                const s = statusStyle[q.status];
-                const StatusIcon = s.icon;
-                const tier = VOLUME_TIERS.find((t) => t.id === q.volumeTier);
-                return (
-                  <tr key={q.id} className="cursor-pointer" onClick={() => setSelected(q)} style={{ animation: 'fade-up 0.4s cubic-bezier(0.16,1,0.3,1) both', animationDelay: `${i * 40}ms` }}>
-                    <td><p className="font-mono text-xs" style={{ color: 'var(--color-violet)' }}>{q.id}</p>{q.sentDate ? <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text3)' }}>Sent {q.sentDate}</p> : null}</td>
-                    <td><p className="font-semibold" style={{ color: 'var(--color-text)' }}>{q.client}</p><p className="text-xs mt-0.5" style={{ color: 'var(--color-text3)' }}>{q.contact}</p></td>
-                    <td><span className="font-semibold" style={{ color: 'var(--color-text)' }}>{fmtR(q.monthlyFee)}</span><span className="text-xs" style={{ color: 'var(--color-text3)' }}>/mo</span></td>
-                    <td><span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}>{tier?.label ?? q.volumeTier}</span></td>
-                    <td><span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.color }}><StatusIcon size={11} />{q.status}</span></td>
-                    <td className="text-xs" style={{ color: 'var(--color-text3)' }}>{q.validUntil ?? '—'}</td>
-                    <td>
-                      <div className="flex items-center gap-1 justify-end" onClick={(e) => e.stopPropagation()}>
-                        <button title="View" onClick={() => setSelected(q)} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--color-text3)' }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)'; (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.08)'; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}><Eye size={14} /></button>
-                        <button title="PDF" onClick={() => downloadPDF(q)} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--color-text3)' }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)'; (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.08)'; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}><Download size={14} /></button>
-                        {q.status === 'draft' ? <button title="Send" onClick={() => sendQuote(q)} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--color-green)' }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(52,211,153,0.1)'; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}><Send size={14} /></button> : null}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+          {loading ? (
+            <div className="flex items-center justify-center h-40" style={{ color: 'var(--color-text3)' }}>Loading quotes…</div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-40 gap-2" style={{ color: 'var(--color-text3)' }}>
+              <FileText size={24} opacity={0.3} />
+              <p className="text-sm">{filter === 'all' ? 'No quotes yet. Create one to get started.' : `No ${filter} quotes.`}</p>
+            </div>
+          ) : (
+            <table className="data-table">
+              <thead><tr>{['Quote','Client','Monthly','Volume','Status','Valid until',''].map((h) => <th key={h}>{h}</th>)}</tr></thead>
+              <tbody>
+                {filtered.map((q, i) => {
+                  const s = statusStyle[q.status];
+                  const StatusIcon = s.icon;
+                  const tier = VOLUME_TIERS.find((t) => t.id === q.volumeTier);
+                  return (
+                    <tr key={q.dbId} className="cursor-pointer" onClick={() => setSelected(q)} style={{ animation: 'fade-up 0.4s cubic-bezier(0.16,1,0.3,1) both', animationDelay: `${i * 40}ms` }}>
+                      <td><p className="font-mono text-xs" style={{ color: 'var(--color-violet)' }}>{q.id}</p>{q.sentDate ? <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text3)' }}>Sent {q.sentDate}</p> : null}</td>
+                      <td><p className="font-semibold" style={{ color: 'var(--color-text)' }}>{q.client}</p><p className="text-xs mt-0.5" style={{ color: 'var(--color-text3)' }}>{q.contact}</p></td>
+                      <td><span className="font-semibold" style={{ color: 'var(--color-text)' }}>{fmtR(q.monthlyFee)}</span><span className="text-xs" style={{ color: 'var(--color-text3)' }}>/mo</span></td>
+                      <td><span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}>{tier?.label ?? q.volumeTier}</span></td>
+                      <td><span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.color }}><StatusIcon size={11} />{q.status}</span></td>
+                      <td className="text-xs" style={{ color: 'var(--color-text3)' }}>{q.validUntil ?? '—'}</td>
+                      <td>
+                        <div className="flex items-center gap-1 justify-end" onClick={(e) => e.stopPropagation()}>
+                          <button title="View" onClick={() => setSelected(q)} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--color-text3)' }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)'; (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.08)'; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}><Eye size={14} /></button>
+                          <button title="PDF" onClick={() => downloadPDF(q)} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--color-text3)' }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)'; (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.08)'; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}><Download size={14} /></button>
+                          {q.status === 'draft' ? <button title="Send" onClick={() => sendQuote(q)} disabled={saving} className="p-1.5 rounded-lg transition-colors disabled:opacity-50" style={{ color: 'var(--color-green)' }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(52,211,153,0.1)'; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}><Send size={14} /></button> : null}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 
@@ -363,19 +433,22 @@ export default function QuotesPage() {
             <div className="p-7 sticky bottom-0 backdrop-blur space-y-2 mt-auto shrink-0" style={{ borderTop: '1px solid var(--color-border2)', background: 'var(--color-footer-bg)' }}>
               {editState ? (
                 <div className="grid grid-cols-2 gap-2">
-                  <button onClick={() => saveEdit(selected)} className="btn-purple btn-shine inline-flex items-center justify-center gap-1.5"><Save size={14} /> Save changes</button>
+                  <button onClick={() => saveEdit(selected)} disabled={saving} className="btn-purple btn-shine inline-flex items-center justify-center gap-1.5 disabled:opacity-50"><Save size={14} />{saving ? 'Saving…' : 'Save changes'}</button>
                   <button onClick={() => setEditState(null)} className="inline-flex items-center justify-center py-2.5 rounded-xl text-sm font-medium transition-colors" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>Cancel</button>
                 </div>
               ) : (
                 <>
                   {(['draft','sent','viewed'] as QuoteStatus[]).includes(selected.status) ? (
-                    <button onClick={() => sendQuote(selected)} className="btn-purple btn-shine w-full inline-flex items-center justify-center gap-2"><Send size={14} />{selected.status === 'draft' ? 'Send quote' : 'Resend quote'}</button>
+                    <button onClick={() => sendQuote(selected)} disabled={saving} className="btn-purple btn-shine w-full inline-flex items-center justify-center gap-2 disabled:opacity-50"><Send size={14} />{selected.status === 'draft' ? 'Send quote' : 'Resend quote'}</button>
                   ) : null}
                   {(['sent','viewed'] as QuoteStatus[]).includes(selected.status) ? (
                     <div className="grid grid-cols-2 gap-2">
-                      <button onClick={() => markAccepted(selected)} className="inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-0.5" style={{ background: 'linear-gradient(135deg,#059669,#34d399)', boxShadow: '0 4px 16px rgba(52,211,153,0.3)' }}><CheckCircle size={14} /> Accept</button>
-                      <button onClick={() => markDeclined(selected)} className="inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold transition-colors" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.1)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-red)'; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text2)'; }}><XCircle size={14} /> Decline</button>
+                      <button onClick={() => markAccepted(selected)} disabled={saving} className="inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-0.5 disabled:opacity-50" style={{ background: 'linear-gradient(135deg,#059669,#34d399)', boxShadow: '0 4px 16px rgba(52,211,153,0.3)' }}><CheckCircle size={14} /> Accept</button>
+                      <button onClick={() => markDeclined(selected)} disabled={saving} className="inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.1)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-red)'; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text2)'; }}><XCircle size={14} /> Decline</button>
                     </div>
+                  ) : null}
+                  {selected.status === 'accepted' ? (
+                    <button onClick={() => setOnboardQuote(selected)} className="btn-purple btn-shine w-full inline-flex items-center justify-center gap-2"><UserPlus size={14} /> Activate as client</button>
                   ) : null}
                   <button onClick={() => downloadPDF(selected)} className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}><Download size={14} /> Download PDF</button>
                 </>

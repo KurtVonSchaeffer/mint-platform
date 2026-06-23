@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
-import { Inbox, RefreshCw, Sparkles, Mail, Building2, ChevronDown, Plus, X, Loader2, UserPlus } from 'lucide-react';
+import { Inbox, RefreshCw, Sparkles, Mail, Building2, ChevronDown, Plus, X, Loader2, UserPlus, FileText } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 type LeadStatus = 'new' | 'contacted' | 'qualified' | 'won' | 'lost';
@@ -142,12 +143,22 @@ function AddLeadModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
 }
 
 export default function LeadsPage() {
+  const router = useRouter();
   const [leads, setLeads]         = useState<Lead[]>([]);
   const [loading, setLoading]     = useState(true);
   const [addOpen, setAddOpen]     = useState(false);
   const [convertLead, setConvertLead] = useState<Lead | null>(null);
   const [toast, setToast]         = useState<{ kind: ToastKind; message: string } | null>(null);
   const [statusFilter, setStatusFilter] = useState<LeadStatus | null>(null);
+
+  function createQuoteFromLead(lead: Lead) {
+    sessionStorage.setItem('new_quote_prefill', JSON.stringify({
+      client:  lead.company,
+      contact: lead.name,
+      email:   lead.email,
+    }));
+    router.push('/quotes?new=1');
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -349,13 +360,26 @@ export default function LeadsPage() {
                           <Mail size={11} /> Reply
                         </a>
                         {lead.status !== 'won' && lead.status !== 'lost' && (
-                          <button
-                            onClick={() => setConvertLead(lead)}
-                            className="inline-flex items-center gap-1.5 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
-                            style={{ background: 'linear-gradient(135deg,var(--color-purple),var(--color-purple2))', boxShadow: '0 2px 10px rgba(124,58,237,0.3)' }}
-                          >
-                            <UserPlus size={11} /> Onboard
-                          </button>
+                          <>
+                            <button
+                              onClick={() => createQuoteFromLead(lead)}
+                              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                              style={{ border: '1px solid rgba(124,58,237,0.35)', color: 'var(--color-violet)', background: 'rgba(124,58,237,0.08)' }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.15)'; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.08)'; }}
+                            >
+                              <FileText size={11} /> Create quote
+                            </button>
+                            {lead.status === 'qualified' && (
+                              <button
+                                onClick={() => setConvertLead(lead)}
+                                className="inline-flex items-center gap-1.5 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
+                                style={{ background: 'linear-gradient(135deg,var(--color-purple),var(--color-purple2))', boxShadow: '0 2px 10px rgba(124,58,237,0.3)' }}
+                              >
+                                <UserPlus size={11} /> Onboard
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
