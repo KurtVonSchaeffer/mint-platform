@@ -87,7 +87,10 @@ function LoginForm() {
         >
           {/* Brand */}
           <div className="flex flex-col items-center mb-8">
-            <Image src="/algolend-logo-dark.png" alt="AlgoLend" width={160} height={40} style={{ objectFit: 'contain' }} priority />
+            {/* dark mode logo (white) */}
+            <Image src="/algolend-logo-dark.png" alt="AlgoLend" width={160} height={40} style={{ objectFit: 'contain' }} priority className="light-hidden" />
+            {/* light mode logo (dark) */}
+            <Image src="/algolend-logo.png" alt="AlgoLend" width={160} height={40} style={{ objectFit: 'contain' }} priority className="light-only" />
             <p className="text-[11px] tracking-widest uppercase mt-2" style={{ color: 'rgba(167,139,250,0.5)' }}>
               Admin Console
             </p>

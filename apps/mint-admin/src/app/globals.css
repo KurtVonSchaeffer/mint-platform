@@ -143,6 +143,12 @@ html {
   color-scheme: dark;
 }
 
+/* Theme-conditional visibility */
+.light-hidden { display: block; }
+.light-only   { display: none; }
+html[data-theme="light"] .light-hidden { display: none; }
+html[data-theme="light"] .light-only   { display: block; }
+
 body {
   background: var(--color-ink);
   color: var(--color-text);
