@@ -6,6 +6,8 @@ import {
   Check, ArrowRight, Shield, Zap, FileText, PenLine, Calculator,
   LayoutDashboard, CreditCard, FolderOpen, MessageSquare, Bell,
   User, HelpCircle, LogOut, TrendingUp, Clock, CheckCircle,
+  Users, DollarSign, Activity, Settings, BarChart3, ChevronRight,
+  Building2, AlertCircle,
 } from 'lucide-react';
 
 /* ─── NCA ───────────────────────────────────────────────────── */
@@ -280,7 +282,7 @@ function ApplyWizard({ onBack }: { onBack?: () => void }) {
   );
 }
 
-/* ─── Portal shell ───────────────────────────────────────────── */
+/* ─── Borrower portal sidebar ────────────────────────────────── */
 const BRAND = '#7C3AED';
 
 const clientNav = [
@@ -399,9 +401,222 @@ function EmptyPage({ title, sub }: { title: string; sub: string }) {
   );
 }
 
+/* ─── Admin / Lender dashboard ───────────────────────────────── */
+const adminNav = [
+  { id: 'dashboard',    label: 'Dashboard',     Icon: LayoutDashboard },
+  { id: 'applications', label: 'Applications',  Icon: FileText        },
+  { id: 'clients',      label: 'Clients',       Icon: Users           },
+  { id: 'portfolio',    label: 'Portfolio',     Icon: BarChart3       },
+  { id: 'compliance',   label: 'Compliance',    Icon: Shield          },
+  { id: 'settings',     label: 'Settings',      Icon: Settings        },
+];
+
+const APPLICATIONS = [
+  { name: 'Sipho Dlamini',   amount: 'R 12,000', score: 681, status: 'Pending review',  badge: 'yellow' },
+  { name: 'Amara Nkosi',     amount: 'R 25,000', score: 714, status: 'Approved',         badge: 'green'  },
+  { name: 'Thabo Mokoena',   amount: 'R 8,500',  score: 592, status: 'Referred',         badge: 'orange' },
+  { name: 'Lindiwe Zulu',    amount: 'R 18,000', score: 741, status: 'Approved',         badge: 'green'  },
+  { name: 'Kagiso Sithole',  amount: 'R 5,000',  score: 638, status: 'Pending review',  badge: 'yellow' },
+];
+
+const BADGE: Record<string, { bg: string; color: string }> = {
+  green:  { bg: 'rgba(16,185,129,0.1)',  color: '#10b981' },
+  yellow: { bg: 'rgba(245,158,11,0.1)',  color: '#d97706' },
+  orange: { bg: 'rgba(239,68,68,0.08)',  color: '#ef4444' },
+};
+
+function AdminDashboard({ adminPage, setAdminPage }: { adminPage: string; setAdminPage: (p: string) => void }) {
+  return (
+    <>
+      {adminPage === 'dashboard' && (
+        <div className="space-y-5">
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-xl font-bold text-slate-900">Lender dashboard</h1>
+              <p className="text-slate-500 mt-0.5 text-sm">Zwane Capital (Pty) Ltd — June 2026</p>
+            </div>
+            <button onClick={() => setAdminPage('applications')} className="px-3 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1.5" style={{ background: BRAND }}>
+              Review applications <ChevronRight size={12} />
+            </button>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <StatCard label="Active clients"     value="47"          sub="↑ 4 this month"       Icon={Users}       accent="brand"   />
+            <StatCard label="Loan book"          value="R 1.2M"      sub="Avg. R 25,500"        Icon={DollarSign}  accent="info"    />
+            <StatCard label="Pending review"     value="5"           sub="Avg. 4h to decision"  Icon={Clock}       accent="warning" />
+            <StatCard label="Collection rate"    value="94.2%"       sub="↑ 1.1% vs last month" Icon={TrendingUp}  accent="success" />
+          </div>
+          <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+              <p className="text-sm font-semibold text-slate-800">Recent applications</p>
+              <button onClick={() => setAdminPage('applications')} className="text-xs text-violet-600 font-medium hover:underline">View all →</button>
+            </div>
+            <div className="divide-y divide-slate-50">
+              {APPLICATIONS.slice(0, 3).map(a => (
+                <div key={a.name} className="flex items-center justify-between px-5 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0" style={{ background: BRAND }}>{a.name[0]}</div>
+                    <div>
+                      <p className="text-xs font-semibold text-slate-800">{a.name}</p>
+                      <p className="text-[10px] text-slate-400">{a.amount} · Score {a.score}</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{ background: BADGE[a.badge].bg, color: BADGE[a.badge].color }}>{a.status}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-5">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">NCA compliance</p>
+              {[['Affordability assessments','100%','green'],['Sec 92 quotations issued','100%','green'],['Overdue SACRRA reports','0','green'],['NCR registration','Active','green']].map(([k,v,c]) => (
+                <div key={k} className="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
+                  <span className="text-xs text-slate-500">{k}</span>
+                  <span className="text-xs font-semibold" style={{ color: BADGE[c].color }}>{v}</span>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-5">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">This month</p>
+              {[['Applications received','18'],['Approved','12'],['Declined / referred','6'],['Total disbursed','R 286,000']].map(([k,v]) => (
+                <div key={k} className="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
+                  <span className="text-xs text-slate-500">{k}</span>
+                  <span className="text-xs font-bold text-slate-800">{v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {adminPage === 'applications' && (
+        <div className="space-y-4">
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">Applications</h1>
+            <p className="text-sm text-slate-500 mt-0.5">5 pending · 2 awaiting signature</p>
+          </div>
+          <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+            <div className="divide-y divide-slate-100">
+              {APPLICATIONS.map(a => (
+                <div key={a.name} className="flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors cursor-pointer">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full flex items-center justify-center font-bold text-white text-sm shrink-0" style={{ background: BRAND }}>{a.name[0]}</div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-800">{a.name}</p>
+                      <p className="text-xs text-slate-400">{a.amount} requested · Credit score {a.score}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full" style={{ background: BADGE[a.badge].bg, color: BADGE[a.badge].color }}>{a.status}</span>
+                    {a.badge === 'yellow' && (
+                      <div className="flex gap-1.5">
+                        <button className="px-2.5 py-1 rounded-lg text-[10px] font-bold text-white" style={{ background: '#10b981' }}>Approve</button>
+                        <button className="px-2.5 py-1 rounded-lg text-[10px] font-medium border border-slate-200 text-slate-500">Decline</button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {adminPage === 'clients' && (
+        <div className="space-y-4">
+          <h1 className="text-xl font-bold text-slate-900">Clients</h1>
+          <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+            {[
+              { name: 'Amara Nkosi',    loan: 'R 25,000', next: 'R 1,204.50 · 1 Jul', status: 'Current' },
+              { name: 'Lindiwe Zulu',   loan: 'R 18,000', next: 'R 867.20 · 1 Jul',   status: 'Current' },
+              { name: 'Bongani Cele',   loan: 'R 9,500',  next: 'R 456.80 · 1 Jul',   status: 'Current' },
+              { name: 'Nomsa Khumalo',  loan: 'R 30,000', next: 'R 1,441.60 · 1 Jul', status: '3 days overdue' },
+            ].map(c => (
+              <div key={c.name} className="flex items-center justify-between px-5 py-4 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors cursor-pointer">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold text-white text-sm shrink-0" style={{ background: BRAND }}>{c.name[0]}</div>
+                  <div>
+                    <p className="text-sm font-semibold text-slate-800">{c.name}</p>
+                    <p className="text-xs text-slate-400">Outstanding: {c.loan} · Next: {c.next}</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full"
+                  style={c.status === 'Current' ? { background: 'rgba(16,185,129,0.1)', color: '#10b981' } : { background: 'rgba(239,68,68,0.08)', color: '#ef4444' }}>
+                  {c.status}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {(adminPage === 'portfolio' || adminPage === 'compliance' || adminPage === 'settings') && (
+        <div className="space-y-4">
+          <h1 className="text-xl font-bold text-slate-900">{adminNav.find(n => n.id === adminPage)?.label}</h1>
+          <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-12 text-center">
+            <div className="w-10 h-10 mx-auto mb-3 rounded-2xl bg-slate-100 flex items-center justify-center">
+              <Activity size={16} className="text-slate-400" />
+            </div>
+            <p className="text-sm font-semibold text-slate-600 mb-1">Full data in live console</p>
+            <p className="text-xs text-slate-400">This section is active in your production lender portal.</p>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function AdminSidebar({ active, onSelect }: { active: string; onSelect: (id: string) => void }) {
+  return (
+    <aside className="w-52 shrink-0 flex flex-col h-full" style={{ background: '#0f172a', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="flex items-center h-14 px-4 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-white text-xs" style={{ background: BRAND }}>Z</div>
+          <div>
+            <p className="text-xs font-bold text-white">Zwane Capital</p>
+            <p className="text-[9px] text-slate-500">Lender console</p>
+          </div>
+        </div>
+      </div>
+      <nav className="flex-1 overflow-y-auto py-2 px-2 space-y-0.5">
+        {adminNav.map(item => {
+          const isActive = active === item.id;
+          return (
+            <button key={item.id} onClick={() => onSelect(item.id)}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all text-left"
+              style={isActive ? { background: 'rgba(124,58,237,0.2)', color: '#A78BFA' } : { color: '#94a3b8' }}>
+              <item.Icon size={14} />
+              <span className="text-xs">{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+      <div className="p-3 shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl mb-1" style={{ background: 'rgba(255,255,255,0.05)' }}>
+          <Building2 size={14} className="text-slate-400 shrink-0" />
+          <div className="min-w-0">
+            <p className="text-[10px] font-semibold text-slate-300 truncate">Sarah Admin</p>
+            <p className="text-[9px] text-slate-500">Super admin</p>
+          </div>
+        </div>
+        <p className="text-center mt-2 text-[9px] text-slate-600">Powered by <strong className="text-slate-500">AlgoLend</strong></p>
+      </div>
+    </aside>
+  );
+}
+
 /* ─── Demo Page ──────────────────────────────────────────────── */
+type View = 'borrower' | 'lender';
+
 export default function DemoPage() {
+  const [view, setView] = useState<View>('borrower');
   const [page, setPage] = useState('dashboard');
+  const [adminPage, setAdminPage] = useState('dashboard');
+
+  const switchView = (v: View) => {
+    setView(v);
+    setPage('dashboard');
+    setAdminPage('dashboard');
+  };
 
   return (
     <main className="min-h-screen" style={{ background: '#06070D' }}>
@@ -420,17 +635,46 @@ export default function DemoPage() {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-[10px] px-2.5 py-1.5 rounded-full"
-          style={{ background: 'rgba(124,58,237,0.1)', color: '#A78BFA', border: '1px solid rgba(124,58,237,0.2)' }}>
-          <span className="w-1.5 h-1.5 rounded-full bg-[#A78BFA] animate-pulse" />
-          Live demo
+        <div className="flex items-center gap-2">
+          {/* View toggle */}
+          <div className="flex items-center p-1 rounded-xl gap-0.5" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <button onClick={() => switchView('borrower')}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+              style={view === 'borrower' ? { background: BRAND, color: '#fff' } : { color: '#6E74A4' }}>
+              Borrower view
+            </button>
+            <button onClick={() => switchView('lender')}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+              style={view === 'lender' ? { background: BRAND, color: '#fff' } : { color: '#6E74A4' }}>
+              Lender console
+            </button>
+          </div>
+          <div className="flex items-center gap-2 text-[10px] px-2.5 py-1.5 rounded-full"
+            style={{ background: 'rgba(124,58,237,0.1)', color: '#A78BFA', border: '1px solid rgba(124,58,237,0.2)' }}>
+            <span className="w-1.5 h-1.5 rounded-full bg-[#A78BFA] animate-pulse" />
+            Live demo
+          </div>
         </div>
       </header>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="mb-5">
-          <p className="text-base font-semibold text-white">Borrower portal experience</p>
-          <p className="text-sm text-[#6E74A4]">What your clients see — branded to your lender, powered by AlgoLend</p>
+          {view === 'borrower' ? (<>
+            <p className="text-base font-semibold text-white">Borrower portal experience</p>
+            <p className="text-sm text-[#6E74A4]">What your clients see — branded to your lender, powered by AlgoLend</p>
+          </>) : (<>
+            <p className="text-base font-semibold text-white">Lender console</p>
+            <p className="text-sm text-[#6E74A4]">Your admin dashboard — manage applications, clients, and compliance in one place</p>
+          </>)}
+        </div>
+
+        {/* Hint */}
+        <div className="mb-4 flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs"
+          style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.15)', color: '#A78BFA' }}>
+          <AlertCircle size={12} className="shrink-0" />
+          {view === 'borrower'
+            ? 'Switch to "Lender console" above to see the admin view your team uses to review and approve applications.'
+            : 'Switch to "Borrower view" above to see the end-borrower experience your clients interact with.'}
         </div>
 
         {/* Browser chrome */}
@@ -440,67 +684,94 @@ export default function DemoPage() {
               {['#ff5f57','#febc2e','#28c840'].map(c => <div key={c} className="w-3 h-3 rounded-full" style={{ background: c }} />)}
             </div>
             <div className="flex-1 mx-3 h-7 rounded-lg flex items-center px-3 text-[11px] text-slate-500" style={{ background: 'rgba(255,255,255,0.06)' }}>
-              portal.algolend.co.za/client/dashboard
+              {view === 'borrower' ? 'portal.algolend.co.za/client/dashboard' : 'admin.algolend.co.za/dashboard'}
             </div>
           </div>
 
-          <div className="flex" style={{ background: '#f8fafc', height: 560 }}>
-            <PortalSidebar active={page} onSelect={setPage} />
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <header className="h-14 shrink-0 flex items-center justify-between px-6"
-                style={{ background: 'rgba(248,250,252,0.9)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-                <div />
-                <div className="flex items-center gap-3">
-                  <button className="relative w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-black/5 transition-colors">
-                    <Bell size={15} />
-                    <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: BRAND }} />
-                  </button>
-                  <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-sm font-medium" style={{ background: 'rgba(124,58,237,0.06)', color: BRAND }}>
-                    <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: BRAND }}>J</div>
-                    John
+          <div className="flex" style={{ background: view === 'lender' ? '#0f172a' : '#f8fafc', height: 560 }}>
+            {view === 'borrower' ? (
+              <>
+                <PortalSidebar active={page} onSelect={setPage} />
+                <div className="flex-1 flex flex-col overflow-hidden">
+                  <header className="h-14 shrink-0 flex items-center justify-between px-6"
+                    style={{ background: 'rgba(248,250,252,0.9)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+                    <div />
+                    <div className="flex items-center gap-3">
+                      <button className="relative w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-black/5 transition-colors">
+                        <Bell size={15} />
+                        <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: BRAND }} />
+                      </button>
+                      <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-sm font-medium" style={{ background: 'rgba(124,58,237,0.06)', color: BRAND }}>
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white" style={{ background: BRAND }}>J</div>
+                        John
+                      </div>
+                    </div>
+                  </header>
+                  <div className="flex-1 overflow-y-auto px-6 py-6" style={{ background: '#f8fafc' }}>
+                    {page === 'dashboard' && (
+                      <div className="space-y-6">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h1 className="text-xl font-bold text-slate-900 tracking-tight">Good morning, John 👋</h1>
+                            <p className="text-slate-500 mt-0.5 text-sm">Here&apos;s an overview of your account.</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button onClick={() => setPage('calculator')} className="px-3 py-2 rounded-xl text-xs font-medium border border-slate-200 text-slate-600 hover:border-slate-300 transition-colors flex items-center gap-1.5"><Calculator size={13}/> Calculator</button>
+                            <button onClick={() => setPage('apply')} className="px-3 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1.5" style={{ background: BRAND }}>Apply for Loan <ArrowRight size={12}/></button>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                          <StatCard label="Active loans" value="0" sub="No active facilities" Icon={CreditCard} />
+                          <StatCard label="Outstanding balance" value="R 0,00" Icon={TrendingUp} accent="info" />
+                          <StatCard label="Next payment" value="—" sub="Nothing scheduled" Icon={Clock} accent="warning" />
+                          <StatCard label="In progress" value="0" sub="No pending applications" Icon={CheckCircle} accent="success" />
+                        </div>
+                        <div>
+                          <h2 className="text-sm font-semibold text-slate-800 mb-3">Recent applications</h2>
+                          <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-10 text-center">
+                            <div className="w-10 h-10 mx-auto mb-3 rounded-2xl bg-slate-100 flex items-center justify-center"><CreditCard size={16} className="text-slate-400" /></div>
+                            <p className="text-sm font-semibold text-slate-700 mb-1">No applications yet</p>
+                            <p className="text-xs text-slate-400 mb-4">Apply for your first loan to get started.</p>
+                            <button onClick={() => setPage('apply')} className="px-4 py-2 rounded-xl text-xs font-bold text-white" style={{ background: BRAND }}>Apply now →</button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {page === 'apply'         && <ApplyWizard onBack={() => setPage('dashboard')} />}
+                    {page === 'calculator'    && <CalculatorPage />}
+                    {page === 'loans'         && <EmptyPage title="My Loans" sub="No active loans yet" />}
+                    {page === 'documents'     && <EmptyPage title="Documents" sub="No documents uploaded" />}
+                    {page === 'messages'      && <EmptyPage title="Messages" sub="No messages" />}
+                    {page === 'notifications' && <EmptyPage title="Notifications" sub="You&apos;re all caught up" />}
+                    {page === 'profile'       && <EmptyPage title="Profile" sub="Manage your profile details" />}
+                    {page === 'support'       && <EmptyPage title="Support" sub="Raise a ticket or chat with us" />}
                   </div>
                 </div>
-              </header>
-              <div className="flex-1 overflow-y-auto px-6 py-6">
-                {page === 'dashboard' && (
-                  <div className="space-y-6">
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h1 className="text-xl font-bold text-slate-900 tracking-tight">Good morning, John 👋</h1>
-                        <p className="text-slate-500 mt-0.5 text-sm">Here&apos;s an overview of your account.</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => setPage('calculator')} className="px-3 py-2 rounded-xl text-xs font-medium border border-slate-200 text-slate-600 hover:border-slate-300 transition-colors flex items-center gap-1.5"><Calculator size={13}/> Calculator</button>
-                        <button onClick={() => setPage('apply')} className="px-3 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1.5" style={{ background: BRAND }}>Apply for Loan <ArrowRight size={12}/></button>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                      <StatCard label="Active loans" value="0" sub="No active facilities" Icon={CreditCard} />
-                      <StatCard label="Outstanding balance" value="R 0,00" Icon={TrendingUp} accent="info" />
-                      <StatCard label="Next payment" value="—" sub="Nothing scheduled" Icon={Clock} accent="warning" />
-                      <StatCard label="In progress" value="0" sub="No pending applications" Icon={CheckCircle} accent="success" />
-                    </div>
-                    <div>
-                      <h2 className="text-sm font-semibold text-slate-800 mb-3">Recent applications</h2>
-                      <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-10 text-center">
-                        <div className="w-10 h-10 mx-auto mb-3 rounded-2xl bg-slate-100 flex items-center justify-center"><CreditCard size={16} className="text-slate-400" /></div>
-                        <p className="text-sm font-semibold text-slate-700 mb-1">No applications yet</p>
-                        <p className="text-xs text-slate-400 mb-4">Apply for your first loan to get started.</p>
-                        <button onClick={() => setPage('apply')} className="px-4 py-2 rounded-xl text-xs font-bold text-white" style={{ background: BRAND }}>Apply now →</button>
+              </>
+            ) : (
+              <>
+                <AdminSidebar active={adminPage} onSelect={setAdminPage} />
+                <div className="flex-1 flex flex-col overflow-hidden" style={{ background: '#f8fafc' }}>
+                  <header className="h-14 shrink-0 flex items-center justify-between px-6"
+                    style={{ background: 'rgba(248,250,252,0.95)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+                    <p className="text-xs text-slate-400">AlgoLend Admin · Zwane Capital</p>
+                    <div className="flex items-center gap-3">
+                      <button className="relative w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-black/5 transition-colors">
+                        <Bell size={15} />
+                        <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-red-500" />
+                      </button>
+                      <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl text-xs font-medium" style={{ background: 'rgba(124,58,237,0.06)', color: BRAND }}>
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white" style={{ background: BRAND }}>S</div>
+                        Sarah
                       </div>
                     </div>
+                  </header>
+                  <div className="flex-1 overflow-y-auto px-6 py-6">
+                    <AdminDashboard adminPage={adminPage} setAdminPage={setAdminPage} />
                   </div>
-                )}
-                {page === 'apply'         && <ApplyWizard onBack={() => setPage('dashboard')} />}
-                {page === 'calculator'    && <CalculatorPage />}
-                {page === 'loans'         && <EmptyPage title="My Loans" sub="No active loans yet" />}
-                {page === 'documents'     && <EmptyPage title="Documents" sub="No documents uploaded" />}
-                {page === 'messages'      && <EmptyPage title="Messages" sub="No messages" />}
-                {page === 'notifications' && <EmptyPage title="Notifications" sub="You&apos;re all caught up" />}
-                {page === 'profile'       && <EmptyPage title="Profile" sub="Manage your profile details" />}
-                {page === 'support'       && <EmptyPage title="Support" sub="Raise a ticket or chat with us" />}
-              </div>
-            </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
