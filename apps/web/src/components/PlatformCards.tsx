@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Warp } from '@paper-design/shaders-react';
 import {
-  Cpu, ShieldCheck, Landmark, FileSignature, BarChart3, Globe, Check,
+  Cpu, ShieldCheck, Landmark, FileSignature, BarChart3, Globe, Check, Heart,
 } from 'lucide-react';
 
 /* ─── Per-card shader configs ────────────────────────────────────────── */
@@ -37,6 +37,11 @@ const CARD_CONFIGS = {
     colors: ['hsl(0,0%,97%)', 'hsl(345,100%,52%)', 'hsl(0,0%,80%)', 'hsl(350,100%,68%)'],
     proportion: 0.37, softness: 1.05, distortion: 0.15, swirl: 0.9,
     swirlIterations: 10, shape: 'stripes' as const, shapeScale: 0.13, speed: 0.7,
+  },
+  creditLife: {
+    colors: ['hsl(0,0%,97%)', 'hsl(175,85%,40%)', 'hsl(0,0%,78%)', 'hsl(168,90%,58%)'],
+    proportion: 0.39, softness: 1.0, distortion: 0.17, swirl: 0.8,
+    swirlIterations: 10, shape: 'stripes' as const, shapeScale: 0.11, speed: 0.65,
   },
 } as const;
 
@@ -268,6 +273,41 @@ export function PortfolioCard() {
           </div>
         </div>
 
+      </div>
+    </div>
+  );
+}
+
+export function CreditLifeCard() {
+  return (
+    <div className="relative h-full min-h-[220px] rounded-[24px] overflow-hidden group">
+      <WarpBg cfg={CARD_CONFIGS.creditLife} />
+      <div className="relative z-10 p-7 h-full flex flex-col">
+        <div className="flex items-start justify-between mb-5">
+          <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center group-hover:bg-teal-500/25 group-hover:scale-105 transition-all">
+            <Heart size={17} className="text-teal-300" />
+          </div>
+          <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-teal-400/20 text-teal-300 border border-teal-400/30">
+            FSCA Approved
+          </span>
+        </div>
+        <h3 className="text-xl font-semibold mb-2 tracking-tight text-white">Credit life insurance</h3>
+        <p className="text-sm text-white/55 mb-5 leading-relaxed">
+          Embedded cover protecting your loan book — and your borrowers — against death, disability, and retrenchment.
+        </p>
+        <div className="mt-auto space-y-2">
+          {[
+            { label: 'Death',         detail: 'Outstanding balance settled' },
+            { label: 'Disability',    detail: 'Payments waived for term'    },
+            { label: 'Retrenchment',  detail: 'Up to 12 months covered'     },
+          ].map((r) => (
+            <div key={r.label} className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white/8 border border-white/12 backdrop-blur-sm">
+              <Check size={11} className="text-teal-400 shrink-0" />
+              <span className="text-xs font-semibold text-white/80">{r.label}</span>
+              <span className="text-[10px] text-white/40 ml-auto">{r.detail}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

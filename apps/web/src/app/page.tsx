@@ -26,6 +26,7 @@ const OpenBankingCard  = dynamic(() => import('@/components/PlatformCards').then
 const EContractsCard   = dynamic(() => import('@/components/PlatformCards').then(m => ({ default: m.EContractsCard })));
 const PortfolioCard    = dynamic(() => import('@/components/PlatformCards').then(m => ({ default: m.PortfolioCard })));
 const PortalCard       = dynamic(() => import('@/components/PlatformCards').then(m => ({ default: m.PortalCard })));
+const CreditLifeCard   = dynamic(() => import('@/components/PlatformCards').then(m => ({ default: m.CreditLifeCard })));
 
 /* ─── Content ─────────────────────────────────────────────────────── */
 
@@ -368,8 +369,13 @@ export default function HomePage() {
               <PortalCard />
             </Reveal>
 
-            {/* Row 4: Portfolio full-width */}
-            <Reveal delay={280} className="md:col-span-2 lg:col-span-3" threshold={0.05}>
+            {/* Row 4 left: Credit Life */}
+            <Reveal delay={280}>
+              <CreditLifeCard />
+            </Reveal>
+
+            {/* Row 4 right: Portfolio */}
+            <Reveal delay={320} className="md:col-span-1 lg:col-span-2" threshold={0.05}>
               <PortfolioCard />
             </Reveal>
           </div>
