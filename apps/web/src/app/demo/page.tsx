@@ -353,13 +353,45 @@ function StatCard({ label, value, sub, Icon, accent = 'brand' }: {
   );
 }
 
+const CL_RATE = 9; // R9 per R1,000 of outstanding balance
+
+function calcCreditLifeSchedule(principal: number, term: number) {
+  const r = 0.27 / 12;
+  const base = principal * r / (1 - Math.pow(1 + r, -term));
+  const rows: { month: number; balance: number; clPremium: number }[] = [];
+  let balance = principal;
+  for (let m = 1; m <= term; m++) {
+    const interest = balance * r;
+    const principalPaid = base - interest;
+    const clPremium = Math.round((balance / 1000) * CL_RATE * 100) / 100;
+    rows.push({ month: m, balance: Math.round(balance * 100) / 100, clPremium });
+    balance = Math.max(0, balance - principalPaid);
+  }
+  return rows;
+}
+
 function CalculatorPage() {
   const [amt, setAmt] = useState(20000);
   const [trm, setTrm] = useState(24);
+  const [showSchedule, setShowSchedule] = useState(false);
   const q = useMemo(() => calcQuote(amt, trm), [amt, trm]);
+  const clSchedule = useMemo(() => calcCreditLifeSchedule(amt, trm), [amt, trm]);
+  const totalCL = useMemo(() => clSchedule.reduce((s, r) => s + r.clPremium, 0), [clSchedule]);
+  const firstCL = clSchedule[0]?.clPremium ?? 0;
+  const lastCL  = clSchedule[clSchedule.length - 1]?.clPremium ?? 0;
+
+  // Show at most 6 evenly-spaced rows in the preview
+  const previewRows = useMemo(() => {
+    if (clSchedule.length <= 6) return clSchedule;
+    const step = Math.floor(clSchedule.length / 5);
+    const indices = [0, step, step*2, step*3, step*4, clSchedule.length - 1];
+    return indices.map(i => clSchedule[i]);
+  }, [clSchedule]);
+
   return (
     <div className="space-y-5 max-w-lg">
-      <div><h1 className="text-xl font-bold text-slate-900">Loan Calculator</h1><p className="text-sm text-slate-500 mt-0.5">Estimate your monthly repayment under the NCA.</p></div>
+      <div><h1 className="text-xl font-bold text-slate-900">Loan Calculator</h1><p className="text-sm text-slate-500 mt-0.5">Estimate your monthly repayment under the NCA — including credit life cover.</p></div>
+
       <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-6 space-y-5">
         <div>
           <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Loan amount: {R(amt)}</label>
@@ -382,6 +414,74 @@ function CalculatorPage() {
               <span className={big ? 'text-lg font-bold text-violet-700' : 'text-xs font-semibold text-slate-700'}>{v}</span>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Credit life section */}
+      <div className="rounded-2xl bg-white border border-slate-200 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: '1px solid #f1f5f9' }}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(20,184,166,0.1)' }}>
+              <Shield size={13} className="text-teal-600" />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-slate-800">Credit life cover</p>
+              <p className="text-[10px] text-slate-400">R{CL_RATE}/R1,000 outstanding balance · decreases monthly</p>
+            </div>
+          </div>
+          <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-teal-50 text-teal-700 border border-teal-200">FSCA Approved</span>
+        </div>
+
+        <div className="px-5 py-4 grid grid-cols-3 gap-3">
+          {[
+            { label: 'Month 1 premium', value: R(firstCL) },
+            { label: `Month ${trm} premium`, value: R(lastCL) },
+            { label: 'Total cover cost', value: R(Math.round(totalCL * 100) / 100) },
+          ].map(s => (
+            <div key={s.label} className="text-center rounded-xl p-3 bg-slate-50 border border-slate-100">
+              <p className="text-sm font-bold text-slate-800">{s.value}</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Schedule preview */}
+        <div className="px-5 pb-4">
+          <button onClick={() => setShowSchedule(v => !v)} className="text-xs font-semibold text-teal-600 hover:text-teal-700 transition-colors mb-3">
+            {showSchedule ? '▲ Hide schedule' : '▼ Show monthly schedule'}
+          </button>
+          {showSchedule && (
+            <div className="rounded-xl overflow-hidden border border-slate-200">
+              <div className="grid grid-cols-3 px-4 py-2 bg-slate-50 border-b border-slate-200">
+                {['Month', 'Balance', 'CL Premium'].map(h => (
+                  <p key={h} className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{h}</p>
+                ))}
+              </div>
+              {(showSchedule ? clSchedule : previewRows).map(row => (
+                <div key={row.month} className="grid grid-cols-3 px-4 py-2 border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors">
+                  <p className="text-xs text-slate-500">{row.month}</p>
+                  <p className="text-xs text-slate-700">{R(row.balance)}</p>
+                  <p className="text-xs font-semibold text-teal-700">{R(row.clPremium)}</p>
+                </div>
+              ))}
+            </div>
+          )}
+          {!showSchedule && (
+            <div className="rounded-xl overflow-hidden border border-slate-200">
+              <div className="grid grid-cols-3 px-4 py-2 bg-slate-50 border-b border-slate-200">
+                {['Month', 'Balance', 'CL Premium'].map(h => (
+                  <p key={h} className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{h}</p>
+                ))}
+              </div>
+              {previewRows.map(row => (
+                <div key={row.month} className="grid grid-cols-3 px-4 py-2 border-b border-slate-50 last:border-0">
+                  <p className="text-xs text-slate-500">{row.month}</p>
+                  <p className="text-xs text-slate-700">{R(row.balance)}</p>
+                  <p className="text-xs font-semibold text-teal-700">{R(row.clPremium)}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
