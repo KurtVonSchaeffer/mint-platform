@@ -61,7 +61,7 @@ export function AnimatedStat({ value, label }: Props) {
   return (
     <div ref={ref} className="group">
       <p
-        className="headline text-5xl lg:text-6xl font-semibold mb-2 group-hover:text-[var(--color-brand)] transition-colors"
+        className="headline text-5xl lg:text-6xl font-semibold mb-2 text-[var(--color-ink)] group-hover:text-[var(--color-brand)] transition-colors"
         style={{ transition: 'color 0.2s' }}
       >
         {display}

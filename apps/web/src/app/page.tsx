@@ -169,11 +169,11 @@ export default function HomePage() {
 
       {/* ── STATS ───────────────────────────────────────────────────── */}
       <section className="bg-[var(--color-bg)] border-b border-[var(--color-border-soft)]">
-        <div className="max-w-[1200px] mx-auto px-6 py-20 grid grid-cols-2 lg:grid-cols-4 items-start">
+        <div className="max-w-[1200px] mx-auto px-6 py-20 grid grid-cols-2 lg:grid-cols-4 items-center">
           {stats.map((s, i) => (
             <div
               key={s.label}
-              className="px-8 py-2"
+              className="px-8 py-6 text-center"
               style={{
                 borderLeft: i > 0 ? '1px solid var(--color-border)' : undefined,
               }}
