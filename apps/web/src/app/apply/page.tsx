@@ -171,7 +171,7 @@ export default function ApplyPage() {
                 Start your AlgoLend application
               </h1>
               <p className="text-sm mt-1" style={{ color: 'var(--color-ink-soft)' }}>
-                Takes about 5 minutes. We'll review and activate your platform within 1 business day.
+                Takes about 5 minutes. We'll review your application and be in touch within 1 business day.
               </p>
             </div>
           </div>
