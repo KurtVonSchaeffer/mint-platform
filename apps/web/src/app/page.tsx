@@ -144,23 +144,22 @@ export default function HomePage() {
         </ContainerScroll>
       </section>
 
-      {/* ── INTEGRATION MARQUEE ─────────────────────────────────────── */}
-      <section className="py-10 border-y border-[var(--color-border-soft)] overflow-hidden bg-[var(--color-bg)]">
-        <div className="max-w-[1200px] mx-auto px-6 mb-6">
-          <p className="eyebrow text-center">Certified integrations</p>
-        </div>
-        <div className="relative">
-          <div className="absolute left-0 top-0 bottom-0 w-20 z-10 bg-gradient-to-r from-[var(--color-bg)] to-transparent pointer-events-none" />
-          <div className="absolute right-0 top-0 bottom-0 w-20 z-10 bg-gradient-to-l from-[var(--color-bg)] to-transparent pointer-events-none" />
-          <div className="marquee-track">
-            {[...integrations, ...integrations].map((p, i) => (
-              <div key={`${p.name}-${i}`} className="flex items-center gap-3 shrink-0">
-                <IntegrationLogo name={p.name} size={28} className="text-[var(--color-ink)]" />
-                {p.name !== 'Sure Systems' && (
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-2xl font-bold text-[var(--color-ink)] tracking-tight">{p.name}</span>
-                    <span className="text-xs text-[var(--color-ink-muted)]">{p.sub}</span>
+      {/* ── INTEGRATION STRIP ───────────────────────────────────────── */}
+      <section className="py-10 border-y border-[var(--color-border-soft)] bg-[var(--color-bg)]">
+        <div className="max-w-[1200px] mx-auto px-6">
+          <p className="eyebrow text-center mb-8">Certified integrations</p>
+          <div className="flex flex-wrap items-center justify-center gap-6 md:gap-10">
+            {integrations.map((p, i) => (
+              <div key={p.name} className="flex items-center gap-6 md:gap-10">
+                <div className="flex items-center gap-3">
+                  <IntegrationLogo name={p.name} size={26} className="text-[var(--color-ink)] shrink-0" />
+                  <div className="leading-tight">
+                    <p className="text-sm font-bold text-[var(--color-ink)] whitespace-nowrap">{p.name}</p>
+                    <p className="text-[11px] text-[var(--color-ink-muted)] whitespace-nowrap">{p.sub}</p>
                   </div>
+                </div>
+                {i < integrations.length - 1 && (
+                  <div className="w-px h-8 bg-[var(--color-border-soft)] hidden md:block" />
                 )}
               </div>
             ))}
