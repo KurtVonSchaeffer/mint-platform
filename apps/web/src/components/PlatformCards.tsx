@@ -299,7 +299,7 @@ export function CreditLifeCard() {
           {[
             { label: 'Death',         detail: 'Outstanding balance settled' },
             { label: 'Disability',    detail: 'Payments waived for term'    },
-            { label: 'Retrenchment',  detail: 'Up to 12 months covered'     },
+            { label: 'Unemployment benefit', detail: 'Income protection cover'    },
           ].map((r) => (
             <div key={r.label} className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white/8 border border-white/12 backdrop-blur-sm">
               <Check size={11} className="text-teal-400 shrink-0" />
