@@ -397,6 +397,32 @@ body::before {
   box-shadow: 0 4px 20px rgba(124,58,237,0.4), 0 0 0 3px rgba(167,139,250,0.5);
 }
 
+/* ─── Teal button (Mint Platforms) ────────────────────────────── */
+.btn-teal {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 10px 20px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform 0.2s var(--ease-spring), box-shadow 0.2s ease;
+  box-shadow: 0 4px 20px rgba(5,150,105,0.4), 0 0 0 0 rgba(5,150,105,0);
+}
+.btn-teal:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 30px rgba(5,150,105,0.5), 0 0 0 1px rgba(5,150,105,0.3);
+}
+.btn-teal:active { transform: translateY(0); }
+.btn-teal:focus-visible {
+  outline: none;
+  box-shadow: 0 4px 20px rgba(5,150,105,0.4), 0 0 0 3px rgba(52,211,153,0.5);
+}
+
 /* ─── Form field ───────────────────────────────────────────────── */
 .field-input {
   display: block;

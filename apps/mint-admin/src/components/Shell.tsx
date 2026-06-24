@@ -18,6 +18,7 @@ import { createBrowserClient } from '@supabase/ssr';
 type IconProps = { size?: number; className?: string; style?: React.CSSProperties };
 type NavItem  = { label: string; href: string; icon: React.ComponentType<IconProps> };
 type NavGroup = { group: string; icon: React.ComponentType<IconProps>; items: NavItem[] };
+type Platform = 'algolend' | 'mint';
 
 // Routes each role can access. super_admin gets everything.
 const ROLE_ROUTES: Record<string, string[]> = {
@@ -72,7 +73,7 @@ const nav: (NavItem | NavGroup)[] = [
   { label: 'Settings',    href: '/settings',    icon: Settings },
 ];
 
-// Flat list of all nav items (used for search and page title lookup)
+// Flat list of all nav items (computed per-platform at runtime in component)
 const flatNav: NavItem[] = nav.flatMap(e => 'group' in e ? e.items : [e]);
 
 const NEW_ACTIONS = [
@@ -90,6 +91,38 @@ function AlgoLendLogo({ height = 28, isLight }: { height?: number; isLight: bool
     <Image src={src} alt="AlgoLend" width={width} height={height} style={{ objectFit: 'contain' }} priority />
   );
 }
+
+/* ─── Mint Platforms logo ────────────────────────────────────────── */
+function MintLogo({ height = 28, isLight }: { height?: number; isLight: boolean }) {
+  const src = isLight ? '/mint-logo.svg' : '/mint-logo-white.png';
+  return (
+    <Image src={src} alt="Mint Platforms" width={height * 4} height={height} style={{ objectFit: 'contain', height, width: 'auto' }} priority />
+  );
+}
+
+/* ─── Mint Platforms nav ─────────────────────────────────────────── */
+const mintNav: (NavItem | NavGroup)[] = [
+  { label: 'Dashboard',   href: '/',         icon: LayoutDashboard },
+  { label: 'Clients',     href: '/clients',  icon: Users },
+  { label: 'Leads',       href: '/leads',    icon: TrendingUp },
+  {
+    group: 'Sales',
+    icon: FileText,
+    items: [
+      { label: 'Quotes',     href: '/quotes',    icon: FileText },
+      { label: 'Contracts',  href: '/contracts', icon: ClipboardList },
+    ],
+  },
+  {
+    group: 'Billing',
+    icon: Wallet,
+    items: [
+      { label: 'Invoices',       href: '/invoices', icon: Receipt },
+      { label: 'Subscriptions',  href: '/billing',  icon: CreditCard },
+    ],
+  },
+  { label: 'Settings',    href: '/settings', icon: Settings },
+];
 
 /* ─── Shell ──────────────────────────────────────────────────── */
 export function Shell({ children }: { children: React.ReactNode }) {
@@ -113,6 +146,23 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [userName,     setUserName]     = useState('Super Admin');
   const [userRole,     setUserRole]     = useState<string>('super_admin');
   const [appOpen, setAppOpen] = useState(false);
+  const [platform, setPlatform] = useState<Platform>('algolend');
+
+  // Persist platform selection across page loads
+  useEffect(() => {
+    const saved = localStorage.getItem('mint_admin_platform') as Platform | null;
+    if (saved === 'algolend' || saved === 'mint') setPlatform(saved);
+  }, []);
+
+  function switchPlatform(p: Platform) {
+    setPlatform(p);
+    localStorage.setItem('mint_admin_platform', p);
+    setAppOpen(false);
+  }
+
+  const isMint = platform === 'mint';
+  const activeNav = isMint ? mintNav : nav;
+
   const appRef    = useRef<HTMLDivElement>(null);
   const newRef    = useRef<HTMLDivElement>(null);
   const bellRef   = useRef<HTMLDivElement>(null);
@@ -121,14 +171,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   // Auto-expand accordion group when a child route is active
   useEffect(() => {
-    for (const entry of nav) {
+    for (const entry of activeNav) {
       if ('group' in entry && entry.items.some(item =>
         item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)
       )) {
         setOpenGroups(prev => { const s = new Set(prev); s.add(entry.group); return s; });
       }
     }
-  }, [pathname]);
+  }, [pathname, platform]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const supabase = createBrowserClient(
@@ -212,43 +262,51 @@ export function Shell({ children }: { children: React.ReactNode }) {
     e.preventDefault();
     const q = searchQ.trim();
     if (!q) return;
-    const match = flatNav.find(n => n.label.toLowerCase().includes(q.toLowerCase()));
+    const match = activeFlatNav.find(n => n.label.toLowerCase().includes(q.toLowerCase()));
     if (match) router.push(match.href);
     else router.push(`/clients?q=${encodeURIComponent(q)}`);
     setSearchQ('');
     setSearchOpen(false);
   }
 
+  const activeFlatNav = activeNav.flatMap(e => 'group' in e ? e.items : [e]);
   const filteredNav = searchQ.trim()
-    ? flatNav.filter(n => n.label.toLowerCase().includes(searchQ.toLowerCase()))
+    ? activeFlatNav.filter(n => n.label.toLowerCase().includes(searchQ.toLowerCase()))
     : [];
 
   const isLight = theme === 'light';
 
+  // Accent: purple for AlgoLend, teal for Mint Platforms
+  const accent = isMint
+    ? { hex: '#059669', light: '#047857', rgb: '5,150,105', pastel: '#D1FAE5', text: '#065F46' }
+    : { hex: '#7C3AED', light: '#6D28D9', rgb: '124,58,237', pastel: '#EDE9FE', text: '#6D28D9' };
+
   const navColors = {
-    activeText:   isLight ? '#6D28D9'                  : '#C4B5FD',
-    hoverText:    isLight ? '#1A1F36'                  : 'rgba(238,240,255,0.85)',
-    normalText:   isLight ? '#42466B'                  : 'rgba(139,144,180,0.8)',
+    activeText:   isLight ? accent.text                              : (isMint ? '#6EE7B7' : '#C4B5FD'),
+    hoverText:    isLight ? '#1A1F36'                               : 'rgba(238,240,255,0.85)',
+    normalText:   isLight ? '#42466B'                               : 'rgba(139,144,180,0.8)',
     activeBg:     isLight
-      ? 'linear-gradient(90deg, rgba(124,58,237,0.1) 0%, rgba(124,58,237,0.03) 100%)'
-      : 'linear-gradient(90deg, rgba(124,58,237,0.2) 0%, rgba(124,58,237,0.06) 100%)',
+      ? `linear-gradient(90deg, rgba(${accent.rgb},0.1) 0%, rgba(${accent.rgb},0.03) 100%)`
+      : `linear-gradient(90deg, rgba(${accent.rgb},0.2) 0%, rgba(${accent.rgb},0.06) 100%)`,
     activeShadow: isLight
-      ? 'inset 2px 0 0 #7C3AED'
-      : 'inset 2px 0 0 #7C3AED, 0 0 20px rgba(124,58,237,0.08)',
-    hoverBg:      isLight ? 'rgba(124,58,237,0.06)' : 'rgba(124,58,237,0.08)',
-    iconActiveBg: isLight ? 'rgba(124,58,237,0.12)' : 'rgba(124,58,237,0.2)',
-    iconNormalBg: isLight ? 'rgba(0,0,0,0.04)'      : 'rgba(255,255,255,0.04)',
+      ? `inset 2px 0 0 ${accent.hex}`
+      : `inset 2px 0 0 ${accent.hex}, 0 0 20px rgba(${accent.rgb},0.08)`,
+    hoverBg:      isLight ? `rgba(${accent.rgb},0.06)` : `rgba(${accent.rgb},0.08)`,
+    iconActiveBg: isLight ? `rgba(${accent.rgb},0.12)` : `rgba(${accent.rgb},0.2)`,
+    iconNormalBg: isLight ? 'rgba(0,0,0,0.04)'         : 'rgba(255,255,255,0.04)',
     wordmarkGrad: isLight
-      ? 'linear-gradient(135deg, #1A1F36 0%, #6D28D9 100%)'
-      : 'linear-gradient(135deg, #EEF0FF 0%, #C4B5FD 100%)',
-    subText:      isLight ? 'rgba(109,40,217,0.45)'  : 'rgba(167,139,250,0.5)',
-    liveText:     isLight ? 'rgba(16,185,129,0.7)'   : 'rgba(52,211,153,0.6)',
+      ? `linear-gradient(135deg, #1A1F36 0%, ${accent.light} 100%)`
+      : `linear-gradient(135deg, #EEF0FF 0%, ${isMint ? '#6EE7B7' : '#C4B5FD'} 100%)`,
+    subText:      isLight ? `rgba(${accent.rgb},0.45)` : `rgba(${accent.rgb},0.6)`,
+    liveText:     isLight ? 'rgba(16,185,129,0.7)'     : 'rgba(52,211,153,0.6)',
     signOutNorm:  isLight ? '#8B90B4' : 'var(--color-text3)',
     topBarBg:     isLight
       ? 'rgba(248,246,255,0.95)'
       : 'rgba(11,13,24,0.88)',
     topBarBorder: isLight ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.05)',
     searchBg:     isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.05)',
+    accentHex:    accent.hex,
+    accentRgb:    accent.rgb,
   };
 
   return (
@@ -260,7 +318,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         style={{ background: 'var(--color-surface)', borderBottom: `1px solid ${navColors.topBarBorder}` }}
       >
         <div className="flex items-center">
-          <AlgoLendLogo height={22} isLight={isLight} />
+          {isMint ? <MintLogo height={22} isLight={isLight} /> : <AlgoLendLogo height={22} isLight={isLight} />}
         </div>
         <button
           onClick={() => setSidebarOpen(o => !o)}
@@ -284,7 +342,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       >
         {/* Page title from path */}
         <p className="text-xs font-medium shrink-0" style={{ color: 'var(--color-text3)' }}>
-          {flatNav.find(n => n.href === '/' ? pathname === '/' : pathname.startsWith(n.href))?.label ?? 'Dashboard'}
+          {activeFlatNav.find(n => n.href === '/' ? pathname === '/' : pathname.startsWith(n.href))?.label ?? 'Dashboard'}
         </p>
         <span style={{ color: 'var(--color-border3)', fontSize: 14, lineHeight: 1 }}>›</span>
 
@@ -504,7 +562,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
           <div ref={newRef} className="relative">
             <button
               onClick={() => setNewOpen(o => !o)}
-              className="btn-purple btn-shine inline-flex items-center gap-1.5 !py-1.5 !px-3 !text-xs"
+              className={`${isMint ? 'btn-teal' : 'btn-purple'} btn-shine inline-flex items-center gap-1.5 !py-1.5 !px-3 !text-xs`}
             >
               <Plus size={13} />
               New
@@ -580,8 +638,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <div className="sidebar-brand flex flex-col h-auto px-5 pt-4 pb-3 shrink-0 relative gap-2">
           <div className="flex items-center gap-3">
             <div className="flex flex-col gap-0.5">
-              <AlgoLendLogo height={26} isLight={isLight} />
-              <p className="text-[9px] tracking-widest uppercase pl-0.5" style={{ color: navColors.subText }}>Admin Console</p>
+              {isMint
+                ? <MintLogo height={26} isLight={isLight} />
+                : <AlgoLendLogo height={26} isLight={isLight} />
+              }
+              <p className="text-[9px] tracking-widest uppercase pl-0.5" style={{ color: navColors.subText }}>
+                {isMint ? 'CRM Console' : 'Admin Console'}
+              </p>
             </div>
             <div className="ml-auto flex items-center gap-1.5">
               <div className="relative flex items-center justify-center w-3 h-3">
@@ -594,20 +657,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          {/* App switcher */}
+          {/* Platform switcher */}
           <div ref={appRef} className="relative">
             <button
               onClick={() => setAppOpen(o => !o)}
               className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
               style={{
-                background: isLight ? 'rgba(124,58,237,0.07)' : 'rgba(124,58,237,0.12)',
-                border: '1px solid rgba(124,58,237,0.2)',
-                color: 'var(--color-violet)',
+                background: isLight ? `rgba(${navColors.accentRgb},0.07)` : `rgba(${navColors.accentRgb},0.12)`,
+                border: `1px solid rgba(${navColors.accentRgb},0.25)`,
+                color: navColors.accentHex,
               }}
             >
               <span className="flex items-center gap-1.5">
                 <LayoutDashboard size={11} />
-                AlgoLend Admin
+                {isMint ? 'Mint Platforms' : 'AlgoLend'}
               </span>
               <ChevronDown size={10} className={`transition-transform duration-200 ${appOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -622,34 +685,48 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 }}
               >
                 <div className="px-3 py-1.5" style={{ borderBottom: '1px solid var(--color-border2)' }}>
-                  <p className="text-[9px] uppercase tracking-widest font-semibold" style={{ color: 'var(--color-text3)' }}>Switch tool</p>
+                  <p className="text-[9px] uppercase tracking-widest font-semibold" style={{ color: 'var(--color-text3)' }}>Switch platform</p>
                 </div>
+
+                {/* AlgoLend option */}
                 <button
                   className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium text-left transition-colors"
-                  style={{ background: isLight ? 'rgba(124,58,237,0.06)' : 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}
-                  onClick={() => setAppOpen(false)}
+                  style={platform === 'algolend'
+                    ? { background: isLight ? 'rgba(124,58,237,0.07)' : 'rgba(124,58,237,0.12)', color: '#7C3AED' }
+                    : { color: 'var(--color-text2)' }}
+                  onClick={() => switchPlatform('algolend')}
+                  onMouseEnter={e => { if (platform !== 'algolend') (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
+                  onMouseLeave={e => { if (platform !== 'algolend') (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                 >
-                  <LayoutDashboard size={13} />
-                  <div>
-                    <p className="font-semibold">AlgoLend Admin</p>
-                    <p className="text-[10px] opacity-60">Client management</p>
+                  <div className="w-5 h-5 rounded flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.12)' }}>
+                    <LayoutDashboard size={11} style={{ color: '#7C3AED' }} />
                   </div>
-                  <CheckCircle2 size={12} className="ml-auto opacity-70" />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold">AlgoLend</p>
+                    <p className="text-[10px] opacity-55">Lender credit management</p>
+                  </div>
+                  {platform === 'algolend' && <CheckCircle2 size={12} className="shrink-0" style={{ color: '#7C3AED', opacity: 0.7 }} />}
                 </button>
-                <Link
-                  href="/mint-invoice"
-                  onClick={() => setAppOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-colors"
-                  style={{ color: 'var(--color-text2)' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+
+                {/* Mint Platforms option */}
+                <button
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium text-left transition-colors"
+                  style={platform === 'mint'
+                    ? { background: isLight ? 'rgba(5,150,105,0.07)' : 'rgba(5,150,105,0.12)', color: '#059669' }
+                    : { color: 'var(--color-text2)' }}
+                  onClick={() => switchPlatform('mint')}
+                  onMouseEnter={e => { if (platform !== 'mint') (e.currentTarget as HTMLElement).style.background = 'rgba(5,150,105,0.06)'; }}
+                  onMouseLeave={e => { if (platform !== 'mint') (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                 >
-                  <Receipt size={13} />
-                  <div>
-                    <p className="font-semibold">Mint Invoice Creator</p>
-                    <p className="text-[10px] opacity-60">Internal billing tool</p>
+                  <div className="w-5 h-5 rounded flex items-center justify-center shrink-0" style={{ background: 'rgba(5,150,105,0.12)' }}>
+                    <Receipt size={11} style={{ color: '#059669' }} />
                   </div>
-                </Link>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold">Mint Platforms</p>
+                    <p className="text-[10px] opacity-55">BizTec client CRM</p>
+                  </div>
+                  {platform === 'mint' && <CheckCircle2 size={12} className="shrink-0" style={{ color: '#059669', opacity: 0.7 }} />}
+                </button>
               </div>
             )}
           </div>
@@ -657,7 +734,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 py-3 px-2.5 space-y-0.5 overflow-y-auto relative">
-          {nav.filter(entry => {
+          {activeNav.filter(entry => {
             if ('group' in entry) return entry.items.some(i => canAccess(i.href, userRole));
             return canAccess(entry.href, userRole);
           }).map((entry) => {
@@ -699,7 +776,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                     />
                   </button>
                   {isOpen && (
-                    <div className="mt-0.5 ml-4 pl-3 space-y-0.5" style={{ borderLeft: `1px solid ${isLight ? 'rgba(124,58,237,0.15)' : 'rgba(124,58,237,0.2)'}` }}>
+                    <div className="mt-0.5 ml-4 pl-3 space-y-0.5" style={{ borderLeft: `1px solid rgba(${navColors.accentRgb},${isLight ? '0.15' : '0.2'})` }}>
                       {entry.items.filter(i => canAccess(i.href, userRole)).map(({ label, href, icon: Icon }) => {
                         const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href);
                         const isHovChild = hovered === href;
@@ -759,7 +836,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <div className="sidebar-footer p-3 shrink-0">
           <div className="sidebar-user flex items-center gap-3 px-3 py-2.5 rounded-xl mb-2">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-              style={{ background: '#7C3AED', color: 'white', animation: 'border-glow 3s ease-in-out infinite', boxShadow: '0 0 0 2px rgba(124,58,237,0.25)' }}>
+              style={{ background: navColors.accentHex, color: 'white', animation: 'border-glow 3s ease-in-out infinite', boxShadow: `0 0 0 2px rgba(${navColors.accentRgb},0.25)` }}>
               {userInitials}
             </div>
             <div className="min-w-0 flex-1">
