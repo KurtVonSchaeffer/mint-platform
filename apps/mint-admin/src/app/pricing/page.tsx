@@ -153,8 +153,10 @@ export default function PricingPage() {
 
   const totalProviderCost = serviceBreakdown.reduce((s, r) => s + r.bundleProvider, 0);
   const totalMarketValue  = serviceBreakdown.reduce((s, r) => s + r.bundleSell, 0);
-  const grossMargin       = flatFee - totalProviderCost;
-  const marginPct         = flatFee > 0 ? (grossMargin / flatFee) * 100 : 0;
+  const branchFees        = branches * 25000;   // R250/branch/month in cents
+  const clientTotal       = flatFee + branchFees;
+  const grossMargin       = clientTotal - totalProviderCost;
+  const marginPct         = clientTotal > 0 ? (grossMargin / clientTotal) * 100 : 0;
 
   function toggleService(id: string) {
     const svc = SERVICE_RATES.find(s => s.id === id);
@@ -482,7 +484,7 @@ export default function PricingPage() {
                 Client pays / month
               </p>
               <p className="text-4xl font-bold tracking-tight font-mono" style={{ color: 'var(--color-text)' }}>
-                {fmt(flatFee)}
+                {fmt(clientTotal)}
               </p>
               <p className="text-xs mt-1" style={{ color: 'var(--color-text3)' }}>
                 {activeTier.branches} · excl. VAT · {effectiveSelectedIds.size} services · pay-as-you-use checks
@@ -503,6 +505,16 @@ export default function PricingPage() {
 
               <PriceReveal isSuperAdmin={isSuperAdmin} email={email} block>
                 <>
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm" style={{ color: 'var(--color-text3)' }}>Platform licence</p>
+                    <p className="font-mono text-sm" style={{ color: 'var(--color-text2)' }}>{fmt(flatFee)}</p>
+                  </div>
+                  {branchFees > 0 && (
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm" style={{ color: 'var(--color-text3)' }}>Branch fees ({branches} × R250)</p>
+                      <p className="font-mono text-sm" style={{ color: 'var(--color-text2)' }}>{fmt(branchFees)}</p>
+                    </div>
+                  )}
                   <div className="flex justify-between items-center">
                     <p className="text-sm" style={{ color: 'var(--color-text3)' }}>Provider cost (est. {estVolume.toLocaleString()} calls/type)</p>
                     <p className="font-mono text-sm" style={{ color: 'var(--color-red)' }}>−{fmt(totalProviderCost)}</p>
@@ -527,7 +539,7 @@ export default function PricingPage() {
               </PriceReveal>
               <div className="flex justify-between items-center pt-2" style={{ borderTop: '1px solid var(--color-border2)' }}>
                 <p className="text-sm" style={{ color: 'var(--color-text3)' }}>Annual contract value</p>
-                <p className="font-mono font-bold text-sm" style={{ color: 'var(--color-text)' }}>{fmt(flatFee * 12)}</p>
+                <p className="font-mono font-bold text-sm" style={{ color: 'var(--color-text)' }}>{fmt(clientTotal * 12)}</p>
               </div>
             </div>
 
