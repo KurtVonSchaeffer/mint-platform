@@ -187,7 +187,9 @@ export default function HomePage() {
 
                 <div className="flex items-center gap-3 flex-wrap">
                   <Link
-                    href="/apply"
+                    href="https://www.mymint.co.za"
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="btn-shine inline-flex items-center gap-2 text-white text-[13px] font-semibold px-6 py-3 rounded-full"
                     style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #9B5CF6 100%)', boxShadow: '0 4px 24px rgba(124,58,237,0.5)' }}
                   >
