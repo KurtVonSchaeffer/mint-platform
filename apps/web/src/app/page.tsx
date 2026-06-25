@@ -144,86 +144,110 @@ export default function HomePage() {
       </section>
 
       {/* ── MINT MARKETPLACE ────────────────────────────────────────── */}
-      <section className="relative overflow-hidden py-24 bg-[#020D0A]">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full opacity-20 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse, #059669 0%, transparent 70%)' }} aria-hidden />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full opacity-10 blur-3xl pointer-events-none" style={{ background: '#10B981' }} aria-hidden />
+      <section className="relative overflow-hidden py-24 bg-[var(--color-ink)]">
+        {/* Purple ambient glows */}
+        <div className="absolute -top-40 left-1/4 w-[700px] h-[500px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(ellipse, rgba(124,58,237,0.35) 0%, transparent 70%)', filter: 'blur(60px)' }} aria-hidden />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(167,139,250,0.15) 0%, transparent 70%)', filter: 'blur(40px)' }} aria-hidden />
+        {/* Subtle grid */}
+        <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" aria-hidden />
 
         <div className="relative max-w-[1200px] mx-auto px-6">
           <Reveal>
-            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-16">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5 border" style={{ background: 'rgba(16,185,129,0.08)', borderColor: 'rgba(16,185,129,0.25)' }}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Now live</span>
-                </div>
-                <h2 className="headline text-4xl md:text-5xl font-bold text-white leading-none mb-4">
-                  MINT Unsecured<br />
-                  <span style={{ background: 'linear-gradient(90deg, #34D399, #059669)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    Credit Marketplace
-                  </span>
-                </h2>
-                <p className="text-base max-w-lg" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                  A single application. Multiple lenders. Instant decisions. MINT connects borrowers to a curated network of AlgoLend-powered credit providers — all NCA-compliant, all in one place.
-                </p>
+            {/* Included badge */}
+            <div className="flex justify-center mb-10">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border" style={{ background: 'rgba(124,58,237,0.12)', borderColor: 'rgba(124,58,237,0.3)' }}>
+                <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: '#A78BFA' }} />
+                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#C4B5FD' }}>Included with every AlgoLend plan</span>
               </div>
-              <div className="flex-shrink-0">
-                <Link
-                  href="/apply"
-                  className="btn-shine inline-flex items-center gap-2 text-white text-[13px] font-semibold px-6 py-3 rounded-full transition-all duration-200 hover:-translate-y-px"
-                  style={{ background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)', boxShadow: '0 4px 24px rgba(16,185,129,0.4)' }}
-                >
-                  Apply now
-                  <ArrowRight size={14} />
-                </Link>
+            </div>
+
+            {/* Headline */}
+            <div className="text-center mb-6">
+              <h2 className="headline text-4xl md:text-6xl font-bold text-white leading-none mb-5">
+                Join AlgoLend.<br />
+                <span style={{ background: 'linear-gradient(90deg, #A78BFA 0%, #7C3AED 50%, #C4B5FD 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                  Get the MINT marketplace free.
+                </span>
+              </h2>
+              <p className="text-base max-w-xl mx-auto" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                Every lender on AlgoLend automatically gets a listing on the MINT Unsecured Credit Marketplace — South Africa's NCA-compliant loan marketplace. More borrowers. Zero extra cost.
+              </p>
+            </div>
+
+            {/* Arrow flow: AlgoLend → MINT */}
+            <div className="flex items-center justify-center gap-4 mb-14 flex-wrap">
+              <div className="flex items-center gap-3 px-5 py-3 rounded-2xl" style={{ background: 'rgba(124,58,237,0.15)', border: '1px solid rgba(124,58,237,0.3)' }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(124,58,237,0.25)' }}>
+                  <svg width="16" height="16" viewBox="0 0 32 32" fill="none"><path d="M6 30L6 14C6 8.48 10.48 4 16 4C21.52 4 26 8.48 26 14L26 30" stroke="#A78BFA" strokeWidth="2.6" fill="none" strokeLinecap="round"/><circle cx="16" cy="15" r="5.5" fill="#0B0D18"/></svg>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">AlgoLend</p>
+                  <p className="text-[10px]" style={{ color: 'rgba(167,139,250,0.7)' }}>Your lending platform</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1" style={{ color: 'rgba(167,139,250,0.5)' }}>
+                <div className="w-8 h-px" style={{ background: 'rgba(167,139,250,0.3)' }} />
+                <ArrowRight size={14} style={{ color: '#A78BFA' }} />
+              </div>
+              <div className="flex items-center gap-3 px-5 py-3 rounded-2xl" style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)' }}>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(124,58,237,0.2)' }}>
+                  <Sparkles size={15} style={{ color: '#C4B5FD' }} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">MINT Marketplace</p>
+                  <p className="text-[10px]" style={{ color: 'rgba(167,139,250,0.7)' }}>Borrower reach · included free</p>
+                </div>
               </div>
             </div>
           </Reveal>
 
+          {/* Benefits grid */}
           <Reveal delay={100}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-14">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
               {[
-                { icon: Zap,       title: 'Instant decisions',    body: 'Automated credit scoring returns a decision in seconds — no waiting, no callbacks.' },
-                { icon: BarChart3, title: 'Multiple lenders',     body: 'One application matched across our network of NCR-registered credit providers.' },
-                { icon: Check,     title: 'NCA compliant',        body: 'Every offer includes a full pre-agreement quote under the National Credit Act.' },
-                { icon: Activity,  title: 'Credit life included', body: 'FSCA-approved cover for death, disability and unemployment on every loan.' },
+                { icon: Zap,       title: 'Instant loan matching',   body: 'Borrowers apply once on MINT and get matched to your credit products automatically based on your scorecard.' },
+                { icon: BarChart3, title: 'Larger borrower pool',    body: 'MINT drives qualified applicants directly into your AlgoLend pipeline — no marketing spend required.' },
+                { icon: Check,     title: 'Zero extra integration',  body: 'Your AlgoLend configuration flows straight to MINT. One setup. One platform. Two channels.' },
+                { icon: Activity,  title: 'Credit life on every loan', body: 'FSCA-approved credit life cover for death, disability and unemployment is included on every offer.' },
+                { icon: Lock,      title: 'NCA-compliant by default', body: 'Pre-agreement quotes, affordability checks and disclosure documents generated automatically.' },
+                { icon: TrendingUp, title: 'Grow your loan book',   body: 'Access a qualified, pre-screened borrower marketplace from day one — at no additional cost.' },
               ].map(f => (
-                <div key={f.title} className="rounded-2xl p-5 flex flex-col gap-3" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(16,185,129,0.12)' }}>
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(16,185,129,0.12)' }}>
-                    <f.icon size={16} className="text-emerald-400" />
+                <div key={f.title} className="rounded-2xl p-5 flex gap-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(124,58,237,0.12)' }}>
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5" style={{ background: 'rgba(124,58,237,0.15)' }}>
+                    <f.icon size={15} style={{ color: '#A78BFA' }} />
                   </div>
-                  <p className="text-sm font-semibold text-white">{f.title}</p>
-                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.45)' }}>{f.body}</p>
+                  <div>
+                    <p className="text-sm font-semibold text-white mb-1">{f.title}</p>
+                    <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>{f.body}</p>
+                  </div>
                 </div>
               ))}
             </div>
           </Reveal>
 
+          {/* CTA strip */}
           <Reveal delay={200}>
-            <div className="rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
-              <div className="text-center sm:text-left">
-                <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: '#34D399' }}>Loan amounts</p>
-                <p className="text-2xl font-bold text-white">R 1,000 — R 250,000</p>
-                <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Unsecured · Terms from 3 to 60 months</p>
+            <div className="rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-6" style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.18) 0%, rgba(167,139,250,0.06) 100%)', border: '1px solid rgba(124,58,237,0.25)' }}>
+              <div>
+                <p className="text-lg font-bold text-white mb-1">Ready to reach more borrowers?</p>
+                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>Set up your AlgoLend platform and your MINT listing goes live on the same day.</p>
               </div>
-              <div className="h-px sm:h-12 sm:w-px w-full" style={{ background: 'rgba(16,185,129,0.2)' }} aria-hidden />
-              <div className="text-center sm:text-left">
-                <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: '#34D399' }}>Interest rate</p>
-                <p className="text-2xl font-bold text-white">Up to 27% p.a.</p>
-                <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>NCA maximum · no hidden fees</p>
+              <div className="flex items-center gap-3 shrink-0">
+                <Link
+                  href="/apply"
+                  className="btn-shine inline-flex items-center gap-2 text-white text-[13px] font-semibold px-6 py-3 rounded-full"
+                  style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #9B5CF6 100%)', boxShadow: '0 4px 24px rgba(124,58,237,0.45)' }}
+                >
+                  Start now <ArrowRight size={13} />
+                </Link>
+                <Link
+                  href="/demo"
+                  className="inline-flex items-center gap-1.5 text-[13px] font-medium px-4 py-3 rounded-full border transition-all hover:-translate-y-px"
+                  style={{ color: '#C4B5FD', borderColor: 'rgba(124,58,237,0.35)', background: 'rgba(124,58,237,0.08)' }}
+                >
+                  See demo <ArrowUpRight size={12} />
+                </Link>
               </div>
-              <div className="h-px sm:h-12 sm:w-px w-full" style={{ background: 'rgba(16,185,129,0.2)' }} aria-hidden />
-              <div className="text-center sm:text-left">
-                <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: '#34D399' }}>Powered by</p>
-                <p className="text-2xl font-bold text-white">AlgoLend</p>
-                <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>NCR-registered lender network</p>
-              </div>
-              <Link
-                href="/apply"
-                className="btn-shine flex-shrink-0 inline-flex items-center gap-2 text-white text-[13px] font-semibold px-5 py-2.5 rounded-full"
-                style={{ background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)', boxShadow: '0 4px 16px rgba(16,185,129,0.35)' }}
-              >
-                Check your rate <ArrowUpRight size={13} />
-              </Link>
             </div>
           </Reveal>
         </div>
