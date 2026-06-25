@@ -157,25 +157,25 @@ export default function HomePage() {
               <div className="flex-1 min-w-0">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-6 border" style={{ background: 'rgba(124,58,237,0.1)', borderColor: 'rgba(124,58,237,0.3)' }}>
                   <Sparkles size={11} style={{ color: '#A78BFA' }} />
-                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#C4B5FD' }}>Part of your AlgoLend onboarding</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#C4B5FD' }}>Powered by AlgoLend lenders</span>
                 </div>
 
                 <h2 className="headline text-4xl md:text-5xl font-bold text-white leading-none mb-5">
-                  Onboard with AlgoLend.<br />
+                  One application.<br />
                   <span style={{ background: 'linear-gradient(90deg, #C4B5FD 0%, #7C3AED 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    Get listed on MINT.
+                    Every lender competes.
                   </span>
                 </h2>
 
                 <p className="text-base mb-8 max-w-md" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                  When you go live on AlgoLend, your credit products are automatically listed on the MINT Unsecured Credit Marketplace — giving you instant access to a qualified pool of borrowers actively looking for credit.
+                  MINT aggregates every AlgoLend-powered lender into a single marketplace. Apply once and let the network compete to give you the best possible offer and rate — NCA-compliant, instantly.
                 </p>
 
                 <div className="space-y-3 mb-10">
                   {[
-                    { n: '01', text: 'Onboard and configure your credit policy on AlgoLend.' },
-                    { n: '02', text: 'Your products are listed on the MINT marketplace automatically.' },
-                    { n: '03', text: 'Borrowers apply on MINT — decisions flow back through AlgoLend instantly.' },
+                    { n: '01', text: 'You apply once on the MINT marketplace.' },
+                    { n: '02', text: 'Your application is matched against every AlgoLend lender on the network.' },
+                    { n: '03', text: 'Lenders compete — you get the best offer and lowest rate available to you.' },
                   ].map(s => (
                     <div key={s.n} className="flex items-start gap-4">
                       <span className="text-[10px] font-bold mt-0.5 shrink-0 w-6 text-right" style={{ color: 'rgba(167,139,250,0.4)', fontFamily: 'var(--font-mono)' }}>{s.n}</span>
@@ -184,13 +184,16 @@ export default function HomePage() {
                   ))}
                 </div>
 
-                <Link
-                  href="/apply"
-                  className="btn-shine inline-flex items-center gap-2 text-white text-[13px] font-semibold px-6 py-3 rounded-full"
-                  style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #9B5CF6 100%)', boxShadow: '0 4px 24px rgba(124,58,237,0.5)' }}
-                >
-                  Start your onboarding <ArrowRight size={13} />
-                </Link>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Link
+                    href="/apply"
+                    className="btn-shine inline-flex items-center gap-2 text-white text-[13px] font-semibold px-6 py-3 rounded-full"
+                    style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #9B5CF6 100%)', boxShadow: '0 4px 24px rgba(124,58,237,0.5)' }}
+                  >
+                    Apply on MINT <ArrowRight size={13} />
+                  </Link>
+                  <span className="text-xs" style={{ color: 'rgba(167,139,250,0.45)' }}>Are you a lender? <Link href="/apply" className="underline underline-offset-2" style={{ color: '#A78BFA' }}>Join AlgoLend →</Link></span>
+                </div>
               </div>
 
               {/* Right: MINT marketplace card */}
@@ -228,10 +231,10 @@ export default function HomePage() {
                   {/* Feature list */}
                   <div className="px-6 py-5 space-y-2.5">
                     {[
-                      'One application → multiple lender offers',
-                      'NCA-compliant pre-agreement quotes',
-                      'FSCA credit life cover on every loan',
-                      'Borrowers matched to your scorecard',
+                      'All AlgoLend lenders compete for your application',
+                      'Best available rate — not just one offer',
+                      'NCA-compliant pre-agreement quote per lender',
+                      'FSCA credit life cover on every approved loan',
                     ].map(f => (
                       <div key={f} className="flex items-start gap-2.5">
                         <Check size={12} className="mt-0.5 shrink-0" style={{ color: '#A78BFA' }} />
