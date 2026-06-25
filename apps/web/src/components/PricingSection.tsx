@@ -76,7 +76,7 @@ export function PricingSection() {
                 </p>
                 <p className="text-5xl font-bold tracking-tight mb-1"
                   style={{ color: 'var(--color-brand)' }}>
-                  R 1,990
+                  R 1,999
                 </p>
                 <p className="text-sm text-[var(--color-ink-muted)] mb-4">
                   /month excl. VAT · implementation quoted separately
