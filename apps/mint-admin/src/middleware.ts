@@ -91,6 +91,7 @@ export async function middleware(request: NextRequest) {
   // Allow public paths through without auth
   const isPublic =
     pathname.startsWith('/login') ||
+    pathname.startsWith('/set-password') ||
     pathname.startsWith('/api/auth') ||
     pathname.startsWith('/api/marketplace') ||   // MINT integration — uses its own Bearer auth
     pathname.startsWith('/_next') ||
