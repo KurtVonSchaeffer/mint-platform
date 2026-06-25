@@ -14,12 +14,6 @@ const STARTER_FEATURES = [
   'Address verification',
   'NCA-compliant quotations',
   'NCR audit trail',
-  'Up to 2 branches',
-  '100 checks / month included',
-];
-
-const SCALE_FEATURES = [
-  'Everything in Starter',
   'Open banking — TruID affordability',
   'E-contracts',
   'CIPC employment data',
@@ -27,8 +21,14 @@ const SCALE_FEATURES = [
   'SACRRA bureau reporting',
   'Loan book & repayment tracking',
   'EFT integration',
+  'Up to 2 branches',
+  'API checks billed pay-as-you-go',
+];
+
+const ENTERPRISE_FEATURES = [
+  'Everything in Starter',
   'Unlimited branches',
-  '300 checks / month included',
+  '200 API checks / month included',
   'Priority onboarding support',
 ];
 
@@ -62,7 +62,7 @@ export function PricingSection() {
                 </p>
                 <p className="text-5xl font-bold tracking-tight mb-1"
                   style={{ color: 'var(--color-brand)' }}>
-                  R 5,500
+                  R 1,990
                 </p>
                 <p className="text-sm text-[var(--color-ink-muted)] mb-4">
                   /month excl. VAT · implementation quoted separately
@@ -73,8 +73,7 @@ export function PricingSection() {
                     color: 'var(--color-ink-soft)',
                     border: '1px solid var(--color-border)',
                   }}>
-                  <Zap size={10} style={{ color: 'var(--color-brand)' }} />
-                  100 checks / month included
+                  API checks billed pay-as-you-go
                 </div>
               </div>
 
@@ -123,7 +122,7 @@ export function PricingSection() {
                 <div className="relative mb-6">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#A78BFA' }}>
-                      SCALE
+                      ENTERPRISE
                     </p>
                     <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full"
                       style={{ background: 'rgba(167,139,250,0.15)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.3)' }}>
@@ -131,20 +130,20 @@ export function PricingSection() {
                     </span>
                   </div>
                   <p className="text-5xl font-bold tracking-tight mb-1 text-white">
-                    R 9,500
+                    R 15,500
                   </p>
                   <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                    /month excl. VAT · implementation quoted separately
+                    /month excl. VAT · flat rate, implementation quoted separately
                   </p>
                   <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
                     style={{ background: 'rgba(167,139,250,0.1)', color: '#C4B5FD', border: '1px solid rgba(167,139,250,0.2)' }}>
                     <Zap size={10} style={{ color: '#A78BFA' }} />
-                    300 checks / month included
+                    200 API checks / month included
                   </div>
                 </div>
 
                 <ul className="space-y-2.5 flex-1 mb-8 relative">
-                  {SCALE_FEATURES.map(f => (
+                  {ENTERPRISE_FEATURES.map(f => (
                     <li key={f} className="flex items-start gap-2 text-sm text-white/80">
                       <Check size={13} className="mt-0.5 shrink-0" style={{ color: '#A78BFA' }} />
                       {f}
@@ -177,12 +176,12 @@ export function PricingSection() {
                 desc: 'Branding, scorecard configuration, integrations, UAT, and go-live support. One-off fee.',
               },
               {
-                label: 'ii. Extra checks',
+                label: 'ii. API checks',
                 title: 'Pay as you go',
-                desc: 'Checks above your monthly quota billed at published per-service rates. No surprises.',
+                desc: 'Starter is PAYG from check one. Enterprise includes 200 checks/month — additional checks billed at published rates.',
               },
               {
-                label: 'iii. API costs',
+                label: 'iii. Pass-through costs',
                 title: 'Transparent billing',
                 desc: 'Experian, TruID, SACRRA, and e-contract charges are passed through at provider cost.',
               },

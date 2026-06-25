@@ -4,12 +4,222 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { Check, Sparkles, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
 
-/* ─── Slide data ─────────────────────────────────────────────────── */
-const LENDER_SLIDES = [
-  { src: '/screenshots/admin-live-dashboard.jpg',    label: 'Dashboard',    url: 'algolend-opal.vercel.app/admin/dashboard'    },
-  { src: '/screenshots/admin-live-loanbook.jpg',     label: 'Loan Book',    url: 'algolend-opal.vercel.app/admin/loan-book'    },
-  { src: '/screenshots/admin-live-applications.jpg', label: 'Applications', url: 'algolend-opal.vercel.app/admin/applications' },
-];
+/* ─── Lender mock slide config ───────────────────────────────────── */
+const MOCK_SLIDES = [
+  { key: 'dashboard',    label: 'Dashboard',    url: 'admin.algolend.co.za/dashboard'    },
+  { key: 'loanbook',    label: 'Loan Book',    url: 'admin.algolend.co.za/loan-book'    },
+  { key: 'applications', label: 'Applications', url: 'admin.algolend.co.za/applications' },
+] as const;
+
+/* ─── Mini sidebar logo ──────────────────────────────────────────── */
+function MiniLogo() {
+  return (
+    <svg width={16} height={16} viewBox="0 0 32 32" fill="none">
+      <rect width="32" height="32" rx="6" fill="rgba(255,255,255,0.10)" />
+      <path d="M 6 28 L 6 14 C 6 8.48 10.48 4 16 4 C 21.52 4 26 8.48 26 14 L 26 28"
+        stroke="#A78BFA" strokeWidth="2.6" fill="none" strokeLinecap="round" />
+      <circle cx="16" cy="15" r="5.5" fill="#0F1629" />
+    </svg>
+  );
+}
+
+/* ─── Shared admin shell (sidebar + content area) ────────────────── */
+const SIDEBAR_ITEMS = ['Dashboard', 'Analytics', 'Applications', 'Users', 'Payments', 'Credit Rules', 'Loan Book', 'Cash Ledger'];
+
+function AdminShell({ active, children }: { active: string; children: React.ReactNode }) {
+  return (
+    <div className="flex h-full w-full" style={{ background: '#0d0b1a' }}>
+      <div className="w-28 shrink-0 flex flex-col p-2" style={{ background: 'rgba(8,5,20,0.85)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="mb-3 flex items-center gap-1.5 pb-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <MiniLogo />
+          <span className="text-[9px] font-bold text-white">AlgoLend</span>
+        </div>
+        {SIDEBAR_ITEMS.map(item => (
+          <div key={item}
+            className="mb-0.5 flex items-center gap-1.5 rounded-lg px-2 py-1 text-[8px]"
+            style={{
+              background: item === active ? 'rgba(167,139,250,0.12)' : 'transparent',
+              color: item === active ? '#C4B5FD' : 'rgba(255,255,255,0.30)',
+            }}
+          >
+            <span className="w-1 h-1 rounded-full shrink-0" style={{ background: item === active ? '#A78BFA' : 'rgba(255,255,255,0.15)' }} />
+            {item}
+          </div>
+        ))}
+      </div>
+      <div className="flex-1 overflow-hidden">{children}</div>
+    </div>
+  );
+}
+
+/* ─── Slide 1: Dashboard ─────────────────────────────────────────── */
+function DashboardSlide() {
+  return (
+    <AdminShell active="Dashboard">
+      <div className="flex h-full flex-col gap-2 p-3" style={{ background: 'rgba(13,10,26,0.65)' }}>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[8px] uppercase tracking-wider font-mono" style={{ color: 'rgba(255,255,255,0.30)' }}>Tuesday, 9 June 2026</p>
+            <p className="text-sm font-semibold text-white">Welcome back, Sipho</p>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[7px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(52,211,153,0.12)', color: '#34d399', border: '1px solid rgba(52,211,153,0.2)' }}>● Operational</span>
+            <span className="text-[7px] px-1.5 py-0.5 rounded-full font-semibold" style={{ background: 'rgba(167,139,250,0.12)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.2)' }}>SureSystems Connected</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-4 gap-1.5">
+          {[
+            { l: 'Total Balance',   v: 'R 2.4M',  d: '+18%' },
+            { l: 'Total Disbursed', v: 'R 1.2M',  d: '+12%' },
+            { l: 'Cash Flow',       v: 'R 89.4K', d: '+9%'  },
+            { l: 'Active Loans',    v: '23',       d: '+4'   },
+          ].map(s => (
+            <div key={s.l} className="rounded-xl p-2" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <p className="text-[7px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{s.l}</p>
+              <p className="mt-0.5 text-[11px] font-bold text-white">{s.v}</p>
+              <p className="mt-0.5 text-[7px] font-semibold text-emerald-400">↗ {s.d}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="rounded-xl p-2.5" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="mb-1 flex items-center justify-between">
+            <p className="text-[8px] font-semibold text-white/70">Cash Flow Velocity</p>
+            <span className="text-[7px] font-semibold text-emerald-400">↗ +18%</span>
+          </div>
+          <svg viewBox="0 0 400 48" className="w-full" style={{ height: 48 }} preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="dv-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#7C3AED" stopOpacity="0.4" />
+                <stop offset="1" stopColor="#7C3AED" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path d="M0 40 L30 37 L60 33 L90 36 L120 27 L150 30 L180 20 L210 23 L240 14 L270 18 L300 11 L330 14 L360 6 L400 2 L400 48 L0 48 Z" fill="url(#dv-grad)" />
+            <path d="M0 40 L30 37 L60 33 L90 36 L120 27 L150 30 L180 20 L210 23 L240 14 L270 18 L300 11 L330 14 L360 6 L400 2" stroke="#A78BFA" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          </svg>
+        </div>
+
+        <div className="rounded-xl overflow-hidden flex-1" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="flex items-center justify-between px-2.5 py-1.5" style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+            <p className="text-[8px] font-semibold text-white/60">Recent Applications</p>
+            <p className="text-[7px] font-mono text-white/30">5 NEW</p>
+          </div>
+          {[
+            { n: 'Nkosi Holdings',    a: 'R 50,000',  s: 'pending',   c: 'rgba(96,165,250,0.15)',    t: '#93C5FD' },
+            { n: 'Dlamini Logistics', a: 'R 120,000', s: 'approved',  c: 'rgba(52,211,153,0.15)',    t: '#6EE7B7' },
+            { n: 'Mahlangu Tech',     a: 'R 30,000',  s: 'disbursed', c: 'rgba(167,139,250,0.15)',   t: '#C4B5FD' },
+          ].map(r => (
+            <div key={r.n} className="flex items-center justify-between px-2.5 py-1.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+              <span className="text-[8px] text-white/70">{r.n}</span>
+              <span className="text-[8px] text-white/40">{r.a}</span>
+              <span className="rounded px-1.5 py-0.5 text-[7px] font-medium" style={{ background: r.c, color: r.t }}>{r.s}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </AdminShell>
+  );
+}
+
+/* ─── Slide 2: Loan Book ─────────────────────────────────────────── */
+function LoanBookSlide() {
+  return (
+    <AdminShell active="Loan Book">
+      <div className="flex h-full flex-col gap-2 p-3" style={{ background: 'rgba(13,10,26,0.65)' }}>
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-white">Loan Book</p>
+          <span className="text-[8px] px-2.5 py-1 rounded-full font-semibold" style={{ background: 'rgba(167,139,250,0.1)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.2)' }}>Export CSV</span>
+        </div>
+
+        <div className="grid grid-cols-4 gap-1.5">
+          {[
+            { l: 'Active Loans', v: '23'      },
+            { l: 'Portfolio',    v: 'R 2.4M'  },
+            { l: 'Avg Rate',     v: '24.2%'   },
+            { l: 'Arrears',      v: '3.1%'    },
+          ].map(s => (
+            <div key={s.l} className="rounded-xl p-2" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <p className="text-[7px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{s.l}</p>
+              <p className="mt-0.5 text-[11px] font-bold text-white">{s.v}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="rounded-xl overflow-hidden flex-1" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="grid grid-cols-5 px-2.5 py-1.5 text-[7px] font-semibold" style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.40)' }}>
+            <span>Borrower</span><span>Amount</span><span>Term</span><span>Rate</span><span>Status</span>
+          </div>
+          {[
+            { n: 'Nkosi Holdings',    a: 'R 50,000',  t: '24m', r: '24%', s: 'current',  c: 'rgba(52,211,153,0.15)',   tx: '#6EE7B7' },
+            { n: 'Dlamini Logistics', a: 'R 120,000', t: '36m', r: '21%', s: 'current',  c: 'rgba(52,211,153,0.15)',   tx: '#6EE7B7' },
+            { n: 'Mahlangu Tech',     a: 'R 30,000',  t: '12m', r: '27%', s: 'current',  c: 'rgba(52,211,153,0.15)',   tx: '#6EE7B7' },
+            { n: 'Sithole Retail',    a: 'R 85,000',  t: '18m', r: '23%', s: 'current',  c: 'rgba(52,211,153,0.15)',   tx: '#6EE7B7' },
+            { n: 'Mthembu Farms',     a: 'R 45,000',  t: '24m', r: '25%', s: '1-30 days',c: 'rgba(245,158,11,0.15)',   tx: '#FCD34D' },
+          ].map(r => (
+            <div key={r.n} className="grid grid-cols-5 items-center px-2.5 py-1.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+              <span className="text-[8px] text-white/75">{r.n}</span>
+              <span className="text-[8px] text-white/55">{r.a}</span>
+              <span className="text-[8px] text-white/45">{r.t}</span>
+              <span className="text-[8px] text-white/55">{r.r}</span>
+              <span className="rounded px-1.5 py-0.5 text-[7px] font-medium w-fit" style={{ background: r.c, color: r.tx }}>{r.s}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </AdminShell>
+  );
+}
+
+/* ─── Slide 3: Applications ──────────────────────────────────────── */
+function ApplicationsSlide() {
+  return (
+    <AdminShell active="Applications">
+      <div className="flex h-full flex-col gap-2 p-3" style={{ background: 'rgba(13,10,26,0.65)' }}>
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-semibold text-white">Applications</p>
+          <span className="text-[8px] px-2.5 py-1 rounded-full font-semibold text-white" style={{ background: 'linear-gradient(135deg,#7C3AED,#9B5CF6)' }}>+ New Application</span>
+        </div>
+
+        <div className="grid grid-cols-4 gap-1.5">
+          {[
+            { l: 'Pending',    v: '8',  c: '#93C5FD' },
+            { l: 'In Review',  v: '3',  c: '#FCD34D' },
+            { l: 'Approved',   v: '6',  c: '#6EE7B7' },
+            { l: 'Disbursed',  v: '5',  c: '#C4B5FD' },
+          ].map(s => (
+            <div key={s.l} className="rounded-xl p-2" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
+              <p className="text-[7px]" style={{ color: 'rgba(255,255,255,0.35)' }}>{s.l}</p>
+              <p className="mt-0.5 text-[13px] font-bold" style={{ color: s.c }}>{s.v}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="rounded-xl overflow-hidden flex-1" style={{ border: '1px solid rgba(255,255,255,0.07)' }}>
+          <div className="grid grid-cols-4 px-2.5 py-1.5 text-[7px] font-semibold" style={{ background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.40)' }}>
+            <span>Applicant</span><span>Amount</span><span>Bureau</span><span>Status</span>
+          </div>
+          {[
+            { n: 'Zulu Properties', a: 'R 200,000', b: '71', s: 'under review', c: 'rgba(245,158,11,0.15)',   tx: '#FCD34D' },
+            { n: 'Mokoena Auto',    a: 'R 75,000',  b: '82', s: 'approved',     c: 'rgba(52,211,153,0.15)',   tx: '#6EE7B7' },
+            { n: 'Khumalo Clinic',  a: 'R 150,000', b: '68', s: 'pending',      c: 'rgba(96,165,250,0.15)',   tx: '#93C5FD' },
+            { n: 'Ndlovu Trading',  a: 'R 60,000',  b: '79', s: 'disbursed',    c: 'rgba(167,139,250,0.15)',  tx: '#C4B5FD' },
+            { n: 'Dube & Sons',     a: 'R 90,000',  b: '74', s: 'under review', c: 'rgba(245,158,11,0.15)',   tx: '#FCD34D' },
+          ].map(r => (
+            <div key={r.n} className="grid grid-cols-4 items-center px-2.5 py-1.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+              <span className="text-[8px] text-white/75">{r.n}</span>
+              <span className="text-[8px] text-white/55">{r.a}</span>
+              <span className="text-[8px] font-semibold" style={{ color: '#A78BFA' }}>{r.b}</span>
+              <span className="rounded px-1.5 py-0.5 text-[7px] font-medium w-fit" style={{ background: r.c, color: r.tx }}>{r.s}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </AdminShell>
+  );
+}
+
+const SLIDE_COMPONENTS = [DashboardSlide, LoanBookSlide, ApplicationsSlide];
 
 const BORROWER_SLIDES = [
   { src: '/screenshots/borrower-live-dashboard.jpg', label: 'Dashboard' },
@@ -106,9 +316,10 @@ function NavBtn({ dir, onClick, light = false }: {
 
 /* ─── Lender admin view ──────────────────────────────────────────── */
 function LenderView() {
-  const { idx, next, prev, goTo } = useCarousel(LENDER_SLIDES.length, 5000);
+  const { idx, next, prev, goTo } = useCarousel(MOCK_SLIDES.length, 5000);
   const swipe = useSwipe(next, prev);
-  const slide = LENDER_SLIDES[idx];
+  const slide = MOCK_SLIDES[idx];
+  const SlideComponent = SLIDE_COMPONENTS[idx];
 
   return (
     <div className="relative w-full max-w-4xl mx-auto">
@@ -140,48 +351,36 @@ function LenderView() {
 
         {/* Slides */}
         <div
-          className="relative overflow-hidden select-none cursor-grab active:cursor-grabbing"
-          style={{ height: 'clamp(240px, 45vw, 420px)' }}
+          className="relative overflow-hidden select-none"
+          style={{ height: 'clamp(260px, 45vw, 440px)' }}
           {...swipe}
         >
           <div
             className="flex h-full"
             style={{
-              width: `${LENDER_SLIDES.length * 100}%`,
-              transform: `translateX(-${(idx * 100) / LENDER_SLIDES.length}%)`,
+              width: `${MOCK_SLIDES.length * 100}%`,
+              transform: `translateX(-${(idx * 100) / MOCK_SLIDES.length}%)`,
               transition: 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1)',
             }}
           >
-            {LENDER_SLIDES.map((s, i) => (
-              <div key={i} className="relative h-full" style={{ width: `${100 / LENDER_SLIDES.length}%` }}>
-                <Image
-                  src={s.src}
-                  alt={`AlgoLend admin — ${s.label}`}
-                  width={1400}
-                  height={860}
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  className="w-full object-cover object-top"
-                  style={{ height: '100%', filter: 'brightness(1.25) contrast(1.05)' }}
-                  priority={i === 0}
-                />
-              </div>
-            ))}
+            {MOCK_SLIDES.map((_, i) => {
+              const Comp = SLIDE_COMPONENTS[i];
+              return (
+                <div key={i} className="h-full" style={{ width: `${100 / MOCK_SLIDES.length}%` }}>
+                  <Comp />
+                </div>
+              );
+            })}
           </div>
 
-          {/* Bottom vignette */}
-          <div
-            className="absolute bottom-0 left-0 right-0 h-16 pointer-events-none"
-            style={{ background: 'linear-gradient(to bottom, transparent, rgba(26,26,31,0.6))' }}
-          />
-
-          {/* Arrows — sit inside the image area */}
+          {/* Arrows */}
           <NavBtn dir="prev" onClick={prev} />
           <NavBtn dir="next" onClick={next} />
         </div>
 
         {/* Dot indicators inside laptop chrome */}
         <div className="bg-[#0F0F12]">
-          <Dots count={LENDER_SLIDES.length} active={idx} onDot={goTo} light />
+          <Dots count={MOCK_SLIDES.length} active={idx} onDot={goTo} light />
         </div>
       </div>
 
