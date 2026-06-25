@@ -157,67 +157,88 @@ export default function HomePage() {
               <div className="flex-1 min-w-0">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-6 border" style={{ background: 'rgba(124,58,237,0.1)', borderColor: 'rgba(124,58,237,0.3)' }}>
                   <Sparkles size={11} style={{ color: '#A78BFA' }} />
-                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#C4B5FD' }}>Also by Mint Platforms</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#C4B5FD' }}>Part of your AlgoLend onboarding</span>
                 </div>
 
                 <h2 className="headline text-4xl md:text-5xl font-bold text-white leading-none mb-5">
-                  Need credit?<br />
+                  Onboard with AlgoLend.<br />
                   <span style={{ background: 'linear-gradient(90deg, #C4B5FD 0%, #7C3AED 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                    Try the MINT marketplace.
+                    Get listed on MINT.
                   </span>
                 </h2>
 
                 <p className="text-base mb-8 max-w-md" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                  MINT is South Africa's unsecured credit marketplace — one application, multiple NCA-registered lenders, instant decisions. Apply in minutes and get the best offer available to you.
+                  When you go live on AlgoLend, your credit products are automatically listed on the MINT Unsecured Credit Marketplace — giving you instant access to a qualified pool of borrowers actively looking for credit.
                 </p>
 
-                <div className="flex flex-wrap gap-3 mb-10">
+                <div className="space-y-3 mb-10">
                   {[
-                    'One application',
-                    'Multiple lenders',
-                    'Instant decisions',
-                    'NCA compliant',
-                    'Credit life included',
-                    'R 1,000 – R 250,000',
-                  ].map(tag => (
-                    <span key={tag} className="text-xs font-medium px-3 py-1.5 rounded-full" style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.22)', color: '#C4B5FD' }}>
-                      {tag}
-                    </span>
+                    { n: '01', text: 'Onboard and configure your credit policy on AlgoLend.' },
+                    { n: '02', text: 'Your products are listed on the MINT marketplace automatically.' },
+                    { n: '03', text: 'Borrowers apply on MINT — decisions flow back through AlgoLend instantly.' },
+                  ].map(s => (
+                    <div key={s.n} className="flex items-start gap-4">
+                      <span className="text-[10px] font-bold mt-0.5 shrink-0 w-6 text-right" style={{ color: 'rgba(167,139,250,0.4)', fontFamily: 'var(--font-mono)' }}>{s.n}</span>
+                      <p className="text-sm" style={{ color: 'rgba(255,255,255,0.55)' }}>{s.text}</p>
+                    </div>
                   ))}
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <Link
-                    href="/apply"
-                    className="btn-shine inline-flex items-center gap-2 text-white text-[13px] font-semibold px-6 py-3 rounded-full"
-                    style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #9B5CF6 100%)', boxShadow: '0 4px 24px rgba(124,58,237,0.5)' }}
-                  >
-                    Apply on MINT <ArrowRight size={13} />
-                  </Link>
-                  <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Powered by AlgoLend lenders</span>
-                </div>
+                <Link
+                  href="/apply"
+                  className="btn-shine inline-flex items-center gap-2 text-white text-[13px] font-semibold px-6 py-3 rounded-full"
+                  style={{ background: 'linear-gradient(135deg, #7C3AED 0%, #9B5CF6 100%)', boxShadow: '0 4px 24px rgba(124,58,237,0.5)' }}
+                >
+                  Start your onboarding <ArrowRight size={13} />
+                </Link>
               </div>
 
-              {/* Right: stat cards */}
-              <div className="flex-shrink-0 w-full lg:w-[340px] grid grid-cols-2 gap-3">
-                {[
-                  { value: 'Instant', label: 'Credit decisions' },
-                  { value: 'R250k',   label: 'Max loan amount' },
-                  { value: '27%',     label: 'Max rate p.a. (NCA)' },
-                  { value: '60m',     label: 'Max repayment term' },
-                ].map(s => (
-                  <div key={s.label} className="rounded-2xl p-5 text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(124,58,237,0.15)' }}>
-                    <p className="text-2xl font-bold text-white mb-1">{s.value}</p>
-                    <p className="text-[11px]" style={{ color: 'rgba(167,139,250,0.6)' }}>{s.label}</p>
+              {/* Right: MINT marketplace card */}
+              <div className="flex-shrink-0 w-full lg:w-[360px]">
+                <div className="rounded-3xl overflow-hidden" style={{ background: 'linear-gradient(145deg, rgba(124,58,237,0.18) 0%, rgba(124,58,237,0.04) 100%)', border: '1px solid rgba(124,58,237,0.25)' }}>
+                  {/* Card header */}
+                  <div className="px-6 pt-6 pb-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(124,58,237,0.15)' }}>
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(124,58,237,0.25)' }}>
+                        <Sparkles size={14} style={{ color: '#C4B5FD' }} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-white">MINT Marketplace</p>
+                        <p className="text-[10px]" style={{ color: 'rgba(167,139,250,0.6)' }}>Unsecured credit · South Africa</p>
+                      </div>
+                    </div>
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-1 rounded-full" style={{ background: 'rgba(124,58,237,0.2)', color: '#C4B5FD', border: '1px solid rgba(124,58,237,0.3)' }}>Live</span>
                   </div>
-                ))}
-                <div className="col-span-2 rounded-2xl p-4 flex items-center gap-3" style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.15) 0%, rgba(124,58,237,0.06) 100%)', border: '1px solid rgba(124,58,237,0.25)' }}>
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.25)' }}>
-                    <Check size={14} style={{ color: '#A78BFA' }} />
+
+                  {/* Stats */}
+                  <div className="grid grid-cols-2 gap-px" style={{ background: 'rgba(124,58,237,0.1)' }}>
+                    {[
+                      { value: 'Instant', label: 'Decisions' },
+                      { value: 'R 250k',  label: 'Max loan' },
+                      { value: '27% p.a.', label: 'NCA max rate' },
+                      { value: '60 months', label: 'Max term' },
+                    ].map(s => (
+                      <div key={s.label} className="px-5 py-4" style={{ background: 'rgba(11,13,24,0.6)' }}>
+                        <p className="text-lg font-bold text-white">{s.value}</p>
+                        <p className="text-[10px]" style={{ color: 'rgba(167,139,250,0.55)' }}>{s.label}</p>
+                      </div>
+                    ))}
                   </div>
-                  <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                    FSCA-approved credit life cover included on every loan — death, disability & unemployment.
-                  </p>
+
+                  {/* Feature list */}
+                  <div className="px-6 py-5 space-y-2.5">
+                    {[
+                      'One application → multiple lender offers',
+                      'NCA-compliant pre-agreement quotes',
+                      'FSCA credit life cover on every loan',
+                      'Borrowers matched to your scorecard',
+                    ].map(f => (
+                      <div key={f} className="flex items-start gap-2.5">
+                        <Check size={12} className="mt-0.5 shrink-0" style={{ color: '#A78BFA' }} />
+                        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>{f}</p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
