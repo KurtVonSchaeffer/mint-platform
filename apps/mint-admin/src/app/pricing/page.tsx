@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { SERVICE_RATES, PRICING_CONFIG, sellingPrice } from '@/lib/pricing';
-import { CheckCircle2, XCircle, FileText, ArrowRight, Download, Star, TrendingUp, Lock, Pencil, Save, X } from 'lucide-react';
+import { CheckCircle2, XCircle, FileText, ArrowRight, Download, Star, TrendingUp, Lock, Pencil, Save, X, Eye, EyeOff } from 'lucide-react';
 import { PriceReveal } from '@/components/PriceReveal';
 import { useRole } from '@/hooks/useRole';
+import { createBrowserClient } from '@supabase/ssr';
 
 const RATE_STORAGE_KEY = 'algolend_rate_overrides';
 
@@ -53,9 +54,15 @@ export default function PricingPage() {
   const [flatFee, setFlatFee]             = useState(1499900);   // Platform licence in cents
   const [branches, setBranches]           = useState(1);
   const [toast, setToast]               = useState<{ kind: ToastKind; message: string } | null>(null);
-  const [rateOverrides, setRateOverrides] = useState<Record<string, number>>({});
+  const [rateOverrides, setRateOverrides]   = useState<Record<string, number>>({});
   const [isEditingRates, setIsEditingRates] = useState(false);
-  const [draftRates, setDraftRates]       = useState<Record<string, number>>({});
+  const [draftRates, setDraftRates]         = useState<Record<string, number>>({});
+  const [showAuthModal, setShowAuthModal]   = useState(false);
+  const [authPassword, setAuthPassword]     = useState('');
+  const [authError, setAuthError]           = useState('');
+  const [authLoading, setAuthLoading]       = useState(false);
+  const [showPw, setShowPw]                 = useState(false);
+  const pwInputRef                          = useRef<HTMLInputElement>(null);
 
   // Load saved overrides from localStorage on mount
   useEffect(() => {
@@ -65,7 +72,26 @@ export default function PricingPage() {
     } catch { /* ignore */ }
   }, []);
 
-  function startEditRates() {
+  function requestEditRates() {
+    setAuthPassword('');
+    setAuthError('');
+    setShowPw(false);
+    setShowAuthModal(true);
+    setTimeout(() => pwInputRef.current?.focus(), 80);
+  }
+
+  async function confirmEditRates() {
+    if (!authPassword) { setAuthError('Enter your password'); return; }
+    setAuthLoading(true);
+    setAuthError('');
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    );
+    const { error } = await supabase.auth.signInWithPassword({ email, password: authPassword });
+    setAuthLoading(false);
+    if (error) { setAuthError('Incorrect password'); return; }
+    setShowAuthModal(false);
     const draft: Record<string, number> = {};
     SERVICE_RATES.forEach(s => { draft[s.id] = rateOverrides[s.id] ?? s.publishedCents; });
     setDraftRates(draft);
@@ -182,6 +208,59 @@ export default function PricingPage() {
   return (
     <Shell>
       {toast && <Toast kind={toast.kind} message={toast.message} onClose={() => setToast(null)} />}
+
+      {/* Password confirmation modal for rate editing */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+          onClick={e => { if (e.target === e.currentTarget) setShowAuthModal(false); }}>
+          <div className="rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+            style={{ background: 'var(--color-card)', border: '1px solid var(--color-border2)' }}>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.25)' }}>
+                <Lock size={15} style={{ color: 'var(--color-violet)' }} />
+              </div>
+              <div>
+                <p className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>Confirm to edit rates</p>
+                <p className="text-[11px]" style={{ color: 'var(--color-text3)' }}>{email}</p>
+              </div>
+            </div>
+            <p className="text-xs mb-4 mt-3" style={{ color: 'var(--color-text3)' }}>
+              Re-enter your password to unlock rate editing.
+            </p>
+            <div className="relative mb-3">
+              <input
+                ref={pwInputRef}
+                type={showPw ? 'text' : 'password'}
+                placeholder="Password"
+                value={authPassword}
+                onChange={e => { setAuthPassword(e.target.value); setAuthError(''); }}
+                onKeyDown={e => e.key === 'Enter' && confirmEditRates()}
+                className="field-input w-full pr-9"
+                style={authError ? { borderColor: 'var(--color-red)' } : {}}
+              />
+              <button type="button" onClick={() => setShowPw(p => !p)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--color-text3)] hover:text-[var(--color-text)]">
+                {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
+              </button>
+            </div>
+            {authError && <p className="text-xs mb-3" style={{ color: 'var(--color-red)' }}>{authError}</p>}
+            <div className="flex gap-2">
+              <button onClick={() => setShowAuthModal(false)}
+                className="flex-1 py-2 rounded-xl text-sm font-medium transition-colors"
+                style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}>
+                Cancel
+              </button>
+              <button onClick={confirmEditRates} disabled={authLoading}
+                className="flex-1 py-2 rounded-xl text-sm font-semibold btn-purple"
+                style={{ opacity: authLoading ? 0.7 : 1 }}>
+                {authLoading ? 'Checking…' : 'Unlock editing'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-6 page-enter">
 
@@ -459,7 +538,7 @@ export default function PricingPage() {
                 <p className="eyebrow">Pay-as-you-use rates</p>
                 {isSuperAdmin && !isEditingRates && (
                   <button
-                    onClick={startEditRates}
+                    onClick={requestEditRates}
                     className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors"
                     style={{ color: 'var(--color-violet)', background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)' }}
                   >
