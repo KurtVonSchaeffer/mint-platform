@@ -547,7 +547,7 @@ export default function PricingPage() {
             <div className="bento-card p-5">
               <div className="flex items-center justify-between mb-1">
                 <p className="eyebrow">Pay-as-you-use rates</p>
-                {isSuperAdmin && !isEditingRates && (
+                {!isEditingRates && (
                   <button
                     onClick={requestEditRates}
                     className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors"
@@ -556,7 +556,7 @@ export default function PricingPage() {
                     <Pencil size={10} /> Edit rates
                   </button>
                 )}
-                {isSuperAdmin && isEditingRates && (
+                {isEditingRates && (
                   <div className="flex items-center gap-1.5">
                     <button onClick={saveRates}
                       className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-lg"
