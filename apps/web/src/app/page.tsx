@@ -31,18 +31,17 @@ const CreditLifeCard   = dynamic(() => import('@/components/PlatformCards').then
 /* ─── Content ─────────────────────────────────────────────────────── */
 
 const stats = [
-  { value: '2–3 wks', label: 'avg implementation time' },
-  { value: '1',       label: 'dedicated database per client' },
-  { value: '99.9%',   label: 'platform uptime SLA' },
-  { value: '< 48hr',  label: 'avg credit decision' },
+  { value: '2–3 days', label: 'avg implementation time' },
+  { value: '1',        label: 'dedicated database per client' },
+  { value: '99.9%',    label: 'platform uptime SLA' },
+  { value: 'Instant',  label: 'credit decisions' },
 ];
 
 const integrations = [
-  { name: 'TruID',        sub: 'Open Banking' },
-  { name: 'Experian',     sub: 'Credit Bureau' },
-  { name: 'SACRRA',       sub: 'Bureau Reporting' },
-  { name: 'E-Contracts',  sub: 'E-Signatures' },
-  { name: 'Sure Systems', sub: 'EFT & Payments' },
+  { name: 'TruID',       sub: 'Open Banking' },
+  { name: 'Experian',    sub: 'Credit Bureau' },
+  { name: 'SACRRA',      sub: 'Bureau Reporting' },
+  { name: 'E-Contracts', sub: 'E-Signatures' },
 ];
 
 
@@ -56,7 +55,7 @@ const process = [
 const compliance = [
   { code: 'NCA',    title: 'National Credit Act',  desc: 'Affordability, disclosure, and quotation rules architected into the credit engine.' },
   { code: 'SACRRA', title: 'Bureau Reporting',     desc: 'Monthly submissions in SACRRA layout 700, with full acceptance reconciliation.' },
-  { code: 'POPIA',  title: 'Data Protection',      desc: 'Tenant-isolated databases, encrypted at rest, with documented retention policies.' },
+  { code: 'FSCA',   title: 'Credit Life Cover',    desc: 'FSCA-approved credit life insurance built into every loan — death, disability and unemployment cover.' },
   { code: 'NCR',    title: 'Audit Trail',          desc: 'Every credit decision logged immutably. NCR-grade audit reports available on demand.' },
 ];
 
@@ -277,11 +276,11 @@ export default function HomePage() {
                     ),
                   },
                   {
-                    label: 'POPIA Compliant',
-                    sub:   'Tenant-isolated data',
+                    label: 'FSCA Approved',
+                    sub:   'Credit life cover',
                     icon:  (
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
                       </svg>
                     ),
                   },
@@ -429,7 +428,7 @@ export default function HomePage() {
                 </h2>
               </div>
               <p className="text-lg text-[var(--color-ink-soft)]">
-                We handle the regulatory plumbing so you can focus on lending. Architected to the National Credit Act, POPIA, and SACRRA reporting standards.
+                We handle the regulatory plumbing so you can focus on lending. Architected to the National Credit Act, FSCA credit life standards, and SACRRA reporting.
               </p>
             </div>
           </Reveal>
@@ -551,7 +550,7 @@ export default function HomePage() {
 
                   <div className="space-y-3 max-w-md">
                     {[
-                      { icon: TrendingUp, l: 'Implementation', v: '2–3 weeks from kick-off' },
+                      { icon: TrendingUp, l: 'Implementation', v: '2–3 days from kick-off' },
                       { icon: Activity,   l: 'Uptime SLA',     v: '99.9% guaranteed' },
                       { icon: Lock,       l: 'Data isolation', v: 'Dedicated database per client' },
                     ].map((s) => (
