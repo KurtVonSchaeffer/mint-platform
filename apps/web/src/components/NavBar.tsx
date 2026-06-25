@@ -59,12 +59,12 @@ export function NavBar() {
       className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
       style={{
         background: scrolled
-          ? 'rgba(255,255,255,0.92)'
+          ? '#ffffff'
           : 'rgba(15,22,41,0.55)',
-        backdropFilter: 'blur(20px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-        borderBottom: scrolled ? '1px solid rgba(0,0,0,0.08)' : '1px solid rgba(255,255,255,0.08)',
-        boxShadow: scrolled ? '0 2px 24px rgba(0,0,0,0.07)' : 'none',
+        backdropFilter: scrolled ? 'none' : 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: scrolled ? 'none' : 'blur(20px) saturate(180%)',
+        borderBottom: scrolled ? '1px solid rgba(0,0,0,0.07)' : '1px solid rgba(255,255,255,0.08)',
+        boxShadow: scrolled ? '0 1px 20px rgba(0,0,0,0.06)' : 'none',
       }}
     >
       <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
