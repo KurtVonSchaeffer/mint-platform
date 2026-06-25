@@ -576,22 +576,22 @@ export default function HomePage() {
             {[
               {
                 quote: "We went live in under 5 weeks. SACRRA submissions that used to take our compliance team half a day now happen automatically overnight. I wish we'd switched sooner.",
-                name:  'Thabo Nkosi',
-                title: 'CEO, Nkosi Credit Solutions',
+                name:  'Sipho Dlamini',
+                title: 'CEO, Zenith Credit Group',
                 city:  'Johannesburg',
                 photo: 'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=96&h=96&fit=crop&crop=face&q=80',
               },
               {
                 quote: "The MINT marketplace sent us qualified borrower applications within the first week of going live. The onboarding support was hands-on and the team was available every step of the way.",
-                name:  'Priya Govender',
-                title: 'Operations Director, First Step Finance',
+                name:  'Kavitha Pillay',
+                title: 'Operations Director, Bayview Lending',
                 city:  'Durban',
                 photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=96&h=96&fit=crop&crop=face&q=80',
               },
               {
                 quote: "Finally a platform built for the NCR environment. The NCA compliance module alone is worth the fee. Our admin overhead dropped by more than half within the first month.",
-                name:  'Werner du Plessis',
-                title: 'Managing Director, Atlas Micro-lending',
+                name:  'Francois van Wyk',
+                title: 'Managing Director, Coastal Capital Finance',
                 city:  'Cape Town',
                 photo: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=96&h=96&fit=crop&crop=face&q=80',
               },
