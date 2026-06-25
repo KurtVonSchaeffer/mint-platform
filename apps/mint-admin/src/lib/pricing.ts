@@ -20,17 +20,6 @@ export interface ServiceRate {
 
 export const SERVICE_RATES: ServiceRate[] = [
   {
-    id:             'cipc_employment',
-    name:           'CIPC Data: Employment',
-    description:    'Company registration + employment verification via CIPC',
-    providerCents:  266,
-    publishedCents: 350,
-    firstFree:      0,
-    featureFlag:    'credit_scoring',
-    category:       'kyc',
-    enterpriseOnly: false,
-  },
-  {
     id:             'bureau_enquiry',
     name:           'Standard Bureau Check (Experian)',
     description:    'Credit bureau data contribution + enquiry (Experian)',

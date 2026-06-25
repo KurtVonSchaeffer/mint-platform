@@ -30,7 +30,6 @@ function catalogRate(id: string): number {
 /* ─── Pass-through cost rates (ZAR cents per unit) ─────────────────── */
 export const SERVICE_RATES: Record<string, number> = {
   // API check catalog — rates with 38% margin
-  cipc:               catalogRate('cipc'),        // CIPC data
   bureau:             catalogRate('bureau'),      // Bureau enquiry
   banking:            catalogRate('banking'),     // Bank account linking
   contracts:          catalogRate('contracts'),   // Automated contracts
@@ -54,7 +53,6 @@ export const SERVICE_RATES: Record<string, number> = {
 
 export const SERVICE_LABELS: Record<string, string> = {
   activation:         'Platform activation fee',
-  cipc:               'CIPC Data: Employment checks',
   bureau:             'Bureau enquiries (Experian standard)',
   banking:            'Bank account linking (TruID)',
   contracts:          'Automated e-contracts',
@@ -76,7 +74,7 @@ export const SERVICE_LABELS: Record<string, string> = {
 
 /* Services that are "API usage" vs platform fees — used by invoice template */
 export const API_USAGE_SERVICES = new Set([
-  'cipc','bureau','banking','contracts','liveness','homeaff','watchlist','address',
+  'bureau','banking','contracts','liveness','homeaff','watchlist','address',
   'trueid_lookup','experian_score','docuseal_envelope','sacrra_submission',
   'sure_systems_pull','sms_outbound','email_outbound','api_call',
 ]);

@@ -15,7 +15,6 @@ const STARTER_FEATURES = [
   'Address verification',
   'Open banking — TruID affordability check',
   'Built-in e-signing & digital contracts',
-  'CIPC employment data',
   'Full KYC — liveness, ID & phone verification',
   'Automated emails — onboarding stages & repayment reminders',
   'Loan book & repayment tracking',

@@ -17,7 +17,6 @@ export type VolumeTierId = typeof VOLUME_TIERS[number]['id'];
 // clientRate = published client-facing price per check (shown on quotes)
 // firstFree  = complimentary calls per month (promotional)
 export const CHECK_CATALOG = [
-  { id: 'cipc',      label: 'CIPC Data: Employment',                        baseRate: 2.66,  clientRate: 3.50,  firstFree: 0   },
   { id: 'bureau',    label: 'Standard Bureau Check (Experian)',              baseRate: 6.67,  clientRate: 9.20,  firstFree: 0   },
   { id: 'banking',   label: 'Bank Account Linking (TruID)',                  baseRate: 8.50,  clientRate: 11.00, firstFree: 0   },
   { id: 'contracts', label: 'E-Contracts',                                   baseRate: 3.60,  clientRate: 0.30,  firstFree: 0   },

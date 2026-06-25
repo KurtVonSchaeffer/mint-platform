@@ -185,7 +185,6 @@ export default function PricingPage() {
     liveness_id_phone:   'liveness',
     watchlist_peps:      'watchlist',
     address_verification:'address',
-    cipc_employment:     'cipc',
     automated_contracts: 'contracts',
   };
 
