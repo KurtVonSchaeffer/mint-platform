@@ -338,7 +338,7 @@ export default function PricingPage() {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>
-                    Platform licence (R/mo)
+                    Monthly licence fee (R)
                   </label>
                   <input
                     type="number"
@@ -346,11 +346,11 @@ export default function PricingPage() {
                     value={flatFee / 100}
                     onChange={e => setFlatFee(Math.max(0, (parseFloat(e.target.value) || 0) * 100))}
                   />
-                  <p className="text-[10px] mt-1" style={{ color: 'var(--color-text3)' }}>Flat licence fee excl. VAT</p>
+                  <p className="text-[10px] mt-1" style={{ color: 'var(--color-text3)' }}>Recurring monthly · excl. VAT</p>
                 </div>
                 <div>
                   <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>
-                    Est. volume / type / month
+                    Est. API calls per check type
                   </label>
                   <input
                     type="number"
@@ -358,7 +358,7 @@ export default function PricingPage() {
                     value={estVolume}
                     onChange={e => setEstVolume(Math.max(0, parseInt(e.target.value, 10) || 0))}
                   />
-                  <p className="text-[10px] mt-1" style={{ color: 'var(--color-text3)' }}>Used for margin modelling only</p>
+                  <p className="text-[10px] mt-1" style={{ color: 'var(--color-text3)' }}>For margin estimate only — not billed</p>
                 </div>
                 <div>
                   <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>
@@ -475,28 +475,83 @@ export default function PricingPage() {
             </div>
           </div>
 
-          {/* Right: margin summary */}
+          {/* Right: summary */}
           <div className="space-y-4">
 
-            {/* Client invoice view */}
-            <div className="rounded-2xl p-6" style={{ border: '1px solid rgba(124,58,237,0.25)', boxShadow: '0 0 30px rgba(124,58,237,0.1)' }}>
-              <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--color-text3)' }}>
-                Client pays / month
-              </p>
-              <p className="text-4xl font-bold tracking-tight font-mono" style={{ color: 'var(--color-text)' }}>
-                {fmt(clientTotal)}
-              </p>
-              <p className="text-xs mt-1" style={{ color: 'var(--color-text3)' }}>
-                {activeTier.branches} · excl. VAT · {effectiveSelectedIds.size} services · pay-as-you-use checks
-              </p>
-              <p className="text-[11px] mt-3 p-3 rounded-lg italic" style={{ background: 'rgba(124,58,237,0.07)', color: 'var(--color-text3)' }}>
-                {isStarter
-                  ? 'Platform licence — API checks billed pay-as-you-use'
-                  : `Includes ${includedChecks.toLocaleString()} API checks/month · additional checks at published rates`}
-              </p>
+            {/* What the client pays — mini invoice */}
+            <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid rgba(124,58,237,0.25)', boxShadow: '0 0 30px rgba(124,58,237,0.1)' }}>
+
+              {/* Header */}
+              <div className="px-6 pt-5 pb-4">
+                <p className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--color-text3)' }}>
+                  What the client pays
+                </p>
+
+                {/* Monthly line items */}
+                <div className="space-y-2.5">
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm" style={{ color: 'var(--color-text3)' }}>
+                      {activeTier.label} licence
+                    </p>
+                    <p className="font-mono text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
+                      {fmt(flatFee)}<span className="text-xs font-normal ml-1" style={{ color: 'var(--color-text3)' }}>/mo</span>
+                    </p>
+                  </div>
+
+                  {branchFees > 0 && (
+                    <div className="flex justify-between items-center">
+                      <p className="text-sm" style={{ color: 'var(--color-text3)' }}>
+                        Branches ({branches} × R250/mo)
+                      </p>
+                      <p className="font-mono text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
+                        {fmt(branchFees)}<span className="text-xs font-normal ml-1" style={{ color: 'var(--color-text3)' }}>/mo</span>
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between items-center">
+                    <p className="text-sm" style={{ color: 'var(--color-text3)' }}>
+                      API checks ({effectiveSelectedIds.size} types)
+                    </p>
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                      style={{ background: 'rgba(251,191,36,0.1)', color: 'var(--color-amber)', border: '1px solid rgba(251,191,36,0.2)' }}>
+                      Pay-as-you-use
+                    </span>
+                  </div>
+
+                  {!isStarter && (
+                    <p className="text-[11px] pl-3 -mt-1" style={{ color: 'var(--color-text3)', borderLeft: '2px solid rgba(124,58,237,0.3)' }}>
+                      {includedChecks.toLocaleString()} checks/mo included · extra at published rates
+                    </p>
+                  )}
+                </div>
+
+                {/* Total */}
+                <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--color-border2)' }}>
+                  <div className="flex justify-between items-baseline">
+                    <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-text3)' }}>Total / month</p>
+                    <p className="text-3xl font-bold tracking-tight font-mono" style={{ color: 'var(--color-text)' }}>
+                      {fmt(clientTotal)}
+                    </p>
+                  </div>
+                  <p className="text-xs mt-1 text-right" style={{ color: 'var(--color-text3)' }}>excl. VAT</p>
+                </div>
+              </div>
+
+              {/* Footer rows */}
+              <div style={{ borderTop: '1px solid var(--color-border2)', background: 'rgba(255,255,255,0.02)' }}>
+                <div className="px-6 py-3 flex justify-between items-center">
+                  <p className="text-xs" style={{ color: 'var(--color-text3)' }}>Annual licence (×12)</p>
+                  <p className="font-mono text-sm font-bold" style={{ color: 'var(--color-text)' }}>{fmt(clientTotal * 12)}</p>
+                </div>
+                <div className="px-6 py-3 flex justify-between items-center" style={{ borderTop: '1px solid var(--color-border2)' }}>
+                  <p className="text-xs" style={{ color: 'var(--color-text3)' }}>Implementation fee</p>
+                  <p className="text-xs font-semibold" style={{ color: 'var(--color-text3)' }}>Quoted separately</p>
+                </div>
+              </div>
             </div>
 
-            {/* Internal margin — super admin only */}
+            {/* Internal margin */}
             <div className="bento-card p-5 space-y-3">
               <div className="flex items-center gap-2 mb-1">
                 <TrendingUp size={13} style={{ color: 'var(--color-violet)' }} />
@@ -506,41 +561,21 @@ export default function PricingPage() {
               <PriceReveal isSuperAdmin={isSuperAdmin} email={email} block>
                 <>
                   <div className="flex justify-between items-center">
-                    <p className="text-sm" style={{ color: 'var(--color-text3)' }}>Platform licence</p>
-                    <p className="font-mono text-sm" style={{ color: 'var(--color-text2)' }}>{fmt(flatFee)}</p>
+                    <p className="text-sm" style={{ color: 'var(--color-text3)' }}>Monthly revenue</p>
+                    <p className="font-mono text-sm" style={{ color: 'var(--color-text2)' }}>{fmt(clientTotal)}</p>
                   </div>
-                  {branchFees > 0 && (
-                    <div className="flex justify-between items-center">
-                      <p className="text-sm" style={{ color: 'var(--color-text3)' }}>Branch fees ({branches} × R250)</p>
-                      <p className="font-mono text-sm" style={{ color: 'var(--color-text2)' }}>{fmt(branchFees)}</p>
-                    </div>
-                  )}
                   <div className="flex justify-between items-center">
-                    <p className="text-sm" style={{ color: 'var(--color-text3)' }}>Provider cost (est. {estVolume.toLocaleString()} calls/type)</p>
+                    <p className="text-sm" style={{ color: 'var(--color-text3)' }}>API provider cost (est. {estVolume.toLocaleString()} calls/type)</p>
                     <p className="font-mono text-sm" style={{ color: 'var(--color-red)' }}>−{fmt(totalProviderCost)}</p>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className="text-sm" style={{ color: 'var(--color-text3)' }}>Client revenue (est. billable)</p>
-                    <p className="font-mono text-sm" style={{ color: 'var(--color-text2)' }}>{fmt(totalMarketValue)}</p>
                   </div>
                   <div className="flex justify-between items-center pt-2" style={{ borderTop: '1px solid var(--color-border2)' }}>
                     <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Gross margin</p>
                     <p className="font-mono font-bold text-sm" style={{ color: grossMargin >= 0 ? 'var(--color-green)' : 'var(--color-red)' }}>
-                      {fmt(grossMargin)}
-                    </p>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className="text-sm" style={{ color: 'var(--color-text3)' }}>Margin %</p>
-                    <p className="font-mono font-bold text-sm" style={{ color: marginPct >= 30 ? 'var(--color-green)' : 'var(--color-amber)' }}>
-                      {marginPct.toFixed(1)}%
+                      {fmt(grossMargin)} <span style={{ color: marginPct >= 30 ? 'var(--color-green)' : 'var(--color-amber)' }}>({marginPct.toFixed(0)}%)</span>
                     </p>
                   </div>
                 </>
               </PriceReveal>
-              <div className="flex justify-between items-center pt-2" style={{ borderTop: '1px solid var(--color-border2)' }}>
-                <p className="text-sm" style={{ color: 'var(--color-text3)' }}>Annual contract value</p>
-                <p className="font-mono font-bold text-sm" style={{ color: 'var(--color-text)' }}>{fmt(clientTotal * 12)}</p>
-              </div>
             </div>
 
             {/* Published per-check rates — editable by super_admin */}
