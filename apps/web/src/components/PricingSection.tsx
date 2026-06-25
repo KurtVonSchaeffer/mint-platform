@@ -36,14 +36,7 @@ const ENTERPRISE_FEATURES = [
   '99% platform uptime',
 ];
 
-const PAYG_RATES = [
-  { label: 'Full KYC — Liveness, ID & Phone', rate: 'R 6.50 / call', note: 'First 500 free' },
-  { label: 'Standard Bureau Check (Experian)',  rate: 'R 9.20 / call', note: null },
-  { label: 'Bank Account Linking (TruID)',      rate: 'R 11.00 / call', note: null },
-  { label: 'Address Verification',             rate: 'R 3.50 / call', note: null },
-  { label: 'E-Contracts',                      rate: 'R 0.30 / contract', note: null },
-  { label: 'AML / Watchlist & PEP Screening',  rate: 'Included', note: null },
-];
+
 
 export function PricingSection() {
   return (
@@ -181,44 +174,6 @@ export function PricingSection() {
           </Reveal>
         </div>
 
-        {/* Per-check rate breakdown */}
-        <Reveal delay={120}>
-          <div className="mt-10 max-w-3xl mx-auto">
-            <div className="bento-card p-6">
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <p className="eyebrow mb-1">API check rates</p>
-                  <p className="text-sm font-semibold tracking-tight" style={{ color: 'var(--color-ink)' }}>
-                    Pay-as-you-use · transparent billing
-                  </p>
-                </div>
-                <span className="text-xs font-semibold px-3 py-1.5 rounded-full"
-                  style={{ background: 'var(--color-surface)', color: 'var(--color-ink-soft)', border: '1px solid var(--color-border)' }}>
-                  excl. VAT
-                </span>
-              </div>
-              <div className="divide-y" style={{ borderColor: 'var(--color-border)' }}>
-                {PAYG_RATES.map(r => (
-                  <div key={r.label} className="flex items-center justify-between py-3">
-                    <div>
-                      <p className="text-sm" style={{ color: 'var(--color-ink-soft)' }}>{r.label}</p>
-                      {r.note && (
-                        <p className="text-xs mt-0.5" style={{ color: 'var(--color-brand)' }}>{r.note}</p>
-                      )}
-                    </div>
-                    <p className={`text-sm font-semibold font-mono ${r.rate === 'Included' ? '' : ''}`}
-                      style={{ color: r.rate === 'Included' ? 'var(--color-ink-muted)' : 'var(--color-brand)' }}>
-                      {r.rate}
-                    </p>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs mt-4 pt-4 text-center" style={{ color: 'var(--color-ink-muted)', borderTop: '1px solid var(--color-border)' }}>
-                Enterprise: first 2,000 checks/month included in platform licence · Starter: billed from check one
-              </p>
-            </div>
-          </div>
-        </Reveal>
 
         {/* Bottom notes */}
         <Reveal delay={160}>
