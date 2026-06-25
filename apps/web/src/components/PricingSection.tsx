@@ -19,7 +19,7 @@ const STARTER_FEATURES = [
   'Phone verification',
   'SACRRA bureau reporting',
   'Loan book & repayment tracking',
-  'EFT integration',
+  'DebiCheck integration',
   'Up to 2 branches',
   'API checks billed pay-as-you-go',
 ];
@@ -39,7 +39,7 @@ const ENTERPRISE_FEATURES = [
   'Phone verification',
   'SACRRA bureau reporting',
   'Loan book & repayment tracking',
-  'EFT integration',
+  'DebiCheck integration',
   'Liveness + Home Affairs verification',
   'Unlimited branches',
   '2,000 API checks / month included',
