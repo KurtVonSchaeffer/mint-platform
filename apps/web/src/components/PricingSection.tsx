@@ -1,49 +1,48 @@
 'use client';
 
 import Link from 'next/link';
-import { Check, ArrowRight, Zap } from 'lucide-react';
+import { Check, ArrowRight, Zap, Minus } from 'lucide-react';
 import { Reveal } from '@/components/Reveal';
 
 const STARTER_FEATURES = [
+  'SACRRA bureau reporting (auto-28th)',
   'Credit scoring engine',
   'Borrower application portal',
   'Term loans & working capital',
+  'NCA-compliant quotations & audit trail',
   'Bureau enquiry (Experian)',
-  'Watchlist — PEPs & sanctions',
+  'AML / Watchlist — PEPs & sanctions (included)',
   'Address verification',
-  'NCA-compliant quotations',
-  'Audit trail',
   'Open banking — TruID affordability check',
-  'E-contracts',
+  'Built-in e-signing & digital contracts',
   'CIPC employment data',
-  'Phone verification',
-  'SACRRA bureau reporting',
+  'Full KYC — liveness, ID & phone verification',
+  'Sanlam credit life insurance (R4.50/R1,000)',
+  'Automated emails — onboarding stages & repayment reminders',
   'Loan book & repayment tracking',
   'DebiCheck integration',
   'Up to 2 branches',
-  'API checks billed pay-as-you-go',
+  'Pay-as-you-use API checks',
 ];
 
 const ENTERPRISE_FEATURES = [
-  'Credit scoring engine',
-  'Borrower application portal',
-  'Term loans & working capital',
-  'Bureau enquiry (Experian)',
-  'Watchlist — PEPs & sanctions',
-  'Address verification',
-  'NCA-compliant quotations',
-  'Audit trail',
-  'Open banking — TruID affordability check',
-  'E-contracts',
-  'CIPC employment data',
-  'Phone verification',
-  'SACRRA bureau reporting',
-  'Loan book & repayment tracking',
-  'DebiCheck integration',
-  'Liveness + Home Affairs verification',
-  'Unlimited branches',
+  'Everything in Starter',
   '2,000 API checks / month included',
-  'Priority onboarding support',
+  'Liveness + Home Affairs (DHA) verification',
+  'Unlimited branches',
+  'Priority onboarding & dedicated support',
+  'Custom scorecard configuration',
+  'White-label branding',
+  '99% platform uptime',
+];
+
+const PAYG_RATES = [
+  { label: 'Full KYC — Liveness, ID & Phone', rate: 'R 6.50 / call', note: 'First 500 free' },
+  { label: 'Standard Bureau Check (Experian)',  rate: 'R 9.20 / call', note: null },
+  { label: 'Bank Account Linking (TruID)',      rate: 'R 11.00 / call', note: null },
+  { label: 'Address Verification',             rate: 'R 3.50 / call', note: null },
+  { label: 'E-Contracts',                      rate: 'R 0.30 / contract', note: null },
+  { label: 'AML / Watchlist & PEP Screening',  rate: 'Included', note: null },
 ];
 
 export function PricingSection() {
@@ -79,7 +78,7 @@ export function PricingSection() {
                   R 1,999
                 </p>
                 <p className="text-sm text-[var(--color-ink-muted)] mb-4">
-                  /month excl. VAT · implementation quoted separately
+                  /month excl. VAT · up to 2 branches · implementation quoted separately
                 </p>
                 <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
                   style={{
@@ -87,7 +86,7 @@ export function PricingSection() {
                     color: 'var(--color-ink-soft)',
                     border: '1px solid var(--color-border)',
                   }}>
-                  API checks billed pay-as-you-go
+                  Pay-as-you-use API checks
                 </div>
               </div>
 
@@ -144,30 +143,27 @@ export function PricingSection() {
                     </span>
                   </div>
                   <p className="text-5xl font-bold tracking-tight mb-1 text-white">
-                    R 15,500
+                    R 14,999
                   </p>
                   <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                    /month excl. VAT · flat rate, implementation quoted separately
+                    /month excl. VAT · unlimited branches · implementation quoted separately
                   </p>
                   <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
                     style={{ background: 'rgba(167,139,250,0.1)', color: '#C4B5FD', border: '1px solid rgba(167,139,250,0.2)' }}>
                     <Zap size={10} style={{ color: '#A78BFA' }} />
-                    2,000 API checks / month included
+                    2,000 checks / month included · then pay-as-you-use
                   </div>
                 </div>
 
                 <ul className="space-y-2.5 flex-1 mb-8 relative">
-                  {ENTERPRISE_FEATURES.map((f, i) => {
-                    const isExclusive = i >= ENTERPRISE_FEATURES.length - 4;
-                    return (
-                      <li key={f} className="flex items-start gap-2 text-sm"
-                        style={{ color: isExclusive ? '#C4B5FD' : 'rgba(255,255,255,0.70)' }}>
-                        <Check size={13} className="mt-0.5 shrink-0"
-                          style={{ color: isExclusive ? '#A78BFA' : 'rgba(255,255,255,0.35)' }} />
-                        {f}
-                      </li>
-                    );
-                  })}
+                  {ENTERPRISE_FEATURES.map((f, i) => (
+                    <li key={f} className="flex items-start gap-2 text-sm"
+                      style={{ color: i === 0 ? 'rgba(255,255,255,0.50)' : '#C4B5FD' }}>
+                      <Check size={13} className="mt-0.5 shrink-0"
+                        style={{ color: i === 0 ? 'rgba(255,255,255,0.30)' : '#A78BFA' }} />
+                      {f}
+                    </li>
+                  ))}
                 </ul>
 
                 <Link
@@ -185,9 +181,48 @@ export function PricingSection() {
           </Reveal>
         </div>
 
+        {/* Per-check rate breakdown */}
+        <Reveal delay={120}>
+          <div className="mt-10 max-w-3xl mx-auto">
+            <div className="bento-card p-6">
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <p className="eyebrow mb-1">API check rates</p>
+                  <p className="text-sm font-semibold tracking-tight" style={{ color: 'var(--color-ink)' }}>
+                    Pay-as-you-use · transparent billing
+                  </p>
+                </div>
+                <span className="text-xs font-semibold px-3 py-1.5 rounded-full"
+                  style={{ background: 'var(--color-surface)', color: 'var(--color-ink-soft)', border: '1px solid var(--color-border)' }}>
+                  excl. VAT
+                </span>
+              </div>
+              <div className="divide-y" style={{ borderColor: 'var(--color-border)' }}>
+                {PAYG_RATES.map(r => (
+                  <div key={r.label} className="flex items-center justify-between py-3">
+                    <div>
+                      <p className="text-sm" style={{ color: 'var(--color-ink-soft)' }}>{r.label}</p>
+                      {r.note && (
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--color-brand)' }}>{r.note}</p>
+                      )}
+                    </div>
+                    <p className={`text-sm font-semibold font-mono ${r.rate === 'Included' ? '' : ''}`}
+                      style={{ color: r.rate === 'Included' ? 'var(--color-ink-muted)' : 'var(--color-brand)' }}>
+                      {r.rate}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs mt-4 pt-4 text-center" style={{ color: 'var(--color-ink-muted)', borderTop: '1px solid var(--color-border)' }}>
+                Enterprise: first 2,000 checks/month included in platform licence · Starter: billed from check one
+              </p>
+            </div>
+          </div>
+        </Reveal>
+
         {/* Bottom notes */}
         <Reveal delay={160}>
-          <div className="mt-10 max-w-3xl mx-auto grid sm:grid-cols-3 gap-4">
+          <div className="mt-6 max-w-3xl mx-auto grid sm:grid-cols-3 gap-4">
             {[
               {
                 label: 'i. Implementation',
@@ -196,13 +231,13 @@ export function PricingSection() {
               },
               {
                 label: 'ii. API checks',
-                title: 'Pay as you go',
-                desc: 'Starter is PAYG from check one. Enterprise includes 2,000 checks/month — additional checks billed at published rates.',
+                title: 'Pay-as-you-use',
+                desc: 'Starter is billed from check one. Enterprise includes 2,000 checks/month — additional checks at published rates.',
               },
               {
                 label: 'iii. Pass-through costs',
                 title: 'Transparent billing',
-                desc: 'Experian, TruID, SACRRA, and e-contract charges are passed through at provider cost.',
+                desc: 'Experian, TruID, SACRRA, and DHA charges are passed through at provider cost.',
               },
             ].map(n => (
               <div key={n.label} className="bento-card p-5">

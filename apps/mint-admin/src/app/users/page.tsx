@@ -111,6 +111,8 @@ export default function UsersPage() {
     } else {
       setInviteOpen(false);
       if (json.setupLink) {
+        // Email already sent — show toast + keep link modal as backup
+        setToast({ kind: 'success', message: `Invite email sent to ${inviteEmail}. Setup link also copied below.` });
         setResetLink({ email: inviteEmail, link: json.setupLink, isInvite: true });
       } else {
         setToast({ kind: 'success', message: `${inviteEmail} created — no setup link available` });
@@ -276,7 +278,7 @@ export default function UsersPage() {
               </div>
             </form>
             <p className="text-xs mt-3" style={{ color: 'var(--color-text3)' }}>
-              An invitation email will be sent. The user sets their own password on first login.
+              An invitation email with a password-setup link will be sent automatically to the user.
             </p>
           </div>
         )}
@@ -364,20 +366,22 @@ export default function UsersPage() {
                     </td>
                     <td>
                       <div className="flex items-center gap-1.5 justify-end">
-                        {/* Reset password */}
+                        {/* Reset / Resend invite password */}
                         <button
                           onClick={() => resetPassword(u)}
                           disabled={resetting === u.id}
-                          title="Send password reset link"
+                          title={u.confirmed ? 'Send password reset link' : 'Resend invite email'}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
-                          style={{ background: 'rgba(96,165,250,0.08)', color: 'var(--color-sky)', border: '1px solid rgba(96,165,250,0.15)' }}
+                          style={u.confirmed
+                            ? { background: 'rgba(96,165,250,0.08)', color: 'var(--color-sky)', border: '1px solid rgba(96,165,250,0.15)' }
+                            : { background: 'rgba(251,191,36,0.08)', color: 'var(--color-amber)', border: '1px solid rgba(251,191,36,0.2)' }}
                           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)'; }}
                           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; }}
                         >
                           {resetting === u.id
                             ? <Loader2 size={11} className="animate-spin" />
                             : <RotateCcw size={11} />}
-                          Reset password
+                          {u.confirmed ? 'Reset password' : 'Resend invite'}
                         </button>
                         {/* Delete */}
                         <button

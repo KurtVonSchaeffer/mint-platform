@@ -31,17 +31,17 @@ const CreditLifeCard   = dynamic(() => import('@/components/PlatformCards').then
 /* ─── Content ─────────────────────────────────────────────────────── */
 
 const stats = [
-  { value: '2–3 days', label: 'avg implementation time' },
-  { value: '1',        label: 'dedicated database per client' },
-  { value: '99.9%',    label: 'platform uptime SLA' },
-  { value: 'Instant',  label: 'credit decisions' },
+  { value: '2 days',   label: 'avg implementation time' },
+  { value: '100%',     label: 'private data environment, per client' },
+  { value: '99%',      label: 'platform uptime' },
+  { value: '< 60 min', label: 'per credit decision' },
 ];
 
 const integrations = [
   { name: 'TruID',       sub: 'Open Banking' },
   { name: 'Experian',    sub: 'Credit Bureau' },
   { name: 'SACRRA',      sub: 'Bureau Reporting' },
-  { name: 'E-Contracts', sub: 'E-Signatures' },
+  { name: 'E-Contracts', sub: 'Built-in e-signing' },
   { name: 'Sanlam',      sub: 'Credit life' },
 ];
 
@@ -660,9 +660,9 @@ export default function HomePage() {
 
                   <div className="space-y-3 max-w-md">
                     {[
-                      { icon: TrendingUp, l: 'Implementation', v: '2–3 days from kick-off' },
-                      { icon: Activity,   l: 'Uptime SLA',     v: '99.9% guaranteed' },
-                      { icon: Lock,       l: 'Data isolation', v: 'Dedicated database per client' },
+                      { icon: TrendingUp, l: 'Implementation',   v: '2 days from kick-off' },
+                      { icon: Activity,   l: 'Platform uptime', v: '99% guaranteed' },
+                      { icon: Lock,       l: 'Data isolation',  v: 'Private environment, per client' },
                     ].map((s) => (
                       <div key={s.l} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/10">
                         <div className="w-10 h-10 rounded-xl bg-[#A78BFA]/20 flex items-center justify-center shrink-0">

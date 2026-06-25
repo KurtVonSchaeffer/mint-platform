@@ -2,9 +2,10 @@
 
 import { useRef, useEffect } from 'react';
 import { Plus, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
+import { PriceReveal } from '@/components/PriceReveal';
 import {
   CHECK_CATALOG, VOLUME_TIERS, BRANCH_RATE, ADMIN_FEE,
-  fmtR, fmtRc, rateWithMargin,
+  fmtR, fmtRc,
   type CheckId, type VolumeTierId,
 } from '@/lib/quote-pricing';
 
@@ -23,8 +24,10 @@ export interface QuoteEditState {
 }
 
 interface Props {
-  state:    QuoteEditState;
-  onChange: (patch: Partial<QuoteEditState>) => void;
+  state:         QuoteEditState;
+  onChange:      (patch: Partial<QuoteEditState>) => void;
+  isSuperAdmin?: boolean;
+  email?:        string;
 }
 
 function Toggle({ active }: { active: boolean }) {
@@ -66,7 +69,7 @@ const EYEBROW: React.CSSProperties = {
   color: 'var(--color-text3)',
 };
 
-export function QuoteEditPanel({ state, onChange }: Props) {
+export function QuoteEditPanel({ state, onChange, isSuperAdmin = false, email = '' }: Props) {
   const branches     = Math.max(1, parseInt(state.branches, 10) || 1);
   const flatFee      = Math.max(0, parseFloat(state.monthlyFee) || 0);
   const tier         = VOLUME_TIERS.find((t) => t.id === state.volumeTier) ?? VOLUME_TIERS[0];
@@ -129,36 +132,40 @@ export function QuoteEditPanel({ state, onChange }: Props) {
         backdropFilter: 'blur(14px)',
         borderBottom: '1px solid var(--color-border2)',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={EYEBROW}>Gross margin</span>
-            {showArrow && (
-              marginDelta > 0
-                ? <TrendingUp size={11} style={{ color: '#34d399' }} />
-                : <TrendingDown size={11} style={{ color: '#f87171' }} />
-            )}
-            {showArrow && (
-              <span style={{ fontSize: 9, fontWeight: 700, color: marginDelta > 0 ? '#34d399' : '#f87171' }}>
-                {marginDelta > 0 ? '+' : ''}{marginDelta.toFixed(1)}pp
-              </span>
-            )}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={{ fontSize: 10, fontWeight: 600, color: marginColor }}>{marginLabel}</span>
-            <span style={{
-              fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em',
-              color: marginColor, fontVariantNumeric: 'tabular-nums',
-              transition: 'color 0.35s ease',
-            }}>
-              {grossMarginPct.toFixed(1)}%
-            </span>
-          </div>
-        </div>
-        <MarginBar pct={grossMarginPct} color={marginColor} />
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-          <span style={{ fontSize: 9, color: 'var(--color-text3)' }}>Revenue {fmtR(totalMonthly)}/mo</span>
-          <span style={{ fontSize: 9, color: 'var(--color-text3)' }}>Cost {fmtR(ourMonthlyCost)}/mo · Profit {fmtR(grossProfit)}/mo</span>
-        </div>
+        <PriceReveal isSuperAdmin={isSuperAdmin} email={email} block>
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={EYEBROW}>Gross margin</span>
+                {showArrow && (
+                  marginDelta > 0
+                    ? <TrendingUp size={11} style={{ color: '#34d399' }} />
+                    : <TrendingDown size={11} style={{ color: '#f87171' }} />
+                )}
+                {showArrow && (
+                  <span style={{ fontSize: 9, fontWeight: 700, color: marginDelta > 0 ? '#34d399' : '#f87171' }}>
+                    {marginDelta > 0 ? '+' : ''}{marginDelta.toFixed(1)}pp
+                  </span>
+                )}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+                <span style={{ fontSize: 10, fontWeight: 600, color: marginColor }}>{marginLabel}</span>
+                <span style={{
+                  fontSize: 20, fontWeight: 800, letterSpacing: '-0.02em',
+                  color: marginColor, fontVariantNumeric: 'tabular-nums',
+                  transition: 'color 0.35s ease',
+                }}>
+                  {grossMarginPct.toFixed(1)}%
+                </span>
+              </div>
+            </div>
+            <MarginBar pct={grossMarginPct} color={marginColor} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+              <span style={{ fontSize: 9, color: 'var(--color-text3)' }}>Revenue {fmtR(totalMonthly)}/mo</span>
+              <span style={{ fontSize: 9, color: 'var(--color-text3)' }}>Cost {fmtR(ourMonthlyCost)}/mo · Profit {fmtR(grossProfit)}/mo</span>
+            </div>
+          </>
+        </PriceReveal>
       </div>
 
       {/* ── Scrollable content ────────────────────────────────────── */}
@@ -251,8 +258,8 @@ export function QuoteEditPanel({ state, onChange }: Props) {
           <p style={{ ...EYEBROW, marginBottom: 12 }}>Services included</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {CHECK_CATALOG.map((check) => {
-              const active       = state.selectedChecks.includes(check.id);
-              const pricePerUnit = rateWithMargin(check.baseRate);
+              const active         = state.selectedChecks.includes(check.id);
+              const pricePerUnit   = check.clientRate;              // published client-facing rate
               const monthlyContrib = Math.round(pricePerUnit * adjVolume);
               return (
                 <button
@@ -286,13 +293,32 @@ export function QuoteEditPanel({ state, onChange }: Props) {
                     </p>
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <p style={{
-                      fontSize: 12, fontWeight: 600, fontFamily: 'monospace',
-                      color: active ? 'var(--color-violet)' : 'var(--color-text3)',
-                    }}>{fmtRc(pricePerUnit)}/chk</p>
-                    <p style={{ fontSize: 10, color: 'var(--color-text3)', marginTop: 2 }}>
-                      ≈ {fmtR(monthlyContrib)}/mo
-                    </p>
+                    {pricePerUnit === 0 ? (
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 6,
+                        background: 'rgba(52,211,153,0.12)', color: 'var(--color-green)',
+                        border: '1px solid rgba(52,211,153,0.25)',
+                      }}>
+                        Included
+                      </span>
+                    ) : (
+                      <PriceReveal isSuperAdmin={isSuperAdmin} email={email}>
+                        <>
+                          <p style={{
+                            fontSize: 12, fontWeight: 600, fontFamily: 'monospace',
+                            color: active ? 'var(--color-violet)' : 'var(--color-text3)',
+                          }}>{fmtRc(pricePerUnit)}/chk</p>
+                          {check.firstFree > 0 && (
+                            <p style={{ fontSize: 10, color: 'var(--color-amber)', marginTop: 1 }}>
+                              first {check.firstFree.toLocaleString()} free
+                            </p>
+                          )}
+                          <p style={{ fontSize: 10, color: 'var(--color-text3)', marginTop: 2 }}>
+                            ≈ {fmtR(monthlyContrib)}/mo
+                          </p>
+                        </>
+                      </PriceReveal>
+                    )}
                   </div>
                 </button>
               );

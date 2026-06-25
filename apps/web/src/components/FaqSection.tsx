@@ -6,11 +6,11 @@ import { Plus, Minus } from 'lucide-react';
 const FAQS = [
   {
     q: 'How long does implementation take?',
-    a: 'Typically 4–8 weeks from signed agreement to go-live, depending on the complexity of your credit policy and the number of integrations required. Simple deployments have gone live in under three weeks.',
+    a: 'Typically 2 business days from signed agreement to go-live for a standard deployment. Complex custom scorecards and multi-integration setups may take longer — we will scope that with you upfront.',
   },
   {
     q: 'Do I own my data?',
-    a: "Absolutely. Your data lives in a dedicated Supabase instance — entirely isolated from other AlgoLend clients. Mint Platforms has no access to your borrower data unless you explicitly grant it for support purposes.",
+    a: "Absolutely. Your data lives in a private, fully isolated environment — entirely separate from other AlgoLend clients. Mint Platforms has no access to your borrower data unless you explicitly grant it for support purposes.",
   },
   {
     q: 'What happens if Experian or SureSystems goes down?',

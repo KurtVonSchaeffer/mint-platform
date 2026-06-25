@@ -76,7 +76,7 @@ export default function TermsPage() {
 
           <Section title="6. Service availability">
             <p>
-              Mint Platforms targets 99.9% monthly uptime for the platform. Planned maintenance is communicated with at least 48 hours notice. We are not liable for downtime caused by third-party providers (Supabase, Vercel, Experian, TruID, SureSystems).
+              Mint Platforms targets 99% monthly uptime for the platform. Planned maintenance is communicated with at least 48 hours notice. We are not liable for downtime caused by third-party providers (Supabase, Vercel, Experian, TruID, SureSystems).
             </p>
           </Section>
 

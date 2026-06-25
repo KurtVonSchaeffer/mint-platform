@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { sendEmail, userInviteEmail } from '@/lib/email';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -80,8 +81,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ user: created.user, setupLink: null }, { status: 201 });
   }
 
+  const setupLink = link.properties.action_link;
+
+  // Step 5 — email the invite link directly to the new user
+  await sendEmail({
+    to:      email,
+    subject: `You've been invited to AlgoLend`,
+    html:    userInviteEmail({
+      fullName:   fullName,
+      email:      email,
+      clientName: 'Mint Platforms',
+      role,
+      inviteUrl:  setupLink,
+    }),
+  });
+
   return NextResponse.json({
     user:      created.user,
-    setupLink: link.properties.action_link,
+    setupLink,
   }, { status: 201 });
 }

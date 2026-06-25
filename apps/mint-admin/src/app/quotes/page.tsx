@@ -6,13 +6,15 @@ import { Toast, type ToastKind } from '@/components/Toast';
 import { QuoteEditPanel, type QuoteEditState, type CustomItem } from '@/components/QuoteEditPanel';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
 import {
-  CHECK_CATALOG, VOLUME_TIERS, BRANCH_RATE, computeMonthlyFee, fmtR, fmtRc, rateWithMargin,
+  CHECK_CATALOG, VOLUME_TIERS, BRANCH_RATE, computeMonthlyFee, fmtR, fmtRc,
   type CheckId, type VolumeTierId,
 } from '@/lib/quote-pricing';
 import {
   FileText, Send, Download, Plus, CheckCircle, Clock, XCircle, X, Eye, Sparkles,
   Pencil, Save, UserPlus,
 } from 'lucide-react';
+import { PriceReveal } from '@/components/PriceReveal';
+import { useRole } from '@/hooks/useRole';
 
 type QuoteStatus = 'draft' | 'sent' | 'viewed' | 'accepted' | 'declined' | 'expired';
 
@@ -73,6 +75,7 @@ function todayPlus(days: number) {
 }
 
 export default function QuotesPage() {
+  const { isSuperAdmin, email } = useRole();
   const [quotes, setQuotes]       = useState<Quote[]>([]);
   const [loading, setLoading]     = useState(true);
   const [filter, setFilter]       = useState<'all' | QuoteStatus>('all');
@@ -240,7 +243,7 @@ export default function QuotesPage() {
   function downloadPDF(q: Quote) {
     const w = window.open('', '_blank', 'width=820,height=1100');
     if (!w) { pushToast('error', 'Allow popups to download PDF.'); return; }
-    w.document.write(printableQuote(q));
+    w.document.write(printableQuote(q, isSuperAdmin));
     w.document.close();
     setTimeout(() => w.print(), 250);
   }
@@ -385,7 +388,7 @@ export default function QuotesPage() {
 
             {/* Body: edit or view */}
             {editState ? (
-              <QuoteEditPanel state={editState} onChange={(patch) => setEditState((s) => s ? { ...s, ...patch } : s)} />
+              <QuoteEditPanel state={editState} onChange={(patch) => setEditState((s) => s ? { ...s, ...patch } : s)} isSuperAdmin={isSuperAdmin} email={email} />
             ) : (
               <div className="p-7 space-y-5">
                 <div>
@@ -408,7 +411,16 @@ export default function QuotesPage() {
                         return (
                           <div key={id} className="flex justify-between items-center">
                             <span className="text-[11px] px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(124,58,237,0.12)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.25)' }}>{c.label}</span>
-                            <span className="text-xs font-mono" style={{ color: 'var(--color-text3)' }}>{fmtRc(rateWithMargin(c.baseRate))}/chk</span>
+                            {c.clientRate === 0 ? (
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                                style={{ background: 'rgba(52,211,153,0.12)', color: 'var(--color-green)', border: '1px solid rgba(52,211,153,0.25)' }}>
+                                Included
+                              </span>
+                            ) : (
+                              <PriceReveal isSuperAdmin={isSuperAdmin} email={email}>
+                                <span className="text-xs font-mono" style={{ color: 'var(--color-text3)' }}>{fmtRc(c.clientRate)}/chk</span>
+                              </PriceReveal>
+                            )}
                           </div>
                         );
                       })}
@@ -461,11 +473,14 @@ export default function QuotesPage() {
   );
 }
 
-function printableQuote(q: Quote): string {
+function printableQuote(q: Quote, isSuperAdmin: boolean): string {
   const tier     = VOLUME_TIERS.find((t) => t.id === q.volumeTier);
   const checksHtml = q.selectedChecks.map((id) => {
     const c = CHECK_CATALOG.find((x) => x.id === id);
-    return c ? `<tr><td>${c.label}</td><td class="amt">${fmtRc(rateWithMargin(c.baseRate))}/chk</td></tr>` : '';
+    if (!c) return '';
+    const rateText = c.clientRate === 0 ? 'Included' : `${fmtRc(c.clientRate)}/chk`;
+    const rateCell = isSuperAdmin ? `<td class="amt">${rateText}</td>` : '<td class="amt">—</td>';
+    return `<tr><td>${c.label}</td>${rateCell}</tr>`;
   }).join('');
   const tcv = q.setupFee + q.monthlyFee * 12;
   const logoSvg = `<svg width="30" height="34" viewBox="0 0 34 38" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:inline-block;vertical-align:middle"><defs><linearGradient id="lg" x1="5" y1="38" x2="5" y2="3" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#a78bfa"/></linearGradient></defs><path d="M5 36 L5 13 Q5 3 16 3 Q28 3 28 14 Q28 23 19 26" stroke="url(#lg)" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="18" cy="14" r="11" fill="#1a1033"/></svg>`;

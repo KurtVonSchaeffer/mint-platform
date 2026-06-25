@@ -291,14 +291,20 @@ export function CreditLifeCard() {
             FSCA Approved
           </span>
         </div>
-        <h3 className="text-xl font-semibold mb-2 tracking-tight text-white">Credit life insurance</h3>
-        <p className="text-sm text-white/55 mb-5 leading-relaxed">
+        <div className="flex items-center gap-2 mb-2">
+          <h3 className="text-xl font-semibold tracking-tight text-white">Credit life insurance</h3>
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/50 border border-white/15">Sanlam</span>
+        </div>
+        <p className="text-sm text-white/55 mb-2 leading-relaxed">
           Embedded cover protecting your loan book — and your borrowers — against death, disability, and retrenchment.
         </p>
+        <div className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-teal-400/15 text-teal-300 border border-teal-400/25 mb-4">
+          R4.50 per R1,000 insured
+        </div>
         <div className="mt-auto space-y-2">
           {[
-            { label: 'Death',         detail: 'Outstanding balance settled' },
-            { label: 'Disability',    detail: 'Payments waived for term'    },
+            { label: 'Death',               detail: 'Outstanding balance settled' },
+            { label: 'Disability',          detail: 'Payments waived for term'    },
             { label: 'Unemployment benefit', detail: 'Income protection cover'    },
           ].map((r) => (
             <div key={r.label} className="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white/8 border border-white/12 backdrop-blur-sm">

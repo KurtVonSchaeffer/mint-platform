@@ -7,78 +7,105 @@
  */
 
 export interface ServiceRate {
-  id:           string;
-  name:         string;
-  description:  string;
-  providerCents: number;   // What we pay the provider per check
-  featureFlag:  string | null; // Corresponding feature flag (if any)
-  category:     'kyc' | 'credit' | 'banking' | 'compliance' | 'contracts';
+  id:             string;
+  name:           string;
+  description:    string;
+  providerCents:  number;        // What we pay the provider (internal, super_admin only)
+  publishedCents: number;        // Published client-facing rate per check
+  firstFree:      number;        // Complimentary calls per month (0 = none)
+  featureFlag:    string | null;
+  category:       'kyc' | 'credit' | 'banking' | 'compliance' | 'contracts';
+  enterpriseOnly: boolean;
 }
 
 export const SERVICE_RATES: ServiceRate[] = [
   {
-    id:            'cipc_employment',
-    name:          'CIPC Data: Employment',
-    description:   'Company registration + employment verification via CIPC',
-    providerCents: 266,
-    featureFlag:   'credit_scoring',
-    category:      'kyc',
+    id:             'cipc_employment',
+    name:           'CIPC Data: Employment',
+    description:    'Company registration + employment verification via CIPC',
+    providerCents:  266,
+    publishedCents: 350,
+    firstFree:      0,
+    featureFlag:    'credit_scoring',
+    category:       'kyc',
+    enterpriseOnly: false,
   },
   {
-    id:            'bureau_enquiry',
-    name:          'Standard Bureau Enquiry',
-    description:   'Credit bureau data contribution + enquiry (Experian)',
-    providerCents: 667,
-    featureFlag:   'credit_scoring',
-    category:      'credit',
+    id:             'bureau_enquiry',
+    name:           'Standard Bureau Check (Experian)',
+    description:    'Credit bureau data contribution + enquiry (Experian)',
+    providerCents:  667,
+    publishedCents: 920,
+    firstFree:      0,
+    featureFlag:    'credit_scoring',
+    category:       'credit',
+    enterpriseOnly: false,
   },
   {
-    id:            'bank_linking',
-    name:          'Bank Account Linking (TruID)',
-    description:   'Confirms bank details, salary dates, and fetches actual client budget',
-    providerCents: 850,
-    featureFlag:   'open_banking',
-    category:      'banking',
+    id:             'bank_linking',
+    name:           'Bank Account Linking (TruID)',
+    description:    'Confirms bank details, salary dates, and fetches actual client budget',
+    providerCents:  850,
+    publishedCents: 1100,
+    firstFree:      0,
+    featureFlag:    'open_banking',
+    category:       'banking',
+    enterpriseOnly: false,
   },
   {
-    id:            'automated_contracts',
-    name:          'Automated Contracts',
-    description:   'E-contract generation, issuing, and digital signing',
-    providerCents: 360,
-    featureFlag:   'e_contracts',
-    category:      'contracts',
+    id:             'automated_contracts',
+    name:           'E-Contracts',
+    description:    'E-contract generation, issuing, and digital signing',
+    providerCents:  360,
+    publishedCents: 30,
+    firstFree:      0,
+    featureFlag:    'e_contracts',
+    category:       'contracts',
+    enterpriseOnly: false,
   },
   {
-    id:            'liveness_id_phone',
-    name:          'Liveness + ID + Phone Verification',
-    description:   'Biometric liveness check, ID scan, and phone number verification',
-    providerCents: 540,
-    featureFlag:   'biometric_kyc',
-    category:      'kyc',
+    id:             'liveness_id_phone',
+    name:           'Full KYC — Liveness, ID & Phone',
+    description:    'Biometric liveness check, ID scan, and phone number verification',
+    providerCents:  540,
+    publishedCents: 650,
+    firstFree:      500,
+    featureFlag:    'biometric_kyc',
+    category:       'kyc',
+    enterpriseOnly: false,
   },
   {
-    id:            'liveness_dha',
-    name:          'Liveness + Dept. of Home Affairs',
-    description:   'Liveness check with DHA population register verification',
-    providerCents: 1550,
-    featureFlag:   'biometric_kyc',
-    category:      'kyc',
+    id:             'liveness_dha',
+    name:           'Liveness + Home Affairs (DHA)',
+    description:    'Liveness check with DHA population register verification',
+    providerCents:  1550,
+    publishedCents: 2000,
+    firstFree:      0,
+    featureFlag:    'biometric_kyc',
+    category:       'kyc',
+    enterpriseOnly: true,
   },
   {
-    id:            'watchlist_peps',
-    name:          'Watchlist — PEPs & Sanctions',
-    description:   'Politically Exposed Persons, sanctions screening, and adverse media',
-    providerCents: 195,
-    featureFlag:   'credit_scoring',
-    category:      'compliance',
+    id:             'watchlist_peps',
+    name:           'AML / Watchlist — PEPs & Sanctions',
+    description:    'Politically Exposed Persons, sanctions screening, and adverse media',
+    providerCents:  195,
+    publishedCents: 0,
+    firstFree:      0,
+    featureFlag:    'credit_scoring',
+    category:       'compliance',
+    enterpriseOnly: false,
   },
   {
-    id:            'address_verification',
-    name:          'Address Verification',
-    description:   'Physical address verification against authoritative sources',
-    providerCents: 174,
-    featureFlag:   null,
-    category:      'kyc',
+    id:             'address_verification',
+    name:           'Address Verification',
+    description:    'Physical address verification against authoritative sources',
+    providerCents:  174,
+    publishedCents: 350,
+    firstFree:      0,
+    featureFlag:    null,
+    category:       'kyc',
+    enterpriseOnly: false,
   },
 ];
 
@@ -101,11 +128,9 @@ export type VolumeTierId = typeof VOLUME_TIERS[number]['id'];
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
-/** Your selling price per check in cents */
+/** Published client-facing price per check in cents */
 export function sellingPrice(service: ServiceRate): number {
-  return Math.round(
-    service.providerCents * (1 + PRICING_CONFIG.markupPct) * (1 - PRICING_CONFIG.packageDiscountPct),
-  );
+  return service.publishedCents;
 }
 
 /** Monthly cost for a service at a given check volume, in cents */
