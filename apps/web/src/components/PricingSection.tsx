@@ -9,7 +9,6 @@ const STARTER_FEATURES = [
   'Borrower application portal',
   'Term loans & working capital',
   'Bureau enquiry (Experian)',
-  'Liveness + Home Affairs verification',
   'Watchlist — PEPs & sanctions',
   'Address verification',
   'NCA-compliant quotations',
@@ -27,6 +26,7 @@ const STARTER_FEATURES = [
 
 const ENTERPRISE_FEATURES = [
   'Everything in Starter',
+  'Liveness + Home Affairs verification',
   'Unlimited branches',
   '200 API checks / month included',
   'Priority onboarding support',
