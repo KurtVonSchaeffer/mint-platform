@@ -524,6 +524,100 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── MINT MARKETPLACE ────────────────────────────────────────── */}
+      <section className="relative overflow-hidden py-24 bg-[#020D0A]">
+        {/* Ambient teal glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] rounded-full opacity-20 blur-3xl pointer-events-none" style={{ background: 'radial-gradient(ellipse, #059669 0%, transparent 70%)' }} aria-hidden />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full opacity-10 blur-3xl pointer-events-none" style={{ background: '#10B981' }} aria-hidden />
+
+        <div className="relative max-w-[1200px] mx-auto px-6">
+          <Reveal>
+            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-16">
+              <div>
+                {/* Eyebrow */}
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5 border" style={{ background: 'rgba(16,185,129,0.08)', borderColor: 'rgba(16,185,129,0.25)' }}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Now live</span>
+                </div>
+                <h2 className="headline text-4xl md:text-5xl font-bold text-white leading-none mb-4">
+                  MINT Unsecured<br />
+                  <span style={{ background: 'linear-gradient(90deg, #34D399, #059669)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    Credit Marketplace
+                  </span>
+                </h2>
+                <p className="text-base max-w-lg" style={{ color: 'rgba(255,255,255,0.5)' }}>
+                  A single application. Multiple lenders. Instant decisions. MINT connects borrowers to a curated network of AlgoLend-powered credit providers — all NCA-compliant, all in one place.
+                </p>
+              </div>
+              <div className="flex-shrink-0">
+                <Link
+                  href="/apply"
+                  className="btn-shine inline-flex items-center gap-2 text-white text-[13px] font-semibold px-6 py-3 rounded-full transition-all duration-200 hover:-translate-y-px"
+                  style={{ background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)', boxShadow: '0 4px 24px rgba(16,185,129,0.4)' }}
+                >
+                  Apply now
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
+            </div>
+          </Reveal>
+
+          {/* Feature grid */}
+          <Reveal delay={100}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-14">
+              {[
+                { icon: Zap,       title: 'Instant decisions',       body: 'Automated credit scoring returns a decision in seconds — no waiting, no callbacks.' },
+                { icon: BarChart3, title: 'Multiple lenders',        body: 'One application matched across our network of NCR-registered credit providers.' },
+                { icon: Check,     title: 'NCA compliant',           body: 'Every offer includes a full pre-agreement quote under the National Credit Act.' },
+                { icon: Activity,  title: 'Credit life included',    body: 'FSCA-approved cover for death, disability and unemployment on every loan.' },
+              ].map(f => (
+                <div
+                  key={f.title}
+                  className="rounded-2xl p-5 flex flex-col gap-3"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(16,185,129,0.12)' }}
+                >
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(16,185,129,0.12)' }}>
+                    <f.icon size={16} className="text-emerald-400" />
+                  </div>
+                  <p className="text-sm font-semibold text-white">{f.title}</p>
+                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.45)' }}>{f.body}</p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+
+          {/* Loan range strip */}
+          <Reveal delay={200}>
+            <div className="rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6" style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)' }}>
+              <div className="text-center sm:text-left">
+                <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: '#34D399' }}>Loan amounts</p>
+                <p className="text-2xl font-bold text-white">R 1,000 — R 250,000</p>
+                <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>Unsecured · Terms from 3 to 60 months</p>
+              </div>
+              <div className="h-px sm:h-12 sm:w-px w-full" style={{ background: 'rgba(16,185,129,0.2)' }} aria-hidden />
+              <div className="text-center sm:text-left">
+                <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: '#34D399' }}>Interest rate</p>
+                <p className="text-2xl font-bold text-white">Up to 27% p.a.</p>
+                <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>NCA maximum · no hidden fees</p>
+              </div>
+              <div className="h-px sm:h-12 sm:w-px w-full" style={{ background: 'rgba(16,185,129,0.2)' }} aria-hidden />
+              <div className="text-center sm:text-left">
+                <p className="text-[10px] uppercase tracking-widest font-bold mb-1" style={{ color: '#34D399' }}>Powered by</p>
+                <p className="text-2xl font-bold text-white">AlgoLend</p>
+                <p className="text-xs mt-1" style={{ color: 'rgba(255,255,255,0.4)' }}>NCR-registered lender network</p>
+              </div>
+              <Link
+                href="/apply"
+                className="btn-shine flex-shrink-0 inline-flex items-center gap-2 text-white text-[13px] font-semibold px-5 py-2.5 rounded-full"
+                style={{ background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)', boxShadow: '0 4px 16px rgba(16,185,129,0.35)' }}
+              >
+                Check your rate <ArrowUpRight size={13} />
+              </Link>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
       {/* ── §04 — PRICING ───────────────────────────────────────────── */}
       <PricingSection />
 
