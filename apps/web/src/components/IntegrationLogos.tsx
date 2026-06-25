@@ -167,6 +167,18 @@ export function SureSystemsLogo({ size = 22, className }: LogoProps) {
   );
 }
 
+/* Sanlam — stylised arch mark (navy blue) */
+export function SanlamLogo({ size = 22, className }: LogoProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" className={className} aria-label="Sanlam">
+      {/* Outer arch */}
+      <path d="M12 3C7.03 3 3 7.03 3 12v5h2.5v-5a6.5 6.5 0 1 1 13 0v5H21v-5C21 7.03 16.97 3 12 3z" fill="#1B3A6B" />
+      {/* Inner cutout arch to create horseshoe */}
+      <path d="M12 7.5A4.5 4.5 0 0 0 7.5 12v3H10v-3a2 2 0 0 1 4 0v3h2.5v-3A4.5 4.5 0 0 0 12 7.5z" fill="#fff" />
+    </svg>
+  );
+}
+
 /* ─── Lookup ──────────────────────────────────────────────────────── */
 export const LOGO_MAP: Record<string, React.ComponentType<LogoProps>> = {
   TruID:           TruIDLogo,
@@ -174,6 +186,7 @@ export const LOGO_MAP: Record<string, React.ComponentType<LogoProps>> = {
   SACRRA:          SacrraLogo,
   'E-Contracts':   DocuSealLogo,
   'Sure Systems':  SureSystemsLogo,
+  Sanlam:          SanlamLogo,
   Resend:          ResendLogo,
   OpenPGP:         OpenPGPLogo,
   Supabase:        SupabaseLogo,

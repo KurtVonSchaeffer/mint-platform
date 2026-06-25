@@ -42,6 +42,7 @@ const integrations = [
   { name: 'Experian',    sub: 'Credit Bureau' },
   { name: 'SACRRA',      sub: 'Bureau Reporting' },
   { name: 'E-Contracts', sub: 'E-Signatures' },
+  { name: 'Sanlam',      sub: 'Credit life' },
 ];
 
 
