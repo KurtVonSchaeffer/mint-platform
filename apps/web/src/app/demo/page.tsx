@@ -727,13 +727,17 @@ export default function DemoPage() {
             style={{ color: '#6E74A4', background: 'rgba(255,255,255,0.05)' }}>
             ← Back
           </Link>
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-white text-xs" style={{ background: BRAND }}>A</div>
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
+              <path d="M 6 30 L 6 14 C 6 8.48 10.48 4 16 4 C 21.52 4 26 8.48 26 14 L 26 30"
+                stroke="#7C3AED" strokeWidth="2.6" fill="none" strokeLinecap="round" />
+              <circle cx="16" cy="15" r="5.5" fill="#0F1629" />
+            </svg>
             <div>
-              <p className="text-xs font-bold text-white">AlgoLend</p>
+              <p className="text-xs font-bold text-white group-hover:text-[#A78BFA] transition-colors">AlgoLend</p>
               <p className="text-[9px] text-[#6E74A4]">Interactive demo</p>
             </div>
-          </div>
+          </Link>
         </div>
         <div className="flex items-center gap-2">
           {/* View toggle */}

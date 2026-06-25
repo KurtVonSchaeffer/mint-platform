@@ -2,69 +2,88 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Check, ArrowRight, Upload, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Building2, Users, FileText, CheckCircle2,
+  Check, ArrowRight, Upload, X, Shield, Zap, Award, Clock,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlgoLendLogo } from '@/components/AlgoLendLogo';
 
 /* ── Types ──────────────────────────────────────────────────────────── */
 type Step = 'details' | 'directors' | 'documents' | 'review' | 'done';
-const STEPS: { id: Step; label: string }[] = [
-  { id: 'details',   label: 'Company' },
-  { id: 'directors', label: 'Directors' },
-  { id: 'documents', label: 'Documents' },
-  { id: 'review',    label: 'Review' },
+const STEPS: { id: Step; label: string; desc: string; icon: React.ElementType }[] = [
+  { id: 'details',   label: 'Company',   desc: 'Business details',   icon: Building2    },
+  { id: 'directors', label: 'Directors', desc: 'FICA compliance',    icon: Users        },
+  { id: 'documents', label: 'Documents', desc: 'Verification docs',  icon: FileText     },
+  { id: 'review',    label: 'Review',    desc: 'Confirm & submit',   icon: CheckCircle2 },
 ];
 
 const REQUIRED_DOCS = [
-  { id: 'cipc_cert',      label: 'CIPC registration certificate', hint: 'Company registration from CIPC',        required: true  },
-  { id: 'director_id',    label: 'Director ID copy',              hint: 'Clear copy of SA ID document',          required: true  },
-  { id: 'ncr_cert',       label: 'NCR lending licence',           hint: 'NCR certificate for credit providers',  required: true  },
-  { id: 'bank_statement', label: '3 months bank statements',      hint: 'Business account — last 3 months',      required: true  },
-  { id: 'signed_sla',     label: 'Signed service agreement',      hint: 'Upload if signed — we can email it',    required: false },
+  { id: 'cipc_cert',      label: 'CIPC registration certificate', hint: 'Company registration from CIPC',       required: true  },
+  { id: 'director_id',    label: 'Director ID copy',              hint: 'Clear copy of SA ID document',         required: true  },
+  { id: 'ncr_cert',       label: 'NCR lending licence',           hint: 'NCR certificate for credit providers', required: true  },
+  { id: 'bank_statement', label: '3 months bank statements',      hint: 'Business account — last 3 months',     required: true  },
+  { id: 'signed_sla',     label: 'Signed service agreement',      hint: 'Upload if signed — we can email it',   required: false },
 ];
 
-/* ── Component ──────────────────────────────────────────────────────── */
+const INDUSTRIES = [
+  'Microfinance', 'Retail credit', 'Property finance', 'Vehicle finance',
+  'Business lending', 'SMME lending', 'Fintech', 'Other',
+];
+
+const VALUE_PROPS = [
+  { icon: Clock,  text: 'Go live in 2–3 days from onboarding' },
+  { icon: Shield, text: 'NCR & NCA compliant from day one'    },
+  { icon: Award,  text: 'FSCA credit life on every loan'      },
+  { icon: Zap,    text: 'Your brand, portal, and domain'      },
+];
+
+const TRUST_BADGES = ['256-bit encrypted', 'POPIA compliant', 'SOC 2 ready'];
+
+/* ── Slide variants ─────────────────────────────────────────────────── */
+const slide = {
+  hidden:  { opacity: 0, x: 24 },
+  visible: { opacity: 1, x: 0,   transition: { duration: 0.28, ease: [0.16, 1, 0.3, 1] as const } },
+  exit:    { opacity: 0, x: -24, transition: { duration: 0.18 } },
+};
+
+/* ── Main component ─────────────────────────────────────────────────── */
 export default function ApplyPage() {
-  const [step, setStep]   = useState<Step>('details');
-  const [error, setError] = useState('');
+  const [step, setStep]     = useState<Step>('details');
+  const [error, setError]   = useState('');
   const [saving, setSaving] = useState(false);
 
-  // API session state (obtained after step 1)
   const [token,  setToken]  = useState('');
   const [leadId, setLeadId] = useState('');
 
-  // Step 1 — details
   const [name,      setName]      = useState('');
   const [email,     setEmail]     = useState('');
   const [company,   setCompany]   = useState('');
   const [legalName, setLegalName] = useState('');
   const [phone,     setPhone]     = useState('');
   const [ncr,       setNcr]       = useState('');
+  const [industry,  setIndustry]  = useState('');
 
-  // Step 2 — directors
   const [directors, setDirectors] = useState([{ name: '', id_number: '', email: '' }]);
-
-  // Step 3 — documents
-  const [docFiles, setDocFiles] = useState<Record<string, File | null>>({});
+  const [docFiles,  setDocFiles]  = useState<Record<string, File | null>>({});
 
   const stepIndex = STEPS.findIndex(s => s.id === step);
+  const ORDER: Step[] = ['details', 'directors', 'documents', 'review'];
+  const navBack = () => { const i = ORDER.indexOf(step); if (i > 0) setStep(ORDER[i - 1]); };
+  const navNext = () => { const i = ORDER.indexOf(step); if (i < ORDER.length - 1) setStep(ORDER[i + 1]); };
 
-  /* ── Helpers ─────────────────────────────────────────────────── */
-  function addDirector() {
-    setDirectors(p => [...p, { name: '', id_number: '', email: '' }]);
-  }
+  function addDirector() { setDirectors(p => [...p, { name: '', id_number: '', email: '' }]); }
   function updateDirector(i: number, k: keyof typeof directors[0], v: string) {
     setDirectors(p => p.map((d, idx) => idx === i ? { ...d, [k]: v } : d));
   }
-  function removeDirector(i: number) {
-    setDirectors(p => p.filter((_, idx) => idx !== i));
-  }
-  function setDoc(id: string, file: File | null) {
-    setDocFiles(p => ({ ...p, [id]: file }));
-  }
+  function removeDirector(i: number) { setDirectors(p => p.filter((_, idx) => idx !== i)); }
+  function setDoc(id: string, file: File | null) { setDocFiles(p => ({ ...p, [id]: file })); }
 
-  /* ── Step 1 submit → get token ───────────────────────────────── */
   async function submitDetails() {
-    setError('');
-    setSaving(true);
+    setError(''); setSaving(true);
     try {
       const res = await fetch('/api/onboard/start', {
         method: 'POST',
@@ -73,383 +92,485 @@ export default function ApplyPage() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) { setError(json.error ?? 'Something went wrong.'); return; }
-      setToken(json.token);
-      setLeadId(json.leadId);
+      setToken(json.token); setLeadId(json.leadId);
       setStep('directors');
-    } catch {
-      setError('Network error. Please try again.');
-    } finally {
-      setSaving(false);
-    }
+    } catch { setError('Network error. Please try again.'); }
+    finally { setSaving(false); }
   }
 
-  /* ── Final submit ────────────────────────────────────────────── */
   async function submitApplication() {
-    setError('');
-    setSaving(true);
+    setError(''); setSaving(true);
     try {
-      // Submit main data
       const res = await fetch(`/api/onboard/${token}/submit`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          lead_id: leadId,
-          name, company, legal_name: legalName, phone, ncr_number: ncr, directors,
-        }),
+        body: JSON.stringify({ lead_id: leadId, name, company, legal_name: legalName, phone, ncr_number: ncr, directors }),
       });
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}));
-        setError(d.error ?? 'Submission failed. Please try again.');
-        return;
-      }
-
-      // Upload documents
-      const entries = Object.entries(docFiles).filter(([, f]) => f != null);
-      await Promise.allSettled(entries.map(([docType, file]) => {
-        const fd = new FormData();
-        fd.append('token', token);
-        fd.append('doc_type', docType);
-        fd.append('file', file!);
-        if (leadId) fd.append('client_id', leadId);
-        return fetch(`/api/onboard/${token}/upload`, { method: 'POST', body: fd });
-      }));
-
+      if (!res.ok) { const d = await res.json().catch(() => ({})); setError(d.error ?? 'Submission failed.'); return; }
+      await Promise.allSettled(
+        Object.entries(docFiles).filter(([, f]) => f != null).map(([docType, file]) => {
+          const fd = new FormData();
+          fd.append('token', token); fd.append('doc_type', docType); fd.append('file', file!);
+          if (leadId) fd.append('client_id', leadId);
+          return fetch(`/api/onboard/${token}/upload`, { method: 'POST', body: fd });
+        }),
+      );
       setStep('done');
-    } catch {
-      setError('Network error. Please try again.');
-    } finally {
-      setSaving(false);
-    }
+    } catch { setError('Network error. Please try again.'); }
+    finally { setSaving(false); }
   }
 
-  /* ── Done screen ─────────────────────────────────────────────── */
+  /* ── Done screen ──────────────────────────────────────────────────── */
   if (step === 'done') {
     return (
-      <main className="min-h-screen flex items-center justify-center px-4 py-16"
-        style={{ background: 'var(--color-bg)' }}>
-        <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
-            style={{ background: '#ECFDF5', fontSize: 28 }}>✓</div>
-          <h1 className="text-2xl font-bold tracking-tight mb-2" style={{ color: 'var(--color-ink)' }}>
-            Application submitted
-          </h1>
-          <p className="mb-6" style={{ color: 'var(--color-ink-soft)' }}>
-            Thanks <strong>{name}</strong>. We'll review your application and reach out to <strong>{email}</strong> within 1 business day.
+      <main className="min-h-screen flex items-center justify-center px-4" style={{ background: '#F8F9FB' }}>
+        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className="max-w-md w-full text-center">
+          <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-8"
+            style={{ background: 'linear-gradient(135deg,#7C3AED,#9B5CF6)', boxShadow: '0 12px 40px rgba(124,58,237,0.35)' }}>
+            <Check size={36} className="text-white" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight mb-3" style={{ color: '#09090B' }}>Application submitted</h1>
+          <p className="text-base mb-2" style={{ color: '#52525B' }}>
+            Thanks <strong style={{ color: '#09090B' }}>{name}</strong>. We&apos;ll be in touch at
           </p>
-          <p className="text-sm mb-8" style={{ color: 'var(--color-ink-muted)' }}>
-            Questions? Email us at <a href="mailto:accounts@algolend.co.za" className="underline" style={{ color: 'var(--color-brand)' }}>accounts@algolend.co.za</a>
+          <p className="font-semibold mb-8" style={{ color: '#7C3AED' }}>{email}</p>
+          <div className="rounded-2xl p-5 mb-8 text-left" style={{ background: '#fff', border: '1px solid #E4E4E7' }}>
+            <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: '#A1A1AA' }}>What happens next</p>
+            {['Our team reviews your documents (1 business day)', 'We schedule a 30-min onboarding call', 'Your platform is configured and launched'].map((s, i) => (
+              <div key={i} className="flex items-start gap-3 mb-3 last:mb-0">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5 text-[10px] font-bold"
+                  style={{ background: '#F5F3FF', color: '#7C3AED' }}>{i + 1}</div>
+                <p className="text-sm" style={{ color: '#27272A' }}>{s}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-sm mb-6" style={{ color: '#71717A' }}>
+            Questions? Email{' '}
+            <a href="mailto:accounts@algolend.co.za" style={{ color: '#7C3AED', fontWeight: 600 }}>accounts@algolend.co.za</a>
           </p>
-          <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold px-5 py-2.5 rounded-full text-white" style={{ background: 'var(--color-brand)' }}>
-            Back to AlgoLend <ArrowRight size={13} />
+          <Link href="/" className="inline-flex items-center gap-2 text-sm font-semibold px-6 py-3 rounded-full text-white"
+            style={{ background: 'linear-gradient(135deg,#7C3AED,#9B5CF6)', boxShadow: '0 4px 20px rgba(124,58,237,0.35)' }}>
+            Back to AlgoLend <ArrowRight size={14} />
           </Link>
-        </div>
+        </motion.div>
       </main>
     );
   }
 
+  /* ── Main layout ──────────────────────────────────────────────────── */
   return (
-    <main className="min-h-screen py-16 px-4" style={{ background: 'var(--color-bg)' }}>
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen flex">
 
-        {/* Header */}
-        <div className="mb-8">
-          <Link href="/" className="text-sm font-medium mb-5 inline-flex items-center gap-1.5"
-            style={{ color: 'var(--color-brand)' }}>
-            ← AlgoLend
+      {/* ── Left panel ────────────────────────────────────────────────── */}
+      <div className="hidden lg:flex lg:w-[420px] xl:w-[460px] shrink-0 flex-col justify-between p-10 relative overflow-hidden"
+        style={{ background: '#0F0A1F' }}>
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ background: 'radial-gradient(ellipse at 20% 20%, rgba(124,58,237,0.18) 0%, transparent 60%)' }} />
+
+        <div className="relative z-10">
+          <Link href="/" className="flex items-center gap-2.5 mb-14">
+            <AlgoLendLogo className="h-8 w-8" white />
+            <span className="text-lg font-bold text-white">AlgoLend</span>
           </Link>
-          <div className="flex items-start gap-3 mt-4">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-              style={{ background: 'var(--color-brand)', marginTop: 2 }}>
-              <svg width="18" height="18" viewBox="0 0 32 32" fill="none">
-                <path d="M6 30L6 14C6 8.48 10.48 4 16 4C21.52 4 26 8.48 26 14L26 30"
-                  stroke="#fff" strokeWidth="2.6" fill="none" strokeLinecap="round"/>
-                <circle cx="16" cy="15" r="5.5" fill="#fff"/>
-              </svg>
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--color-ink)' }}>
-                Start your AlgoLend application
-              </h1>
-              <p className="text-sm mt-1" style={{ color: 'var(--color-ink-soft)' }}>
-                Takes about 5 minutes. We'll review your application and be in touch within 1 business day.
-              </p>
-            </div>
+
+          <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: '#A78BFA' }}>
+            Lender onboarding
+          </p>
+          <h2 className="text-2xl font-bold text-white mb-2 leading-snug">
+            Set up your lending operation in days.
+          </h2>
+          <p className="text-sm mb-10" style={{ color: 'rgba(255,255,255,0.45)' }}>
+            Tell us about your business and we&apos;ll configure a fully branded credit platform.
+          </p>
+
+          {/* Vertical step tracker */}
+          <div className="space-y-0 mb-12">
+            {STEPS.map((s, i) => {
+              const done   = i < stepIndex;
+              const active = s.id === step;
+              const Icon   = s.icon;
+              return (
+                <div key={s.id} className="flex items-start gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all duration-300"
+                      style={done
+                        ? { background: '#7C3AED', color: '#fff' }
+                        : active
+                        ? { background: '#7C3AED', boxShadow: '0 0 0 4px rgba(124,58,237,0.25)', color: '#fff' }
+                        : { background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.10)', color: 'rgba(255,255,255,0.3)' }
+                      }>
+                      {done ? <Check size={16} /> : <Icon size={16} />}
+                    </div>
+                    {i < STEPS.length - 1 && (
+                      <div className="relative w-px my-1" style={{ height: 40, background: 'rgba(255,255,255,0.08)' }}>
+                        {done && (
+                          <motion.div
+                            initial={{ height: 0 }} animate={{ height: '100%' }}
+                            transition={{ duration: 0.3 }}
+                            className="absolute top-0 left-0 w-full"
+                            style={{ background: '#7C3AED' }}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="pb-8 last:pb-0 pt-2.5">
+                    <p className="text-sm font-semibold leading-none mb-0.5"
+                      style={{ color: active ? '#fff' : done ? 'rgba(255,255,255,0.65)' : 'rgba(255,255,255,0.22)' }}>
+                      {s.label}
+                    </p>
+                    <p className="text-xs" style={{ color: active ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.18)' }}>
+                      {s.desc}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Value props */}
+          <div className="space-y-3">
+            {VALUE_PROPS.map(({ icon: Icon, text }, i) => (
+              <motion.div key={text} initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: i * 0.08, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: 'rgba(124,58,237,0.15)' }}>
+                  <Icon size={13} style={{ color: '#A78BFA' }} />
+                </div>
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.52)' }}>{text}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
 
-        {/* Step indicator */}
-        <div className="flex items-center gap-2 mb-8">
-          {STEPS.map((s, i) => (
-            <div key={s.id} className="flex items-center gap-2">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors"
-                  style={s.id === step
-                    ? { background: 'var(--color-brand)', color: '#fff' }
-                    : i < stepIndex
-                    ? { background: '#ECFDF5', color: '#059669' }
-                    : { background: 'var(--color-surface-3)', color: 'var(--color-ink-muted)' }}>
-                  {i < stepIndex ? <Check size={11} /> : i + 1}
-                </div>
-                <span className="text-sm font-medium hidden sm:inline"
-                  style={{ color: s.id === step ? 'var(--color-ink)' : 'var(--color-ink-muted)' }}>
-                  {s.label}
-                </span>
-              </div>
-              {i < STEPS.length - 1 && <div className="w-8 h-px" style={{ background: 'var(--color-border)' }} />}
-            </div>
-          ))}
+        {/* Trust badges */}
+        <div className="relative z-10 pt-8" style={{ borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+          <p className="text-[11px] mb-3" style={{ color: 'rgba(255,255,255,0.28)' }}>Trusted &amp; certified</p>
+          <div className="flex flex-wrap gap-2">
+            {TRUST_BADGES.map(b => (
+              <span key={b} className="px-2.5 py-1 rounded-full text-[10px]"
+                style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.45)', border: '1px solid rgba(255,255,255,0.09)' }}>
+                {b}
+              </span>
+            ))}
+          </div>
         </div>
-
-        {/* Card */}
-        <div className="rounded-2xl p-8" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-
-          {/* ── Step 1: Details ── */}
-          {step === 'details' && (
-            <div className="space-y-4">
-              <h2 className="text-lg font-bold mb-4" style={{ color: 'var(--color-ink)' }}>Company details</h2>
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="Contact name *">
-                  <input required value={name} onChange={e => setName(e.target.value)} placeholder="Jane Smith" className="a-input" />
-                </Field>
-                <Field label="Work email *">
-                  <input required type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="jane@company.co.za" className="a-input" />
-                </Field>
-              </div>
-              <Field label="Company name *">
-                <input required value={company} onChange={e => setCompany(e.target.value)} placeholder="BridgeCapital Finance (Pty) Ltd" className="a-input" />
-              </Field>
-              <Field label="Legal / registered name" hint="If different from trading name">
-                <input value={legalName} onChange={e => setLegalName(e.target.value)} placeholder="BridgeCapital Finance (Pty) Ltd" className="a-input" />
-              </Field>
-              <div className="grid grid-cols-2 gap-4">
-                <Field label="Phone number">
-                  <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+27 82 000 0000" className="a-input" />
-                </Field>
-                <Field label="NCR registration number">
-                  <input value={ncr} onChange={e => setNcr(e.target.value)} placeholder="NCRCP12345" className="a-input font-mono" />
-                </Field>
-              </div>
-            </div>
-          )}
-
-          {/* ── Step 2: Directors ── */}
-          {step === 'directors' && (
-            <div className="space-y-4">
-              <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--color-ink)' }}>Director information</h2>
-              <p className="text-sm mb-4" style={{ color: 'var(--color-ink-soft)' }}>
-                Add all directors of the company. Required for FICA compliance.
-              </p>
-              {directors.map((d, i) => (
-                <div key={i} className="rounded-xl p-4 space-y-3" style={{ background: 'var(--color-surface-2)', border: '1px solid var(--color-border)' }}>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--color-ink-muted)' }}>Director {i + 1}</p>
-                    {directors.length > 1 && (
-                      <button onClick={() => removeDirector(i)} className="inline-flex items-center gap-1 text-xs" style={{ color: 'var(--color-ink-muted)' }}>
-                        <X size={11} /> Remove
-                      </button>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label="Full name *">
-                      <input value={d.name} onChange={e => updateDirector(i, 'name', e.target.value)} placeholder="Jane Smith" className="a-input" />
-                    </Field>
-                    <Field label="SA ID number *">
-                      <input value={d.id_number} onChange={e => updateDirector(i, 'id_number', e.target.value)} placeholder="8001015009087" className="a-input font-mono" maxLength={13} />
-                    </Field>
-                  </div>
-                  <Field label="Email address">
-                    <input type="email" value={d.email} onChange={e => updateDirector(i, 'email', e.target.value)} placeholder="jane@company.co.za" className="a-input" />
-                  </Field>
-                </div>
-              ))}
-              <button onClick={addDirector}
-                className="text-sm font-semibold px-4 py-2.5 rounded-xl w-full transition-colors"
-                style={{ border: '1px dashed var(--color-border)', color: 'var(--color-brand)', background: 'transparent' }}>
-                + Add another director
-              </button>
-            </div>
-          )}
-
-          {/* ── Step 3: Documents ── */}
-          {step === 'documents' && (
-            <div className="space-y-3">
-              <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--color-ink)' }}>Upload documents</h2>
-              <p className="text-sm mb-4" style={{ color: 'var(--color-ink-soft)' }}>
-                Required for FICA and NCR compliance verification. Files are encrypted and only accessible to Mint Platforms staff.
-              </p>
-              {REQUIRED_DOCS.map(doc => {
-                const file = docFiles[doc.id] ?? null;
-                return (
-                  <label key={doc.id} className="block cursor-pointer">
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl border transition-all"
-                      style={file
-                        ? { borderColor: '#6EE7B7', background: '#F0FDF4' }
-                        : { borderColor: 'var(--color-border)', background: 'var(--color-surface-2)' }}>
-                      <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-base"
-                        style={{ background: file ? '#D1FAE5' : 'var(--color-surface-3)' }}>
-                        {file ? <Check size={16} className="text-emerald-600" /> : <Upload size={16} style={{ color: 'var(--color-ink-muted)' }} />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium" style={{ color: 'var(--color-ink)' }}>
-                          {doc.label}
-                          {doc.required && <span className="ml-1.5 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ background: '#FEF2F2', color: '#B91C1C' }}>Required</span>}
-                        </p>
-                        <p className="text-xs truncate" style={{ color: file ? '#059669' : 'var(--color-ink-muted)' }}>
-                          {file ? file.name : doc.hint}
-                        </p>
-                      </div>
-                      {file && (
-                        <button type="button" onClick={e => { e.preventDefault(); setDoc(doc.id, null); }}
-                          className="text-xs px-2 py-1 rounded" style={{ color: 'var(--color-ink-muted)', background: 'var(--color-surface-3)' }}>
-                          Remove
-                        </button>
-                      )}
-                    </div>
-                    <input type="file" className="sr-only" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                      onChange={e => { setDoc(doc.id, e.target.files?.[0] ?? null); e.target.value = ''; }} />
-                  </label>
-                );
-              })}
-              <p className="text-xs pt-1" style={{ color: 'var(--color-ink-muted)' }}>
-                Accepted: PDF, JPG, PNG, Word. Missing documents can be sent to <strong>accounts@algolend.co.za</strong>.
-              </p>
-            </div>
-          )}
-
-          {/* ── Step 4: Review ── */}
-          {step === 'review' && (
-            <div className="space-y-5">
-              <h2 className="text-lg font-bold mb-4" style={{ color: 'var(--color-ink)' }}>Review & submit</h2>
-              <ReviewSection title="Company">
-                <ReviewRow label="Trading name" value={company} />
-                {legalName && <ReviewRow label="Legal name" value={legalName} />}
-                <ReviewRow label="Contact" value={`${name} · ${email}`} />
-                {phone && <ReviewRow label="Phone" value={phone} />}
-                {ncr && <ReviewRow label="NCR number" value={ncr} mono />}
-              </ReviewSection>
-              <ReviewSection title="Directors">
-                {directors.map((d, i) => (
-                  <ReviewRow key={i} label={`Director ${i + 1}`} value={`${d.name}${d.id_number ? ` · ${d.id_number}` : ''}`} />
-                ))}
-              </ReviewSection>
-              <ReviewSection title="Documents">
-                {REQUIRED_DOCS.map(doc => (
-                  <ReviewRow key={doc.id} label={doc.label}
-                    value={docFiles[doc.id] ? docFiles[doc.id]!.name : doc.required ? '⚠ Missing' : 'Not uploaded'}
-                    warn={!docFiles[doc.id] && doc.required} />
-                ))}
-              </ReviewSection>
-              {error && (
-                <p className="text-sm px-4 py-3 rounded-xl" style={{ background: '#FEF2F2', color: '#B91C1C' }}>{error}</p>
-              )}
-            </div>
-          )}
-
-          {/* Error */}
-          {step !== 'review' && error && (
-            <p className="text-sm mt-4 px-4 py-3 rounded-xl" style={{ background: '#FEF2F2', color: '#B91C1C' }}>{error}</p>
-          )}
-        </div>
-
-        {/* Footer nav */}
-        <div className="flex justify-between items-center mt-6">
-          <button
-            onClick={() => {
-              const order: Step[] = ['details', 'directors', 'documents', 'review'];
-              const i = order.indexOf(step);
-              if (i > 0) setStep(order[i - 1]);
-            }}
-            disabled={step === 'details'}
-            className="px-5 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-30"
-            style={{ border: '1px solid var(--color-border)', color: 'var(--color-ink-soft)' }}>
-            Back
-          </button>
-
-          {step === 'details' && (
-            <button
-              onClick={submitDetails}
-              disabled={saving || !name.trim() || !email.trim() || !company.trim()}
-              className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity disabled:opacity-40"
-              style={{ background: 'var(--color-brand)' }}>
-              {saving ? 'Saving…' : 'Continue →'}
-            </button>
-          )}
-
-          {(step === 'directors' || step === 'documents') && (
-            <button
-              onClick={() => {
-                const order: Step[] = ['details', 'directors', 'documents', 'review'];
-                const i = order.indexOf(step);
-                setStep(order[i + 1]);
-              }}
-              className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white"
-              style={{ background: 'var(--color-brand)' }}>
-              Next →
-            </button>
-          )}
-
-          {step === 'review' && (
-            <button
-              onClick={submitApplication}
-              disabled={saving}
-              className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-opacity disabled:opacity-60"
-              style={{ background: 'var(--color-brand)' }}>
-              {saving ? 'Submitting…' : 'Submit application →'}
-            </button>
-          )}
-        </div>
-
-        <p className="text-center text-xs mt-6" style={{ color: 'var(--color-ink-muted)' }}>
-          By applying you agree to our{' '}
-          <Link href="/terms" className="underline">Terms</Link> and{' '}
-          <Link href="/privacy" className="underline">Privacy Policy</Link>.
-        </p>
       </div>
 
-      <style>{`
-        .a-input {
-          width: 100%;
-          padding: 10px 14px;
-          border-radius: 10px;
-          border: 1px solid var(--color-border);
-          background: var(--color-surface);
-          color: var(--color-ink);
-          font-size: 14px;
-          outline: none;
-          transition: border-color 0.15s;
-          font-family: inherit;
-        }
-        .a-input:focus { border-color: var(--color-brand); box-shadow: 0 0 0 3px rgba(124,58,237,0.1); }
-        .a-input::placeholder { color: var(--color-ink-muted); }
-      `}</style>
-    </main>
-  );
-}
+      {/* ── Right panel (form) ─────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-h-screen overflow-y-auto" style={{ background: '#F8F9FB' }}>
 
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--color-ink-soft)' }}>{label}</label>
-      {children}
-      {hint && <p className="text-xs mt-1" style={{ color: 'var(--color-ink-muted)' }}>{hint}</p>}
+        {/* Mobile header */}
+        <div className="lg:hidden flex items-center justify-between px-6 py-4 bg-white border-b border-[#E4E4E7]">
+          <Link href="/" className="flex items-center gap-2">
+            <AlgoLendLogo className="h-7 w-7" />
+            <span className="font-bold text-sm" style={{ color: '#09090B' }}>AlgoLend</span>
+          </Link>
+          <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: '#F5F3FF', color: '#7C3AED' }}>
+            Step {stepIndex + 1} / {STEPS.length}
+          </span>
+        </div>
+
+        {/* Mobile progress */}
+        <div className="lg:hidden px-6 pt-5 pb-1">
+          <div className="flex gap-1.5">
+            {STEPS.map((s, i) => (
+              <div key={s.id} className="flex-1 h-1 rounded-full transition-all duration-300"
+                style={{ background: i <= stepIndex ? '#7C3AED' : '#E4E4E7' }} />
+            ))}
+          </div>
+        </div>
+
+        <div className="flex-1 flex flex-col justify-center px-6 py-10 lg:px-16 xl:px-24 max-w-2xl w-full mx-auto">
+
+          {/* Step heading */}
+          <div className="mb-8">
+            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#A78BFA' }}>
+              Step {stepIndex + 1} — {STEPS[stepIndex]?.label}
+            </p>
+            <h1 className="text-2xl font-bold tracking-tight" style={{ color: '#09090B' }}>
+              {step === 'details'   && 'Tell us about your company'}
+              {step === 'directors' && 'Add your directors'}
+              {step === 'documents' && 'Upload required documents'}
+              {step === 'review'    && 'Review your application'}
+            </h1>
+            <p className="mt-1.5 text-sm" style={{ color: '#71717A' }}>
+              {step === 'details'   && 'We need these details to set up your platform and verify your credit business.'}
+              {step === 'directors' && 'Required for FICA compliance. Add all registered directors of your company.'}
+              {step === 'documents' && 'Files are encrypted and only accessible to Mint Platforms staff for verification.'}
+              {step === 'review'    && 'Check everything looks correct before you submit.'}
+            </p>
+          </div>
+
+          {/* Animated step content */}
+          <AnimatePresence mode="wait">
+            <motion.div key={step} initial="hidden" animate="visible" exit="exit" variants={slide}>
+
+              {/* ── Step 1: Details ── */}
+              {step === 'details' && (
+                <div className="space-y-5">
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="Contact name" required>
+                      <FInput value={name} onChange={setName} placeholder="Jane Smith" />
+                    </Field>
+                    <Field label="Work email" required>
+                      <FInput type="email" value={email} onChange={setEmail} placeholder="jane@company.co.za" />
+                    </Field>
+                  </div>
+                  <Field label="Company trading name" required>
+                    <FInput value={company} onChange={setCompany} placeholder="BridgeCapital Finance (Pty) Ltd" />
+                  </Field>
+                  <Field label="Legal / registered name" hint="Leave blank if same as trading name">
+                    <FInput value={legalName} onChange={setLegalName} placeholder="Same as above" />
+                  </Field>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="Phone number">
+                      <FInput type="tel" value={phone} onChange={setPhone} placeholder="+27 82 000 0000" />
+                    </Field>
+                    <Field label="NCR registration number">
+                      <FInput value={ncr} onChange={setNcr} placeholder="NCRCP12345" mono />
+                    </Field>
+                  </div>
+                  <Field label="Industry">
+                    <Select value={industry} onValueChange={setIndustry}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select your industry" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {INDUSTRIES.map(ind => (
+                          <SelectItem key={ind} value={ind.toLowerCase().replace(/ /g, '-')}>{ind}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </Field>
+                </div>
+              )}
+
+              {/* ── Step 2: Directors ── */}
+              {step === 'directors' && (
+                <div className="space-y-4">
+                  {directors.map((d, i) => (
+                    <div key={i} className="rounded-2xl p-5"
+                      style={{ background: '#fff', border: '1px solid #E4E4E7', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+                            style={{ background: '#F5F3FF', color: '#7C3AED' }}>{i + 1}</div>
+                          <span className="text-sm font-semibold" style={{ color: '#09090B' }}>Director {i + 1}</span>
+                        </div>
+                        {directors.length > 1 && (
+                          <button onClick={() => removeDirector(i)}
+                            className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg"
+                            style={{ color: '#71717A', background: '#F4F4F5' }}>
+                            <X size={11} /> Remove
+                          </button>
+                        )}
+                      </div>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <Field label="Full name" required>
+                            <FInput value={d.name} onChange={v => updateDirector(i, 'name', v)} placeholder="Jane Smith" />
+                          </Field>
+                          <Field label="SA ID number" hint="13-digit RSA ID" required>
+                            <FInput value={d.id_number} onChange={v => updateDirector(i, 'id_number', v)} placeholder="8001015009087" mono maxLength={13} />
+                          </Field>
+                        </div>
+                        <Field label="Email address">
+                          <FInput type="email" value={d.email} onChange={v => updateDirector(i, 'email', v)} placeholder="jane@company.co.za" />
+                        </Field>
+                      </div>
+                    </div>
+                  ))}
+                  <button onClick={addDirector}
+                    className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-semibold"
+                    style={{ border: '2px dashed #DDD6FE', color: '#7C3AED', background: 'rgba(124,58,237,0.03)' }}>
+                    + Add another director
+                  </button>
+                </div>
+              )}
+
+              {/* ── Step 3: Documents ── */}
+              {step === 'documents' && (
+                <div className="space-y-3">
+                  {REQUIRED_DOCS.map(doc => {
+                    const file = docFiles[doc.id] ?? null;
+                    return (
+                      <label key={doc.id} className="block cursor-pointer">
+                        <div className="flex items-center gap-4 px-5 py-4 rounded-2xl border-2 transition-all duration-200"
+                          style={file
+                            ? { borderColor: '#86EFAC', background: '#F0FDF4' }
+                            : { borderColor: '#E4E4E7', background: '#fff' }}>
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                            style={{ background: file ? '#DCFCE7' : '#F5F3FF' }}>
+                            {file
+                              ? <Check size={18} style={{ color: '#16A34A' }} />
+                              : <Upload size={18} style={{ color: '#7C3AED' }} />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <p className="text-sm font-semibold" style={{ color: '#09090B' }}>{doc.label}</p>
+                              {doc.required && !file && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                                  style={{ background: '#FEF2F2', color: '#DC2626' }}>Required</span>
+                              )}
+                              {file && (
+                                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                                  style={{ background: '#DCFCE7', color: '#16A34A' }}>✓ Uploaded</span>
+                              )}
+                            </div>
+                            <p className="text-xs truncate" style={{ color: file ? '#16A34A' : '#A1A1AA' }}>
+                              {file ? file.name : doc.hint}
+                            </p>
+                          </div>
+                          {file && (
+                            <button type="button" onClick={e => { e.preventDefault(); setDoc(doc.id, null); }}
+                              className="text-xs px-2.5 py-1.5 rounded-lg shrink-0"
+                              style={{ color: '#71717A', background: '#F4F4F5' }}>
+                              Remove
+                            </button>
+                          )}
+                        </div>
+                        <input type="file" className="sr-only" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                          onChange={e => { setDoc(doc.id, e.target.files?.[0] ?? null); e.target.value = ''; }} />
+                      </label>
+                    );
+                  })}
+                  <p className="text-xs pt-1 px-1" style={{ color: '#A1A1AA' }}>
+                    Accepted: PDF, JPG, PNG, Word. Questions? Email <strong>accounts@algolend.co.za</strong>
+                  </p>
+                </div>
+              )}
+
+              {/* ── Step 4: Review ── */}
+              {step === 'review' && (
+                <div className="space-y-4">
+                  <ReviewSection title="Company" onEdit={() => setStep('details')}>
+                    <ReviewRow label="Trading name" value={company} />
+                    {legalName && <ReviewRow label="Legal name"  value={legalName} />}
+                    {industry  && <ReviewRow label="Industry"    value={industry}  />}
+                    <ReviewRow label="Contact"     value={`${name} · ${email}`} />
+                    {phone && <ReviewRow label="Phone"       value={phone} />}
+                    {ncr   && <ReviewRow label="NCR number"  value={ncr} mono />}
+                  </ReviewSection>
+                  <ReviewSection title="Directors" onEdit={() => setStep('directors')}>
+                    {directors.map((d, i) => (
+                      <ReviewRow key={i} label={`Director ${i + 1}`}
+                        value={`${d.name}${d.id_number ? ` · ${d.id_number}` : ''}`} />
+                    ))}
+                  </ReviewSection>
+                  <ReviewSection title="Documents" onEdit={() => setStep('documents')}>
+                    {REQUIRED_DOCS.map(doc => (
+                      <ReviewRow key={doc.id} label={doc.label}
+                        value={docFiles[doc.id] ? docFiles[doc.id]!.name : doc.required ? '⚠ Missing' : 'Not uploaded'}
+                        warn={!docFiles[doc.id] && doc.required} />
+                    ))}
+                  </ReviewSection>
+                </div>
+              )}
+
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Error */}
+          {error && (
+            <div className="mt-5 flex items-center gap-3 px-4 py-3.5 rounded-xl text-sm"
+              style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}>
+              <span className="font-bold">!</span> {error}
+            </div>
+          )}
+
+          {/* Navigation */}
+          <div className="flex items-center justify-between mt-8 pt-6" style={{ borderTop: '1px solid #E4E4E7' }}>
+            <Button variant="outline" onClick={navBack} disabled={step === 'details'}
+              className="gap-2 rounded-xl border-[#E4E4E7] text-[#52525B] hover:bg-[#F4F4F5] disabled:opacity-0">
+              ← Back
+            </Button>
+
+            {step === 'details' && (
+              <Button onClick={submitDetails} disabled={saving || !name.trim() || !email.trim() || !company.trim()}
+                className="gap-2 px-6 rounded-xl text-white font-semibold group"
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#9B5CF6)', boxShadow: '0 4px 20px rgba(124,58,237,0.3)', border: 'none' }}>
+                {saving ? 'Saving…' : <>Continue <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" /></>}
+              </Button>
+            )}
+
+            {(step === 'directors' || step === 'documents') && (
+              <Button onClick={navNext} className="gap-2 px-6 rounded-xl text-white font-semibold group"
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#9B5CF6)', boxShadow: '0 4px 20px rgba(124,58,237,0.3)', border: 'none' }}>
+                Continue <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+              </Button>
+            )}
+
+            {step === 'review' && (
+              <Button onClick={submitApplication} disabled={saving} className="gap-2 px-6 rounded-xl text-white font-semibold"
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#9B5CF6)', boxShadow: '0 4px 20px rgba(124,58,237,0.3)', border: 'none' }}>
+                {saving ? 'Submitting…' : 'Submit application'}
+              </Button>
+            )}
+          </div>
+
+          <p className="text-center text-xs mt-6" style={{ color: '#A1A1AA' }}>
+            By applying you agree to our{' '}
+            <Link href="/terms" style={{ color: '#7C3AED' }}>Terms</Link> and{' '}
+            <Link href="/privacy" style={{ color: '#7C3AED' }}>Privacy Policy</Link>.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
 
-function ReviewSection({ title, children }: { title: string; children: React.ReactNode }) {
+/* ── Input ──────────────────────────────────────────────────────────── */
+function FInput({ value, onChange, placeholder, type = 'text', mono, maxLength }:
+  { value: string; onChange: (v: string) => void; placeholder?: string; type?: string; mono?: boolean; maxLength?: number }) {
+  return (
+    <input type={type} value={value} onChange={e => onChange(e.target.value)}
+      placeholder={placeholder} maxLength={maxLength}
+      className="w-full px-3.5 py-2.5 rounded-xl border-[1.5px] border-[#E4E4E7] bg-white text-sm text-[#09090B] outline-none transition-all placeholder:text-[#A1A1AA]"
+      style={{ fontFamily: mono ? 'monospace' : 'inherit' }}
+      onFocus={e => { e.target.style.borderColor = '#7C3AED'; e.target.style.boxShadow = '0 0 0 3px rgba(124,58,237,0.12)'; }}
+      onBlur={e => { e.target.style.borderColor = '#E4E4E7'; e.target.style.boxShadow = 'none'; }}
+    />
+  );
+}
+
+/* ── Field ──────────────────────────────────────────────────────────── */
+function Field({ label, hint, required, children }: { label: string; hint?: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div>
-      <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--color-ink-muted)' }}>{title}</p>
-      <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--color-border)' }}>{children}</div>
+      <Label className="block text-xs font-semibold mb-1.5 text-[#52525B]">
+        {label}{required && <span style={{ color: '#7C3AED', marginLeft: 3 }}>*</span>}
+      </Label>
+      {children}
+      {hint && <p className="text-xs mt-1" style={{ color: '#A1A1AA' }}>{hint}</p>}
+    </div>
+  );
+}
+
+/* ── Review helpers ─────────────────────────────────────────────────── */
+function ReviewSection({ title, onEdit, children }: { title: string; onEdit: () => void; children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl overflow-hidden" style={{ background: '#fff', border: '1px solid #E4E4E7' }}>
+      <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid #F4F4F5' }}>
+        <p className="text-xs font-bold uppercase tracking-wider" style={{ color: '#A1A1AA' }}>{title}</p>
+        <button onClick={onEdit} className="text-xs font-semibold" style={{ color: '#7C3AED' }}>Edit</button>
+      </div>
+      {children}
     </div>
   );
 }
 
 function ReviewRow({ label, value, mono, warn }: { label: string; value: string; mono?: boolean; warn?: boolean }) {
   return (
-    <div className="flex items-start gap-3 px-4 py-2.5" style={{ borderBottom: '1px solid var(--color-border-soft)' }}>
-      <span className="text-xs w-36 shrink-0 pt-0.5" style={{ color: 'var(--color-ink-muted)' }}>{label}</span>
-      <span className={`text-sm ${mono ? 'font-mono' : ''}`} style={{ color: warn ? '#B91C1C' : 'var(--color-ink)' }}>{value}</span>
+    <div className="flex items-start gap-4 px-5 py-3" style={{ borderBottom: '1px solid #F4F4F5' }}>
+      <span className="text-xs w-40 shrink-0 pt-0.5" style={{ color: '#A1A1AA' }}>{label}</span>
+      <span className="text-sm flex-1"
+        style={{ color: warn ? '#DC2626' : '#09090B', fontFamily: mono ? 'monospace' : 'inherit' }}>
+        {value}
+      </span>
     </div>
   );
 }
