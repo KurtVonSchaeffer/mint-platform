@@ -170,6 +170,12 @@ export default function ApplyPage() {
           style={{ background: 'radial-gradient(ellipse at 20% 20%, rgba(124,58,237,0.18) 0%, transparent 60%)' }} />
 
         <div className="relative z-10">
+          <Link href="/" className="inline-flex items-center gap-1.5 text-xs font-medium mb-8 transition-colors"
+            style={{ color: 'rgba(255,255,255,0.4)' }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.8)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.4)')}>
+            ← Back to AlgoLend
+          </Link>
           <Link href="/" className="flex items-center gap-2.5 mb-14">
             <AlgoLendLogo className="h-8 w-8" white />
             <span className="text-lg font-bold text-white">AlgoLend</span>
@@ -266,7 +272,7 @@ export default function ApplyPage() {
         {/* Mobile header */}
         <div className="lg:hidden flex items-center justify-between px-6 py-4 bg-white border-b border-[#E4E4E7]">
           <Link href="/" className="flex items-center gap-2">
-            <AlgoLendLogo className="h-7 w-7" />
+            ← <AlgoLendLogo className="h-7 w-7" />
             <span className="font-bold text-sm" style={{ color: '#09090B' }}>AlgoLend</span>
           </Link>
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full" style={{ background: '#F5F3FF', color: '#7C3AED' }}>
