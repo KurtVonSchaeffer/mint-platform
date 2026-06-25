@@ -238,7 +238,7 @@ export default function HomePage() {
           <div className="absolute left-0 top-0 bottom-0 w-20 z-10 bg-gradient-to-r from-[var(--color-bg)] to-transparent pointer-events-none" />
           <div className="absolute right-0 top-0 bottom-0 w-20 z-10 bg-gradient-to-l from-[var(--color-bg)] to-transparent pointer-events-none" />
           <div className="marquee-track">
-            {[...integrations, ...integrations].map((p, i) => (
+            {[...integrations, ...integrations, ...integrations, ...integrations].map((p, i) => (
               <div key={`${p.name}-${i}`} className="flex items-center gap-3 shrink-0">
                 <IntegrationLogo name={p.name} size={26} className="text-[var(--color-ink)] shrink-0" />
                 <div className="leading-tight">
