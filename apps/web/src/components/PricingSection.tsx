@@ -42,7 +42,7 @@ const ENTERPRISE_FEATURES = [
   'EFT integration',
   'Liveness + Home Affairs verification',
   'Unlimited branches',
-  '200 API checks / month included',
+  '2,000 API checks / month included',
   'Priority onboarding support',
 ];
 
@@ -152,7 +152,7 @@ export function PricingSection() {
                   <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
                     style={{ background: 'rgba(167,139,250,0.1)', color: '#C4B5FD', border: '1px solid rgba(167,139,250,0.2)' }}>
                     <Zap size={10} style={{ color: '#A78BFA' }} />
-                    200 API checks / month included
+                    2,000 API checks / month included
                   </div>
                 </div>
 
@@ -197,7 +197,7 @@ export function PricingSection() {
               {
                 label: 'ii. API checks',
                 title: 'Pay as you go',
-                desc: 'Starter is PAYG from check one. Enterprise includes 200 checks/month — additional checks billed at published rates.',
+                desc: 'Starter is PAYG from check one. Enterprise includes 2,000 checks/month — additional checks billed at published rates.',
               },
               {
                 label: 'iii. Pass-through costs',
