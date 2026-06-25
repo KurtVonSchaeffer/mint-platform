@@ -226,17 +226,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const isLight = theme === 'light';
 
   const navColors = {
-    activeText:   isLight ? '#6D28D9'                  : '#C4B5FD',
+    activeText:   isLight ? '#6D28D9'                  : '#DDD0FF',
     hoverText:    isLight ? '#1A1F36'                  : 'rgba(238,240,255,0.85)',
     normalText:   isLight ? '#42466B'                  : 'rgba(139,144,180,0.8)',
     activeBg:     isLight
-      ? 'linear-gradient(90deg, rgba(124,58,237,0.1) 0%, rgba(124,58,237,0.03) 100%)'
-      : 'linear-gradient(90deg, rgba(124,58,237,0.2) 0%, rgba(124,58,237,0.06) 100%)',
+      ? 'linear-gradient(90deg, rgba(124,58,237,0.13) 0%, rgba(124,58,237,0.04) 100%)'
+      : 'linear-gradient(90deg, rgba(124,58,237,0.30) 0%, rgba(124,58,237,0.08) 100%)',
     activeShadow: isLight
-      ? 'inset 2px 0 0 #7C3AED'
-      : 'inset 2px 0 0 #7C3AED, 0 0 20px rgba(124,58,237,0.08)',
-    hoverBg:      isLight ? 'rgba(124,58,237,0.06)' : 'rgba(124,58,237,0.08)',
-    iconActiveBg: isLight ? 'rgba(124,58,237,0.12)' : 'rgba(124,58,237,0.2)',
+      ? 'inset 3px 0 0 #7C3AED'
+      : 'inset 3px 0 0 #9B5CF6, 0 2px 20px rgba(124,58,237,0.18)',
+    hoverBg:      isLight ? 'rgba(124,58,237,0.07)' : 'rgba(124,58,237,0.10)',
+    iconActiveBg: isLight ? 'rgba(124,58,237,0.15)' : 'rgba(124,58,237,0.28)',
     iconNormalBg: isLight ? 'rgba(0,0,0,0.04)'      : 'rgba(255,255,255,0.04)',
     wordmarkGrad: isLight
       ? 'linear-gradient(135deg, #1A1F36 0%, #6D28D9 100%)'
@@ -245,9 +245,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
     liveText:     isLight ? 'rgba(16,185,129,0.7)'   : 'rgba(52,211,153,0.6)',
     signOutNorm:  isLight ? '#8B90B4' : 'var(--color-text3)',
     topBarBg:     isLight
-      ? 'rgba(248,246,255,0.95)'
-      : 'rgba(11,13,24,0.88)',
-    topBarBorder: isLight ? 'rgba(0,0,0,0.07)' : 'rgba(255,255,255,0.05)',
+      ? 'rgba(248,246,255,0.97)'
+      : 'rgba(12,14,26,0.94)',
+    topBarBorder: isLight ? 'rgba(124,58,237,0.14)' : 'rgba(124,58,237,0.18)',
+    topBarShadow: isLight
+      ? '0 1px 12px rgba(0,0,0,0.06), 0 1px 0 rgba(124,58,237,0.08)'
+      : '0 1px 0 rgba(124,58,237,0.16), 0 4px 24px rgba(0,0,0,0.25)',
     searchBg:     isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.05)',
   };
 
@@ -276,17 +279,28 @@ export function Shell({ children }: { children: React.ReactNode }) {
       <div
         className="hidden lg:flex fixed top-0 left-64 right-0 h-14 items-center gap-4 px-8 z-30"
         style={{
-          background: `${navColors.topBarBg}`,
+          background: navColors.topBarBg,
           borderBottom: `1px solid ${navColors.topBarBorder}`,
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
+          boxShadow: navColors.topBarShadow,
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
         }}
       >
-        {/* Page title from path */}
-        <p className="text-xs font-medium shrink-0" style={{ color: 'var(--color-text3)' }}>
-          {flatNav.find(n => n.href === '/' ? pathname === '/' : pathname.startsWith(n.href))?.label ?? 'Dashboard'}
-        </p>
-        <span style={{ color: 'var(--color-border3)', fontSize: 14, lineHeight: 1 }}>›</span>
+        {/* Page context pill — icon + label */}
+        {(() => {
+          const page = flatNav.find(n => n.href === '/' ? pathname === '/' : pathname.startsWith(n.href));
+          const PageIcon = page?.icon;
+          return (
+            <div className="flex items-center gap-2 shrink-0 px-2.5 py-1 rounded-lg"
+              style={{ background: 'rgba(124,58,237,0.10)', border: '1px solid rgba(124,58,237,0.22)' }}>
+              {PageIcon && <PageIcon size={12} style={{ color: 'var(--color-violet)' }} />}
+              <span className="text-xs font-semibold" style={{ color: 'var(--color-violet)' }}>
+                {page?.label ?? 'Dashboard'}
+              </span>
+            </div>
+          );
+        })()}
+        <span style={{ color: 'var(--color-border3)', fontSize: 12, lineHeight: 1, opacity: 0.5 }}>›</span>
 
         {/* ── Search ── */}
         <div ref={searchRef} className="flex-1 max-w-md relative">
@@ -687,7 +701,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   >
                     <div className="relative z-10 w-6 h-6 rounded-md flex items-center justify-center shrink-0 transition-all duration-200"
                       style={hasActive
-                        ? { color: navColors.activeText }
+                        ? { color: navColors.activeText, background: navColors.iconActiveBg }
                         : { color: 'inherit', opacity: 0.65 }}>
                       <entry.icon size={14} />
                     </div>
@@ -745,7 +759,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   : { color: navColors.normalText }}
               >
                 <div className="relative z-10 w-6 h-6 rounded-md flex items-center justify-center shrink-0 transition-all duration-200"
-                  style={isActive ? { color: navColors.activeText } : { color: 'inherit', opacity: 0.65 }}>
+                  style={isActive
+                    ? { color: navColors.activeText, background: navColors.iconActiveBg }
+                    : { color: 'inherit', opacity: 0.65 }}>
                   <Icon size={14} />
                 </div>
                 <span className="relative z-10 flex-1">{label}</span>
@@ -798,7 +814,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
       {/* ── Main content ──────────────────────────────────── */}
       <main id="main" className="flex-1 lg:pl-64 min-h-screen relative z-10 pt-14 lg:pt-14">
-        <div className="relative max-w-7xl mx-auto px-6 lg:px-8 py-8">
+        <div className="relative max-w-screen-xl mx-auto px-6 lg:px-10 py-8 lg:py-10">
           {children}
         </div>
       </main>

@@ -691,6 +691,31 @@ html[data-theme="light"] .confirm-backdrop {
   backdrop-filter: none !important;
 }
 
+/* ─── Topbar gradient bleed ────────────────────────────────────── */
+/* Creates a soft purple halo below the topbar that ties it to content */
+#main::before {
+  content: '';
+  position: fixed;
+  top: 56px;
+  left: 256px; /* sidebar width */
+  right: 0;
+  height: 80px;
+  pointer-events: none;
+  z-index: 29;
+  background: linear-gradient(
+    to bottom,
+    rgba(124, 58, 237, 0.04) 0%,
+    transparent 100%
+  );
+}
+html[data-theme="light"] #main::before {
+  background: linear-gradient(
+    to bottom,
+    rgba(124, 58, 237, 0.025) 0%,
+    transparent 100%
+  );
+}
+
 /* ─── Leads page — CSS-only hover (no JS handlers needed) ──────── */
 .lead-card {
   transition: background 0.15s ease;
