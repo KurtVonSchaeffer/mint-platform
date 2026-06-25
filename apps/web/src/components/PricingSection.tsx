@@ -17,7 +17,6 @@ const STARTER_FEATURES = [
   'Built-in e-signing & digital contracts',
   'CIPC employment data',
   'Full KYC — liveness, ID & phone verification',
-  'Sanlam credit life insurance (R4.50/R1,000)',
   'Automated emails — onboarding stages & repayment reminders',
   'Loan book & repayment tracking',
   'DebiCheck integration',
