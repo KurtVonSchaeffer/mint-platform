@@ -25,7 +25,21 @@ const STARTER_FEATURES = [
 ];
 
 const ENTERPRISE_FEATURES = [
-  'Everything in Starter',
+  'Credit scoring engine',
+  'Borrower application portal',
+  'Term loans & working capital',
+  'Bureau enquiry (Experian)',
+  'Watchlist — PEPs & sanctions',
+  'Address verification',
+  'NCA-compliant quotations',
+  'NCR audit trail',
+  'Open banking — TruID affordability',
+  'E-contracts',
+  'CIPC employment data',
+  'Phone verification',
+  'SACRRA bureau reporting',
+  'Loan book & repayment tracking',
+  'EFT integration',
   'Liveness + Home Affairs verification',
   'Unlimited branches',
   '200 API checks / month included',
@@ -143,12 +157,17 @@ export function PricingSection() {
                 </div>
 
                 <ul className="space-y-2.5 flex-1 mb-8 relative">
-                  {ENTERPRISE_FEATURES.map(f => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-white/80">
-                      <Check size={13} className="mt-0.5 shrink-0" style={{ color: '#A78BFA' }} />
-                      {f}
-                    </li>
-                  ))}
+                  {ENTERPRISE_FEATURES.map((f, i) => {
+                    const isExclusive = i >= ENTERPRISE_FEATURES.length - 4;
+                    return (
+                      <li key={f} className="flex items-start gap-2 text-sm"
+                        style={{ color: isExclusive ? '#C4B5FD' : 'rgba(255,255,255,0.70)' }}>
+                        <Check size={13} className="mt-0.5 shrink-0"
+                          style={{ color: isExclusive ? '#A78BFA' : 'rgba(255,255,255,0.35)' }} />
+                        {f}
+                      </li>
+                    );
+                  })}
                 </ul>
 
                 <Link
