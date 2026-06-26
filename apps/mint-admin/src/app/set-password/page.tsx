@@ -15,9 +15,9 @@ export default function SetPasswordPage() {
 }
 
 function SetPasswordForm() {
-  const router     = useRouter();
-  const params     = useSearchParams();
-  const code       = params.get('code');
+  const router = useRouter();
+  const params = useSearchParams();
+  const code   = params.get('code'); // PKCE flow (?code=...)
 
   const [ready, setReady]       = useState(false);
   const [error, setError]       = useState<string | null>(null);
@@ -32,20 +32,40 @@ function SetPasswordForm() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   );
 
-  // Exchange the one-time code for a session
   useEffect(() => {
-    if (!code) {
-      setError('Invalid or expired invite link. Ask an admin to resend your invite.');
+    // Path 1: PKCE flow — ?code= in the URL query string
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error: err }) => {
+        if (err) setError('This link has expired or already been used. Ask an admin to resend your invite.');
+        else setReady(true);
+      });
       return;
     }
-    supabase.auth.exchangeCodeForSession(code).then(({ error: err }) => {
-      if (err) {
-        setError('This link has expired or already been used. Ask an admin to resend your invite.');
-      } else {
+
+    // Path 2: Implicit flow — #access_token= in the URL hash (what Supabase admin generateLink produces)
+    // The Supabase client automatically processes hash tokens on auth state change.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
         setReady(true);
       }
     });
+
+    // Also check if a session already exists from the hash being processed
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setReady(true);
+    });
+
+    return () => subscription.unsubscribe();
   }, [code]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Timeout: if neither flow resolves in 5s, show an error
+  useEffect(() => {
+    if (ready || error) return;
+    const t = setTimeout(() => {
+      if (!ready) setError('Could not verify the invite link. It may have expired — ask an admin to resend your invite.');
+    }, 5000);
+    return () => clearTimeout(t);
+  }, [ready, error]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -84,7 +104,6 @@ function SetPasswordForm() {
             </p>
           </div>
 
-          {/* Success state */}
           {done && (
             <div className="flex flex-col items-center gap-3 py-4">
               <CheckCircle2 size={36} style={{ color: 'var(--color-teal)' }} />
@@ -92,7 +111,6 @@ function SetPasswordForm() {
             </div>
           )}
 
-          {/* Error with no code — can't recover */}
           {!done && error && !ready && (
             <div className="flex items-start gap-2 px-3 py-3 rounded-xl text-sm"
               style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', color: 'var(--color-red)' }}>
@@ -101,7 +119,6 @@ function SetPasswordForm() {
             </div>
           )}
 
-          {/* Loading — exchanging code */}
           {!done && !error && !ready && (
             <div className="flex items-center justify-center gap-2 py-6" style={{ color: 'var(--color-text3)' }}>
               <Loader2 size={18} className="animate-spin" />
@@ -109,7 +126,6 @@ function SetPasswordForm() {
             </div>
           )}
 
-          {/* Password form */}
           {!done && ready && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <p className="text-sm mb-4" style={{ color: 'var(--color-text3)' }}>
@@ -129,6 +145,7 @@ function SetPasswordForm() {
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     disabled={loading}
+                    autoFocus
                   />
                   <button type="button" tabIndex={-1} onClick={() => setShowPw(p => !p)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer"
