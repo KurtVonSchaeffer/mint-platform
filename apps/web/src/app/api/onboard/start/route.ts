@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
       name,
       email,
       company,
-      source:             'apply-form',
+      source:             'marketing-site',
       status:             'new',
       onboarding_status:  'started',
       onboarding_data:    { phone, ncr_number: ncr },
