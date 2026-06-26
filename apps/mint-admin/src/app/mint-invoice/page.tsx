@@ -6,18 +6,18 @@ import Link from 'next/link';
 import { Plus, Trash2, ArrowLeft, Printer } from 'lucide-react';
 
 const FROM = {
-  company: 'Mint Platforms (Pty) Ltd',
+  company: 'ALGOHIVE PTY LTD',
   address: ['3 Gwen Lane, Sandown', 'Sandton, 2031, South Africa'],
-  reg:     '2024/123456/07',
+  reg:     '2024/644796/07',
   email:   'info@mymint.co.za',
 };
 
 const BANKING = {
   bank:   'Capitec Bank',
-  name:   'Lonwabo N Damane',
-  number: '1392511168',
-  branch: '470010',
-  type:   'Savings',
+  name:   'ALGOHIVE PTY LTD',
+  number: '1053045883',
+  branch: '450105',
+  type:   'Business Account',
 };
 
 interface LineItem { id: number; desc: string; sub: string; qty: number; rate: number; }

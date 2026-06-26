@@ -183,10 +183,10 @@ export function printableInvoice(inv: InvoiceForTemplate): string {
   <div class="section-title">Payment Details</div>
   <div class="payment-grid">
     <div class="pd-item"><div class="pdl">Bank Name</div><div class="pdv">Capitec Bank</div></div>
-    <div class="pd-item"><div class="pdl">Account Name</div><div class="pdv">Lonwabo N Damane</div></div>
-    <div class="pd-item"><div class="pdl">Account Number</div><div class="pdv">1392511168</div></div>
-    <div class="pd-item"><div class="pdl">Branch Code</div><div class="pdv">470010</div></div>
-    <div class="pd-item"><div class="pdl">Account Type</div><div class="pdv">Savings</div></div>
+    <div class="pd-item"><div class="pdl">Account Name</div><div class="pdv">ALGOHIVE PTY LTD</div></div>
+    <div class="pd-item"><div class="pdl">Account Number</div><div class="pdv">1053045883</div></div>
+    <div class="pd-item"><div class="pdl">Branch Code</div><div class="pdv">450105</div></div>
+    <div class="pd-item"><div class="pdl">Account Type</div><div class="pdv">Business Account</div></div>
     <div class="pd-item"><div class="pdl">Reference</div><div class="pdv">${inv.reference}</div></div>
   </div>
 
@@ -197,7 +197,7 @@ export function printableInvoice(inv: InvoiceForTemplate): string {
   </div>
 
   <div class="footer">
-    Mint Platforms (Pty) Ltd · Reg. No. 2024/123456/07 · accounts@algolend.co.za
+    ALGOHIVE PTY LTD · Reg. No. 2024/644796/07 · accounts@algolend.co.za
   </div>
 
 </body></html>`;
