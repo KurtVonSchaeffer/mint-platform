@@ -1,5 +1,5 @@
 const API_USAGE_SERVICES = new Set([
-  'cipc','bureau','banking','contracts','liveness','homeaff','watchlist','address',
+  'bureau','banking','contracts','liveness','homeaff','watchlist','address',
   'trueid_lookup','experian_score','docuseal_envelope','sacrra_submission',
   'sure_systems_pull','sms_outbound','email_outbound','api_call',
 ]);
