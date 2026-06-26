@@ -43,11 +43,13 @@ export async function POST(req: NextRequest) {
   const supabase = getSupabase();
 
   // Check for existing lead with same email — update rather than duplicate
-  const { data: existing } = await supabase
+  const { data: existingRows } = await supabase
     .from('leads')
     .select('id')
     .eq('email', email)
-    .maybeSingle();
+    .order('created_at', { ascending: true })
+    .limit(1);
+  const existing = existingRows?.[0] ?? null;
 
   let lead: { id: string };
   if (existing) {
