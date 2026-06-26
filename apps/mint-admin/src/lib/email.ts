@@ -5,7 +5,7 @@
  */
 import { Resend } from 'resend';
 
-const FROM    = process.env.RESEND_FROM_EMAIL ?? 'AlgoLend <noreply@mintplatforms.co.za>';
+const FROM    = process.env.RESEND_FROM_EMAIL ?? 'AlgoLend <noreply@algolend.co.za>';
 const KEY     = process.env.RESEND_API_KEY;
 const resend  = KEY ? new Resend(KEY) : null;
 
