@@ -10,7 +10,7 @@ interface Props {
 
 // Swap to a Loom/YouTube embed URL to override the self-hosted video
 const DEMO_VIDEO_URL = ''; // e.g. 'https://www.loom.com/embed/xxxx'
-const DEMO_VIDEO_SRC = '/videos/algolend-showcase-FINAL.mp4';
+const DEMO_VIDEO_SRC = '/videos/algolend-showcase-FINAL.mp4?v=2';
 
 export function DemoVideoModal({ onClose }: Props) {
   const backdropRef = useRef<HTMLDivElement>(null);
