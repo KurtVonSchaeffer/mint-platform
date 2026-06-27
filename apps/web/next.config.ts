@@ -2,6 +2,16 @@ import type { NextConfig } from 'next';
 
 const config: NextConfig = {
   productionBrowserSourceMaps: false,
+  async redirects() {
+    return [
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.algolend.co.za' }],
+        destination: 'https://algolend.co.za/:path*',
+        permanent: true,
+      },
+    ];
+  },
   webpack(cfg) {
     // Stop source-map-loader fetching .map files from packages that don't
     // ship them (e.g. Framer Motion via @paper-design/shaders-react).
