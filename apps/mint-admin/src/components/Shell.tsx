@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, CreditCard, Zap, BarChart3,
   Settings, LogOut, TrendingUp, FileText, Receipt, ArrowDownToLine,
   ChevronRight, Sun, Moon, Calculator, UserCog, Store, Menu, X,
-  Bell, Plus, UserPlus, ChevronDown, Wallet, SlidersHorizontal, Plug,
+  Bell, Plus, UserPlus, ChevronDown, Wallet, SlidersHorizontal, Plug, HandCoins,
   AlertTriangle, AlertCircle, Loader2, CheckCircle2, ShieldCheck, ClipboardList,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
@@ -59,9 +59,10 @@ const nav: (NavItem | NavGroup)[] = [
     group: 'Marketplace',
     icon: Store,
     items: [
-      { label: 'Lender Policies', href: '/marketplace',          icon: Store              },
-      { label: 'Loan Simulator',  href: '/marketplace/simulate',     icon: SlidersHorizontal },
-      { label: 'Integration',     href: '/marketplace/integration',  icon: Plug              },
+      { label: 'Lender Policies', href: '/marketplace',             icon: Store              },
+      { label: 'Loan Simulator',  href: '/marketplace/simulate',    icon: SlidersHorizontal  },
+      { label: 'Integration',     href: '/marketplace/integration', icon: Plug               },
+      { label: 'MINT Loans',      href: '/marketplace/loans',       icon: HandCoins          },
     ],
   },
   { label: 'Features',    href: '/features',    icon: Zap },
