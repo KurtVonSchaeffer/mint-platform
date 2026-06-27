@@ -56,7 +56,7 @@ const process = [
 const compliance = [
   { code: 'NCA',    title: 'National Credit Act',  desc: 'Affordability, disclosure, and quotation rules architected into the credit engine.' },
   { code: 'SACRRA', title: 'Bureau Reporting',     desc: 'Monthly submissions in SACRRA layout 700, with full acceptance reconciliation.' },
-  { code: 'FSCA',   title: 'Credit Life Cover',    desc: 'FSCA-approved credit life insurance built into every loan — death, disability and unemployment cover.' },
+  { code: 'FSCA',   title: 'Credit Life Cover',    desc: 'FSCA-approved credit life insurance underwritten by Sanlam — death, disability and unemployment cover built into every loan.' },
   { code: 'NCR',    title: 'Audit Trail',          desc: 'Every credit decision logged immutably. NCR-grade audit reports available on demand.' },
 ];
 
