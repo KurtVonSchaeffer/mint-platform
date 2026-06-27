@@ -23,7 +23,6 @@ interface LenderPolicy {
   max_dsr_pct:           number;
   min_amount:            number;
   max_amount:            number;
-  min_years_in_operation: number;
   require_id_verified:   boolean;
   max_open_defaults:     number;
   base_rate_pct:         number;
@@ -44,7 +43,7 @@ const EMPTY_POLICY = {
   display_name: '', tagline: '', avg_turnaround_days: 2,
   min_credit_score: 580, max_dsr_pct: 45,
   min_amount: 10000, max_amount: 500000,
-  min_years_in_operation: 1, require_id_verified: true, max_open_defaults: 0,
+  require_id_verified: true, max_open_defaults: 0,
   base_rate_pct: 28, initiation_fee_pct: 3, monthly_service_fee: 69,
   rate_bands: [
     { minScore: 700, rateAdjustment: -3 },
@@ -97,7 +96,6 @@ export default function MarketplacePage() {
       max_dsr_pct:           p.max_dsr_pct,
       min_amount:            p.min_amount,
       max_amount:            p.max_amount,
-      min_years_in_operation: p.min_years_in_operation,
       require_id_verified:   p.require_id_verified,
       max_open_defaults:     p.max_open_defaults,
       base_rate_pct:         p.base_rate_pct,
@@ -232,7 +230,6 @@ export default function MarketplacePage() {
                     { key: 'max_dsr_pct',             label: 'Max DSR (%)',              min: 0,   max: 100, step: 0.5 },
                     { key: 'min_amount',              label: 'Min loan amount (R)',      min: 0,   max: undefined, step: 1000 },
                     { key: 'max_amount',              label: 'Max loan amount (R)',      min: 0,   max: undefined, step: 10000 },
-                    { key: 'min_years_in_operation',  label: 'Min years operating',      min: 0,   max: 20,  step: 1  },
                     { key: 'max_open_defaults',       label: 'Max open defaults',        min: 0,   max: 10,  step: 1  },
                   ].map(({ key, label, min, max, step }) => (
                     <div key={key}>

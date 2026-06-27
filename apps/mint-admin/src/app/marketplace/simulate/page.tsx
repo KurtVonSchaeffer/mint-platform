@@ -14,7 +14,6 @@ interface SimForm {
   idVerified:                 boolean;
   requestedAmount:            number;
   termMonths:                 number;
-  yearsInOperation:           number;
 }
 
 interface Offer {
@@ -45,7 +44,7 @@ function fmtR(n: number) {
 const DEFAULTS: SimForm = {
   creditScore: 680, monthlyIncome: 35000, existingMonthlyObligations: 5000,
   openDefaults: 0, idVerified: true, requestedAmount: 150000,
-  termMonths: 60, yearsInOperation: 3,
+  termMonths: 60,
 };
 
 const SCORE_BAND = (s: number) =>
@@ -168,11 +167,7 @@ export default function SimulatePage() {
                 </button>
               </div>
 
-              <div>
-                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Years in operation</label>
-                <input type="number" className="field-input font-mono" value={form.yearsInOperation} min={0} max={50} step={1}
-                  onChange={e => set('yearsInOperation', +e.target.value)} />
-              </div>
+
             </div>
 
             {/* Loan request */}

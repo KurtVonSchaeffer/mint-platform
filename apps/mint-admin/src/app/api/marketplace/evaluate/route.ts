@@ -37,7 +37,6 @@ export const dynamic = 'force-dynamic';
  *   purpose?:         string,
  *
  *   // Optional — used for lender eligibility gates
- *   yearsInOperation?: number,  // for business loans
  *
  *   // Optional — to persist quote for audit
  *   mintUserId?:     string,
@@ -120,7 +119,7 @@ export async function POST(req: NextRequest) {
     creditScore, monthlyIncome, existingMonthlyObligations,
     openDefaults = 0, enquiriesLast12Months = 0, idVerified = false,
     employmentStatus = 'unknown', requestedAmount, termMonths,
-    yearsInOperation = 1, mintUserId, mintRequestRef,
+    mintUserId, mintRequestRef,
   } = body as Record<string, unknown>;
 
   if (!creditScore || !monthlyIncome || !requestedAmount || !termMonths) {
@@ -158,9 +157,8 @@ export async function POST(req: NextRequest) {
   };
 
   const quoteReq: QuoteRequest = {
-    amount:           Number(requestedAmount),
-    termMonths:       Number(termMonths),
-    yearsInOperation: Number(yearsInOperation),
+    amount:     Number(requestedAmount),
+    termMonths: Number(termMonths),
   };
 
   // ── 4. Load all active lender policies ───────────────────────────────
@@ -169,7 +167,7 @@ export async function POST(req: NextRequest) {
     .select(`
       id, client_id, display_name, logo_url, tagline, avg_turnaround_days,
       min_credit_score, max_dsr_pct, min_amount, max_amount,
-      min_years_in_operation, require_id_verified, max_open_defaults,
+      require_id_verified, max_open_defaults,
       base_rate_pct, initiation_fee_pct, monthly_service_fee, rate_bands
     `)
     .eq('active', true);
@@ -197,7 +195,6 @@ export async function POST(req: NextRequest) {
     maxDsrPct:           r.max_dsr_pct,
     minAmount:           r.min_amount,
     maxAmount:           r.max_amount,
-    minYearsInOperation: r.min_years_in_operation,
     requireIdVerified:   r.require_id_verified,
     maxOpenDefaults:     r.max_open_defaults,
     baseRatePct:         r.base_rate_pct,

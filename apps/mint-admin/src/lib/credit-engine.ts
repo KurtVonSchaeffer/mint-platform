@@ -35,7 +35,6 @@ export interface LenderPolicy {
   maxDsrPct:            number;
   minAmount:            number;
   maxAmount:            number;
-  minYearsInOperation:  number;
   requireIdVerified:    boolean;
   maxOpenDefaults:      number;
   baseRatePct:          number;
@@ -47,7 +46,6 @@ export interface LenderPolicy {
 export interface QuoteRequest {
   amount:             number;
   termMonths:         number;
-  yearsInOperation?:  number;
 }
 
 export interface Offer {
@@ -102,9 +100,6 @@ export function evaluatePolicy(
     return decline('Open defaults exceed maximum allowed');
   if (profile.creditScore < policy.minCreditScore)
     return decline('Credit score below minimum requirement');
-  if ((request.yearsInOperation ?? 0) < policy.minYearsInOperation)
-    return decline(`Business must have at least ${policy.minYearsInOperation} year(s) of operation`);
-
   // Amount clamping
   const amount = Math.min(Math.max(request.amount, policy.minAmount), policy.maxAmount);
 

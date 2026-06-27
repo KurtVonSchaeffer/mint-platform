@@ -11,7 +11,7 @@ export async function GET() {
     .select(`
       id, client_id, display_name, logo_url, tagline, avg_turnaround_days,
       min_credit_score, max_dsr_pct, min_amount, max_amount,
-      min_years_in_operation, require_id_verified, max_open_defaults,
+      require_id_verified, max_open_defaults,
       base_rate_pct, initiation_fee_pct, monthly_service_fee,
       rate_bands, active, created_at, updated_at,
       clients(id, name, slug, tier, status)
