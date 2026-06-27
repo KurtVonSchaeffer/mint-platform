@@ -13,7 +13,7 @@ const FAQS = [
     a: "Absolutely. Your data lives in a private, fully isolated environment. It is entirely separate from other clients on the platform. Mint Platforms has no access to your borrower data unless you explicitly grant it for support purposes.",
   },
   {
-    q: 'What happens if Experian or SureSystems goes down?',
+    q: 'What happens if Experian or DebiCheck goes down?',
     a: "The platform is built to degrade gracefully. If a bureau is unavailable, the credit engine continues with the data it has, flagging the missing component for manual review. You never lose an application.",
   },
   {
