@@ -37,7 +37,7 @@ const INDUSTRIES = [
 const VALUE_PROPS = [
   { icon: Clock,  text: 'Go live in 2–3 days from onboarding' },
   { icon: Shield, text: 'NCR & NCA compliant from day one'    },
-  { icon: Award,  text: 'FSCA credit life on every loan'      },
+  { icon: Award,  text: 'Sanlam credit life on every loan'     },
   { icon: Zap,    text: 'Your brand, portal, and domain'      },
 ];
 

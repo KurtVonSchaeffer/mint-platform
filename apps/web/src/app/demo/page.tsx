@@ -390,7 +390,7 @@ function CalculatorPage() {
 
   return (
     <div className="space-y-5 max-w-lg">
-      <div><h1 className="text-xl font-bold text-slate-900">Loan Calculator</h1><p className="text-sm text-slate-500 mt-0.5">Estimate your monthly repayment under the NCA — including credit life cover.</p></div>
+      <div><h1 className="text-xl font-bold text-slate-900">Loan Calculator</h1><p className="text-sm text-slate-500 mt-0.5">Estimate your monthly repayment under the NCA — including Sanlam credit life cover.</p></div>
 
       <div className="rounded-2xl bg-white border border-slate-200 shadow-sm p-6 space-y-5">
         <div>

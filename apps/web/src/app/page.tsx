@@ -237,7 +237,7 @@ export default function HomePage() {
                       'All AlgoLend lenders compete for your application',
                       'Best available rate — not just one offer',
                       'NCA-compliant pre-agreement quote per lender',
-                      'FSCA credit life cover on every approved loan',
+                      'Sanlam credit life cover on every approved loan',
                     ].map(f => (
                       <div key={f} className="flex items-start gap-2.5">
                         <Check size={12} className="mt-0.5 shrink-0" style={{ color: '#A78BFA' }} />
@@ -538,7 +538,7 @@ export default function HomePage() {
                 </h2>
               </div>
               <p className="text-lg text-[var(--color-ink-soft)]">
-                We handle the regulatory plumbing so you can focus on lending. Architected to the National Credit Act, FSCA credit life standards, and SACRRA reporting.
+                We handle the regulatory plumbing so you can focus on lending. Architected to the National Credit Act, Sanlam credit life standards, and SACRRA reporting.
               </p>
             </div>
           </Reveal>
