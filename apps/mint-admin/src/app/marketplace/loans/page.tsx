@@ -129,7 +129,7 @@ export default function MintLoansPage() {
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-gray-400">
               <HandCoins size={32} className="mb-3 opacity-30" />
-              <p className="text-sm">{search ? 'No loans match your search.' : 'No accepted loans yet — they'll appear here once MINT borrowers accept offers.'}</p>
+              <p className="text-sm">{search ? 'No loans match your search.' : "No accepted loans yet — they'll appear here once MINT borrowers accept offers."}</p>
             </div>
           ) : (
             <table className="w-full text-sm">
