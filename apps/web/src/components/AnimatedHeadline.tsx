@@ -2,15 +2,14 @@
 
 import { useEffect, useState } from 'react';
 
-const WORDS = ['South African', 'alternative', 'bespoke', 'modern', 'SME'];
+const WORDS = ['lowest rate', 'best offer', 'right lender', 'fastest approval'];
 
 export function AnimatedHeadline() {
-  const [index, setIndex]   = useState(0);
+  const [index, setIndex]     = useState(0);
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      // Fade out
       setVisible(false);
       setTimeout(() => {
         setIndex((i) => (i + 1) % WORDS.length);
@@ -24,12 +23,11 @@ export function AnimatedHeadline() {
     <h1
       className="headline text-[clamp(3rem,8vw,6.5rem)] font-semibold mb-6 max-w-5xl mx-auto"
       style={{ animation: 'var(--animate-fade-up)', animationDelay: '80ms' }}
-      aria-label="The lending platform for credit providers"
+      aria-label="One application. Every lender competes."
     >
-      The lending platform<br />
-      for{' '}
+      One application.<br />
+      Get the{' '}
       <span className="relative inline-block">
-        {/* Underline SVG — always visible */}
         <svg
           className="absolute -bottom-1 left-0 w-full pointer-events-none"
           viewBox="0 0 200 12"
@@ -44,8 +42,6 @@ export function AnimatedHeadline() {
             strokeLinecap="round"
           />
         </svg>
-
-        {/* Animated word */}
         <span
           className="relative z-10 transition-all duration-300"
           style={{
@@ -54,10 +50,9 @@ export function AnimatedHeadline() {
             display: 'inline-block',
           }}
         >
-          {WORDS[index]} credit
+          {WORDS[index]}
         </span>
-      </span>{' '}
-      providers.
+      </span>.
     </h1>
   );
 }

@@ -56,9 +56,10 @@ export async function POST(_req: NextRequest, { params }: Params) {
   const fullName  = user.user_metadata?.full_name ?? user.email.split('@')[0];
   const role      = user.user_metadata?.role ?? 'admin';
 
+  let emailResult: { ok: boolean; error?: string };
+
   if (!isConfirmed) {
-    // User hasn't set a password yet — resend the styled invite email
-    await sendEmail({
+    emailResult = await sendEmail({
       to:      user.email,
       subject: `You've been invited to AlgoLend`,
       html:    userInviteEmail({
@@ -70,8 +71,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
       }),
     });
   } else {
-    // Confirmed user — send a plain password-reset email
-    await sendEmail({
+    emailResult = await sendEmail({
       to:      user.email,
       subject: 'Reset your AlgoLend password',
       html: `<!DOCTYPE html>
@@ -102,10 +102,16 @@ export async function POST(_req: NextRequest, { params }: Params) {
     });
   }
 
+  if (!emailResult.ok) {
+    console.error('[invite/email]', emailResult.error);
+  }
+
   return NextResponse.json({
-    ok:        true,
-    email:     user.email,
+    ok:         true,
+    emailSent:  emailResult.ok,
+    emailError: emailResult.ok ? undefined : emailResult.error,
+    email:      user.email,
     resetLink,
-    expiresAt: data.properties.email_otp,
+    expiresAt:  data.properties.email_otp,
   });
 }

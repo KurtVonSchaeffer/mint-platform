@@ -131,6 +131,9 @@ export default function UsersPage() {
       setToast({ kind: 'error', message: json.error ?? 'Reset failed' });
     } else {
       setResetLink({ email: user.email, link: json.resetLink });
+      if (!json.emailSent) {
+        setToast({ kind: 'error', message: `Email delivery failed — copy the link below and share it manually.` });
+      }
     }
     setResetting(null);
   }

@@ -6,12 +6,11 @@ import { ArrowRight } from 'lucide-react';
 import { MobileNav } from './MobileNav';
 
 const LINKS = [
-  { label: 'Home',         href: '/'             },
-  { label: 'Platform',     href: '#platform'    },
-  { label: 'How it works', href: '#process'      },
-  { label: 'Compliance',   href: '#compliance'   },
-  { label: 'Pricing',      href: '#pricing'      },
-  { label: 'Admin tour',   href: '/admin-tour'   },
+  { label: 'Home',         href: '/'            },
+  { label: 'How it works', href: '#process'     },
+  { label: 'Lenders',      href: '#platform'    },
+  { label: 'Compliance',   href: '#compliance'  },
+  { label: 'For lenders',  href: '/apply'       },
 ];
 
 const SECTIONS = ['platform', 'process', 'compliance', 'pricing', 'faq', 'enquire'];
@@ -78,7 +77,7 @@ export function NavBar() {
             className="font-semibold tracking-tight text-[15px] transition-colors duration-200"
             style={{ color: scrolled ? '#0F1629' : '#ffffff' }}
           >
-            AlgoLend
+            MINT
           </span>
         </Link>
 
@@ -131,25 +130,16 @@ export function NavBar() {
         {/* CTA + mobile */}
         <div className="flex items-center gap-2">
           <Link
-            href="/demo"
-            className="hidden md:inline-flex items-center gap-1.5 text-[13px] font-medium px-4 py-2 rounded-full border transition-all duration-200 hover:-translate-y-px"
-            style={{
-              color: scrolled ? '#7C3AED' : 'rgba(255,255,255,0.85)',
-              borderColor: scrolled ? 'rgba(124,58,237,0.4)' : 'rgba(255,255,255,0.25)',
-              background: scrolled ? 'rgba(124,58,237,0.06)' : 'rgba(255,255,255,0.07)',
-            }}
-          >
-            Try demo
-          </Link>
-          <Link
-            href="/apply"
+            href="https://www.mymint.co.za"
+            target="_blank"
+            rel="noopener noreferrer"
             className="btn-shine hidden md:inline-flex items-center gap-1.5 text-white text-[13px] font-semibold px-4 py-2 rounded-full transition-all duration-200 hover:-translate-y-px"
             style={{
               background: 'linear-gradient(135deg, #7C3AED 0%, #9B5CF6 100%)',
               boxShadow: '0 4px 20px rgba(124,58,237,0.4)',
             }}
           >
-            Start now
+            Apply on MINT
             <ArrowRight size={13} />
           </Link>
           <MobileNav scrolled={scrolled} />
