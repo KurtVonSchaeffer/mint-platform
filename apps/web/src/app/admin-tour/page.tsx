@@ -20,7 +20,7 @@ const sections = [
     color: '#7C3AED',
     rgb: '124,58,237',
     title: 'Command Dashboard',
-    summary: 'Live KPIs, portfolio health, and your credit pipeline — all in one glance.',
+    summary: 'Live KPIs, portfolio health, and your credit pipeline. All in one glance.',
     features: [
       'Real-time active loan count and portfolio value',
       'NPA tracking with automated aging buckets',
@@ -34,7 +34,7 @@ const sections = [
     color: '#10b981',
     rgb: '16,185,129',
     title: 'Credit Applications',
-    summary: 'From submission to disbursement — every step of the credit lifecycle in one pipeline.',
+    summary: 'From submission to disbursement. Every step of the credit lifecycle in one pipeline.',
     features: [
       'Application intake with document uploads',
       'TruID open banking affordability check',
@@ -48,7 +48,7 @@ const sections = [
     color: '#f59e0b',
     rgb: '245,158,11',
     title: 'Loan Book',
-    summary: 'Full loan lifecycle management — from disbursement through collections to closure.',
+    summary: 'Full loan lifecycle management from disbursement through collections to closure.',
     features: [
       'Live repayment schedule per borrower',
       'Sure Systems EFT debit order management',
@@ -62,12 +62,12 @@ const sections = [
     color: '#ef4444',
     rgb: '239,68,68',
     title: 'Compliance & SACRRA',
-    summary: 'Regulatory reporting that runs itself — no spreadsheets, no manual uploads.',
+    summary: 'Regulatory reporting that runs itself. No spreadsheets, no manual uploads.',
     features: [
-      'SACRRA layout 700 — auto-runs on the 28th',
+      'SACRRA layout 700: auto-runs on the 28th',
       'Full acceptance reconciliation with error log',
       'NCA quotation generation (pre-agreement)',
-      'NCR audit trail — every decision logged immutably',
+      'NCR audit trail: every decision logged immutably',
     ],
   },
   {
@@ -90,7 +90,7 @@ const sections = [
     color: '#64748b',
     rgb: '100,116,139',
     title: 'Settings & White-label',
-    summary: 'Full platform configuration — branding, products, scoring, and team access.',
+    summary: 'Full platform configuration: branding, products, scoring, and team access.',
     features: [
       'Company branding (logo, colors, domain)',
       'Product builder (terms, rates, limits)',
@@ -101,12 +101,12 @@ const sections = [
 ];
 
 const integrations = [
-  { name: 'TruID',        desc: 'Open banking — real-time affordability',  color: '#059669' },
-  { name: 'Experian',     desc: 'Credit bureau — full consumer report',    color: '#3b82f6' },
-  { name: 'SACRRA',       desc: 'Bureau reporting — layout 700 auto-sub',  color: '#f59e0b' },
-  { name: 'E-Contracts',  desc: 'E-signatures — NCA-compliant contracts',  color: '#8b5cf6' },
-  { name: 'Sure Systems', desc: 'EFT & debit orders — automated payments', color: '#ef4444' },
-  { name: 'Resend',       desc: 'Transactional email — instant delivery',  color: '#64748b' },
+  { name: 'TruID',        desc: 'Open banking: real-time affordability',  color: '#059669' },
+  { name: 'Experian',     desc: 'Credit bureau: full consumer report',    color: '#3b82f6' },
+  { name: 'SACRRA',       desc: 'Bureau reporting: layout 700 auto-sub',  color: '#f59e0b' },
+  { name: 'E-Contracts',  desc: 'E-signatures: NCA-compliant contracts',  color: '#8b5cf6' },
+  { name: 'Sure Systems', desc: 'EFT & debit orders: automated payments', color: '#ef4444' },
+  { name: 'Resend',       desc: 'Transactional email: instant delivery',  color: '#64748b' },
 ];
 
 export default function AdminTourPage() {
@@ -151,7 +151,7 @@ export default function AdminTourPage() {
           </h1>
           <p className="text-xl text-[var(--color-ink-soft)] leading-relaxed mb-10">
             Six modules. One screen. Everything your underwriting team needs to
-            run a compliant, data-driven credit operation — without spreadsheets.
+            run a compliant, data-driven credit operation. No spreadsheets.
           </p>
           <div className="flex items-center justify-center gap-3 flex-wrap">
             <Link
@@ -295,7 +295,7 @@ export default function AdminTourPage() {
           </h2>
           <p className="text-lg text-[var(--color-ink-soft)] mb-8">
             Book a 30-minute walk-through. We'll log into a live deployment and
-            show you every module — no slides, no deck, just the actual product.
+            show you every module. No slides, no deck, just the actual product.
           </p>
           <Link
             href="/#enquire"

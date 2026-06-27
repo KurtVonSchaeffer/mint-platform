@@ -48,7 +48,7 @@ const integrations = [
 
 const process = [
   { n: '01', icon: Sparkles,  title: 'Discovery',       desc: 'We map your credit policy, products, compliance posture, and team workflows in detail.' },
-  { n: '02', icon: Cpu,       title: 'Configuration',   desc: 'Platform built to your specifications — branding, scorecards, integrations, and user roles.' },
+  { n: '02', icon: Cpu,       title: 'Configuration',   desc: 'Platform built to your specifications: branding, scorecards, integrations, and user roles.' },
   { n: '03', icon: Activity,  title: 'UAT & Training',  desc: 'End-to-end user acceptance testing with your team, plus full staff onboarding training.' },
   { n: '04', icon: Lock,      title: 'Go Live',         desc: 'Launch with dedicated implementation support and ongoing platform management by Mint.' },
 ];
@@ -56,7 +56,7 @@ const process = [
 const compliance = [
   { code: 'NCA',    title: 'National Credit Act',  desc: 'Affordability, disclosure, and quotation rules architected into the credit engine.' },
   { code: 'SACRRA', title: 'Bureau Reporting',     desc: 'Monthly submissions in SACRRA layout 700, with full acceptance reconciliation.' },
-  { code: 'FSCA',   title: 'Credit Life Cover',    desc: 'FSCA-approved credit life insurance underwritten by Sanlam — death, disability and unemployment cover built into every loan.' },
+  { code: 'FSCA',   title: 'Credit Life Cover',    desc: 'FSCA-approved credit life insurance underwritten by Sanlam. Covers death, disability and unemployment on every approved loan.' },
   { code: 'NCR',    title: 'Audit Trail',          desc: 'Every credit decision logged immutably. NCR-grade audit reports available on demand.' },
 ];
 
@@ -235,7 +235,7 @@ export default function HomePage() {
                   <div className="px-6 py-5 space-y-2.5">
                     {[
                       'Every lender on the network competes for your application',
-                      'Best available rate — not just one offer',
+                      'Best available rate, not just one offer',
                       'NCA-compliant pre-agreement quote per lender',
                       'Sanlam credit life cover on every approved loan',
                     ].map(f => (
@@ -443,7 +443,7 @@ export default function HomePage() {
                 one platform.
               </h2>
               <p className="text-lg text-[var(--color-ink-soft)]">
-                Every deployment includes the full platform. We enable the modules you need — you don't pay for the ones you don't.
+                Every deployment includes the full platform. You only pay for the modules you use.
               </p>
             </div>
           </Reveal>
@@ -500,7 +500,7 @@ export default function HomePage() {
                 Bespoke. Not a download.
               </h2>
               <p className="text-lg text-white/60">
-                Every deployment is custom-built — you don't configure your way out of a generic SaaS template.
+                Every deployment is custom-built. You never configure your way out of a generic SaaS template.
               </p>
             </div>
           </Reveal>
@@ -655,7 +655,7 @@ export default function HomePage() {
                     your lending platform?
                   </h2>
                   <p className="text-lg text-white/60 max-w-md mb-8">
-                    Book a 30-minute discovery call with the Mint Platforms team. No commitment — just a conversation about your requirements.
+                    Book a 30-minute discovery call with the Mint Platforms team. No commitment, just a conversation about your requirements.
                   </p>
 
                   <div className="space-y-3 max-w-md">

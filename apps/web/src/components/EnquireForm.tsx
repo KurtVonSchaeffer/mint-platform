@@ -59,7 +59,7 @@ export function EnquireForm() {
         </div>
         <h3 className="text-2xl font-semibold text-white mb-2">Enquiry received.</h3>
         <p className="text-sm text-white/55 mb-6 max-w-sm mx-auto">
-          We'll be in touch within one business day — or skip the wait and book a time directly.
+          We'll be in touch within one business day. Or skip the wait and book a time directly.
         </p>
         <a
           href="https://calendly.com/mintplatforms"

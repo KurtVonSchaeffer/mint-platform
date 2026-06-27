@@ -11,12 +11,12 @@ const STARTER_FEATURES = [
   'Term loans & working capital',
   'NCA-compliant quotations & audit trail',
   'Bureau enquiry (Experian)',
-  'AML / Watchlist — PEPs & sanctions (included)',
+  'AML / Watchlist: PEPs & sanctions (included)',
   'Address verification',
-  'Open banking — TruID affordability check',
+  'Open banking: TruID affordability check',
   'Built-in e-signing & digital contracts',
-  'Full KYC — liveness, ID & phone verification',
-  'Automated emails — onboarding stages & repayment reminders',
+  'Full KYC: liveness, ID & phone verification',
+  'Automated emails: onboarding stages & repayment reminders',
   'Loan book & repayment tracking',
   'DebiCheck integration',
   'Up to 2 branches',
@@ -49,7 +49,7 @@ export function PricingSection() {
             </h2>
             <p className="text-lg text-[var(--color-ink-soft)]">
               Choose the tier that fits your credit operation. Every deployment is
-              fully configured to your spec — branding, scorecards, and integrations.
+              fully configured to your spec: branding, scorecards, and integrations.
             </p>
           </div>
         </Reveal>
@@ -185,7 +185,7 @@ export function PricingSection() {
               {
                 label: 'ii. API checks',
                 title: 'Pay-as-you-use',
-                desc: 'Starter is billed from check one. Enterprise includes 2,000 checks/month — additional checks at published rates.',
+                desc: 'Starter is billed from check one. Enterprise includes 2,000 checks/month. Additional checks at published rates.',
               },
               {
                 label: 'iii. Pass-through costs',

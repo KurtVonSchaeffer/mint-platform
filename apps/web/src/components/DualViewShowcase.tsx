@@ -466,7 +466,7 @@ function BorrowerView() {
       <div className="hidden md:block absolute left-[4%] top-1/2 -translate-y-1/2 max-w-[190px] space-y-3">
         <p className="text-white/40 text-[10px] uppercase tracking-widest font-semibold">Borrower sees</p>
         <p className="text-white text-base font-semibold leading-snug">
-          Their branded portal — your logo, your colours.
+          Their branded portal. Your logo, your colours.
         </p>
         <ul className="space-y-2">
           {['Balance & repayments', 'Debit order control', 'Statement download', 'New application'].map((f) => (

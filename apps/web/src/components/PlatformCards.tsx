@@ -96,7 +96,7 @@ export function CreditEngineCard() {
           A credit engine that<br />thinks like your<br />underwriters.
         </h3>
         <p className="text-white/60 mb-8 max-w-md text-sm leading-relaxed">
-          Custom scorecards, rule-based decisioning, automated approvals, and risk-based pricing — configured to your exact credit policy.
+          Custom scorecards, rule-based decisioning, automated approvals, and risk-based pricing. Configured to your exact credit policy.
         </p>
 
         {/* Scorecard visual */}
@@ -143,7 +143,7 @@ export function KycCard() {
         </div>
         <h3 className="text-xl font-semibold mb-2 tracking-tight text-white">KYC, AML & sanctions</h3>
         <p className="text-sm text-white/55 mb-6 leading-relaxed">
-          Director identity, biometric liveness, PEP, and sanctions screening — embedded in the application flow.
+          Director identity, biometric liveness, PEP, and sanctions screening. Embedded in the application flow.
         </p>
         <div className="mt-auto space-y-1.5">
           {['Director ID verified', 'AML clear', 'PEP screened', 'CIPC confirmed'].map((c) => (
@@ -193,7 +193,7 @@ export function EContractsCard() {
           </div>
           <h3 className="text-xl font-semibold mb-2 tracking-tight text-white">E-contracts</h3>
           <p className="text-sm text-white/55 leading-relaxed">
-            Automated agreement generation, secure digital signing, certificates of completion — all inside the portal.
+            Automated agreement generation, secure digital signing, and certificates of completion. All inside the portal.
           </p>
         </div>
         <div className="bg-white/8 border border-white/15 rounded-2xl p-4 w-full md:w-56 shrink-0 backdrop-blur-sm group-hover:rotate-1 transition-transform duration-500">
@@ -296,7 +296,7 @@ export function CreditLifeCard() {
           <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-white/50 border border-white/15">Sanlam</span>
         </div>
         <p className="text-sm text-white/55 mb-2 leading-relaxed">
-          Embedded cover protecting your loan book — and your borrowers — against death, disability, and retrenchment.
+          Embedded cover protecting your loan book and your borrowers against death, disability, and retrenchment.
         </p>
         <div className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-teal-400/15 text-teal-300 border border-teal-400/25 mb-4">
           R4.50 per R1,000 insured
