@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, CreditCard, Zap, BarChart3,
   Settings, LogOut, TrendingUp, FileText, Receipt, ArrowDownToLine,
   ChevronRight, Sun, Moon, Calculator, UserCog, Store, Menu, X,
-  Bell, Plus, UserPlus, ChevronDown, Wallet, SlidersHorizontal, Plug, HandCoins,
+  Bell, Plus, UserPlus, ChevronDown, Wallet, SlidersHorizontal, Plug, HandCoins, Landmark,
   AlertTriangle, AlertCircle, Loader2, CheckCircle2, ShieldCheck, ClipboardList,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
@@ -59,10 +59,11 @@ const nav: (NavItem | NavGroup)[] = [
     group: 'Marketplace',
     icon: Store,
     items: [
-      { label: 'Lender Policies', href: '/marketplace',             icon: Store              },
-      { label: 'Loan Simulator',  href: '/marketplace/simulate',    icon: SlidersHorizontal  },
-      { label: 'Integration',     href: '/marketplace/integration', icon: Plug               },
-      { label: 'MINT Loans',      href: '/marketplace/loans',       icon: HandCoins          },
+      { label: 'Lender Policies',      href: '/marketplace',                  icon: Store              },
+      { label: 'Loan Simulator',       href: '/marketplace/simulate',         icon: SlidersHorizontal  },
+      { label: 'Integration',          href: '/marketplace/integration',      icon: Plug               },
+      { label: 'MINT Loans',           href: '/marketplace/loans',            icon: HandCoins          },
+      { label: 'Portfolio Credit',     href: '/marketplace/portfolio-credit', icon: Landmark           },
     ],
   },
   { label: 'Features',    href: '/features',    icon: Zap },
