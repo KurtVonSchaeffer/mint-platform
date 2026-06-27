@@ -118,7 +118,7 @@ export default function HomePage() {
                 className="text-lg md:text-xl text-[var(--color-ink-soft)] max-w-2xl mx-auto mb-10 leading-relaxed"
                 style={{ animation: 'var(--animate-fade-up)', animationDelay: '160ms' }}
               >
-                A fully branded, end-to-end credit management platform — configured to your credit
+                A fully branded, end-to-end credit management platform. Configured to your credit
                 policy, regulatory framework, and borrower journey.
               </p>
 
@@ -158,7 +158,7 @@ export default function HomePage() {
               <div className="flex-1 min-w-0">
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-6 border" style={{ background: 'rgba(124,58,237,0.1)', borderColor: 'rgba(124,58,237,0.3)' }}>
                   <Sparkles size={11} style={{ color: '#A78BFA' }} />
-                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#C4B5FD' }}>Powered by AlgoLend lenders</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: '#C4B5FD' }}>MINT Marketplace</span>
                 </div>
 
                 <h2 className="headline text-4xl md:text-5xl font-bold text-white leading-none mb-5">
@@ -169,14 +169,14 @@ export default function HomePage() {
                 </h2>
 
                 <p className="text-base mb-8 max-w-md" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                  MINT aggregates every AlgoLend-powered lender into a single marketplace. Apply once and let the network compete to give you the best possible offer and rate — NCA-compliant, instantly.
+                  MINT brings every lender on the network into a single marketplace. Apply once and let them compete to give you the best possible offer and rate. NCA-compliant, no hidden fees.
                 </p>
 
                 <div className="space-y-3 mb-10">
                   {[
                     { n: '01', text: 'You apply once on the MINT marketplace.' },
-                    { n: '02', text: 'Your application is matched against every AlgoLend lender on the network.' },
-                    { n: '03', text: 'Lenders compete — you get the best offer and lowest rate available to you.' },
+                    { n: '02', text: 'Your application is matched against every lender on the network.' },
+                    { n: '03', text: 'Lenders compete and you get the best offer and lowest rate available to you.' },
                   ].map(s => (
                     <div key={s.n} className="flex items-start gap-4">
                       <span className="text-[10px] font-bold mt-0.5 shrink-0 w-6 text-right" style={{ color: 'rgba(167,139,250,0.4)', fontFamily: 'var(--font-mono)' }}>{s.n}</span>
@@ -234,7 +234,7 @@ export default function HomePage() {
                   {/* Feature list */}
                   <div className="px-6 py-5 space-y-2.5">
                     {[
-                      'All AlgoLend lenders compete for your application',
+                      'Every lender on the network competes for your application',
                       'Best available rate — not just one offer',
                       'NCA-compliant pre-agreement quote per lender',
                       'Sanlam credit life cover on every approved loan',

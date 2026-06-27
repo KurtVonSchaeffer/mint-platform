@@ -6,11 +6,11 @@ import { Plus, Minus } from 'lucide-react';
 const FAQS = [
   {
     q: 'How long does implementation take?',
-    a: 'Typically 2 business days from signed agreement to go-live for a standard deployment. Complex custom scorecards and multi-integration setups may take longer — we will scope that with you upfront.',
+    a: 'Typically 2 business days from signed agreement to go-live for a standard deployment. Complex custom scorecards and multi-integration setups may take longer. We will scope that with you upfront.',
   },
   {
     q: 'Do I own my data?',
-    a: "Absolutely. Your data lives in a private, fully isolated environment — entirely separate from other AlgoLend clients. Mint Platforms has no access to your borrower data unless you explicitly grant it for support purposes.",
+    a: "Absolutely. Your data lives in a private, fully isolated environment. It is entirely separate from other clients on the platform. Mint Platforms has no access to your borrower data unless you explicitly grant it for support purposes.",
   },
   {
     q: 'What happens if Experian or SureSystems goes down?',
@@ -18,7 +18,7 @@ const FAQS = [
   },
   {
     q: 'Can I configure my own credit scorecard?',
-    a: "Yes — this is the core of what we do. Your scorecard, rate bands, product rules, and affordability parameters are all configured per your credit policy. Nothing is shared with other lenders on the platform.",
+    a: "Yes. This is the core of what we do. Your scorecard, rate bands, product rules, and affordability parameters are all configured per your credit policy. Nothing is shared with other lenders on the platform.",
   },
   {
     q: 'Is the platform NCA compliant?',
@@ -30,7 +30,7 @@ const FAQS = [
   },
   {
     q: 'Can we white-label it completely?',
-    a: "Yes — your logo, your colours, your domain. Borrowers never see any AlgoLend or Mint Platforms branding. Even transactional emails come from your domain.",
+    a: "Yes. Your logo, your colours, your domain. Borrowers never see any AlgoLend or Mint Platforms branding. Transactional emails come from your domain too.",
   },
   {
     q: 'Do you support multi-branch lending?',
