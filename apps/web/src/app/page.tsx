@@ -31,10 +31,10 @@ const CreditLifeCard   = dynamic(() => import('@/components/PlatformCards').then
 /* ─── Content ─────────────────────────────────────────────────────── */
 
 const stats = [
-  { value: 'Instant',  label: 'credit decisions' },
-  { value: 'R 250k',   label: 'max loan amount' },
-  { value: '27%',      label: 'NCA max rate p.a.' },
-  { value: '60 mo',    label: 'max repayment term' },
+  { value: '2 days',   label: 'avg implementation time' },
+  { value: '100%',     label: 'private data environment, per client' },
+  { value: '99%',      label: 'platform uptime' },
+  { value: '< 60 min', label: 'per credit decision' },
 ];
 
 const integrations = [
@@ -47,17 +47,17 @@ const integrations = [
 
 
 const process = [
-  { n: '01', icon: Sparkles, title: 'Apply once',          desc: 'Fill in one short form on the MINT marketplace. No repeated paperwork, no running to different banks.' },
-  { n: '02', icon: Cpu,      title: 'Instant matching',    desc: 'Your profile is checked against every lender on the network in real time — credit bureau, income verification and all.' },
-  { n: '03', icon: Activity, title: 'Compare real offers', desc: 'See side-by-side what each lender will actually give you — amount, rate, monthly repayment — before you commit.' },
-  { n: '04', icon: Lock,     title: 'Accept the best one', desc: 'Pick your offer, sign digitally, and receive funds. Credit life cover from Sanlam is included on every approved loan.' },
+  { n: '01', icon: Sparkles,  title: 'Discovery',       desc: 'We map your credit policy, products, compliance posture, and team workflows in detail.' },
+  { n: '02', icon: Cpu,       title: 'Configuration',   desc: 'Platform built to your specifications — branding, scorecards, integrations, and user roles.' },
+  { n: '03', icon: Activity,  title: 'UAT & Training',  desc: 'End-to-end user acceptance testing with your team, plus full staff onboarding training.' },
+  { n: '04', icon: Lock,      title: 'Go Live',         desc: 'Launch with dedicated implementation support and ongoing platform management by Mint.' },
 ];
 
 const compliance = [
-  { code: 'NCA',    title: 'National Credit Act',  desc: 'Every quote on MINT includes a pre-agreement statement and a quotation as required by the NCA. No surprises at signing.' },
-  { code: 'SACRRA', title: 'Bureau Reporting',     desc: 'All lending on the network is reported to SACRRA monthly, keeping your credit record accurate and up to date.' },
-  { code: 'FSCA',   title: 'Credit Life Cover',    desc: 'Sanlam credit life insurance is built into every approved loan — covering death, disability, and retrenchment at no extra application step.' },
-  { code: 'NCR',    title: 'Transparent Decisions', desc: 'You get a clear reason for every decline. No black-box rejections — just honest feedback so you know where you stand.' },
+  { code: 'NCA',    title: 'National Credit Act',  desc: 'Affordability, disclosure, and quotation rules architected into the credit engine.' },
+  { code: 'SACRRA', title: 'Bureau Reporting',     desc: 'Monthly submissions in SACRRA layout 700, with full acceptance reconciliation.' },
+  { code: 'FSCA',   title: 'Credit Life Cover',    desc: 'FSCA-approved credit life insurance underwritten by Sanlam — death, disability and unemployment cover built into every loan.' },
+  { code: 'NCR',    title: 'Audit Trail',          desc: 'Every credit decision logged immutably. NCR-grade audit reports available on demand.' },
 ];
 
 /* ─── Helpers ─────────────────────────────────────────────────────── */
@@ -107,7 +107,7 @@ export default function HomePage() {
                 style={{ animation: 'var(--animate-fade-up)', animationDelay: '0ms' }}
               >
                 <span className="relative w-1.5 h-1.5 rounded-full bg-emerald-500 pulse-dot" />
-                <span className="text-[var(--color-ink-soft)]">South Africa&apos;s credit marketplace · <span className="text-[var(--color-ink)] font-semibold">Live now</span></span>
+                <span className="text-[var(--color-ink-soft)]">Built for <span className="text-[var(--color-ink)] font-semibold">South African</span> credit providers</span>
               </div>
 
               {/* Headline */}
@@ -118,8 +118,8 @@ export default function HomePage() {
                 className="text-lg md:text-xl text-[var(--color-ink-soft)] max-w-2xl mx-auto mb-10 leading-relaxed"
                 style={{ animation: 'var(--animate-fade-up)', animationDelay: '160ms' }}
               >
-                MINT is South Africa&apos;s multi-lender credit marketplace. Apply once — every lender
-                on the network competes for your application in real time, NCA-compliant, no hidden fees.
+                A fully branded, end-to-end credit management platform — configured to your credit
+                policy, regulatory framework, and borrower journey.
               </p>
 
               {/* CTAs */}
@@ -128,16 +128,14 @@ export default function HomePage() {
                 style={{ animation: 'var(--animate-fade-up)', animationDelay: '240ms' }}
               >
                 <Link
-                  href="https://www.mymint.co.za"
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="/apply"
                   className="btn-shine inline-flex items-center gap-2 bg-[var(--color-ink)] text-[var(--color-bg)] font-semibold text-[14px] px-5 py-3 rounded-full transition-transform hover:-translate-y-0.5"
                   style={{ boxShadow: '0 12px 32px -8px rgba(9, 9, 11, 0.4)' }}
                 >
-                  Apply on MINT
+                  Start now
                   <ArrowRight size={15} />
                 </Link>
-                <WatchIntroButton />
+                <SeeItWorkButton />
               </div>
             </div>
           }
