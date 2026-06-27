@@ -525,6 +525,22 @@ function BorrowerView() {
               ))}
             </div>
 
+            {/* Logo overlay — covers the AlgoLend nav branding in the screenshot */}
+            <div
+              className="absolute z-10 pointer-events-none"
+              style={{ top: 10, left: '50%', transform: 'translateX(-50%)' }}
+            >
+              <div
+                className="flex items-center gap-1.5 px-3 py-1 rounded-full"
+                style={{ background: 'rgba(255,255,255,0.95)', boxShadow: '0 1px 6px rgba(0,0,0,0.12)' }}
+              >
+                <div className="w-4 h-4 rounded-full bg-[#7C3AED]/20 flex items-center justify-center">
+                  <div className="w-2 h-2 rounded-full bg-[#7C3AED]" />
+                </div>
+                <span className="text-[10px] font-bold text-[#7C3AED] tracking-wide">Your Logo</span>
+              </div>
+            </div>
+
             {/* Prev/next arrows inside screen */}
             <NavBtn dir="prev" onClick={prev} light />
             <NavBtn dir="next" onClick={next} light />
