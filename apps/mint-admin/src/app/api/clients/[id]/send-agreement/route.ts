@@ -5,7 +5,7 @@ import { Resend } from 'resend';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const BASE_URL = process.env.NEXT_PUBLIC_WEB_URL ?? 'https://algolend.co.za';
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -47,7 +47,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
 
   const link = `${BASE_URL}/sign/${lead.onboarding_token}`;
 
-  await resend.emails.send({
+  await resend?.emails.send({
     from:    process.env.RESEND_FROM_EMAIL ?? 'accounts@algolend.co.za',
     to:      client.contact_email,
     subject: `Service Agreement — ${client.name}`,
