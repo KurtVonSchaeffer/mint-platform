@@ -62,6 +62,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
 
   const [name, setName]               = useState(initialValues?.name ?? '');
   const [slug, setSlug]               = useState(initialValues?.name ? slugify(initialValues.name) : '');
+  const [slugEdited, setSlugEdited]   = useState(false);
   const [domain, setDomain]           = useState('');
   const [legalName, setLegalName]     = useState(initialValues?.legalName ?? '');
   const [contactEmail, setContactEmail] = useState(initialValues?.contactEmail ?? '');
@@ -85,7 +86,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
 
   function handleNameChange(val: string) {
     setName(val);
-    setSlug(slugify(val));
+    if (!slugEdited) setSlug(slugify(val));
   }
 
   function handleTierChange(t: typeof tier) {
@@ -197,7 +198,15 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
               <Field label="Company name *">
                 <input value={name} onChange={(e) => handleNameChange(e.target.value)} placeholder="e.g. BridgeCapital Finance" className="field-input" />
               </Field>
-              <Field label="Client domain" hint={domain ? `→ https://${domain}` : undefined}>
+              <Field label="Portal URL slug *" hint={slug ? `→ https://${slug}.algolend.co.za  (share this link with the client to set up their custom domain)` : undefined}>
+                <input
+                  value={slug}
+                  onChange={(e) => { setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')); setSlugEdited(true); }}
+                  placeholder="e.g. zwane-financial"
+                  className="field-input font-mono"
+                />
+              </Field>
+              <Field label="Custom domain (optional)" hint={domain ? `→ https://${domain}  (client CNAMEs this to their Vercel URL)` : 'Enter once the client has pointed their domain to the portal'}>
                 <input
                   value={domain}
                   onChange={(e) => setDomain(e.target.value.toLowerCase().replace(/[^a-z0-9.\-]/g, ''))}
@@ -316,7 +325,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
               <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border2)' }}>
                 <div className="w-7 h-7 rounded-lg shrink-0" style={{ backgroundColor: secondaryColor }} />
                 <div className="w-7 h-7 rounded-lg shrink-0" style={{ backgroundColor: primaryColor }} />
-                <span className="text-xs font-mono" style={{ color: 'var(--color-text3)' }}>{domain || 'client.co.za'}</span>
+                <span className="text-xs font-mono" style={{ color: 'var(--color-text3)' }}>{domain || `${slug || 'client'}.algolend.co.za`}</span>
                 <span className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-lg text-white" style={{ backgroundColor: primaryColor }}>Sign in</span>
               </div>
             </div>
@@ -469,7 +478,8 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
           {step === 'review' && (
             <div className="space-y-4">
               <ReviewRow label="Company"  value={name} />
-              {domain && <ReviewRow label="Client domain" value={domain} mono />}
+              <ReviewRow label="Portal URL" value={`${slug}.algolend.co.za`} mono />
+              {domain && <ReviewRow label="Custom domain" value={domain} mono />}
               {legalName && <ReviewRow label="Legal name" value={legalName} />}
               <ReviewRow label="Contact"  value={`${contactName || '—'} · ${contactEmail}`} />
               {ncrNumber && <ReviewRow label="NCR number" value={ncrNumber} mono />}
