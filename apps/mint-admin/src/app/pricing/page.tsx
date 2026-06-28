@@ -64,6 +64,14 @@ export default function PricingPage() {
   const [showPw, setShowPw]                 = useState(false);
   const pwInputRef                          = useRef<HTMLInputElement>(null);
 
+  // Super admins are already authenticated — no re-auth needed
+  function requestEditRatesSuperAdmin() {
+    const draft: Record<string, number> = {};
+    SERVICE_RATES.forEach(s => { draft[s.id] = rateOverrides[s.id] ?? s.publishedCents; });
+    setDraftRates(draft);
+    setIsEditingRates(true);
+  }
+
   // Load saved overrides from localStorage on mount
   useEffect(() => {
     try {
@@ -584,7 +592,7 @@ export default function PricingPage() {
                 <p className="eyebrow">Pay-as-you-use rates</p>
                 {!isEditingRates && (
                   <button
-                    onClick={requestEditRates}
+                    onClick={isSuperAdmin ? requestEditRatesSuperAdmin : requestEditRates}
                     className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-lg transition-colors"
                     style={{ color: 'var(--color-violet)', background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)' }}
                   >
