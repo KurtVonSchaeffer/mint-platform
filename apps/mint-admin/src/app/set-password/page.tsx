@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
-import { Eye, EyeOff, KeyRound, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, KeyRound, AlertCircle, CheckCircle2, Loader2, LinkIcon } from 'lucide-react';
 import Image from 'next/image';
 
 export default function SetPasswordPage() {
@@ -14,12 +14,24 @@ export default function SetPasswordPage() {
   );
 }
 
+function parseHashError(): string | null {
+  if (typeof window === 'undefined') return null;
+  const hash = window.location.hash.slice(1);
+  const params = new URLSearchParams(hash);
+  const errorCode = params.get('error_code');
+  if (!errorCode) return null;
+  if (errorCode === 'otp_expired') return 'expired';
+  if (errorCode === 'access_denied') return 'expired';
+  return 'invalid';
+}
+
 function SetPasswordForm() {
   const router = useRouter();
   const params = useSearchParams();
-  const code   = params.get('code'); // PKCE flow (?code=...)
+  const code   = params.get('code');
 
   const [ready, setReady]       = useState(false);
+  const [expired, setExpired]   = useState(false);
   const [error, setError]       = useState<string | null>(null);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm]   = useState('');
@@ -33,24 +45,27 @@ function SetPasswordForm() {
   );
 
   useEffect(() => {
-    // Path 1: PKCE flow — ?code= in the URL query string
+    // Check for Supabase error in URL hash immediately — no waiting
+    const hashErr = parseHashError();
+    if (hashErr) {
+      setExpired(true);
+      return;
+    }
+
+    // Path 1: PKCE flow — ?code= in query string
     if (code) {
       supabase.auth.exchangeCodeForSession(code).then(({ error: err }) => {
-        if (err) setError('This link has expired or already been used. Ask an admin to resend your invite.');
+        if (err) setExpired(true);
         else setReady(true);
       });
       return;
     }
 
-    // Path 2: Implicit flow — #access_token= in the URL hash (what Supabase admin generateLink produces)
-    // The Supabase client automatically processes hash tokens on auth state change.
+    // Path 2: Implicit flow — #access_token= in hash (Supabase admin generateLink)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
-        setReady(true);
-      }
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') setReady(true);
     });
 
-    // Also check if a session already exists from the hash being processed
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) setReady(true);
     });
@@ -58,14 +73,12 @@ function SetPasswordForm() {
     return () => subscription.unsubscribe();
   }, [code]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Timeout: if neither flow resolves in 5s, show an error
+  // Fallback timeout — only fires if no hash error and no session resolved
   useEffect(() => {
-    if (ready || error) return;
-    const t = setTimeout(() => {
-      if (!ready) setError('Could not verify the invite link. It may have expired — ask an admin to resend your invite.');
-    }, 5000);
+    if (ready || expired || error) return;
+    const t = setTimeout(() => { if (!ready) setExpired(true); }, 6000);
     return () => clearTimeout(t);
-  }, [ready, error]);
+  }, [ready, expired, error]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -95,38 +108,56 @@ function SetPasswordForm() {
         style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(124,58,237,0.12) 0%, transparent 70%)' }} />
 
       <div className="relative w-full max-w-sm" style={{ animation: 'fade-up 0.5s cubic-bezier(0.16,1,0.3,1) both' }}>
-        <div className="bento-card p-8" style={{ borderColor: 'rgba(124,58,237,0.2)' }}>
+        <div className="bento-card p-8" style={{ borderColor: expired ? 'rgba(248,113,113,0.3)' : 'rgba(124,58,237,0.2)' }}>
           <div className="flex flex-col items-center mb-8">
             <Image src="/algolend-logo-dark.png" alt="AlgoLend" width={160} height={40} style={{ objectFit: 'contain' }} priority className="light-hidden" />
             <Image src="/algolend-logo.png"      alt="AlgoLend" width={160} height={40} style={{ objectFit: 'contain' }} priority className="light-only" />
-            <p className="text-[11px] tracking-widest uppercase mt-2" style={{ color: 'rgba(167,139,250,0.5)' }}>
-              Set your password
+            <p className="text-[11px] tracking-widest uppercase mt-2" style={{ color: expired ? 'rgba(248,113,113,0.6)' : 'rgba(167,139,250,0.5)' }}>
+              {expired ? 'Link expired' : 'Set your password'}
             </p>
           </div>
 
-          {done && (
+          {/* ── Expired state ── */}
+          {expired && (
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center"
+                style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)' }}>
+                <LinkIcon size={22} style={{ color: 'var(--color-red)' }} />
+              </div>
+              <div>
+                <p className="font-semibold text-base mb-1" style={{ color: 'var(--color-text)' }}>
+                  This link has expired
+                </p>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text3)' }}>
+                  Password links are valid for 24 hours. Ask your admin to send you a new one from the Users page.
+                </p>
+              </div>
+              <div className="w-full pt-2 mt-2" style={{ borderTop: '1px solid var(--color-border2)' }}>
+                <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
+                  Admin: go to <span className="font-mono" style={{ color: 'var(--color-violet)' }}>/users</span> → Reset password
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* ── Success state ── */}
+          {!expired && done && (
             <div className="flex flex-col items-center gap-3 py-4">
               <CheckCircle2 size={36} style={{ color: 'var(--color-teal)' }} />
               <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Password set! Redirecting…</p>
             </div>
           )}
 
-          {!done && error && !ready && (
-            <div className="flex items-start gap-2 px-3 py-3 rounded-xl text-sm"
-              style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', color: 'var(--color-red)' }}>
-              <AlertCircle size={14} className="shrink-0 mt-0.5" />
-              {error}
-            </div>
-          )}
-
-          {!done && !error && !ready && (
+          {/* ── Loading / verifying ── */}
+          {!expired && !done && !ready && !error && (
             <div className="flex items-center justify-center gap-2 py-6" style={{ color: 'var(--color-text3)' }}>
               <Loader2 size={18} className="animate-spin" />
-              <span className="text-sm">Verifying invite link…</span>
+              <span className="text-sm">Verifying link…</span>
             </div>
           )}
 
-          {!done && ready && (
+          {/* ── Password form ── */}
+          {!expired && !done && ready && (
             <form onSubmit={handleSubmit} className="space-y-4">
               <p className="text-sm mb-4" style={{ color: 'var(--color-text3)' }}>
                 Choose a password to secure your account.
