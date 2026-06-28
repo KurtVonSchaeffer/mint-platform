@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, ExternalLink, Loader2, CheckCircle2, AlertCircle, Search, Download } from 'lucide-react';
+import { X, ExternalLink, Loader2, CheckCircle2, AlertCircle, Search, Download, KeyRound } from 'lucide-react';
 
 interface VercelProject {
   id:    string;
@@ -15,7 +15,7 @@ interface ImportRow {
   clientName:    string;
   slug:          string;
   contactEmail:  string;
-  tier:          'core' | 'growth' | 'enterprise';
+  tier:          'core' | 'enterprise';
   monthlyFee:    string;
   selected:      boolean;
   state:         'idle' | 'saving' | 'done' | 'error';
@@ -27,7 +27,10 @@ interface Props {
   onImported: (count: number) => void;
 }
 
-const TIER_OPTIONS = ['core', 'growth', 'enterprise'] as const;
+const TIER_OPTIONS: { id: 'core' | 'enterprise'; label: string; fee: string }[] = [
+  { id: 'core',       label: 'Starter',    fee: '1999'  },
+  { id: 'enterprise', label: 'Enterprise', fee: '14999' },
+];
 
 export function ImportFromVercelModal({ onClose, onImported }: Props) {
   const [loading, setLoading]   = useState(true);
@@ -49,8 +52,8 @@ export function ImportFromVercelModal({ onClose, onImported }: Props) {
           clientName:   p.name.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
           slug:         p.slug ?? p.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-'),
           contactEmail: '',
-          tier:         'growth',
-          monthlyFee:   '22000',
+          tier:         'core',
+          monthlyFee:   '1999',
           selected:     !!p.slug,   // auto-select known client projects
           state:        'idle',
         }));
@@ -166,18 +169,46 @@ export function ImportFromVercelModal({ onClose, onImported }: Props) {
 
           {/* Fetch error */}
           {fetchErr && (
-            <div
-              className="rounded-xl p-4 flex items-start gap-3"
-              style={{ background: 'rgba(248,113,113,0.07)', border: '1px solid rgba(248,113,113,0.2)' }}
-            >
-              <AlertCircle size={16} style={{ color: 'var(--color-red)', marginTop: 1 }} className="shrink-0" />
-              <div>
-                <p className="text-sm font-semibold" style={{ color: 'var(--color-red)' }}>Could not load Vercel projects</p>
-                <p className="text-xs mt-1" style={{ color: 'var(--color-text2)' }}>{fetchErr}</p>
-                <p className="text-xs mt-2" style={{ color: 'var(--color-text3)' }}>
-                  Set <code className="font-mono" style={{ color: 'var(--color-violet)' }}>VERCEL_API_TOKEN</code> and{' '}
-                  <code className="font-mono" style={{ color: 'var(--color-violet)' }}>VERCEL_TEAM_ID</code> in your environment variables, then try again.
-                </p>
+            <div className="rounded-xl overflow-hidden" style={{ border: '1px solid rgba(248,113,113,0.2)' }}>
+              <div className="flex items-start gap-3 p-4" style={{ background: 'rgba(248,113,113,0.07)' }}>
+                <AlertCircle size={16} style={{ color: 'var(--color-red)', marginTop: 1 }} className="shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--color-red)' }}>Could not load Vercel projects</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--color-text2)' }}>{fetchErr}</p>
+                </div>
+              </div>
+              <div className="px-4 py-3 space-y-2" style={{ background: 'rgba(0,0,0,0.2)', borderTop: '1px solid rgba(248,113,113,0.12)' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.3)' }}>Fix it in 2 steps</p>
+                <div className="flex items-start gap-2.5 text-xs" style={{ color: 'var(--color-text3)' }}>
+                  <span className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5" style={{ background: 'rgba(124,58,237,0.3)', color: '#A78BFA' }}>1</span>
+                  <span>
+                    Create a token at{' '}
+                    <a href="https://vercel.com/account/tokens" target="_blank" rel="noreferrer"
+                      className="font-semibold underline" style={{ color: 'var(--color-violet)' }}>
+                      vercel.com/account/tokens
+                    </a>
+                    {' '}with full scope on the AlgoLend team
+                  </span>
+                </div>
+                <div className="flex items-start gap-2.5 text-xs" style={{ color: 'var(--color-text3)' }}>
+                  <span className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-bold shrink-0 mt-0.5" style={{ background: 'rgba(124,58,237,0.3)', color: '#A78BFA' }}>2</span>
+                  <span>
+                    Add <code className="font-mono px-1 rounded" style={{ background: 'rgba(124,58,237,0.15)', color: '#C4B5FD' }}>VERCEL_API_TOKEN</code> and{' '}
+                    <code className="font-mono px-1 rounded" style={{ background: 'rgba(124,58,237,0.15)', color: '#C4B5FD' }}>VERCEL_TEAM_ID</code>{' '}
+                    to{' '}
+                    <a href="https://vercel.com/kurtvonschaeffers-projects/admin/settings/environment-variables" target="_blank" rel="noreferrer"
+                      className="font-semibold underline" style={{ color: 'var(--color-violet)' }}>
+                      project env vars
+                    </a>
+                    {' '}for Production, Preview & Development, then redeploy
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <KeyRound size={11} style={{ color: 'rgba(255,255,255,0.2)' }} />
+                  <code className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                    VERCEL_TEAM_ID = team_ujhTvHHfrPHhAwn1nKbjVgck
+                  </code>
+                </div>
               </div>
             </div>
           )}
@@ -327,10 +358,14 @@ export function ImportFromVercelModal({ onClose, onImported }: Props) {
                           <select
                             className="field-input cursor-pointer"
                             value={row.tier}
-                            onChange={(e) => update(row.project.id, { tier: e.target.value as ImportRow['tier'] })}
+                            onChange={(e) => {
+                              const t = e.target.value as ImportRow['tier'];
+                              const fee = TIER_OPTIONS.find(o => o.id === t)?.fee ?? '1999';
+                              update(row.project.id, { tier: t, monthlyFee: fee });
+                            }}
                           >
                             {TIER_OPTIONS.map(t => (
-                              <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                              <option key={t.id} value={t.id}>{t.label}</option>
                             ))}
                           </select>
                         </div>
