@@ -778,24 +778,15 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
 
 /* ─── Helpers ──────────────────────────────────────────────────────── */
 
-function F({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function F({ hint, children }: { label?: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.3)' }}>{label}</label>
       {children}
-      {hint && <p className="text-[11px] mt-1.5 leading-relaxed" style={{ color: 'rgba(255,255,255,0.25)' }}>{hint}</p>}
+      {hint && <p className="text-[11px] mt-1.5 leading-relaxed" style={{ color: 'var(--color-text3)' }}>{hint}</p>}
     </div>
   );
 }
 
-function Divider({ label, note }: { label: string; note?: string }) {
-  return (
-    <div className="flex items-center gap-3 pt-1">
-      <p className="text-[10px] font-bold uppercase tracking-[0.15em] shrink-0" style={{ color: 'rgba(255,255,255,0.2)' }}>
-        {label}
-        {note && <span className="ml-1 normal-case font-normal tracking-normal">— {note}</span>}
-      </p>
-      <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.06)' }} />
-    </div>
-  );
+function Divider({ label: _label, note: _note }: { label?: string; note?: string }) {
+  return <div className="h-px" style={{ background: 'var(--color-border2)' }} />;
 }
