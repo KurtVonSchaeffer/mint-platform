@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 export interface CreateClientInput {
   name: string;
   slug: string;
+  domain?: string;
   legal_name?: string;
   contact_email: string;
   contact_name?: string;
@@ -70,6 +71,7 @@ export async function POST(req: NextRequest) {
       name,
       slug,
       subdomain: slug,
+      domain: body.domain ?? null,
       legal_name: legal_name ?? null,
       contact_email,
       contact_name: contact_name ?? null,

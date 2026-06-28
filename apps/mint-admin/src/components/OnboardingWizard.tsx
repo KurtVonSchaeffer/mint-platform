@@ -62,7 +62,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
 
   const [name, setName]               = useState(initialValues?.name ?? '');
   const [slug, setSlug]               = useState(initialValues?.name ? slugify(initialValues.name) : '');
-  const [slugEdited, setSlugEdited]   = useState(false);
+  const [domain, setDomain]           = useState('');
   const [legalName, setLegalName]     = useState(initialValues?.legalName ?? '');
   const [contactEmail, setContactEmail] = useState(initialValues?.contactEmail ?? '');
   const [contactName, setContactName] = useState(initialValues?.contactName ?? '');
@@ -85,7 +85,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
 
   function handleNameChange(val: string) {
     setName(val);
-    if (!slugEdited) setSlug(slugify(val));
+    setSlug(slugify(val));
   }
 
   function handleTierChange(t: typeof tier) {
@@ -104,7 +104,8 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
   async function submit() {
     setError(null); setSubmitting(true);
     const payload: CreateClientInput = {
-      name: name.trim(), slug: slug.trim(), legal_name: legalName.trim() || undefined,
+      name: name.trim(), slug: slug.trim(), domain: domain.trim() || undefined,
+      legal_name: legalName.trim() || undefined,
       contact_email: contactEmail.trim(), contact_name: contactName.trim() || undefined,
       ncr_number: ncrNumber.trim() || undefined, tier, monthly_fee_cents: monthlyFeeCents,
       primary_color: primaryColor, secondary_color: secondaryColor,
@@ -196,11 +197,11 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
               <Field label="Company name *">
                 <input value={name} onChange={(e) => handleNameChange(e.target.value)} placeholder="e.g. BridgeCapital Finance" className="field-input" />
               </Field>
-              <Field label="URL slug *" hint={slug ? `→ https://${slug}.algolend.co.za` : undefined}>
+              <Field label="Client domain" hint={domain ? `→ https://${domain}` : undefined}>
                 <input
-                  value={slug}
-                  onChange={(e) => { setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')); setSlugEdited(true); }}
-                  placeholder="e.g. bridgecapital"
+                  value={domain}
+                  onChange={(e) => setDomain(e.target.value.toLowerCase().replace(/[^a-z0-9.\-]/g, ''))}
+                  placeholder="e.g. zwanefin.co.za"
                   className="field-input font-mono"
                 />
               </Field>
@@ -315,7 +316,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
               <div className="flex items-center gap-3 px-4 py-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border2)' }}>
                 <div className="w-7 h-7 rounded-lg shrink-0" style={{ backgroundColor: secondaryColor }} />
                 <div className="w-7 h-7 rounded-lg shrink-0" style={{ backgroundColor: primaryColor }} />
-                <span className="text-xs font-mono" style={{ color: 'var(--color-text3)' }}>{slug || 'client'}.algolend.co.za</span>
+                <span className="text-xs font-mono" style={{ color: 'var(--color-text3)' }}>{domain || 'client.co.za'}</span>
                 <span className="ml-auto text-xs font-semibold px-2.5 py-1 rounded-lg text-white" style={{ backgroundColor: primaryColor }}>Sign in</span>
               </div>
             </div>
@@ -468,7 +469,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
           {step === 'review' && (
             <div className="space-y-4">
               <ReviewRow label="Company"  value={name} />
-              <ReviewRow label="Slug / URL" value={`${slug}.algolend.co.za`} mono />
+              {domain && <ReviewRow label="Client domain" value={domain} mono />}
               {legalName && <ReviewRow label="Legal name" value={legalName} />}
               <ReviewRow label="Contact"  value={`${contactName || '—'} · ${contactEmail}`} />
               {ncrNumber && <ReviewRow label="NCR number" value={ncrNumber} mono />}
