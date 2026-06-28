@@ -17,6 +17,7 @@ interface LenderPolicy {
   id:                    string;
   client_id:             string;
   display_name:          string;
+  logo_url:              string | null;
   tagline:               string | null;
   avg_turnaround_days:   number;
   min_credit_score:      number;
@@ -40,7 +41,7 @@ function fmt(n: number) {
 }
 
 const EMPTY_POLICY = {
-  display_name: '', tagline: '', avg_turnaround_days: 2,
+  display_name: '', logo_url: '', tagline: '', avg_turnaround_days: 2,
   min_credit_score: 580, max_dsr_pct: 45,
   min_amount: 10000, max_amount: 500000,
   require_id_verified: true, max_open_defaults: 0,
@@ -90,6 +91,7 @@ export default function MarketplacePage() {
     setIsNew(false);
     setDraft({
       display_name:          p.display_name,
+      logo_url:              p.logo_url ?? '',
       tagline:               p.tagline ?? '',
       avg_turnaround_days:   p.avg_turnaround_days,
       min_credit_score:      p.min_credit_score,
@@ -214,6 +216,16 @@ export default function MarketplacePage() {
                 <div className="col-span-2">
                   <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Tagline</label>
                   <input className="field-input" value={draft.tagline ?? ''} onChange={e => setDraft(d => ({ ...d, tagline: e.target.value }))} placeholder="e.g. Fast decisions for established businesses" />
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Logo URL (shown to consumers in marketplace)</label>
+                  <div className="flex items-center gap-2">
+                    <input className="field-input flex-1" value={draft.logo_url ?? ''} onChange={e => setDraft(d => ({ ...d, logo_url: e.target.value }))} placeholder="https://example.com/logo.png" />
+                    {draft.logo_url && (
+                      <img src={draft.logo_url} alt="Logo preview" className="w-10 h-10 rounded-lg object-contain border" style={{ border: '1px solid var(--color-border2)', background: '#fff' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                    )}
+                  </div>
+                  <p className="text-[10px] mt-1" style={{ color: 'var(--color-text3)' }}>Paste a direct image URL. Hosted on your CDN, Supabase Storage, or any public URL.</p>
                 </div>
                 <div>
                   <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Avg turnaround (days)</label>
@@ -416,9 +428,15 @@ export default function MarketplacePage() {
                   <>
                     <tr key={p.id} style={{ animation: 'fade-up 0.3s cubic-bezier(0.16,1,0.3,1) both' }}>
                       <td>
-                        <div>
-                          <p className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{p.display_name}</p>
-                          {p.tagline && <p className="text-xs truncate" style={{ color: 'var(--color-text3)' }}>{p.tagline}</p>}
+                        <div className="flex items-center gap-3">
+                          {p.logo_url
+                            ? <img src={p.logo_url} alt={p.display_name} className="w-8 h-8 rounded-lg object-contain shrink-0" style={{ border: '1px solid var(--color-border2)', background: '#fff' }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                            : <div className="w-8 h-8 rounded-lg shrink-0 flex items-center justify-center text-xs font-bold" style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}>{p.display_name[0]}</div>
+                          }
+                          <div>
+                            <p className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{p.display_name}</p>
+                            {p.tagline && <p className="text-xs truncate" style={{ color: 'var(--color-text3)' }}>{p.tagline}</p>}
+                          </div>
                         </div>
                       </td>
                       <td>
