@@ -5,11 +5,11 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import {
-  LayoutDashboard, Users, CreditCard, Zap, BarChart3,
-  Settings, LogOut, TrendingUp, FileText, Receipt, ArrowDownToLine,
-  ChevronRight, Sun, Moon, Calculator, UserCog, Store, Menu, X,
-  Bell, Plus, UserPlus, ChevronDown, Wallet, SlidersHorizontal, Plug, HandCoins, Landmark,
-  AlertTriangle, AlertCircle, Loader2, CheckCircle2, ShieldCheck, ClipboardList,
+  LayoutGrid, Building2, Filter, Inbox, Tag, ScrollText, Receipt,
+  CreditCard, Globe, Scale, Gauge, Link2, Banknote, PiggyBank,
+  ToggleLeft, Activity, ShieldCheck, ArrowDownToLine, Users2, SlidersHorizontal,
+  LogOut, Sun, Moon, Menu, X, Bell, Plus, UserPlus, ChevronDown, ChevronRight,
+  Loader2, CheckCircle2, AlertTriangle, AlertCircle, Settings,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { useRouter } from 'next/navigation';
@@ -41,47 +41,47 @@ function canAccess(href: string, role: string): boolean {
 }
 
 const nav: (NavItem | NavGroup)[] = [
-  { label: 'Dashboard',   href: '/',            icon: LayoutDashboard },
-  { label: 'Clients',     href: '/clients',     icon: Users },
-  { label: 'Leads',        href: '/leads',        icon: TrendingUp    },
-  { label: 'Applications', href: '/applications', icon: ClipboardList },
+  { label: 'Dashboard',    href: '/',            icon: LayoutGrid     },
+  { label: 'Clients',      href: '/clients',     icon: Building2      },
+  { label: 'Leads',        href: '/leads',        icon: Filter         },
+  { label: 'Applications', href: '/applications', icon: Inbox          },
   {
     group: 'Financials',
-    icon: Wallet,
+    icon: Receipt,
     items: [
-      { label: 'Pricing',        href: '/pricing',   icon: Calculator },
-      { label: 'Quotes',         href: '/quotes',    icon: FileText },
-      { label: 'Invoices',       href: '/invoices',  icon: Receipt },
-      { label: 'Subscriptions',  href: '/billing',   icon: CreditCard },
+      { label: 'Pricing',       href: '/pricing',  icon: Tag        },
+      { label: 'Quotes',        href: '/quotes',   icon: ScrollText },
+      { label: 'Invoices',      href: '/invoices', icon: Receipt    },
+      { label: 'Subscriptions', href: '/billing',  icon: CreditCard },
     ],
   },
   {
     group: 'Marketplace',
-    icon: Store,
+    icon: Globe,
     items: [
-      { label: 'Lender Policies',      href: '/marketplace',                  icon: Store              },
-      { label: 'Loan Simulator',       href: '/marketplace/simulate',         icon: SlidersHorizontal  },
-      { label: 'Integration',          href: '/marketplace/integration',      icon: Plug               },
-      { label: 'MINT Loans',           href: '/marketplace/loans',            icon: HandCoins          },
-      { label: 'Portfolio Credit',     href: '/marketplace/portfolio-credit', icon: Landmark           },
+      { label: 'Lender Policies',  href: '/marketplace',                  icon: Scale   },
+      { label: 'Loan Simulator',   href: '/marketplace/simulate',         icon: Gauge   },
+      { label: 'Integration',      href: '/marketplace/integration',      icon: Link2   },
+      { label: 'MINT Loans',       href: '/marketplace/loans',            icon: Banknote },
+      { label: 'Portfolio Credit', href: '/marketplace/portfolio-credit', icon: PiggyBank },
     ],
   },
-  { label: 'Features',    href: '/features',    icon: Zap },
-  { label: 'API Usage',   href: '/usage',        icon: BarChart3 },
-  { label: 'Compliance',  href: '/compliance',  icon: ShieldCheck },
-  { label: 'Migration',   href: '/migration',   icon: ArrowDownToLine },
-  { label: 'Users',       href: '/users',        icon: UserCog },
-  { label: 'Settings',    href: '/settings',    icon: Settings },
+  { label: 'Features',   href: '/features',  icon: ToggleLeft      },
+  { label: 'API Usage',  href: '/usage',      icon: Activity        },
+  { label: 'Compliance', href: '/compliance', icon: ShieldCheck     },
+  { label: 'Migration',  href: '/migration',  icon: ArrowDownToLine },
+  { label: 'Users',      href: '/users',      icon: Users2          },
+  { label: 'Settings',   href: '/settings',   icon: SlidersHorizontal },
 ];
 
 // Flat list of all nav items (used for search and page title lookup)
 const flatNav: NavItem[] = nav.flatMap(e => 'group' in e ? e.items : [e]);
 
 const NEW_ACTIONS = [
-  { label: 'New client',  href: '/clients?new=1',  icon: Users },
-  { label: 'New lead',    href: '/leads?new=1',    icon: UserPlus },
-  { label: 'New invoice', href: '/invoices?new=1', icon: Receipt },
-  { label: 'New quote',   href: '/quotes?new=1',   icon: FileText },
+  { label: 'New client',  href: '/clients?new=1',  icon: Building2  },
+  { label: 'New lead',    href: '/leads?new=1',    icon: UserPlus   },
+  { label: 'New invoice', href: '/invoices?new=1', icon: Receipt    },
+  { label: 'New quote',   href: '/quotes?new=1',   icon: ScrollText },
 ];
 
 /* ─── AlgoLend logo (actual brand asset) ────────────────────────── */
@@ -622,7 +622,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
               }}
             >
               <span className="flex items-center gap-1.5">
-                <LayoutDashboard size={11} />
+                <LayoutGrid size={11} />
                 AlgoLend Admin
               </span>
               <ChevronDown size={10} className={`transition-transform duration-200 ${appOpen ? 'rotate-180' : ''}`} />
@@ -645,7 +645,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   style={{ background: isLight ? 'rgba(124,58,237,0.06)' : 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}
                   onClick={() => setAppOpen(false)}
                 >
-                  <LayoutDashboard size={13} />
+                  <LayoutGrid size={13} />
                   <div>
                     <p className="font-semibold">AlgoLend Admin</p>
                     <p className="text-[10px] opacity-60">Client management</p>
