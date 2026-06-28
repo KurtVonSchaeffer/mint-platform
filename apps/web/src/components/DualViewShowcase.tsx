@@ -525,20 +525,15 @@ function BorrowerView() {
               ))}
             </div>
 
-            {/* Logo overlay — covers the AlgoLend nav branding in the screenshot */}
+            {/* Nav bar overlay — full-width white strip covering the AlgoLend branding in screenshots */}
             <div
-              className="absolute z-10 pointer-events-none"
-              style={{ top: 10, left: '50%', transform: 'translateX(-50%)' }}
+              className="absolute z-10 pointer-events-none inset-x-0 top-0 flex items-center justify-center gap-2"
+              style={{ height: 44, background: '#ffffff', borderBottom: '1px solid rgba(0,0,0,0.06)' }}
             >
-              <div
-                className="flex items-center gap-1.5 px-3 py-1 rounded-full"
-                style={{ background: 'rgba(255,255,255,0.95)', boxShadow: '0 1px 6px rgba(0,0,0,0.12)' }}
-              >
-                <div className="w-4 h-4 rounded-full bg-[#7C3AED]/20 flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-full bg-[#7C3AED]" />
-                </div>
-                <span className="text-[10px] font-bold text-[#7C3AED] tracking-wide">Your Logo</span>
+              <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: 'rgba(124,58,237,0.15)' }}>
+                <div className="w-2.5 h-2.5 rounded-full bg-[#7C3AED]" />
               </div>
+              <span className="text-[11px] font-bold tracking-wide" style={{ color: '#7C3AED' }}>Your Logo</span>
             </div>
 
             {/* Prev/next arrows inside screen */}
