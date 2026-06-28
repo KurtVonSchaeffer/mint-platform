@@ -778,9 +778,10 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
 
 /* ─── Helpers ──────────────────────────────────────────────────────── */
 
-function F({ hint, children }: { label?: string; hint?: string; children: React.ReactNode }) {
+function F({ label, hint, children }: { label?: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
+      {label && <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wide" style={{ color: 'var(--color-text2)' }}>{label}</label>}
       {children}
       {hint && <p className="text-[11px] mt-1.5 leading-relaxed" style={{ color: 'var(--color-text3)' }}>{hint}</p>}
     </div>
