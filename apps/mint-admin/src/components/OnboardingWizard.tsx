@@ -6,14 +6,12 @@ import { ALL_FEATURES, FEATURE_LABELS } from '@/lib/features';
 import type { CreateClientInput } from '@/app/api/clients/route';
 
 const TIERS = [
-  { id: 'core',       label: 'Core',       price: 8500,  desc: 'Essential lending ops — up to 3 branches, basic reporting.' },
-  { id: 'growth',     label: 'Growth',     price: 22000, desc: 'Full bureau + open banking + multi-branch + WhatsApp.' },
-  { id: 'enterprise', label: 'Enterprise', price: 45000, desc: 'Everything + biometric KYC + dedicated SLA + custom integrations.' },
+  { id: 'core',       label: 'Starter',    price: 1999,  desc: 'R1,999/mo · Up to 2 branches · All API checks billed pay-as-you-use.' },
+  { id: 'enterprise', label: 'Enterprise', price: 14999, desc: 'R14,999/mo · Unlimited branches · 2,000 API checks/month included.' },
 ] as const;
 
 const DEFAULT_FEATURES_BY_TIER: Record<string, string[]> = {
   core:       ['credit_scoring', 'e_contracts', 'term_loans'],
-  growth:     ['credit_scoring', 'e_contracts', 'open_banking', 'sacrra_bureau', 'multi_branch', 'term_loans', 'whatsapp_notify'],
   enterprise: ALL_FEATURES as unknown as string[],
 };
 
@@ -69,13 +67,13 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
   const [contactEmail, setContactEmail] = useState(initialValues?.contactEmail ?? '');
   const [contactName, setContactName] = useState(initialValues?.contactName ?? '');
   const [ncrNumber, setNcrNumber]     = useState('');
-  const [tier, setTier]               = useState<'core' | 'growth' | 'enterprise'>('growth');
-  const [monthlyFeeCents, setMonthlyFeeCents] = useState(22000 * 100);
+  const [tier, setTier]               = useState<'core' | 'enterprise'>('core');
+  const [monthlyFeeCents, setMonthlyFeeCents] = useState(1999 * 100);
   const [primaryColor, setPrimaryColor]   = useState('#7C3AED');
   const [secondaryColor, setSecondaryColor] = useState('#1A1F36');
   const [supportEmail, setSupportEmail]   = useState('');
   const [features, setFeatures] = useState<Record<string, boolean>>(() =>
-    Object.fromEntries(ALL_FEATURES.map((f) => [f, DEFAULT_FEATURES_BY_TIER.growth.includes(f)])),
+    Object.fromEntries(ALL_FEATURES.map((f) => [f, DEFAULT_FEATURES_BY_TIER.core.includes(f)])),
   );
   const [docFiles, setDocFiles]         = useState<Record<string, File | null>>({});
   const [mpOptIn, setMpOptIn]           = useState(false);
