@@ -112,22 +112,9 @@ export async function POST(req: NextRequest) {
   };
 
   const isOverage = remaining <= 0;
-  const isEnterprise = client.tier === 'enterprise';
 
-  if (isOverage && !isEnterprise) {
-    // Core clients: hard block — must top up
-    if (remaining === 0) {
-      sendEmail({ to: client.contact_email, subject: `API quota exhausted — ${client.name}`,
-        html: quotaExceededEmail({ clientName: client.name, contact: client.contact_name ?? client.contact_email.split('@')[0], slug: client.slug, used: usedThisMonth, limit: quota }) }).catch(() => {});
-    }
-    return NextResponse.json(
-      { error: 'Monthly API quota exceeded', quota, used: usedThisMonth, remaining: 0, resets_at: resetDate.toISOString(), upgrade_url: `/api/clients/${client_id}/request-upgrade` },
-      { status: 429, headers: { ...rateLimitHeaders, 'Retry-After': String(resetTimestamp) } },
-    );
-  }
-
-  // Enterprise: first call past quota triggers an overage-started email
-  if (isOverage && isEnterprise && remaining === 0) {
+  // First call past quota: notify client that overage billing has started
+  if (isOverage && remaining === 0) {
     sendEmail({ to: client.contact_email, subject: `API overage billing started — ${client.name}`,
       html: quotaExceededEmail({ clientName: client.name, contact: client.contact_name ?? client.contact_email.split('@')[0], slug: client.slug, used: usedThisMonth, limit: quota }) }).catch(() => {});
   }
