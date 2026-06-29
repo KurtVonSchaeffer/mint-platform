@@ -273,7 +273,7 @@ export default function SimulatePage() {
                             ))}
                           </div>
                           <p className="text-[10px] mt-2 font-mono" style={{ color: 'var(--color-text3)' }}>
-                            Effective cost: {o.effectiveCost?.toFixed(2)}% · Turnaround ~{o.avgTurnaroundDays}d
+                            Total cost of credit: {new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', maximumFractionDigits: 0 }).format(o.effectiveCost ?? 0)} · Turnaround ~{o.avgTurnaroundDays}d
                           </p>
                         </div>
                       ))}
