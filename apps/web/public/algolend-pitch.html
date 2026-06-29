@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AlgoLend — Lending Infrastructure for South Africa</title>
+<meta name="description" content="AlgoLend gives NCR-registered credit providers a complete, white-label lending platform — live in 2–3 weeks, no engineering team required.">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0a0a0f;
+    color: #fff;
+    height: 100vh;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  #progress {
+    position: fixed; top: 0; left: 0; height: 3px;
+    background: linear-gradient(90deg, #7c3aed, #a78bfa);
+    transition: width 0.4s ease;
+    z-index: 100;
+  }
+
+  #deck { width: 100%; height: 100vh; position: relative; }
+
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    padding: 48px;
+    opacity: 0;
+    transform: translateX(60px);
+    transition: opacity 0.45s ease, transform 0.45s ease;
+    pointer-events: none;
+  }
+  .slide.active  { opacity: 1; transform: translateX(0); pointer-events: all; }
+  .slide.exit    { opacity: 0; transform: translateX(-60px); }
+
+  #dots {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; gap: 8px; z-index: 100;
+  }
+  .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    cursor: pointer; transition: all 0.3s;
+  }
+  .dot.on { background: #a78bfa; width: 22px; border-radius: 3px; }
+
+  #nav { position: fixed; bottom: 20px; right: 32px; display: flex; gap: 10px; z-index: 100; }
+  .arrow {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: rgba(124,58,237,0.2); border: 1px solid rgba(124,58,237,0.4);
+    color: #a78bfa; font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .arrow:hover { background: rgba(124,58,237,0.4); }
+
+  #counter {
+    position: fixed; bottom: 28px; left: 32px;
+    font-size: 12px; color: rgba(255,255,255,0.3);
+    font-variant-numeric: tabular-nums; z-index: 100;
+  }
+
+  .logo-text {
+    font-size: 22px; font-weight: 800; letter-spacing: -0.5px;
+    display: flex; align-items: center; gap: 8px;
+    position: fixed; top: 24px; left: 32px; z-index: 100; opacity: 0.7;
+  }
+  .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: #7c3aed; }
+
+  /* Typography */
+  .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: #7c3aed; margin-bottom: 16px; }
+  .h1 { font-size: 64px; font-weight: 800; line-height: 1.05; }
+  .h2 { font-size: 42px; font-weight: 700; line-height: 1.1; }
+  .body { font-size: 17px; line-height: 1.65; color: rgba(255,255,255,0.65); }
+  .muted { color: rgba(255,255,255,0.35); }
+  .violet { color: #a78bfa; }
+
+  /* Glow */
+  .glow { position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none; }
+  .glow-purple { background: rgba(124,58,237,0.18); width: 500px; height: 500px; }
+  .glow-blue   { background: rgba(59,130,246,0.1);  width: 400px; height: 400px; }
+
+  /* Cards */
+  .card        { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px 28px; }
+  .card-violet { background: rgba(124,58,237,0.12); border: 1px solid rgba(124,58,237,0.25); border-radius: 16px; padding: 24px 28px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; width: 100%; max-width: 800px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; width: 100%; max-width: 900px; }
+
+  .tag { display: inline-flex; align-items: center; gap: 6px; background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.3); border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 600; color: #a78bfa; }
+
+  .stat-num { font-size: 48px; font-weight: 800; color: #a78bfa; line-height: 1; }
+  .stat-label { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+
+  .divider { width: 48px; height: 3px; background: #7c3aed; border-radius: 2px; margin: 20px 0; }
+
+  .check { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+  .check-dot { width: 20px; height: 20px; border-radius: 50%; background: rgba(124,58,237,0.3); border: 1px solid #7c3aed; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; margin-top: 2px; }
+
+  .tier { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 32px 28px; flex: 1; }
+  .tier.featured { background: rgba(124,58,237,0.1); border-color: rgba(124,58,237,0.5); }
+  .tier-price { font-size: 36px; font-weight: 800; margin: 12px 0 4px; }
+  .tier-sub   { font-size: 12px; color: rgba(255,255,255,0.4); margin-bottom: 20px; }
+
+  .pill { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; padding: 8px 18px; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; }
+
+  .tline { display: flex; gap: 0; align-items: flex-start; width: 100%; max-width: 820px; }
+  .tstep { flex: 1; position: relative; padding-top: 40px; }
+  .tstep:not(:last-child)::after { content: ''; position: absolute; top: 14px; left: 50%; width: 100%; height: 2px; background: linear-gradient(90deg, #7c3aed, rgba(124,58,237,0.2)); }
+  .tnode { width: 28px; height: 28px; border-radius: 50%; background: #7c3aed; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; position: relative; z-index: 1; }
+
+  /* Print / PDF hint */
+  @media print {
+    body { overflow: visible; height: auto; }
+    .slide { position: relative; transform: none !important; opacity: 1 !important; height: 100vh; page-break-after: always; }
+    #nav, #dots, #counter, #progress, .logo-text { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="logo-text"><div class="logo-dot"></div>AlgoLend</div>
+<div id="progress"></div>
+<div id="counter"></div>
+
+<div id="deck">
+
+  <!-- 0: Hero -->
+  <div class="slide active">
+    <div class="glow glow-purple" style="top:-100px;left:-100px;"></div>
+    <div class="glow glow-blue"   style="bottom:-50px;right:-50px;"></div>
+    <div style="text-align:center;max-width:720px;position:relative;">
+      <div class="eyebrow">Lending Infrastructure · South Africa</div>
+      <div class="h1">The platform <span class="violet">lenders</span><br>run on.</div>
+      <div class="divider" style="margin:24px auto;"></div>
+      <p class="body" style="max-width:520px;margin:0 auto;">AlgoLend gives NCR-registered credit providers a complete, white-label lending platform — live in 2–3 weeks, no engineering team required.</p>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:36px;flex-wrap:wrap;">
+        <div class="tag">🏦 White-label portal</div>
+        <div class="tag">⚡ 2–3 week go-live</div>
+        <div class="tag">🔒 NCA compliant</div>
+        <div class="tag">🇿🇦 Built for SA</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1: Problem -->
+  <div class="slide">
+    <div class="glow glow-purple" style="top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+    <div style="max-width:820px;width:100%;position:relative;">
+      <div class="eyebrow">The Problem</div>
+      <div class="h2" style="margin-bottom:12px;">Building lending software<br>is <span class="violet">expensive and slow.</span></div>
+      <div class="divider"></div>
+      <div class="grid3" style="margin-top:32px;">
+        <div class="card"><div style="font-size:32px;margin-bottom:12px;">💸</div><div style="font-weight:700;font-size:16px;margin-bottom:8px;">R2M+ to build</div><div class="body" style="font-size:14px;">A custom lending portal costs millions and takes 12–18 months to deliver.</div></div>
+        <div class="card"><div style="font-size:32px;margin-bottom:12px;">📋</div><div style="font-weight:700;font-size:16px;margin-bottom:8px;">Manual processes</div><div class="body" style="font-size:14px;">Applications on paper or email. No automation, no audit trail, no compliance safety net.</div></div>
+        <div class="card"><div style="font-size:32px;margin-bottom:12px;">🔌</div><div style="font-weight:700;font-size:16px;margin-bottom:8px;">Fragmented tools</div><div class="body" style="font-size:14px;">Credit bureaus, debit orders, KYC — each a separate vendor, contract, and integration.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2: Solution -->
+  <div class="slide">
+    <div style="max-width:820px;width:100%;position:relative;">
+      <div class="eyebrow">The Solution</div>
+      <div class="h2" style="margin-bottom:12px;">One platform.<br><span class="violet">Everything you need.</span></div>
+      <div class="divider"></div>
+      <div style="display:flex;gap:16px;margin-top:32px;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+          <div class="check"><div class="check-dot">✓</div><div><strong>White-label borrower portal</strong><br><span class="muted" style="font-size:14px;">Your brand, your domain, your customer experience.</span></div></div>
+          <div class="check"><div class="check-dot">✓</div><div><strong>Built-in credit decisioning</strong><br><span class="muted" style="font-size:14px;">Experian bureau + configurable scoring engine.</span></div></div>
+          <div class="check"><div class="check-dot">✓</div><div><strong>Automated collections</strong><br><span class="muted" style="font-size:14px;">DebiCheck authenticated debit orders, no manual follow-up.</span></div></div>
+          <div class="check"><div class="check-dot">✓</div><div><strong>Digital e-contracts</strong><br><span class="muted" style="font-size:14px;">NCA-compliant agreements signed in-app.</span></div></div>
+          <div class="check"><div class="check-dot">✓</div><div><strong>Open banking via TruID</strong><br><span class="muted" style="font-size:14px;">Bank-verified income in seconds, no payslips needed.</span></div></div>
+        </div>
+        <div style="width:280px;flex-shrink:0;">
+          <div class="card-violet" style="height:100%;display:flex;flex-direction:column;justify-content:space-between;">
+            <div class="eyebrow" style="color:#a78bfa;">Admin console</div>
+            <div style="display:flex;flex-direction:column;gap:10px;margin:16px 0;">
+              <div style="background:rgba(255,255,255,0.07);border-radius:10px;padding:10px 14px;font-size:13px;">📊 Portfolio dashboard</div>
+              <div style="background:rgba(255,255,255,0.07);border-radius:10px;padding:10px 14px;font-size:13px;">👥 Borrower management</div>
+              <div style="background:rgba(255,255,255,0.07);border-radius:10px;padding:10px 14px;font-size:13px;">📄 Invoice &amp; billing</div>
+              <div style="background:rgba(255,255,255,0.07);border-radius:10px;padding:10px 14px;font-size:13px;">📈 Analytics &amp; reports</div>
+              <div style="background:rgba(255,255,255,0.07);border-radius:10px;padding:10px 14px;font-size:13px;">🔧 Feature toggles</div>
+            </div>
+            <div class="muted" style="font-size:12px;">Hosted at admin.algolend.co.za</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3: MINT -->
+  <div class="slide">
+    <div class="glow glow-purple" style="bottom:-100px;right:-100px;"></div>
+    <div style="max-width:820px;width:100%;position:relative;">
+      <div class="eyebrow">Bonus Channel</div>
+      <div class="h2" style="margin-bottom:12px;">Access the <span class="violet">MINT marketplace.</span></div>
+      <div class="divider"></div>
+      <p class="body" style="margin-bottom:32px;max-width:580px;">MINT is South Africa's consumer credit marketplace. AlgoLend clients can opt in to receive pre-screened loan applications from MINT's consumer base — no marketing spend required.</p>
+      <div class="grid3">
+        <div class="card" style="text-align:center;"><div class="stat-num">1</div><div class="stat-label">credit check per consumer<br><span style="font-size:11px;color:#a78bfa;">MINT runs it — you just receive offers</span></div></div>
+        <div class="card" style="text-align:center;"><div class="stat-num">60s</div><div class="stat-label">from application<br>to lender offers</div></div>
+        <div class="card" style="text-align:center;"><div class="stat-num">0</div><div class="stat-label">extra infrastructure<br>needed on your side</div></div>
+      </div>
+      <div style="margin-top:20px;padding:16px 20px;background:rgba(124,58,237,0.1);border:1px solid rgba(124,58,237,0.2);border-radius:12px;font-size:14px;color:rgba(255,255,255,0.7);">
+        💡 Your eligibility gates, rates, and loan limits are configured once in AlgoLend — MINT evaluates every consumer application against your policy automatically.
+      </div>
+    </div>
+  </div>
+
+  <!-- 4: Integrations -->
+  <div class="slide">
+    <div style="max-width:820px;width:100%;position:relative;">
+      <div class="eyebrow">Integrations</div>
+      <div class="h2" style="margin-bottom:12px;">Best-in-class partners,<br><span class="violet">pre-integrated.</span></div>
+      <div class="divider"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:32px;">
+        <div class="pill">🏦 Experian <span class="muted" style="font-size:11px;">· Credit bureau</span></div>
+        <div class="pill">🔍 TruID <span class="muted" style="font-size:11px;">· Open banking</span></div>
+        <div class="pill">✅ DebiCheck <span class="muted" style="font-size:11px;">· Authenticated debit</span></div>
+        <div class="pill">📜 SACRRA <span class="muted" style="font-size:11px;">· Bureau reporting</span></div>
+        <div class="pill">💳 PayFast <span class="muted" style="font-size:11px;">· Payments</span></div>
+        <div class="pill">🪪 Biometric KYC <span class="muted" style="font-size:11px;">· ID verification</span></div>
+        <div class="pill">💬 WhatsApp <span class="muted" style="font-size:11px;">· Notifications</span></div>
+        <div class="pill">📧 Resend <span class="muted" style="font-size:11px;">· Transactional email</span></div>
+      </div>
+      <div style="margin-top:28px;display:flex;gap:16px;">
+        <div style="flex:1;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:20px 24px;">
+          <div style="font-weight:600;margin-bottom:8px;">🔒 NCA Compliant</div>
+          <div class="body" style="font-size:14px;">Every workflow built around the National Credit Act — initiation fees, monthly service caps, proper consumer disclosure built in.</div>
+        </div>
+        <div style="flex:1;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:20px 24px;">
+          <div style="font-weight:600;margin-bottom:8px;">🛡️ Enterprise security</div>
+          <div class="body" style="font-size:14px;">Row-level security, audit logs on every action, encrypted data at rest, isolated database instance per client.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5: Pricing -->
+  <div class="slide">
+    <div class="glow glow-purple" style="top:50%;left:30%;transform:translate(-50%,-50%);"></div>
+    <div style="max-width:760px;width:100%;position:relative;">
+      <div class="eyebrow">Pricing</div>
+      <div class="h2" style="margin-bottom:12px;">Simple, <span class="violet">transparent</span> pricing.</div>
+      <div class="divider"></div>
+      <div style="display:flex;gap:16px;margin-top:32px;">
+        <div class="tier">
+          <div class="tag" style="margin-bottom:16px;">Starter</div>
+          <div class="tier-price">R1,999<span style="font-size:16px;font-weight:400;color:rgba(255,255,255,0.4)">/mo</span></div>
+          <div class="tier-sub">+ R9,500 once-off activation</div>
+          <div style="display:flex;flex-direction:column;gap:9px;font-size:14px;color:rgba(255,255,255,0.7);">
+            <div class="check"><div class="check-dot" style="font-size:9px;">✓</div>500 API calls/month</div>
+            <div class="check"><div class="check-dot" style="font-size:9px;">✓</div>White-label portal</div>
+            <div class="check"><div class="check-dot" style="font-size:9px;">✓</div>Core lending features</div>
+            <div class="check"><div class="check-dot" style="font-size:9px;">✓</div>MINT marketplace access</div>
+            <div class="check"><div class="check-dot" style="font-size:9px;">✓</div>Email support</div>
+          </div>
+        </div>
+        <div class="tier featured">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+            <div class="tag">Enterprise</div>
+            <div style="font-size:11px;background:#7c3aed;border-radius:999px;padding:3px 9px;font-weight:600;">POPULAR</div>
+          </div>
+          <div class="tier-price" style="color:#a78bfa;">R14,999<span style="font-size:16px;font-weight:400;color:rgba(255,255,255,0.4)">/mo</span></div>
+          <div class="tier-sub">Custom activation fee</div>
+          <div style="display:flex;flex-direction:column;gap:9px;font-size:14px;color:rgba(255,255,255,0.7);">
+            <div class="check"><div class="check-dot" style="font-size:9px;">✓</div>2,000 API calls/month</div>
+            <div class="check"><div class="check-dot" style="font-size:9px;">✓</div>Everything in Starter</div>
+            <div class="check"><div class="check-dot" style="font-size:9px;">✓</div>Advanced analytics</div>
+            <div class="check"><div class="check-dot" style="font-size:9px;">✓</div>Multi-branch management</div>
+            <div class="check"><div class="check-dot" style="font-size:9px;">✓</div>Portfolio credit (secured)</div>
+            <div class="check"><div class="check-dot" style="font-size:9px;">✓</div>Dedicated onboarding</div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:14px;font-size:13px;color:rgba(255,255,255,0.3);text-align:center;">Pay-as-you-go overage on Enterprise · No long-term contracts · Cancel anytime</div>
+    </div>
+  </div>
+
+  <!-- 6: Timeline -->
+  <div class="slide">
+    <div style="max-width:820px;width:100%;position:relative;">
+      <div class="eyebrow">Go-live</div>
+      <div class="h2" style="margin-bottom:12px;">Up and running in<br><span class="violet">2–3 weeks.</span></div>
+      <div class="divider"></div>
+      <div class="tline" style="margin-top:48px;">
+        <div class="tstep"><div class="tnode">1</div><div style="text-align:center;padding:0 8px;"><div style="font-weight:700;font-size:15px;margin-bottom:6px;">Sign &amp; Submit</div><div class="muted" style="font-size:13px;">Service agreement + compliance docs (CIPC, NCR, ID, bank statements)</div></div></div>
+        <div class="tstep"><div class="tnode">2</div><div style="text-align:center;padding:0 8px;"><div style="font-weight:700;font-size:15px;margin-bottom:6px;">Branding &amp; Config</div><div class="muted" style="font-size:13px;">Logo, colours, domain, loan products, eligibility gates</div></div></div>
+        <div class="tstep"><div class="tnode">3</div><div style="text-align:center;padding:0 8px;"><div style="font-weight:700;font-size:15px;margin-bottom:6px;">Integration</div><div class="muted" style="font-size:13px;">DebiCheck, bureau, KYC — we handle the wiring</div></div></div>
+        <div class="tstep"><div class="tnode" style="background:rgba(124,58,237,0.5);border:2px solid #a78bfa;">🚀</div><div style="text-align:center;padding:0 8px;"><div style="font-weight:700;font-size:15px;margin-bottom:6px;color:#a78bfa;">Go Live</div><div class="muted" style="font-size:13px;">Portal live on your domain, first applications coming in</div></div></div>
+      </div>
+      <div style="margin-top:48px;display:flex;gap:24px;justify-content:center;">
+        <div style="text-align:center;"><div class="stat-num" style="font-size:36px;">99.9%</div><div class="stat-label">Uptime SLA</div></div>
+        <div style="width:1px;background:rgba(255,255,255,0.1);"></div>
+        <div style="text-align:center;"><div class="stat-num" style="font-size:36px;">2–3</div><div class="stat-label">Weeks to go live</div></div>
+        <div style="width:1px;background:rgba(255,255,255,0.1);"></div>
+        <div style="text-align:center;"><div class="stat-num" style="font-size:36px;">0</div><div class="stat-label">Engineering team needed</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7: What you need -->
+  <div class="slide">
+    <div class="glow glow-purple" style="top:-50px;right:-50px;"></div>
+    <div style="max-width:820px;width:100%;position:relative;">
+      <div class="eyebrow">Getting Started</div>
+      <div class="h2" style="margin-bottom:12px;">What you need<br><span class="violet">to go live.</span></div>
+      <div class="divider"></div>
+      <div class="grid2" style="margin-top:32px;">
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#a78bfa;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:16px;">From you</div>
+          <div class="check"><div class="check-dot" style="font-size:9px;">✓</div><div><strong>CIPC registration cert</strong><br><span class="muted" style="font-size:13px;">Company registration document</span></div></div>
+          <div class="check"><div class="check-dot" style="font-size:9px;">✓</div><div><strong>NCR lending licence</strong><br><span class="muted" style="font-size:13px;">Your NCR registration number &amp; cert</span></div></div>
+          <div class="check"><div class="check-dot" style="font-size:9px;">✓</div><div><strong>Director ID copy</strong><br><span class="muted" style="font-size:13px;">Certified copy of directors</span></div></div>
+          <div class="check"><div class="check-dot" style="font-size:9px;">✓</div><div><strong>3 months bank statements</strong><br><span class="muted" style="font-size:13px;">Business account statements</span></div></div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#a78bfa;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:16px;">From us</div>
+          <div class="check"><div class="check-dot" style="font-size:9px;">✓</div><div><strong>Full platform setup</strong><br><span class="muted" style="font-size:13px;">White-label portal, admin console, all integrations</span></div></div>
+          <div class="check"><div class="check-dot" style="font-size:9px;">✓</div><div><strong>Dedicated onboarding</strong><br><span class="muted" style="font-size:13px;">We configure your products, rates &amp; branding</span></div></div>
+          <div class="check"><div class="check-dot" style="font-size:9px;">✓</div><div><strong>NCA-compliant templates</strong><br><span class="muted" style="font-size:13px;">Loan agreements &amp; consumer disclosures</span></div></div>
+          <div class="check"><div class="check-dot" style="font-size:9px;">✓</div><div><strong>Ongoing support</strong><br><span class="muted" style="font-size:13px;">Email support + product updates included</span></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8: CTA -->
+  <div class="slide">
+    <div class="glow glow-purple" style="top:50%;left:50%;transform:translate(-50%,-50%);width:700px;height:700px;"></div>
+    <div style="text-align:center;max-width:640px;position:relative;">
+      <div class="eyebrow">Ready to launch?</div>
+      <div class="h1" style="font-size:56px;">Start lending<br><span class="violet">in weeks,</span><br>not years.</div>
+      <div class="divider" style="margin:28px auto;"></div>
+      <p class="body" style="margin-bottom:40px;">Join NCR-registered lenders across South Africa who have replaced spreadsheets and manual processes with AlgoLend's full-stack lending infrastructure.</p>
+      <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+        <a href="mailto:info@algolend.co.za?subject=Getting started with AlgoLend" style="background:#7c3aed;color:#fff;padding:14px 32px;border-radius:12px;font-weight:700;font-size:15px;text-decoration:none;">Get started →</a>
+        <a href="https://algolend.co.za" target="_blank" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);padding:14px 32px;border-radius:12px;font-weight:600;font-size:15px;color:#fff;text-decoration:none;">Visit algolend.co.za</a>
+      </div>
+      <div style="margin-top:40px;font-size:13px;color:rgba(255,255,255,0.3);">admin.algolend.co.za · algolend.co.za · info@algolend.co.za</div>
+    </div>
+  </div>
+
+</div>
+
+<div id="dots"></div>
+<div id="nav">
+  <div class="arrow" id="prev">←</div>
+  <div class="arrow" id="next">→</div>
+</div>
+
+<script>
+  const SLIDES = document.querySelectorAll('.slide');
+  const N = SLIDES.length;
+  let cur = 0;
+
+  const dotsEl = document.getElementById('dots');
+  SLIDES.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' on' : '');
+    d.onclick = () => go(i);
+    dotsEl.appendChild(d);
+  });
+
+  function go(to) {
+    if (to < 0 || to >= N || to === cur) return;
+    const prev = cur;
+    cur = to;
+    SLIDES[prev].classList.remove('active');
+    SLIDES[prev].style.transform = to > prev ? 'translateX(-60px)' : 'translateX(60px)';
+    SLIDES[prev].style.opacity = '0';
+    setTimeout(() => { SLIDES[prev].style.transform = ''; SLIDES[prev].style.opacity = ''; }, 500);
+    SLIDES[cur].classList.add('active');
+    update();
+  }
+
+  function update() {
+    document.getElementById('progress').style.width = ((cur + 1) / N * 100) + '%';
+    document.getElementById('counter').textContent = (cur + 1) + ' / ' + N;
+    document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('on', i === cur));
+  }
+
+  document.getElementById('next').onclick = () => go(Math.min(cur + 1, N - 1));
+  document.getElementById('prev').onclick = () => go(Math.max(cur - 1, 0));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') go(Math.min(cur + 1, N - 1));
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   go(Math.max(cur - 1, 0));
+  });
+  let tx = 0;
+  document.addEventListener('touchstart', e => tx = e.touches[0].clientX);
+  document.addEventListener('touchend',   e => { const dx = tx - e.changedTouches[0].clientX; if (Math.abs(dx) > 50) go(dx > 0 ? Math.min(cur+1,N-1) : Math.max(cur-1,0)); });
+
+  update();
+</script>
+</body>
+</html>
