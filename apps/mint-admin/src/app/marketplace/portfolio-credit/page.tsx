@@ -274,14 +274,55 @@ export default function PortfolioCreditPage() {
                                 </div>
                               ))}
                             </div>
-                            {Object.keys(f.metadata).length > 0 && (
-                              <details className="mt-3">
-                                <summary className="cursor-pointer text-[11px] font-medium text-gray-400 hover:text-gray-600">Metadata</summary>
-                                <pre className="mt-1 rounded-lg bg-gray-100 p-3 text-[11px] text-gray-600 overflow-auto">
-                                  {JSON.stringify(f.metadata, null, 2)}
-                                </pre>
-                              </details>
-                            )}
+                            {/* Collateral basket */}
+                            {(() => {
+                              const symbols = f.metadata?.symbols as string[] | undefined;
+                              const count   = f.metadata?.collateral_count as number | undefined;
+                              const repayable = f.metadata?.amount_repayable as number | undefined;
+                              const monthly   = f.metadata?.monthly_repayable as number | undefined;
+                              const firstDate = f.metadata?.first_repayment_date as string | undefined;
+                              if (!symbols?.length && !repayable) return null;
+                              return (
+                                <div className="mt-4 rounded-xl border border-gray-100 bg-white p-4 space-y-3">
+                                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                    Collateral basket{count ? ` — ${count} holding${count !== 1 ? 's' : ''}` : ''}
+                                  </p>
+                                  {symbols?.length ? (
+                                    <div className="flex flex-wrap gap-2">
+                                      {symbols.map((sym) => (
+                                        <span key={sym} className="inline-flex items-center rounded-lg border border-violet-100 bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700">
+                                          {sym}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  ) : null}
+                                  {(repayable || monthly || firstDate) && (
+                                    <div className="grid grid-cols-3 gap-3 pt-1 border-t border-gray-100">
+                                      {repayable && (
+                                        <div>
+                                          <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Total repayable</p>
+                                          <p className="mt-0.5 text-sm font-semibold text-gray-800">{fmt(repayable)}</p>
+                                        </div>
+                                      )}
+                                      {monthly && (
+                                        <div>
+                                          <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Monthly instalment</p>
+                                          <p className="mt-0.5 text-sm font-semibold text-gray-800">{fmt(monthly)}</p>
+                                        </div>
+                                      )}
+                                      {firstDate && (
+                                        <div>
+                                          <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">First repayment</p>
+                                          <p className="mt-0.5 text-sm font-semibold text-gray-800">
+                                            {new Date(firstDate).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                          </p>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </td>
                         </tr>
                       )}

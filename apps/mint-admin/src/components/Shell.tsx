@@ -70,8 +70,11 @@ const nav: (NavItem | NavGroup)[] = [
   { label: 'API Usage',  href: '/usage',      icon: Activity        },
   { label: 'Compliance', href: '/compliance', icon: ShieldCheck     },
   { label: 'Migration',  href: '/migration',  icon: ArrowDownToLine },
-  { label: 'Users',      href: '/users',      icon: Users2          },
-  { label: 'Settings',   href: '/settings',   icon: SlidersHorizontal },
+];
+
+const bottomNav = [
+  { label: 'Users',    href: '/users',    icon: Users2            },
+  { label: 'Settings', href: '/settings', icon: SlidersHorizontal },
 ];
 
 // Flat list of all nav items (used for search and page title lookup)
@@ -775,6 +778,23 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
         {/* Footer */}
         <div className="sidebar-footer p-3 shrink-0">
+          {/* Users + Settings */}
+          <div className="mb-1">
+            {bottomNav.map(({ label, href, icon: Icon }) => {
+              const isActive = pathname === href;
+              return (
+                <Link key={href} href={href}
+                  className="flex items-center gap-2.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                  style={{ color: isActive ? 'var(--color-violet)' : 'var(--color-text3)', background: isActive ? 'rgba(124,58,237,0.08)' : 'transparent' }}
+                  onMouseEnter={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'var(--color-card-hover)'; }}
+                  onMouseLeave={e => { if (!isActive) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                >
+                  <Icon size={13} />{label}
+                </Link>
+              );
+            })}
+          </div>
+
           <div className="sidebar-user flex items-center gap-3 px-3 py-2.5 rounded-xl mb-2">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
               style={{ background: '#7C3AED', color: 'white', animation: 'border-glow 3s ease-in-out infinite', boxShadow: '0 0 0 2px rgba(124,58,237,0.25)' }}>
