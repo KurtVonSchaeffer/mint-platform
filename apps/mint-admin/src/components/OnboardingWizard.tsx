@@ -224,7 +224,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                         style={
                           active ? { background: 'linear-gradient(135deg,#7C3AED,#A78BFA)', boxShadow: '0 0 12px rgba(124,58,237,0.5)', color: '#fff' }
                         : done  ? { background: 'rgba(52,211,153,0.15)', color: 'var(--color-green)', border: '1px solid rgba(52,211,153,0.3)' }
-                                : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.07)' }
+                                : { background: 'rgba(255,255,255,0.05)', color: 'var(--color-text3)', border: '1px solid rgba(255,255,255,0.07)' }
                         }
                       >
                         {done
@@ -234,7 +234,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
 
                       <div className="min-w-0">
                         <p className="text-xs font-semibold truncate leading-tight" style={{
-                          color: active ? 'var(--color-text)' : done ? 'var(--color-text2)' : 'rgba(255,255,255,0.25)',
+                          color: active ? 'var(--color-text)' : done ? 'var(--color-text2)' : 'var(--color-text3)',
                         }}>
                           {s.label}
                         </p>
@@ -262,7 +262,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                 {name[0]?.toUpperCase()}
               </div>
               <p className="text-xs font-medium leading-tight truncate" style={{ color: 'var(--color-text2)' }}>{name}</p>
-              {slug && <p className="text-[10px] font-mono truncate mt-0.5" style={{ color: 'rgba(255,255,255,0.2)' }}>{slug}</p>}
+              {slug && <p className="text-[10px] font-mono truncate mt-0.5" style={{ color: 'var(--color-text3)' }}>{slug}</p>}
             </div>
           )}
         </div>
@@ -279,7 +279,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                 <h2 className="text-xl font-bold tracking-tight mb-0.5" style={{ color: 'var(--color-text)' }}>
                   {currentStep.label}
                 </h2>
-                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.35)' }}>{currentStep.desc}</p>
+                <p className="text-sm" style={{ color: 'var(--color-text3)' }}>{currentStep.desc}</p>
               </div>
             ) : step === 'done' ? (
               <div>
@@ -295,7 +295,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
             <button
               onClick={onClose}
               className="shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all ml-4"
-              style={{ color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
+              style={{ color: 'var(--color-text3)', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.08)'; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.3)'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
             >
@@ -397,7 +397,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2.5">
                             <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all shrink-0"
-                              style={selected ? { borderColor: 'var(--color-purple)', background: 'var(--color-purple)' } : { borderColor: 'rgba(255,255,255,0.2)' }}>
+                              style={selected ? { borderColor: 'var(--color-purple)', background: 'var(--color-purple)' } : { borderColor: 'var(--color-border)' }}>
                               {selected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                             </div>
                             <span className="font-bold text-sm" style={{ color: 'var(--color-text)' }}>{t.label}</span>
@@ -412,10 +412,10 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                             <span className="font-bold text-base" style={{ color: selected ? '#A78BFA' : 'var(--color-text2)' }}>
                               {fmt(t.price * 100)}
                             </span>
-                            <span className="text-xs ml-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>/mo</span>
+                            <span className="text-xs ml-0.5" style={{ color: 'var(--color-text3)' }}>/mo</span>
                           </div>
                         </div>
-                        <p className="text-xs ml-6.5" style={{ color: 'rgba(255,255,255,0.35)', marginLeft: 26 }}>{t.desc}</p>
+                        <p className="text-xs ml-6.5" style={{ color: 'var(--color-text3)', marginLeft: 26 }}>{t.desc}</p>
                       </button>
                     );
                   })}
@@ -423,7 +423,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
 
                 <F label="Custom monthly fee (ZAR)" hint="Override the tier default if negotiated differently">
                   <div className="relative">
-                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold pointer-events-none" style={{ color: 'rgba(255,255,255,0.3)' }}>R</span>
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold pointer-events-none" style={{ color: 'var(--color-text3)' }}>R</span>
                     <input
                       type="number" min={0} step={500}
                       value={monthlyFeeCents === 0 ? '' : monthlyFeeCents / 100}
@@ -440,7 +440,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
             {/* ── Step 3: Branding ── */}
             {step === 'branding' && (
               <div className="space-y-5">
-                <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text2)' }}>
                   These colours populate the client's portal theme and can be updated later from client settings.
                 </p>
 
@@ -449,7 +449,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                     <div className="flex items-center gap-3">
                       <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)}
                         className="w-9 h-9 rounded-lg cursor-pointer p-0.5 shrink-0"
-                        style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }} />
+                        style={{ border: '1px solid var(--color-border)', background: 'transparent' }} />
                       <input value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="field-input font-mono flex-1" placeholder="#7C3AED" />
                     </div>
                   </F>
@@ -457,7 +457,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                     <div className="flex items-center gap-3">
                       <input type="color" value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)}
                         className="w-9 h-9 rounded-lg cursor-pointer p-0.5 shrink-0"
-                        style={{ border: '1px solid rgba(255,255,255,0.1)', background: 'transparent' }} />
+                        style={{ border: '1px solid var(--color-border)', background: 'transparent' }} />
                       <input value={secondaryColor} onChange={(e) => setSecondaryColor(e.target.value)} className="field-input font-mono flex-1" placeholder="#1A1F36" />
                     </div>
                   </F>
@@ -481,7 +481,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                   <div className="px-5 py-4 flex items-center justify-between" style={{ background: 'rgba(0,0,0,0.25)' }}>
                     <div>
                       <p className="text-xs font-semibold text-white mb-0.5">Portal preview</p>
-                      <p className="text-[10px]" style={{ color: 'rgba(255,255,255,0.3)' }}>Brand colours applied to client portal</p>
+                      <p className="text-[10px]" style={{ color: 'var(--color-text3)' }}>Brand colours applied to client portal</p>
                     </div>
                     <span className="text-xs font-semibold px-3 py-1.5 rounded-lg text-white" style={{ background: primaryColor }}>
                       Sign in
@@ -494,7 +494,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
             {/* ── Step 4: Features ── */}
             {step === 'features' && (
               <div className="space-y-1">
-                <p className="text-xs mb-4 pb-4" style={{ color: 'rgba(255,255,255,0.35)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <p className="text-xs mb-4 pb-4" style={{ color: 'var(--color-text3)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                   Pre-populated from the {tier === 'core' ? 'Starter' : 'Enterprise'} tier. Toggle to customise.
                   <span className="ml-2 font-semibold" style={{ color: 'var(--color-violet)' }}>
                     {ALL_FEATURES.filter((f) => features[f]).length}/{ALL_FEATURES.length} enabled
@@ -509,10 +509,10 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                       onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.1)'; }}
                       onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.borderColor = 'transparent'; }}
                     >
-                      <span className="text-sm" style={{ color: enabled ? 'var(--color-text)' : 'rgba(255,255,255,0.35)' }}>
+                      <span className="text-sm" style={{ color: enabled ? 'var(--color-text)' : 'var(--color-text3)' }}>
                         {FEATURE_LABELS[flag]}
                       </span>
-                      <div className="relative w-9 h-5 rounded-full transition-colors shrink-0" style={{ background: enabled ? 'var(--color-purple)' : 'rgba(255,255,255,0.1)' }}>
+                      <div className="relative w-9 h-5 rounded-full transition-colors shrink-0" style={{ background: enabled ? 'var(--color-purple)' : 'var(--color-border)' }}>
                         <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${enabled ? 'translate-x-4' : 'translate-x-0.5'}`} />
                       </div>
                     </button>
@@ -526,7 +526,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
               <div className="space-y-5">
                 <div className="rounded-xl p-5" style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.12)' }}>
                   <p className="font-semibold text-sm mb-2" style={{ color: 'var(--color-text)' }}>AlgoLend Marketplace</p>
-                  <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text2)' }}>
                     Mint originates and underwrites personal loans through its consumer app. By joining the marketplace,
                     you become a lending partner — your capital is deployed to pre-qualified Mint borrowers and you earn
                     the interest. Mint handles origination, collections, and compliance.
@@ -540,7 +540,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                       style={mpOptIn === opt
                         ? (opt
                           ? { background: 'rgba(124,58,237,0.1)', border: '1.5px solid rgba(124,58,237,0.4)' }
-                          : { background: 'rgba(255,255,255,0.04)', border: '1.5px solid rgba(255,255,255,0.12)' })
+                          : { background: 'var(--color-card-hover)', border: '1.5px solid var(--color-border)' })
                         : { background: 'rgba(255,255,255,0.02)', border: '1.5px solid rgba(255,255,255,0.06)' }}
                       onMouseEnter={(e) => { if (mpOptIn !== opt) (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.2)'; }}
                       onMouseLeave={(e) => { if (mpOptIn !== opt) (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)'; }}
@@ -548,15 +548,15 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                       <div className="flex items-center gap-2 mb-1.5">
                         <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all"
                           style={mpOptIn === opt
-                            ? (opt ? { borderColor: 'var(--color-purple)', background: 'var(--color-purple)' } : { borderColor: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.1)' })
-                            : { borderColor: 'rgba(255,255,255,0.15)' }}>
+                            ? (opt ? { borderColor: 'var(--color-purple)', background: 'var(--color-purple)' } : { borderColor: 'var(--color-border)', background: 'var(--color-card-hover)' })
+                            : { borderColor: 'var(--color-border)' }}>
                           {mpOptIn === opt && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                         </div>
                         <p className="font-semibold text-sm" style={{ color: opt ? 'var(--color-violet)' : 'var(--color-text2)' }}>
                           {opt ? 'Join the marketplace' : 'Skip for now'}
                         </p>
                       </div>
-                      <p className="text-xs ml-6" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                      <p className="text-xs ml-6" style={{ color: 'var(--color-text3)' }}>
                         {opt ? 'Deploy capital to MINT-originated loans.' : 'Can be enabled later from client settings.'}
                       </p>
                     </button>
@@ -575,7 +575,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                           return (
                             <button key={lt} onClick={() => setMpLoanTypes((p) => on ? p.filter((x) => x !== lt) : [...p, lt])}
                               className="px-3 py-1 rounded-full text-xs font-semibold transition-all"
-                              style={on ? { background: 'var(--color-purple)', color: '#fff' } : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                              style={on ? { background: 'var(--color-purple)', color: '#fff' } : { background: 'rgba(255,255,255,0.05)', color: 'var(--color-text2)', border: '1px solid rgba(255,255,255,0.08)' }}>
                               {lt}
                             </button>
                           );
@@ -590,7 +590,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
             {/* ── Step 6: Documents ── */}
             {step === 'documents' && (
               <div className="space-y-3">
-                <p className="text-xs pb-4 leading-relaxed" style={{ color: 'rgba(255,255,255,0.35)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <p className="text-xs pb-4 leading-relaxed" style={{ color: 'var(--color-text3)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                   Required documents must be uploaded before the client can be activated. All files are stored securely.
                 </p>
                 {REQUIRED_DOCS.map((doc) => {
@@ -606,7 +606,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                         <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all"
                           style={file
                             ? { background: 'rgba(52,211,153,0.12)', color: 'var(--color-green)' }
-                            : { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.25)' }}>
+                            : { background: 'rgba(255,255,255,0.05)', color: 'var(--color-text3)' }}>
                           {file ? <Check size={14} strokeWidth={2.5} /> : <Upload size={14} />}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -618,7 +618,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                               </span>
                             )}
                           </p>
-                          <p className="text-[11px] truncate mt-0.5" style={{ color: file ? 'var(--color-green)' : 'rgba(255,255,255,0.25)' }}>
+                          <p className="text-[11px] truncate mt-0.5" style={{ color: file ? 'var(--color-green)' : 'var(--color-text3)' }}>
                             {file ? file.name : doc.hint}
                           </p>
                         </div>
@@ -626,11 +626,11 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                           <button type="button"
                             onClick={(e) => { e.preventDefault(); setDocFiles((p) => ({ ...p, [doc.id]: null })); }}
                             className="shrink-0 text-xs px-2.5 py-1 rounded-lg transition-all"
-                            style={{ color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                            style={{ color: 'var(--color-text3)', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}>
                             Remove
                           </button>
                         ) : (
-                          <ArrowRight size={13} className="shrink-0 transition-transform group-hover:translate-x-0.5" style={{ color: 'rgba(255,255,255,0.2)' }} />
+                          <ArrowRight size={13} className="shrink-0 transition-transform group-hover:translate-x-0.5" style={{ color: 'var(--color-text3)' }} />
                         )}
                       </div>
                       <input type="file" className="sr-only" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
@@ -638,7 +638,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                     </label>
                   );
                 })}
-                <p className="text-[11px] pt-1" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                <p className="text-[11px] pt-1" style={{ color: 'var(--color-text3)' }}>
                   Accepted: PDF, JPG, PNG, Word. Missing documents can be uploaded later from the client profile.
                 </p>
               </div>
@@ -661,7 +661,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                   ].map(({ label, value, mono }, i, arr) => (
                     <div key={label} className="flex items-start gap-3 px-4 py-3"
                       style={i < arr.length - 1 ? { borderBottom: '1px solid rgba(255,255,255,0.05)' } : undefined}>
-                      <span className="text-xs font-medium w-28 shrink-0 pt-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>{label}</span>
+                      <span className="text-xs font-medium w-28 shrink-0 pt-0.5" style={{ color: 'var(--color-text3)' }}>{label}</span>
                       <span className={`text-sm flex-1 ${mono ? 'font-mono' : 'font-medium'}`} style={{ color: 'var(--color-text)' }}>{value}</span>
                     </div>
                   ))}
@@ -669,7 +669,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
 
                 {/* Feature chips */}
                 <div className="pt-4">
-                  <p className="text-xs font-medium mb-2" style={{ color: 'rgba(255,255,255,0.3)' }}>
+                  <p className="text-xs font-medium mb-2" style={{ color: 'var(--color-text3)' }}>
                     Features ({ALL_FEATURES.filter((f) => features[f]).length}/{ALL_FEATURES.length} enabled)
                   </p>
                   <div className="flex flex-wrap gap-1.5">
@@ -684,11 +684,11 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
 
                 {/* Brand colours */}
                 <div className="pt-3 flex items-center gap-2">
-                  <span className="text-xs font-medium w-28 shrink-0" style={{ color: 'rgba(255,255,255,0.3)' }}>Brand colours</span>
+                  <span className="text-xs font-medium w-28 shrink-0" style={{ color: 'var(--color-text3)' }}>Brand colours</span>
                   <div className="flex items-center gap-2">
-                    <span className="w-5 h-5 rounded" style={{ backgroundColor: primaryColor, border: '1px solid rgba(255,255,255,0.1)' }} />
+                    <span className="w-5 h-5 rounded" style={{ backgroundColor: primaryColor, border: '1px solid var(--color-border)' }} />
                     <span className="text-xs font-mono" style={{ color: 'var(--color-text2)' }}>{primaryColor}</span>
-                    <span className="w-5 h-5 rounded" style={{ backgroundColor: secondaryColor, border: '1px solid rgba(255,255,255,0.1)' }} />
+                    <span className="w-5 h-5 rounded" style={{ backgroundColor: secondaryColor, border: '1px solid var(--color-border)' }} />
                     <span className="text-xs font-mono" style={{ color: 'var(--color-text2)' }}>{secondaryColor}</span>
                   </div>
                 </div>
@@ -706,7 +706,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
             {/* ── Done ── */}
             {step === 'done' && result && (
               <div className="py-4 space-y-5">
-                <p className="text-sm" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                <p className="text-sm" style={{ color: 'var(--color-text2)' }}>
                   Tenant created, feature flags seeded, and portal URL is ready to share.
                 </p>
                 <a href={result.tenantUrl} target="_blank" rel="noreferrer"
@@ -714,13 +714,13 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                   <ExternalLink size={13} />
                   {result.tenantUrl}
                 </a>
-                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.25)' }}>
+                <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
                   Status: Trial · DNS propagation may take up to 5 minutes.
                 </p>
                 {result.marketplaceOptIn && (
                   <div className="rounded-xl px-4 py-3 text-xs" style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.15)', color: 'var(--color-violet)' }}>
                     <p className="font-bold mb-0.5">Marketplace policy drafted</p>
-                    <p style={{ color: 'rgba(255,255,255,0.35)' }}>
+                    <p style={{ color: 'var(--color-text3)' }}>
                       Default credit rules created. Review rates in <strong style={{ color: 'var(--color-violet)' }}>Marketplace → Lender Policies</strong>, then toggle active to go live.
                     </p>
                   </div>
@@ -730,15 +730,15 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between px-8 py-5 shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center justify-between px-8 py-5 shrink-0" style={{ borderTop: '1px solid var(--color-border)' }}>
             {step !== 'done' ? (
               <>
                 <button
                   onClick={() => { const prev = STEPS[stepIndex - 1]; if (prev) setStep(prev.id); else onClose(); }}
                   className="px-4 py-2 rounded-xl text-sm font-medium transition-all"
-                  style={{ border: '1px solid rgba(255,255,255,0.09)', color: 'rgba(255,255,255,0.5)' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.5)'; }}
+                  style={{ border: '1px solid var(--color-border)', color: 'var(--color-text3)' }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-card-hover)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; }}
                 >
                   {stepIndex === 0 ? 'Cancel' : '← Back'}
                 </button>
@@ -762,9 +762,9 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
               <div className="w-full flex justify-end">
                 <button onClick={onClose}
                   className="px-5 py-2.5 rounded-xl text-sm font-medium transition-all"
-                  style={{ border: '1px solid rgba(255,255,255,0.09)', color: 'rgba(255,255,255,0.5)' }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.5)'; }}>
+                  style={{ border: '1px solid var(--color-border)', color: 'var(--color-text3)' }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-card-hover)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; }}>
                   Close
                 </button>
               </div>
