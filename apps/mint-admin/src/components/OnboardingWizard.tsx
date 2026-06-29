@@ -557,7 +557,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                         </p>
                       </div>
                       <p className="text-xs ml-6" style={{ color: 'rgba(255,255,255,0.3)' }}>
-                        {opt ? 'Deploy capital to Mint-originated loans.' : 'Can be enabled later from client settings.'}
+                        {opt ? 'Deploy capital to MINT-originated loans.' : 'Can be enabled later from client settings.'}
                       </p>
                     </button>
                   ))}

@@ -88,5 +88,5 @@ export async function POST(
     }),
   }).catch(err => console.error('[request-upgrade] email failed:', err));
 
-  return NextResponse.json({ ok: true, message: 'Upgrade request received. The Mint Platforms team will be in touch within 1 business day.' });
+  return NextResponse.json({ ok: true, message: 'Upgrade request received. The MINT Platforms team will be in touch within 1 business day.' });
 }

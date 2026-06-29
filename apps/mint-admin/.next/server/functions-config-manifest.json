@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "functions": {
+    "/api/applications/[id]/approve": {},
+    "/api/applications/[id]/documents": {},
+    "/api/applications/[id]/request-info": {},
+    "/api/auth/signout": {},
+    "/api/applications": {},
+    "/api/billing/generate": {
+      "maxDuration": 60
+    },
+    "/api/billing/cron": {
+      "maxDuration": 120
+    },
+    "/api/clients/[id]/marketplace-applications": {},
+    "/api/clients/[id]/credentials": {},
+    "/api/clients/[id]/api-keys": {},
+    "/api/clients/[id]/request-upgrade": {},
+    "/api/clients/[id]/send-agreement": {},
+    "/api/clients/[id]/users/[userId]": {},
+    "/api/clients/[id]/users": {},
+    "/api/documents/url": {},
+    "/api/email": {},
+    "/api/health": {},
+    "/api/clients": {},
+    "/api/compliance": {},
+    "/api/invoices": {},
+    "/api/invoices/[id]": {},
+    "/api/leads/[id]": {},
+    "/api/leads": {},
+    "/api/lender-policies/[id]": {},
+    "/api/leads/[id]/erase": {},
+    "/api/lender-policies": {},
+    "/api/marketplace/lenders": {},
+    "/api/marketplace/loans": {},
+    "/api/marketplace/applications/[applicationId]": {},
+    "/api/clients/[id]": {},
+    "/api/marketplace/simulate": {},
+    "/api/marketplace/portfolio-credit": {},
+    "/api/marketplace/evaluate": {},
+    "/api/migration/loans": {
+      "maxDuration": 120
+    },
+    "/api/quotes/[id]": {},
+    "/api/marketplace/offers": {},
+    "/api/truid/connect": {},
+    "/api/quotes": {},
+    "/api/truid/data/[collectionId]": {},
+    "/api/usage": {},
+    "/api/users": {},
+    "/api/usage/log": {},
+    "/api/users/[id]": {},
+    "/api/vercel/projects": {},
+    "/api/migration/import-loanbook": {
+      "maxDuration": 300
+    },
+    "/api/vercel/usage": {}
+  }
+}

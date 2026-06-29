@@ -65,7 +65,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
       html:    userInviteEmail({
         fullName,
         email:      user.email,
-        clientName: 'Mint Platforms',
+        clientName: 'MINT Platforms',
         role,
         inviteUrl:  resetLink,
       }),

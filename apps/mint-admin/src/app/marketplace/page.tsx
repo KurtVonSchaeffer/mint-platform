@@ -125,7 +125,7 @@ export default function MarketplacePage() {
     if (!res.ok) {
       setToast({ kind: 'error', message: json.error ?? 'Save failed' });
     } else {
-      setToast({ kind: 'success', message: `Policy ${isNew ? 'created' : 'updated'} — ${draft.active ? 'now live in the Mint marketplace' : 'saved as inactive'}.` });
+      setToast({ kind: 'success', message: `Policy ${isNew ? 'created' : 'updated'} — ${draft.active ? 'now live in the MINT marketplace' : 'saved as inactive'}.` });
       closePanel();
       load();
     }
@@ -139,7 +139,7 @@ export default function MarketplacePage() {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ active: next }),
     });
-    setToast({ kind: next ? 'success' : 'info', message: `${p.display_name} is now ${next ? 'live in' : 'paused from'} the Mint marketplace.` });
+    setToast({ kind: next ? 'success' : 'info', message: `${p.display_name} is now ${next ? 'live in' : 'paused from'} the MINT marketplace.` });
   }
 
   function updateBand(i: number, field: 'minScore' | 'rateAdjustment', val: string) {
@@ -334,7 +334,7 @@ export default function MarketplacePage() {
               >
                 <div>
                   <p className="text-sm font-semibold" style={{ color: draft.active ? 'var(--color-green)' : 'var(--color-text)' }}>
-                    {draft.active ? 'Live in Mint marketplace' : 'Inactive — not in marketplace'}
+                    {draft.active ? 'Live in MINT marketplace' : 'Inactive — not in marketplace'}
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--color-text3)' }}>
                     {draft.active ? 'This lender appears in all new consumer quote results.' : 'Toggle on to include in consumer quote evaluations.'}
@@ -414,7 +414,7 @@ export default function MarketplacePage() {
                 <Store size={20} />
               </div>
               <p className="font-semibold mb-1" style={{ color: 'var(--color-text)' }}>No lender policies yet</p>
-              <p className="text-sm" style={{ color: 'var(--color-text3)' }}>Add a policy for each client to include them in the Mint marketplace.</p>
+              <p className="text-sm" style={{ color: 'var(--color-text3)' }}>Add a policy for each client to include them in the MINT marketplace.</p>
             </div>
           ) : (
             <table className="data-table">

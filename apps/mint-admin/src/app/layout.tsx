@@ -19,7 +19,7 @@ const jetbrains = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title:       'AlgoLend — Admin Console',
-  description: 'Internal platform management for Mint Platforms',
+  description: 'Internal platform management for MINT Platforms',
   icons: {
     icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%237C3AED'/><path d='M8 24 L16 8 L24 24' fill='none' stroke='white' stroke-width='2.5' stroke-linejoin='round'/></svg>",
   },

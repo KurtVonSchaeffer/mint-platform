@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
     html:    userInviteEmail({
       fullName:   fullName,
       email:      email,
-      clientName: 'Mint Platforms',
+      clientName: 'MINT Platforms',
       role,
       inviteUrl:  setupLink,
     }),

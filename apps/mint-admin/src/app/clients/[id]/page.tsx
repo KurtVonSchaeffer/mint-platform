@@ -134,7 +134,7 @@ export default function ClientDetailPage() {
       body: JSON.stringify({ active: next }),
     });
     setMpSaving(false);
-    setToast({ kind: next ? 'success' : 'info', message: `${mpPolicy.display_name} is now ${next ? 'live in' : 'paused from'} the Mint marketplace.` });
+    setToast({ kind: next ? 'success' : 'info', message: `${mpPolicy.display_name} is now ${next ? 'live in' : 'paused from'} the MINT marketplace.` });
   }
 
   const load = useCallback(async () => {
@@ -764,7 +764,7 @@ export default function ClientDetailPage() {
             ) : mpPolicy === null ? (
               <div className="bento-card p-10 text-center">
                 <Store size={20} className="mx-auto mb-3" style={{ color: 'var(--color-text3)' }} />
-                <p className="font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Not in the Mint marketplace</p>
+                <p className="font-semibold mb-1" style={{ color: 'var(--color-text)' }}>Not in the MINT marketplace</p>
                 <p className="text-sm mb-4" style={{ color: 'var(--color-text3)' }}>No lender policy configured. Add one to include this client in MINT consumer quote results.</p>
                 <Link href="/marketplace" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold"
                   style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.2)' }}>
@@ -779,7 +779,7 @@ export default function ClientDetailPage() {
                     <div className="flex items-center gap-2 mb-0.5">
                       {mpPolicy.active ? <CheckCircle2 size={15} style={{ color: 'var(--color-green)' }} /> : <XCircle size={15} style={{ color: 'var(--color-text3)' }} />}
                       <p className="font-semibold text-sm" style={{ color: mpPolicy.active ? 'var(--color-green)' : 'var(--color-text)' }}>
-                        {mpPolicy.active ? 'Live in Mint marketplace' : 'Policy inactive'}
+                        {mpPolicy.active ? 'Live in MINT marketplace' : 'Policy inactive'}
                       </p>
                     </div>
                     <p className="text-xs ml-5" style={{ color: 'var(--color-text3)' }}>{mpPolicy.display_name}{mpPolicy.tagline ? ` · ${mpPolicy.tagline}` : ''}</p>
@@ -982,7 +982,7 @@ export default function ClientDetailPage() {
               <pre className="text-xs leading-relaxed whitespace-pre-wrap overflow-y-auto max-h-72 p-4 rounded-xl font-mono" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}>
 {`SERVICE AGREEMENT
 
-This Service Agreement ("Agreement") is entered into between Mint Platforms (Pty) Ltd, Registration No. 2024/123456/07, ("Service Provider") and the Client identified in this application ("Client").
+This Service Agreement ("Agreement") is entered into between MINT Platforms (Pty) Ltd, Registration No. 2024/123456/07, ("Service Provider") and the Client identified in this application ("Client").
 
 1. SERVICES
 The Service Provider agrees to provide the AlgoLend lending management platform ("Platform") to the Client, including loan origination, borrower management, bureau integrations, and related services as specified in the selected service tier.

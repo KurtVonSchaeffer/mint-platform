@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "functions": {
+    "/api/quote": {
+      "maxDuration": 60
+    },
+    "/api/quote/[id]": {}
+  }
+}

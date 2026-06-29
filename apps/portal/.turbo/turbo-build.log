@@ -1,0 +1,18 @@
+
+> @mint/portal@0.0.0 build /Users/kurtvonschaeffer/mint-platform/apps/portal
+> tsc -b && vite build
+
+vite v6.4.2 building for production...
+transforming...
+✓ 1745 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.75 kB │ gzip:   0.41 kB
+dist/assets/index-BPMV1cZD.css   51.90 kB │ gzip:   9.77 kB
+dist/assets/index-D3Za_66Q.js   848.34 kB │ gzip: 233.04 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 1.75s

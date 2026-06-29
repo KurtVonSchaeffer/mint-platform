@@ -1,0 +1,14 @@
+{
+  "id": "session-1781849560862",
+  "startedAt": "2026-06-19T06:12:40.862Z",
+  "cwd": "/Users/kurtvonschaeffer/mint-platform",
+  "context": {},
+  "metrics": {
+    "edits": 8,
+    "commands": 0,
+    "tasks": 0,
+    "errors": 0
+  },
+  "endedAt": "2026-06-19T09:39:51.610Z",
+  "duration": 12430749
+}

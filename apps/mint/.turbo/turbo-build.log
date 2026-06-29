@@ -1,0 +1,42 @@
+
+> @mint/app@0.0.0 build /Users/kurtvonschaeffer/mint-platform/apps/mint
+> next build
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/kurtvonschaeffer/package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /Users/kurtvonschaeffer/mint-platform/pnpm-lock.yaml
+
+   ▲ Next.js 15.5.18
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 842ms
+   Linting and checking validity of types ...
+   Collecting page data ...
+[mint] Missing Supabase env vars — NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY
+[mint] Missing Supabase env vars — NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY
+   Generating static pages (0/4) ...
+   Generating static pages (1/4) 
+   Generating static pages (2/4) 
+   Generating static pages (3/4) 
+ ✓ Generating static pages (4/4)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                    2.86 kB         105 kB
+├ ○ /_not-found                            989 B         103 kB
+├ ƒ /api/quote                             124 B         102 kB
+├ ƒ /api/quote/[id]                        124 B         102 kB
+└ ƒ /quote/[id]                          4.43 kB         107 kB
++ First Load JS shared by all             102 kB
+  ├ chunks/59-a876fa256b5d0391.js          46 kB
+  ├ chunks/9ff9858c-dbfdd29d6adf2c72.js  54.2 kB
+  └ other shared chunks (total)          1.89 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
