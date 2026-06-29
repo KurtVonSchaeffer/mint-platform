@@ -48,3 +48,14 @@ Thumbs.db
 .cache/
 .local/
 .vercel
+
+# Claude / AI session data
+.claude-flow/
+.claude/
+.turbo/
+apps/**/.claude-flow/
+apps/**/.claude/
+apps/**/.turbo/
+apps/**/.next/
+apps/**/.env.local
+apps/**/screenshots/

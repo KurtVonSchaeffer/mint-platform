@@ -1,9 +1,0 @@
-{
-  "app/invoices/page.tsx -> @/lib/email": {
-    "id": 7624,
-    "files": [
-      "static/chunks/7111.9006ff17ef10e9d8.js",
-      "static/chunks/7624.a66860a7b6c720e3.js"
-    ]
-  }
-}
