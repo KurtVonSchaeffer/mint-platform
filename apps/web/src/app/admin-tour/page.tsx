@@ -265,7 +265,7 @@ export default function AdminTourPage() {
             <div className="flex flex-wrap items-center justify-center gap-4">
               {[
                 { label: 'Uptime SLA',    val: '99.9%',           icon: Activity },
-                { label: 'Go-live time',  val: '4-8 weeks',       icon: Zap      },
+                { label: 'Go-live time',  val: '2-3 weeks',       icon: Zap      },
                 { label: 'Data',          val: 'Dedicated DB',    icon: Database },
                 { label: 'Hosting',       val: 'Vercel Edge',     icon: Globe    },
                 { label: 'Auth',          val: 'Supabase RLS',    icon: Lock     },
