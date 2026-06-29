@@ -4,29 +4,32 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Building2, Users, FileText, CheckCircle2,
+  Building2, Users, FileText, CheckCircle2, PenLine,
   Check, ArrowRight, Upload, X, Shield, Zap, Award, Clock,
 } from 'lucide-react';
+import { useRef } from 'react';
+import { SignaturePad, type SignaturePadHandle } from '@/components/SignaturePad';
+import { AGREEMENT_TEXT, AGREEMENT_VERSION } from '@/lib/agreement';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlgoLendLogo } from '@/components/AlgoLendLogo';
 
 /* ── Types ──────────────────────────────────────────────────────────── */
-type Step = 'details' | 'directors' | 'documents' | 'review' | 'done';
+type Step = 'details' | 'directors' | 'documents' | 'sign' | 'review' | 'done';
 const STEPS: { id: Step; label: string; desc: string; icon: React.ElementType }[] = [
   { id: 'details',   label: 'Company',   desc: 'Business details',   icon: Building2    },
   { id: 'directors', label: 'Directors', desc: 'FICA compliance',    icon: Users        },
   { id: 'documents', label: 'Documents', desc: 'Verification docs',  icon: FileText     },
+  { id: 'sign',      label: 'Sign',      desc: 'Service agreement',  icon: PenLine      },
   { id: 'review',    label: 'Review',    desc: 'Confirm & submit',   icon: CheckCircle2 },
 ];
 
 const REQUIRED_DOCS = [
-  { id: 'cipc_cert',      label: 'CIPC registration certificate', hint: 'Company registration from CIPC',       required: true  },
-  { id: 'director_id',    label: 'Director ID copy',              hint: 'Clear copy of SA ID document',         required: true  },
-  { id: 'ncr_cert',       label: 'NCR lending licence',           hint: 'NCR certificate for credit providers', required: true  },
-  { id: 'bank_statement', label: '3 months bank statements',      hint: 'Business account — last 3 months',     required: true  },
-  { id: 'signed_sla',     label: 'Signed service agreement',      hint: 'Upload if signed — we can email it',   required: false },
+  { id: 'cipc_cert',      label: 'CIPC registration certificate', hint: 'Company registration from CIPC',       required: true },
+  { id: 'director_id',    label: 'Director ID copy',              hint: 'Clear copy of SA ID document',         required: true },
+  { id: 'ncr_cert',       label: 'NCR lending licence',           hint: 'NCR certificate for credit providers', required: true },
+  { id: 'bank_statement', label: '3 months bank statements',      hint: 'Business account — last 3 months',     required: true },
 ];
 
 const INDUSTRIES = [
@@ -59,6 +62,10 @@ export default function ApplyPage() {
   const [token,  setToken]  = useState('');
   const [leadId, setLeadId] = useState('');
 
+  const [agreementAccepted, setAgreementAccepted] = useState(false);
+  const [agreementSigned,   setAgreementSigned]   = useState(false);
+  const sigPadRef = useRef<SignaturePadHandle>(null);
+
   const [name,      setName]      = useState('');
   const [email,     setEmail]     = useState('');
   const [company,   setCompany]   = useState('');
@@ -71,9 +78,31 @@ export default function ApplyPage() {
   const [docFiles,  setDocFiles]  = useState<Record<string, File | null>>({});
 
   const stepIndex = STEPS.findIndex(s => s.id === step);
-  const ORDER: Step[] = ['details', 'directors', 'documents', 'review'];
+  const ORDER: Step[] = ['details', 'directors', 'documents', 'sign', 'review'];
   const navBack = () => { const i = ORDER.indexOf(step); if (i > 0) setStep(ORDER[i - 1]); };
   const navNext = () => { const i = ORDER.indexOf(step); if (i < ORDER.length - 1) setStep(ORDER[i + 1]); };
+
+  async function signAgreement() {
+    if (!agreementAccepted) { setError('Please accept the terms first.'); return; }
+    if (!sigPadRef.current || sigPadRef.current.isEmpty()) { setError('Please draw your signature above.'); return; }
+    setError(''); setSaving(true);
+    try {
+      const res = await fetch(`/api/sign/${token}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agreement_accepted:  true,
+          agreement_signature: sigPadRef.current.toDataURL(),
+          agreement_signed_at: new Date().toISOString(),
+          agreement_version:   AGREEMENT_VERSION,
+        }),
+      });
+      if (!res.ok) { const d = await res.json().catch(() => ({})); setError(d.error ?? 'Failed to save signature.'); return; }
+      setAgreementSigned(true);
+      navNext();
+    } catch { setError('Network error. Please try again.'); }
+    finally { setSaving(false); }
+  }
 
   function addDirector() { setDirectors(p => [...p, { name: '', id_number: '', email: '' }]); }
   function updateDirector(i: number, k: keyof typeof directors[0], v: string) {
@@ -301,12 +330,14 @@ export default function ApplyPage() {
               {step === 'details'   && 'Tell us about your company'}
               {step === 'directors' && 'Add your directors'}
               {step === 'documents' && 'Upload required documents'}
+              {step === 'sign'      && 'Sign the service agreement'}
               {step === 'review'    && 'Review your application'}
             </h1>
             <p className="mt-1.5 text-sm" style={{ color: '#71717A' }}>
               {step === 'details'   && 'We need these details to set up your platform and verify your credit business.'}
               {step === 'directors' && 'Required for FICA compliance. Add all registered directors of your company.'}
               {step === 'documents' && 'Files are encrypted and only accessible to Mint Platforms staff for verification.'}
+              {step === 'sign'      && 'Read the full agreement below, then draw your signature to proceed.'}
               {step === 'review'    && 'Check everything looks correct before you submit.'}
             </p>
           </div>
@@ -450,7 +481,59 @@ export default function ApplyPage() {
                 </div>
               )}
 
-              {/* ── Step 4: Review ── */}
+              {/* ── Step 4: Sign ── */}
+              {step === 'sign' && (
+                <div className="space-y-5">
+                  {/* Agreement text */}
+                  <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid #E4E4E7', background: '#fff' }}>
+                    <div className="px-4 py-2.5" style={{ background: '#F8F9FB', borderBottom: '1px solid #E4E4E7' }}>
+                      <p className="text-xs font-bold uppercase tracking-wider" style={{ color: '#A1A1AA' }}>Service Agreement</p>
+                    </div>
+                    <div className="px-5 py-4 overflow-y-auto" style={{ maxHeight: 240 }}>
+                      <pre className="text-xs leading-relaxed whitespace-pre-wrap" style={{ color: '#52525B', fontFamily: 'inherit' }}>
+                        {AGREEMENT_TEXT}
+                      </pre>
+                    </div>
+                  </div>
+
+                  {/* Accept checkbox */}
+                  <label className="flex items-start gap-3 cursor-pointer rounded-2xl p-4"
+                    style={{ background: '#F5F3FF', border: '1px solid #DDD6FE' }}>
+                    <input
+                      type="checkbox"
+                      checked={agreementAccepted}
+                      onChange={e => setAgreementAccepted(e.target.checked)}
+                      className="mt-0.5 shrink-0"
+                      style={{ accentColor: '#7C3AED', width: 16, height: 16, cursor: 'pointer' }}
+                    />
+                    <span className="text-sm" style={{ color: '#3F3F46', lineHeight: 1.6 }}>
+                      I, on behalf of <strong style={{ color: '#09090B' }}>{company || 'my company'}</strong>, have read and agree to the terms of this Service Agreement.
+                    </span>
+                  </label>
+
+                  {/* Signature pad */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#52525B' }}>
+                        Draw your signature
+                      </label>
+                      <button type="button" onClick={() => sigPadRef.current?.clear()}
+                        className="text-xs px-2.5 py-1 rounded-lg"
+                        style={{ color: '#71717A', background: '#F4F4F5', border: '1px solid #E4E4E7' }}>
+                        Clear
+                      </button>
+                    </div>
+                    <div className="rounded-2xl overflow-hidden" style={{ border: '1.5px solid #E4E4E7', background: '#fff' }}>
+                      <SignaturePad ref={sigPadRef} disabled={!agreementAccepted} />
+                    </div>
+                    <p className="text-xs mt-2" style={{ color: '#A1A1AA' }}>
+                      By signing above you create a legally binding digital signature under the ECT Act.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Step 5: Review ── */}
               {step === 'review' && (
                 <div className="space-y-4">
                   <ReviewSection title="Company" onEdit={() => setStep('details')}>
@@ -470,9 +553,12 @@ export default function ApplyPage() {
                   <ReviewSection title="Documents" onEdit={() => setStep('documents')}>
                     {REQUIRED_DOCS.map(doc => (
                       <ReviewRow key={doc.id} label={doc.label}
-                        value={docFiles[doc.id] ? docFiles[doc.id]!.name : doc.required ? '⚠ Missing' : 'Not uploaded'}
-                        warn={!docFiles[doc.id] && doc.required} />
+                        value={docFiles[doc.id] ? docFiles[doc.id]!.name : '⚠ Missing'}
+                        warn={!docFiles[doc.id]} />
                     ))}
+                  </ReviewSection>
+                  <ReviewSection title="Service Agreement" onEdit={() => setStep('sign')}>
+                    <ReviewRow label="Signed" value={agreementSigned ? '✓ Signed digitally' : '⚠ Not signed'} warn={!agreementSigned} />
                   </ReviewSection>
                 </div>
               )}
@@ -507,6 +593,14 @@ export default function ApplyPage() {
               <Button onClick={navNext} className="gap-2 px-6 rounded-xl text-white font-semibold group"
                 style={{ background: 'linear-gradient(135deg,#7C3AED,#9B5CF6)', boxShadow: '0 4px 20px rgba(124,58,237,0.3)', border: 'none' }}>
                 Continue <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+              </Button>
+            )}
+
+            {step === 'sign' && (
+              <Button onClick={signAgreement} disabled={saving || !agreementAccepted}
+                className="gap-2 px-6 rounded-xl text-white font-semibold"
+                style={{ background: 'linear-gradient(135deg,#7C3AED,#9B5CF6)', boxShadow: '0 4px 20px rgba(124,58,237,0.3)', border: 'none' }}>
+                {saving ? 'Saving…' : <>Sign &amp; Continue <ArrowRight size={14} /></>}
               </Button>
             )}
 
