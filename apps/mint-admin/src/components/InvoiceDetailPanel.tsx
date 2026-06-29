@@ -1,6 +1,7 @@
 'use client';
 
-import { X, CheckCircle, Loader2, Send, Mail, Download, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { X, CheckCircle, Loader2, Send, Mail, Download, Sparkles, CreditCard } from 'lucide-react';
 import { fmt, fmtDate, statusStyle, typeStyle, type Invoice } from '@/lib/invoice-helpers';
 
 type InvoiceAction = 'send' | 'mark_paid' | 'void';
@@ -16,6 +17,38 @@ interface Props {
 }
 
 export function InvoiceDetailPanel({ inv, actioning, onClose, onAction, onReminder, onDownloadPDF, onGenerateInvoice }: Props) {
+  const [pfLoading, setPfLoading] = useState(false);
+  const [pfError,   setPfError]   = useState<string | null>(null);
+
+  async function payViaPayFast() {
+    setPfLoading(true);
+    setPfError(null);
+    try {
+      const res  = await fetch('/api/payfast/checkout', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ type: 'once_off', invoice_id: inv.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Checkout failed');
+
+      // Auto-submit hidden form to PayFast
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = data.url;
+      Object.entries(data.fields as Record<string, string>).forEach(([k, v]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden'; input.name = k; input.value = v;
+        form.appendChild(input);
+      });
+      document.body.appendChild(form);
+      form.submit();
+    } catch (err) {
+      setPfError(String(err));
+      setPfLoading(false);
+    }
+  }
+
   return (
     <>
       <div className="slideover-backdrop" onClick={onClose} />
@@ -121,15 +154,27 @@ export function InvoiceDetailPanel({ inv, actioning, onClose, onAction, onRemind
           style={{ borderTop: '1px solid var(--color-border2)', background: 'var(--color-footer-bg)' }}
         >
           {(inv.status === 'sent' || inv.status === 'overdue') ? (
-            <button
-              onClick={() => onAction(inv, 'mark_paid')}
-              disabled={actioning === inv.id + 'mark_paid'}
-              className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-0.5 disabled:opacity-60"
-              style={{ background: 'linear-gradient(135deg, #059669, #34d399)', boxShadow: '0 4px 16px rgba(52,211,153,0.3)' }}
-            >
-              {actioning === inv.id + 'mark_paid' ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
-              Mark as paid
-            </button>
+            <>
+              <button
+                onClick={payViaPayFast}
+                disabled={pfLoading}
+                className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-0.5 disabled:opacity-60"
+                style={{ background: 'linear-gradient(135deg, #0a6ee0, #34a7ff)', boxShadow: '0 4px 16px rgba(10,110,224,0.3)' }}
+              >
+                {pfLoading ? <Loader2 size={14} className="animate-spin" /> : <CreditCard size={14} />}
+                {pfLoading ? 'Redirecting to PayFast…' : 'Pay via PayFast'}
+              </button>
+              {pfError && <p className="text-[11px] text-center" style={{ color: 'var(--color-red)' }}>{pfError}</p>}
+              <button
+                onClick={() => onAction(inv, 'mark_paid')}
+                disabled={actioning === inv.id + 'mark_paid'}
+                className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-0.5 disabled:opacity-60"
+                style={{ background: 'linear-gradient(135deg, #059669, #34d399)', boxShadow: '0 4px 16px rgba(52,211,153,0.3)' }}
+              >
+                {actioning === inv.id + 'mark_paid' ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />}
+                Mark as paid
+              </button>
+            </>
           ) : null}
           {inv.status === 'draft' ? (
             <button

@@ -664,6 +664,9 @@ export default function ClientDetailPage() {
                 ))}
               </div>
             </div>
+
+            {/* PayFast */}
+            <PayFastSubscriptionCard clientId={client.id} monthlyFeeCents={client.monthly_fee_cents} />
           </div>
         )}
 
@@ -1099,5 +1102,69 @@ Governed by the laws of the Republic of South Africa. Disputes resolved in Gaute
         <div style={{ display: 'none' }}><Building2 /></div>
       </div>
     </Shell>
+  );
+}
+
+/* ── PayFast subscription card ─────────────────────────────────────── */
+function PayFastSubscriptionCard({ clientId, monthlyFeeCents }: { clientId: string; monthlyFeeCents: number }) {
+  const [loading, setLoading] = useState(false);
+  const [error,   setError]   = useState<string | null>(null);
+  const grossCents = Math.round(monthlyFeeCents * 1.15);
+  const fmt = (c: number) => `R ${(c / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`;
+
+  async function setupSubscription() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res  = await fetch('/api/payfast/checkout', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ type: 'subscription', client_id: clientId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? 'Checkout failed');
+
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = data.url;
+      Object.entries(data.fields as Record<string, string>).forEach(([k, v]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden'; input.name = k; input.value = v;
+        form.appendChild(input);
+      });
+      document.body.appendChild(form);
+      form.submit();
+    } catch (err) {
+      setError(String(err));
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="bento-card p-5 space-y-4">
+      <div>
+        <p className="eyebrow mb-1">PayFast Recurring Billing</p>
+        <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
+          Set up a monthly debit order via PayFast. The client enters their card or bank details once — PayFast bills them automatically each month.
+        </p>
+      </div>
+      <div className="flex items-baseline justify-between rounded-xl px-4 py-3" style={{ background: 'rgba(10,110,224,0.06)', border: '1px solid rgba(10,110,224,0.18)' }}>
+        <span className="text-xs font-medium" style={{ color: 'var(--color-text3)' }}>Monthly debit (incl. VAT)</span>
+        <span className="text-lg font-bold" style={{ color: '#0a6ee0' }}>{fmt(grossCents)}</span>
+      </div>
+      {error && <p className="text-[11px]" style={{ color: 'var(--color-red)' }}>{error}</p>}
+      <button
+        onClick={setupSubscription}
+        disabled={loading || monthlyFeeCents <= 0}
+        className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-0.5 disabled:opacity-50"
+        style={{ background: 'linear-gradient(135deg, #0a6ee0, #34a7ff)', boxShadow: '0 4px 16px rgba(10,110,224,0.25)' }}
+      >
+        {loading ? <Loader2 size={14} className="animate-spin" /> : <CreditCard size={14} />}
+        {loading ? 'Redirecting to PayFast…' : 'Set up recurring payment'}
+      </button>
+      {monthlyFeeCents <= 0 && (
+        <p className="text-[11px] text-center" style={{ color: 'var(--color-text3)' }}>Set a monthly fee above first.</p>
+      )}
+    </div>
   );
 }
