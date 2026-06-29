@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
   // Fetch client
   const { data: client, error: clientErr } = await supabaseAdmin
     .from('clients')
-    .select('id, name, slug, contact_email, contact_name, api_quota, status')
+    .select('id, name, slug, contact_email, contact_name, api_quota, status, tier')
     .eq('id', client_id)
     .is('deleted_at', null)
     .single();
@@ -111,9 +111,13 @@ export async function POST(req: NextRequest) {
     'X-RateLimit-Used':      String(usedThisMonth),
   };
 
-  if (remaining <= 0) {
+  const isOverage = remaining <= 0;
+  const isEnterprise = client.tier === 'enterprise';
+
+  if (isOverage && !isEnterprise) {
+    // Core clients: hard block — must top up
     if (remaining === 0) {
-      sendEmail({ to: client.contact_email, subject: `🚨 API quota exhausted — ${client.name}`,
+      sendEmail({ to: client.contact_email, subject: `API quota exhausted — ${client.name}`,
         html: quotaExceededEmail({ clientName: client.name, contact: client.contact_name ?? client.contact_email.split('@')[0], slug: client.slug, used: usedThisMonth, limit: quota }) }).catch(() => {});
     }
     return NextResponse.json(
@@ -122,11 +126,18 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Enterprise: first call past quota triggers an overage-started email
+  if (isOverage && isEnterprise && remaining === 0) {
+    sendEmail({ to: client.contact_email, subject: `API overage billing started — ${client.name}`,
+      html: quotaExceededEmail({ clientName: client.name, contact: client.contact_name ?? client.contact_email.split('@')[0], slug: client.slug, used: usedThisMonth, limit: quota }) }).catch(() => {});
+  }
+
   const computedCost = cost_cents ?? (SERVICE_RATES[service] ?? 0) * quantity;
 
   const { error: insertErr } = await supabaseAdmin.from('usage_logs').insert({
     client_id, service, quantity, cost_cents: computedCost,
-    metadata: metadata ?? null, application_id: application_id ?? null,
+    metadata: { ...(metadata ?? {}), ...(isOverage ? { is_overage: true } : {}) },
+    application_id: application_id ?? null,
     loan_id: loan_id ?? null, user_id: user_id ?? null,
     occurred_at: new Date().toISOString(),
   });
@@ -142,7 +153,7 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json(
-    { logged: true, quota, used: usedAfter, remaining: remaining - quantity, resets_at: resetDate.toISOString() },
+    { logged: true, quota, used: usedAfter, remaining: Math.max(0, remaining - quantity), resets_at: resetDate.toISOString(), ...(isOverage ? { overage: true, overage_cost_cents: computedCost } : {}) },
     { status: 201, headers: rateLimitHeaders },
   );
 }

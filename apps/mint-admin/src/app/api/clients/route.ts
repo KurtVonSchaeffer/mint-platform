@@ -64,6 +64,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'slug must be lowercase alphanumeric with hyphens only' }, { status: 422 });
   }
 
+  // Included API calls per tier — enterprise gets overage billing beyond this
+  const TIER_QUOTAS: Record<string, number> = { core: 500, enterprise: 2000 };
+
   // Insert client row
   const { data: client, error: clientErr } = await supabaseAdmin
     .from('clients')
@@ -85,6 +88,7 @@ export async function POST(req: NextRequest) {
       supabase_url:         body.supabase_url ?? null,
       supabase_service_key: body.supabase_service_key ?? null,
       vercel_project_id:    body.vercel_project_id ?? null,
+      api_quota:            TIER_QUOTAS[tier] ?? 500,
     })
     .select()
     .single();
