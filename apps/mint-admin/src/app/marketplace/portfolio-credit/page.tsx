@@ -73,6 +73,7 @@ export default function PortfolioCreditPage() {
   const [expanded, setExpanded]     = useState<string | null>(null);
   const [search, setSearch]         = useState('');
   const [statusFilter, setStatusFilter] = useState<FacilityStatus | 'all'>('all');
+  const [viewMode, setViewMode]     = useState<'active' | 'history'>('active');
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -87,7 +88,14 @@ export default function PortfolioCreditPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  const ACTIVE_STATUSES:  FacilityStatus[] = ['pending', 'active', 'margin_call'];
+  const HISTORY_STATUSES: FacilityStatus[] = ['repaid', 'defaulted'];
+
   const filtered = facilities.filter((f) => {
+    const inView = viewMode === 'active'
+      ? ACTIVE_STATUSES.includes(f.status)
+      : HISTORY_STATUSES.includes(f.status);
+    if (!inView) return false;
     if (statusFilter !== 'all' && f.status !== statusFilter) return false;
     if (!search) return true;
     const q = search.toLowerCase();
@@ -129,6 +137,30 @@ export default function PortfolioCreditPage() {
           </button>
         </div>
 
+        {/* Active / History toggle */}
+        <div className="flex gap-1 rounded-xl border border-gray-100 bg-gray-50 p-1 w-fit">
+          {(['active', 'history'] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => { setViewMode(v); setStatusFilter('all'); }}
+              className="px-4 py-1.5 rounded-lg text-sm font-medium transition-all capitalize"
+              style={viewMode === v
+                ? { background: '#fff', color: '#111', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
+                : { color: '#6b7280' }}
+            >
+              {v === 'active' ? 'Active' : 'History'}
+              <span className="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{
+                background: viewMode === v ? (v === 'history' ? '#fee2e2' : '#ede9fe') : '#e5e7eb',
+                color: viewMode === v ? (v === 'history' ? '#b91c1c' : '#6d28d9') : '#9ca3af',
+              }}>
+                {v === 'active'
+                  ? facilities.filter(f => ACTIVE_STATUSES.includes(f.status)).length
+                  : facilities.filter(f => HISTORY_STATUSES.includes(f.status)).length}
+              </span>
+            </button>
+          ))}
+        </div>
+
         {/* Margin call alert */}
         {marginCalls.length > 0 && (
           <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
@@ -165,10 +197,10 @@ export default function PortfolioCreditPage() {
             className="flex-1 min-w-48 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
           />
           <div className="flex gap-1.5">
-            {(['all', 'pending', 'active', 'margin_call', 'repaid', 'defaulted'] as const).map((s) => (
+            {(['all', ...(viewMode === 'active' ? ACTIVE_STATUSES : HISTORY_STATUSES)] as const).map((s) => (
               <button
                 key={s}
-                onClick={() => setStatusFilter(s)}
+                onClick={() => setStatusFilter(s as FacilityStatus | 'all')}
                 className={`rounded-lg px-3 py-2 text-xs font-medium capitalize transition ${
                   statusFilter === s
                     ? 'bg-violet-600 text-white'
@@ -193,7 +225,9 @@ export default function PortfolioCreditPage() {
               <p className="text-sm">
                 {search || statusFilter !== 'all'
                   ? 'No facilities match your filters.'
-                  : 'No portfolio-backed credit facilities yet. They will appear here once MINT borrowers draw against their portfolios.'}
+                  : viewMode === 'history'
+                    ? 'No closed facilities yet — repaid and defaulted accounts will appear here.'
+                    : 'No active facilities yet. They will appear here once MINT borrowers draw against their portfolios.'}
               </p>
             </div>
           ) : (
@@ -217,7 +251,7 @@ export default function PortfolioCreditPage() {
                   const open = expanded === f.id;
                   return (
                     <>
-                      <tr key={f.id} className={`hover:bg-gray-50/60 ${f.status === 'margin_call' ? 'bg-red-50/40' : ''}`}>
+                      <tr key={f.id} className={`hover:bg-gray-50/60 ${f.status === 'margin_call' || f.status === 'defaulted' ? 'bg-red-50/40' : f.status === 'repaid' ? 'bg-slate-50/60' : ''}`}>
                         <td className="px-4 py-3">
                           <p className="font-medium text-gray-900">{f.consumer_name || '—'}</p>
                           <p className="text-xs text-gray-400">{f.consumer_email}</p>
@@ -288,12 +322,32 @@ export default function PortfolioCreditPage() {
                                     Collateral basket{count ? ` — ${count} holding${count !== 1 ? 's' : ''}` : ''}
                                   </p>
                                   {symbols?.length ? (
-                                    <div className="flex flex-wrap gap-2">
-                                      {symbols.map((sym) => (
-                                        <span key={sym} className="inline-flex items-center rounded-lg border border-violet-100 bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700">
-                                          {sym}
-                                        </span>
-                                      ))}
+                                    <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${Math.min(symbols.length, 4)}, 1fr)` }}>
+                                      {symbols.map((sym) => {
+                                        const assetValue  = f.portfolio_value / symbols.length;
+                                        const assetLtv    = f.drawn_amount / f.portfolio_value;
+                                        const ltvPct      = Math.min(100, assetLtv * 100);
+                                        const barColor    = ltvPct >= 80 ? '#ef4444' : ltvPct >= 65 ? '#f59e0b' : '#10b981';
+                                        const sharePct    = (100 / symbols.length).toFixed(1);
+                                        return (
+                                          <div key={sym} className="rounded-lg border border-gray-100 bg-white p-3 space-y-2">
+                                            <div className="flex items-center justify-between">
+                                              <span className="text-xs font-bold text-violet-700">{sym}</span>
+                                              <span className="text-[10px] text-gray-400">{sharePct}%</span>
+                                            </div>
+                                            <p className="text-sm font-semibold text-gray-800">{fmt(assetValue)}</p>
+                                            <div>
+                                              <div className="flex items-center justify-between mb-1">
+                                                <span className="text-[10px] text-gray-400">LTV</span>
+                                                <span className="text-[10px] font-semibold" style={{ color: barColor }}>{ltvPct.toFixed(1)}%</span>
+                                              </div>
+                                              <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                                                <div className="h-full rounded-full transition-all" style={{ width: `${ltvPct}%`, background: barColor }} />
+                                              </div>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
                                     </div>
                                   ) : null}
                                   {(repayable || monthly || firstDate) && (
