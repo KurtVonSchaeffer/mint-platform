@@ -85,7 +85,7 @@ export default function MintLoansPage() {
               <HandCoins size={20} />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">MINT Loans</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Unsecured Credit</h1>
               <p className="text-sm text-gray-500">Accepted offers from the MINT consumer marketplace</p>
             </div>
           </div>
@@ -100,7 +100,7 @@ export default function MintLoansPage() {
         {/* Summary stats */}
         <div className="grid grid-cols-3 gap-4">
           {[
-            { label: 'Total accepted', value: String(loans.length), sub: 'loans from MINT' },
+            { label: 'Total accepted', value: String(loans.length), sub: 'unsecured loans' },
             { label: 'Total disbursed', value: fmt(totalDisbursed), sub: 'across all lenders' },
             { label: 'Avg interest rate', value: loans.length ? `${avgRate.toFixed(1)}%` : '—', sub: 'p.a. weighted' },
           ].map((s) => (
@@ -129,7 +129,7 @@ export default function MintLoansPage() {
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-gray-400">
               <HandCoins size={32} className="mb-3 opacity-30" />
-              <p className="text-sm">{search ? 'No loans match your search.' : "No accepted loans yet — they'll appear here once MINT borrowers accept offers."}</p>
+              <p className="text-sm">{search ? 'No loans match your search.' : "No accepted loans yet — they'll appear here once borrowers accept offers."}</p>
             </div>
           ) : (
             <table className="w-full text-sm">

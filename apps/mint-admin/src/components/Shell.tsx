@@ -65,7 +65,7 @@ const nav: (NavItem | NavGroup | NavSection)[] = [
       { label: 'Lender Policies',  href: '/marketplace',                  icon: Scale   },
       { label: 'Loan Simulator',   href: '/marketplace/simulate',         icon: Gauge   },
       { label: 'Integration',      href: '/marketplace/integration',      icon: Link2   },
-      { label: 'MINT Loans',       href: '/marketplace/loans',            icon: Banknote },
+      { label: 'Unsecured Credit',  href: '/marketplace/loans',            icon: Banknote },
       { label: 'Portfolio Credit', href: '/marketplace/portfolio-credit', icon: PiggyBank },
     ],
   },
