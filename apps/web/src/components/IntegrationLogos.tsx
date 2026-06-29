@@ -189,6 +189,7 @@ export const LOGO_MAP: Record<string, React.ComponentType<LogoProps>> = {
   SACRRA:          SacrraLogo,
   'E-Contracts':   DocuSealLogo,
   'Sure Systems':  SureSystemsLogo,
+  'DebiCheck':     SureSystemsLogo,
   Sanlam:          SanlamLogo,
   Resend:          ResendLogo,
   OpenPGP:         OpenPGPLogo,

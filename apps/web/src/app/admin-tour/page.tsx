@@ -51,7 +51,7 @@ const sections = [
     summary: 'Full loan lifecycle management from disbursement through collections to closure.',
     features: [
       'Live repayment schedule per borrower',
-      'Sure Systems EFT debit order management',
+      'DebiCheck authenticated debit order management',
       'Arrears and write-off tracking',
       'Early settlement and restructure tools',
     ],
@@ -105,7 +105,7 @@ const integrations = [
   { name: 'Experian',     desc: 'Credit bureau: full consumer report',    color: '#3b82f6' },
   { name: 'SACRRA',       desc: 'Bureau reporting: layout 700 auto-sub',  color: '#f59e0b' },
   { name: 'E-Contracts',  desc: 'E-signatures: NCA-compliant contracts',  color: '#8b5cf6' },
-  { name: 'Sure Systems', desc: 'EFT & debit orders: automated payments', color: '#ef4444' },
+  { name: 'DebiCheck', desc: 'Authenticated debit orders: NPS-compliant', color: '#ef4444' },
   { name: 'Resend',       desc: 'Transactional email: instant delivery',  color: '#64748b' },
 ];
 
