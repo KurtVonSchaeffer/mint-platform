@@ -16,8 +16,9 @@ import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 
 type IconProps = { size?: number; className?: string; style?: React.CSSProperties };
-type NavItem  = { label: string; href: string; icon: React.ComponentType<IconProps> };
-type NavGroup = { group: string; icon: React.ComponentType<IconProps>; items: NavItem[] };
+type NavItem    = { label: string; href: string; icon: React.ComponentType<IconProps> };
+type NavGroup   = { group: string; icon: React.ComponentType<IconProps>; items: NavItem[] };
+type NavSection = { section: string };
 
 // Routes each role can access. super_admin gets everything.
 const ROLE_ROUTES: Record<string, string[]> = {
@@ -40,11 +41,13 @@ function canAccess(href: string, role: string): boolean {
   return allowed.some(a => a === href || (a !== '/' && href.startsWith(a)));
 }
 
-const nav: (NavItem | NavGroup)[] = [
+const nav: (NavItem | NavGroup | NavSection)[] = [
+  { section: 'Core' },
   { label: 'Dashboard',    href: '/',            icon: LayoutGrid     },
   { label: 'Clients',      href: '/clients',     icon: Building2      },
   { label: 'Leads',        href: '/leads',        icon: Filter         },
   { label: 'Applications', href: '/applications', icon: Inbox          },
+  { section: 'Finance' },
   {
     group: 'Financials',
     icon: Receipt,
@@ -66,6 +69,7 @@ const nav: (NavItem | NavGroup)[] = [
       { label: 'Portfolio Credit', href: '/marketplace/portfolio-credit', icon: PiggyBank },
     ],
   },
+  { section: 'Platform' },
   { label: 'Features',   href: '/features',  icon: ToggleLeft      },
   { label: 'API Usage',  href: '/usage',      icon: Activity        },
   { label: 'Compliance', href: '/compliance', icon: ShieldCheck     },
@@ -78,7 +82,7 @@ const bottomNav = [
 ];
 
 // Flat list of all nav items (used for search and page title lookup)
-const flatNav: NavItem[] = nav.flatMap(e => 'group' in e ? e.items : [e]);
+const flatNav: NavItem[] = nav.flatMap(e => 'section' in e ? [] : 'group' in e ? e.items : [e]);
 
 const NEW_ACTIONS = [
   { label: 'New client',  href: '/clients?new=1',  icon: Building2  },
@@ -133,6 +137,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         setOpenGroups(prev => { const s = new Set(prev); s.add(entry.group); return s; });
       }
     }
+
   }, [pathname]);
 
   useEffect(() => {
@@ -677,9 +682,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
         {/* Nav */}
         <nav className="flex-1 py-3 px-2.5 space-y-0.5 overflow-y-auto relative">
           {nav.filter(entry => {
+            if ('section' in entry) return true;
             if ('group' in entry) return entry.items.some(i => canAccess(i.href, userRole));
             return canAccess(entry.href, userRole);
-          }).map((entry) => {
+          }).map((entry, i) => {
+            if ('section' in entry) {
+              return (
+                <p key={`section-${i}`} className="px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-widest select-none" style={{ color: 'var(--color-text3)', opacity: 0.5 }}>
+                  {entry.section}
+                </p>
+              );
+            }
             if ('group' in entry) {
               // ── Accordion group ────────────────────────────
               const isOpen     = openGroups.has(entry.group);
