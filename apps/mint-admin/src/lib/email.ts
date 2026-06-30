@@ -76,10 +76,12 @@ export function quoteEmail(q: {
 export function invoiceReminderEmail(inv: {
   reference: string; clientName: string; contact: string;
   totalCents: number; dueDate: string; daysOverdue: number;
+  invoiceId?: string;
 }) {
   const fmt = (c: number) =>
     new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 2 }).format(c / 100);
-  const isOverdue = inv.daysOverdue > 0;
+  const isOverdue  = inv.daysOverdue > 0;
+  const paymentUrl = inv.invoiceId ? `https://algolend.co.za/pay/${inv.invoiceId}` : null;
 
   return `<!DOCTYPE html>
 <html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
@@ -98,9 +100,20 @@ export function invoiceReminderEmail(inv: {
     </p>
     <div style="background:#f9f7ff;border-radius:12px;padding:20px;margin:20px 0;text-align:center">
       <p style="font-size:28px;font-weight:700;color:#7C3AED;margin:0">${fmt(inv.totalCents)}</p>
-      <p style="color:#888;font-size:13px;margin:4px 0 0">Amount due</p>
+      <p style="color:#888;font-size:13px;margin:4px 0 0">Amount due · Reference: ${inv.reference}</p>
     </div>
-    <p style="color:#555;font-size:14px">Please arrange payment at your earliest convenience. If you have already paid, please disregard this message.</p>
+    ${paymentUrl ? `
+    <div style="text-align:center;margin:24px 0">
+      <a href="${paymentUrl}" style="background:#7C3AED;color:#fff;padding:13px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block">
+        Pay ${fmt(inv.totalCents)} now →
+      </a>
+      <p style="color:#888;font-size:12px;margin:10px 0 0">Card, instant EFT, or SnapScan — secured by PayFast</p>
+    </div>
+    <p style="color:#888;font-size:13px;line-height:1.6;border-top:1px solid #eee;padding-top:20px">
+      Prefer to pay via bank transfer? Use reference <strong>${inv.reference}</strong> and email your proof of payment to
+      <a href="mailto:accounts@algolend.co.za" style="color:#7C3AED">accounts@algolend.co.za</a>.
+    </p>` : `
+    <p style="color:#555;font-size:14px">Please arrange payment at your earliest convenience. If you have already paid, please disregard this message.</p>`}
   </div>
   <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
     AlgoLend · Mint Platforms (Pty) Ltd
@@ -184,9 +197,11 @@ export function invoiceReadyEmail(inv: {
   periodStart: string; periodEnd: string;
   subtotalCents: number; vatCents: number; totalCents: number;
   dueDate: string; lineCount: number;
+  invoiceId?: string;
 }) {
   const fmt = (c: number) =>
     new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 2 }).format(c / 100);
+  const paymentUrl = inv.invoiceId ? `https://algolend.co.za/pay/${inv.invoiceId}` : null;
   return `<!DOCTYPE html>
 <html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
@@ -197,7 +212,7 @@ export function invoiceReadyEmail(inv: {
   <div style="padding:32px">
     <p style="font-size:16px;margin:0 0 8px">Hi ${inv.contact},</p>
     <p style="color:#555;line-height:1.6;margin:0 0 24px">
-      Please find your invoice for the period <strong>${inv.periodStart} – ${inv.periodEnd}</strong> attached below.
+      Please find your invoice for the period <strong>${inv.periodStart} – ${inv.periodEnd}</strong> below.
     </p>
     <div style="background:#f9f7ff;border:1px solid #e5e0ff;border-radius:12px;padding:20px;margin-bottom:24px">
       <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#7C3AED;margin:0 0 12px">${inv.reference}</p>
@@ -208,8 +223,19 @@ export function invoiceReadyEmail(inv: {
         <tr style="border-top:2px solid #7C3AED"><td style="padding:10px 0 0;font-weight:700;font-size:16px">Total Due</td><td style="text-align:right;font-weight:700;font-size:18px;color:#7C3AED;padding-top:10px">${fmt(inv.totalCents)}</td></tr>
       </table>
     </div>
+    ${paymentUrl ? `
+    <div style="text-align:center;margin:24px 0">
+      <a href="${paymentUrl}" style="background:#7C3AED;color:#fff;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px;display:inline-block">
+        Pay ${fmt(inv.totalCents)} now →
+      </a>
+      <p style="color:#888;font-size:12px;margin:10px 0 0">Card, instant EFT, or SnapScan — secured by PayFast</p>
+    </div>
+    <p style="color:#888;font-size:13px;line-height:1.6;border-top:1px solid #eee;padding-top:20px">
+      Prefer a bank transfer? Use reference <strong>${inv.reference}</strong> and email your proof of payment to
+      <a href="mailto:accounts@algolend.co.za" style="color:#7C3AED">accounts@algolend.co.za</a>.
+    </p>` : `
     <p style="color:#555;font-size:14px;line-height:1.6">Payment is due by <strong>${inv.dueDate}</strong>. Please use <strong>${inv.reference}</strong> as your payment reference.</p>
-    <p style="color:#888;font-size:13px;margin-top:16px">Questions? Reply to this email or contact <a href="mailto:accounts@algolend.co.za" style="color:#7C3AED">accounts@algolend.co.za</a>.</p>
+    <p style="color:#888;font-size:13px;margin-top:16px">Questions? Reply to this email or contact <a href="mailto:accounts@algolend.co.za" style="color:#7C3AED">accounts@algolend.co.za</a>.</p>`}
   </div>
   <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
     AlgoLend · Mint Platforms (Pty) Ltd · accounts@algolend.co.za

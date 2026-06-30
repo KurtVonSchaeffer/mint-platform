@@ -61,6 +61,7 @@ export default function InvoicesPage() {
           ? `OVERDUE: Invoice ${inv.reference} — ${days} days past due`
           : `Payment reminder: Invoice ${inv.reference}`,
         html: invoiceReminderEmail({
+          invoiceId:   inv.id,
           reference:   inv.reference,
           clientName:  inv.clients.name,
           contact:     'Accounts',
