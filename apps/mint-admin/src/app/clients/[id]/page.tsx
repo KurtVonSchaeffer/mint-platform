@@ -24,6 +24,8 @@ interface Client {
   contact_name: string | null; ncr_number: string | null;
   created_at: string; activated_at: string | null;
   api_quota: number | null; primary_color: string;
+  lender_api_base_url: string | null;
+  lender_api_key: string | null;
   client_features: ClientFeature[];
 }
 
@@ -106,6 +108,11 @@ export default function ClientDetailPage() {
   const [billingQuota, setBillingQuota] = useState('');
   const [billingSaving,  setBillingSaving]  = useState(false);
   const [agrSending,    setAgrSending]    = useState(false);
+  const [apiBaseUrl,    setApiBaseUrl]    = useState('');
+  const [apiKey,        setApiKey]        = useState<string | null>(null);
+  const [apiKeyVisible, setApiKeyVisible] = useState(false);
+  const [apiSaving,     setApiSaving]     = useState(false);
+  const [apiRotating,   setApiRotating]   = useState(false);
 
   type MpPolicy = { id: string; active: boolean; display_name: string; base_rate_pct: number; min_credit_score: number; min_amount: number; max_amount: number; tagline: string | null };
   const [mpPolicy,  setMpPolicy]  = useState<MpPolicy | null | undefined>(undefined); // undefined=unloaded
@@ -156,6 +163,8 @@ export default function ClientDetailPage() {
       setDetailEmail(data.client.contact_email);
       setDetailDomain(data.client.domain ?? '');
       setDetailNcr(data.client.ncr_number ?? '');
+      setApiBaseUrl(data.client.lender_api_base_url ?? '');
+      setApiKey(data.client.lender_api_key ?? null);
     } catch {
       setToast({ kind: 'error', message: 'Could not load client data.' });
     } finally {
@@ -411,7 +420,8 @@ export default function ClientDetailPage() {
 
         {/* ── Details tab ──────────────────────────────────────────────── */}
         {activeTab === 'details' && (
-          <div className="bento-card p-6 max-w-xl space-y-4">
+          <div className="max-w-xl space-y-4">
+          <div className="bento-card p-6 space-y-4">
             <p className="eyebrow mb-2">Client Details</p>
             {[
               { label: 'Company name',    val: detailName,    set: setDetailName,    placeholder: 'Zwane Official' },
@@ -458,6 +468,110 @@ export default function ClientDetailPage() {
             >
               {detailSaving ? <><Loader2 size={14} className="animate-spin" /> Saving…</> : <><Save size={14} /> Save details</>}
             </button>
+          </div>
+
+          {/* Integration API */}
+          <div className="bento-card p-6 space-y-4">
+            <div>
+              <p className="eyebrow mb-0.5">Integration API</p>
+              <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
+                The lender uses this key as <code className="font-mono text-[11px] px-1 rounded" style={{ background: 'rgba(255,255,255,0.06)' }}>INTEGRATION_API_KEY</code> on their server. MINT calls their API with it to push loan applications.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--color-text2)' }}>Base URL</label>
+              <input
+                type="url"
+                value={apiBaseUrl}
+                onChange={e => setApiBaseUrl(e.target.value)}
+                placeholder="https://zwane-official.vercel.app"
+                className="field-input font-mono text-xs"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold mb-1" style={{ color: 'var(--color-text2)' }}>API Key</label>
+              {apiKey ? (
+                <div className="flex items-center gap-2">
+                  <code
+                    className="flex-1 text-xs px-3 py-2 rounded-lg font-mono truncate select-all"
+                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--color-border2)', color: 'var(--color-text2)', letterSpacing: apiKeyVisible ? undefined : '0.15em' }}
+                  >
+                    {apiKeyVisible ? apiKey : '•'.repeat(Math.min(apiKey.length, 40))}
+                  </code>
+                  <button
+                    onClick={() => setApiKeyVisible(v => !v)}
+                    title={apiKeyVisible ? 'Hide' : 'Reveal'}
+                    className="p-2 rounded-lg shrink-0 transition-colors"
+                    style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      {apiKeyVisible
+                        ? <><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></>
+                        : <><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></>}
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(apiKey); setToast({ kind: 'success', message: 'API key copied — share via password manager only.' }); }}
+                    title="Copy"
+                    className="p-2 rounded-lg shrink-0 transition-colors"
+                    style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
+                  >
+                    <Copy size={13} />
+                  </button>
+                </div>
+              ) : (
+                <p className="text-xs italic" style={{ color: 'var(--color-text3)' }}>No key generated yet — save to generate one.</p>
+              )}
+              <p className="text-[10px] mt-1" style={{ color: 'var(--color-text3)' }}>Never share this in chat or email — use a password manager.</p>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                onClick={async () => {
+                  setApiSaving(true);
+                  try {
+                    const res = await fetch(`/api/clients/${params.id}`, {
+                      method: 'PATCH',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ lender_api_base_url: apiBaseUrl || null }),
+                    });
+                    if (!res.ok) throw new Error((await res.json()).error);
+                    setToast({ kind: 'success', message: 'Integration settings saved.' });
+                  } catch (err) {
+                    setToast({ kind: 'error', message: `Failed: ${err instanceof Error ? err.message : err}` });
+                  } finally { setApiSaving(false); }
+                }}
+                disabled={apiSaving}
+                className="btn-purple btn-shine flex-1 inline-flex items-center justify-center gap-2 disabled:opacity-60"
+              >
+                {apiSaving ? <><Loader2 size={14} className="animate-spin" /> Saving…</> : <><Save size={14} /> Save URL</>}
+              </button>
+              <button
+                onClick={async () => {
+                  if (!confirm('Rotate the API key? The lender must update their INTEGRATION_API_KEY env var immediately or their integration will break.')) return;
+                  setApiRotating(true);
+                  try {
+                    const res = await fetch(`/api/clients/${params.id}/rotate-lender-key`, { method: 'POST' });
+                    if (!res.ok) throw new Error((await res.json()).error);
+                    const { lender_api_key: newKey } = await res.json();
+                    setApiKey(newKey);
+                    setApiKeyVisible(true);
+                    setToast({ kind: 'success', message: 'Key rotated — copy it now and share via password manager.' });
+                  } catch (err) {
+                    setToast({ kind: 'error', message: `Rotate failed: ${err instanceof Error ? err.message : err}` });
+                  } finally { setApiRotating(false); }
+                }}
+                disabled={apiRotating}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors disabled:opacity-60 shrink-0"
+                style={{ background: 'rgba(248,113,113,0.08)', color: 'var(--color-red)', border: '1px solid rgba(248,113,113,0.2)' }}
+              >
+                {apiRotating ? <Loader2 size={13} className="animate-spin" /> : <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>}
+                Rotate key
+              </button>
+            </div>
+          </div>
           </div>
         )}
 

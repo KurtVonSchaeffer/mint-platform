@@ -51,7 +51,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
   const [clientRes, invoicesRes, usageRes, agreementsRes, leadRes] = await Promise.all([
     supabaseAdmin
       .from('clients')
-      .select('id, name, slug, subdomain, domain, tier, status, contact_email, contact_name, monthly_fee_cents, primary_color, secondary_color, ncr_number, created_at, activated_at, api_quota, client_features(flag, enabled)')
+      .select('id, name, slug, subdomain, domain, tier, status, contact_email, contact_name, monthly_fee_cents, primary_color, secondary_color, ncr_number, created_at, activated_at, api_quota, lender_api_base_url, lender_api_key, client_features(flag, enabled)')
       .eq('id', id)
       .single(),
 
@@ -113,7 +113,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
 export async function PATCH(req: NextRequest, { params }: Params) {
   const { id } = await params;
 
-  let body: { status?: string; features?: Record<string, boolean>; api_quota?: number; topup?: { units: number; price_per_1k_cents: number }; monthly_fee_cents?: number; tier?: string; name?: string; contact_name?: string; contact_email?: string; domain?: string; ncr_number?: string };
+  let body: { status?: string; features?: Record<string, boolean>; api_quota?: number; topup?: { units: number; price_per_1k_cents: number }; monthly_fee_cents?: number; tier?: string; name?: string; contact_name?: string; contact_email?: string; domain?: string; ncr_number?: string; lender_api_base_url?: string | null; lender_api_key?: string | null };
   try {
     body = await req.json();
   } catch {
@@ -121,6 +121,16 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   }
 
   const errors: string[] = [];
+
+  // ── Lender API credentials ───────────────────────────────────────────
+  if (body.lender_api_base_url !== undefined || body.lender_api_key !== undefined) {
+    const patch: Record<string, unknown> = {};
+    if (body.lender_api_base_url !== undefined) patch.lender_api_base_url = body.lender_api_base_url?.trim() || null;
+    if (body.lender_api_key     !== undefined) patch.lender_api_key      = body.lender_api_key?.trim()      || null;
+    const { error } = await supabaseAdmin.from('clients').update(patch).eq('id', id);
+    if (error) { console.error('[clients] lender API credentials update failed', error); errors.push(error.message); }
+    else { logAudit({ action: 'client.update', resourceType: 'client', resourceId: id, meta: { lender_api_base_url: patch.lender_api_base_url, lender_api_key: patch.lender_api_key ? '[redacted]' : null } }); }
+  }
 
   // ── Client details update ────────────────────────────────────────────
   if (body.name !== undefined || body.contact_name !== undefined || body.contact_email !== undefined || body.domain !== undefined || body.ncr_number !== undefined) {

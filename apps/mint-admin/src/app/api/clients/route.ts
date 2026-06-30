@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomBytes } from 'crypto';
 import { supabaseAdmin } from '@/lib/supabase';
 import { ALL_FEATURES } from '@/lib/features';
 import { sendEmail, welcomeClientEmail } from '@/lib/email';
@@ -88,7 +89,7 @@ export async function POST(req: NextRequest) {
       secondary_color,
       support_email:        support_email ?? null,
       lender_api_base_url:  body.lender_api_base_url ?? null,
-      lender_api_key:       body.lender_api_key ?? null,
+      lender_api_key:       body.lender_api_key ?? randomBytes(32).toString('hex'),
       supabase_url:         body.supabase_url ?? null,
       supabase_service_key: body.supabase_service_key ?? null,
       vercel_project_id:    body.vercel_project_id ?? null,

@@ -13,7 +13,8 @@ export type AuditAction =
   | 'lead.create'
   | 'lead.update'
   | 'feature.toggle'
-  | 'quota.update';
+  | 'quota.update'
+  | 'client.rotate_lender_key';
 
 // Maps our semantic actions to the audit_action enum values in the DB
 const ACTION_MAP: Record<AuditAction, string> = {
@@ -29,7 +30,8 @@ const ACTION_MAP: Record<AuditAction, string> = {
   'lead.create':       'create',
   'lead.update':       'update',
   'feature.toggle':    'config_change',
-  'quota.update':      'config_change',
+  'quota.update':               'config_change',
+  'client.rotate_lender_key':  'config_change',
 };
 
 export interface AuditPayload {
