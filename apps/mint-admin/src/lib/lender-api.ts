@@ -27,7 +27,7 @@ export interface LenderLoanPushResult {
   error?: string;
 }
 
-export async function pushLoanToLender(clientId: string, input: LenderLoanPushInput): Promise<LenderLoanPushResult> {
+async function getLenderCredentials(clientId: string): Promise<{ baseUrl: string; apiKey: string } | null> {
   const { data: client } = await supabaseAdmin
     .from('clients')
     .select('lender_api_base_url, lender_api_key')
@@ -36,17 +36,54 @@ export async function pushLoanToLender(clientId: string, input: LenderLoanPushIn
 
   const baseUrl = client?.lender_api_base_url as string | null;
   const apiKey  = client?.lender_api_key as string | null;
+  if (!baseUrl || !apiKey) return null;
+  return { baseUrl: baseUrl.replace(/\/$/, ''), apiKey };
+}
 
-  if (!baseUrl || !apiKey) {
+export interface LenderDecisionInput {
+  applicationId: string | number;
+  action: 'approve' | 'decline';
+  reason?: string;
+}
+
+export interface LenderDecisionResult {
+  ok: boolean;
+  error?: string;
+}
+
+export async function syncDecisionToLender(clientId: string, input: LenderDecisionInput): Promise<LenderDecisionResult> {
+  const creds = await getLenderCredentials(clientId);
+  if (!creds) {
     return { ok: false, error: `Lender ${clientId} has no lender_api_base_url/lender_api_key configured` };
   }
 
   try {
-    const res = await fetch(`${baseUrl.replace(/\/$/, '')}/api/integrations/loans`, {
+    const res = await fetch(`${creds.baseUrl}/api/integrations/loans/${input.applicationId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${creds.apiKey}` },
+      body: JSON.stringify({ action: input.action, reason: input.reason }),
+    });
+
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) return { ok: false, error: body?.error ?? `Lender API returned ${res.status}` };
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message };
+  }
+}
+
+export async function pushLoanToLender(clientId: string, input: LenderLoanPushInput): Promise<LenderLoanPushResult> {
+  const creds = await getLenderCredentials(clientId);
+  if (!creds) {
+    return { ok: false, error: `Lender ${clientId} has no lender_api_base_url/lender_api_key configured` };
+  }
+
+  try {
+    const res = await fetch(`${creds.baseUrl}/api/integrations/loans`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${creds.apiKey}`,
       },
       body: JSON.stringify({
         idNumber:   input.idNumber,

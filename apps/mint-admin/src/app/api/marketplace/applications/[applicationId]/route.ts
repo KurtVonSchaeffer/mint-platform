@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { getClientSupabase } from '@/lib/client-db';
+import { syncDecisionToLender } from '@/lib/lender-api';
 import { sendEmail } from '@/lib/email';
 
 export const runtime = 'nodejs';
@@ -37,7 +37,7 @@ export async function PATCH(
     .from('quote_offers')
     .select(`
       id, status, offered_amount, offered_rate_pct, monthly_installment,
-      offered_term_months, client_id,
+      offered_term_months, client_id, lender_application_ref,
       quote_requests (
         id, reference, consumer_email, consumer_name,
         requested_amount, requested_term
@@ -109,21 +109,23 @@ export async function PATCH(
     }
   }
 
-  // Sync approval/decline status into the lender's own Supabase database
-  const mintRequestId = request?.id ?? null;
-  const loanAppStatus = action === 'approve' ? 'approved' : 'declined';
-  if (mintRequestId) {
-    getClientSupabase(offer.client_id).then(async (clientDb) => {
-      if (!clientDb) return;
-      const appRef = `MINT-${mintRequestId.slice(0, 8).toUpperCase()}`;
-      const { error } = await clientDb
-        .from('loan_applications')
-        .update({ status: loanAppStatus, decision_at: new Date().toISOString() })
-        .eq('client_id', offer.client_id)
-        .eq('reference', appRef);
-      if (error) console.warn('[marketplace/applications] status sync failed:', error.message);
-      else console.log(`[marketplace/applications] synced status=${loanAppStatus} ref=${appRef}`);
+  // Sync approval/decline decision into the lender's system via their scoped integration API.
+  // lender_application_ref is the lender's applicationId set when the loan was pushed in offers/route.ts.
+  const lenderAppRef = (offer as { lender_application_ref?: string | null }).lender_application_ref;
+  if (lenderAppRef) {
+    syncDecisionToLender(offer.client_id, {
+      applicationId: lenderAppRef,
+      action,
+      reason: action === 'decline' ? declineReason : undefined,
+    }).then((result) => {
+      if (result.ok) {
+        console.log(`[marketplace/applications] synced ${action} to lender=${offer.client_id} appRef=${lenderAppRef}`);
+      } else {
+        console.warn(`[marketplace/applications] lender decision sync failed lender=${offer.client_id} appRef=${lenderAppRef}:`, result.error);
+      }
     }).catch(() => {/* non-blocking */});
+  } else {
+    console.warn(`[marketplace/applications] no lender_application_ref on offer ${applicationId} — skipping lender sync`);
   }
 
   console.log(`[marketplace/applications] ${action} applicationId=${applicationId} lenderId=${offer.client_id}`);
