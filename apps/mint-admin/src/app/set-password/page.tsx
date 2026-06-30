@@ -221,7 +221,7 @@ function SetPasswordForm() {
         </div>
 
         <p className="text-center text-xs mt-4" style={{ color: 'var(--color-text3)' }}>
-          Access restricted to Mint Platforms staff only.
+          Access restricted to MINT Platforms staff only.
         </p>
       </div>
     </div>

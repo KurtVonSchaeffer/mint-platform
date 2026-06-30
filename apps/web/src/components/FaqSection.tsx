@@ -10,7 +10,7 @@ const FAQS = [
   },
   {
     q: 'Do I own my data?',
-    a: "Absolutely. Your data lives in a private, fully isolated environment. It is entirely separate from other clients on the platform. Mint Platforms has no access to your borrower data unless you explicitly grant it for support purposes.",
+    a: "Absolutely. Your data lives in a private, fully isolated environment. It is entirely separate from other clients on the platform. MINT Platforms has no access to your borrower data unless you explicitly grant it for support purposes.",
   },
   {
     q: 'What happens if Experian or DebiCheck goes down?',
@@ -30,7 +30,7 @@ const FAQS = [
   },
   {
     q: 'Can we white-label it completely?',
-    a: "Yes. Your logo, your colours, your domain. Borrowers never see any AlgoLend or Mint Platforms branding. Transactional emails come from your domain too.",
+    a: "Yes. Your logo, your colours, your domain. Borrowers never see any AlgoLend or MINT Platforms branding. Transactional emails come from your domain too.",
   },
   {
     q: 'Do you support multi-branch lending?',

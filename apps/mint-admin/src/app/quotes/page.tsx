@@ -220,7 +220,7 @@ export default function QuotesPage() {
     const until   = todayPlus(30);
     const updated = await patchStatus(q, { status: 'sent', sentDate: todayPlus(0), validUntil: until });
     if (!updated) return;
-    const html = `<p>Dear ${q.contact},</p><p>Please find your AlgoLend pricing proposal <strong>${q.id}</strong> below.</p><p><strong>Monthly fee:</strong> ${fmtR(q.monthlyFee)}/mo<br><strong>Implementation:</strong> ${fmtR(q.setupFee)}<br><strong>Valid until:</strong> ${until}</p><p>Reply to this email with any questions.</p><p>— Mint Platforms (Pty) Ltd</p>`;
+    const html = `<p>Dear ${q.contact},</p><p>Please find your AlgoLend pricing proposal <strong>${q.id}</strong> below.</p><p><strong>Monthly fee:</strong> ${fmtR(q.monthlyFee)}/mo<br><strong>Implementation:</strong> ${fmtR(q.setupFee)}<br><strong>Valid until:</strong> ${until}</p><p>Reply to this email with any questions.</p><p>— MINT Platforms (Pty) Ltd</p>`;
     fetch('/api/email', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ to: q.email, subject: `AlgoLend proposal ${q.id} — ${q.client}`, html }),
@@ -498,7 +498,7 @@ function printableQuote(q: Quote, isSuperAdmin: boolean): string {
   .total .v { font-size: 32px; font-weight: 700; margin-top: 4px; } .total .sub { font-size: 12px; opacity: 0.7; margin-top: 4px; }
   .foot { margin-top: 40px; font-size: 11px; color: #94a3b8; line-height: 1.6; }
 </style></head><body>
-<div class="head"><div><div class="brand-wrap">${logoSvg}<span class="brand">AlgoLend</span></div><div style="font-size:11px;color:#64748b;margin-top:4px">A product of Mint Platforms (Pty) Ltd</div></div>
+<div class="head"><div><div class="brand-wrap">${logoSvg}<span class="brand">AlgoLend</span></div><div style="font-size:11px;color:#64748b;margin-top:4px">A product of MINT Platforms (Pty) Ltd</div></div>
 <div class="meta"><strong>${q.id}</strong>${q.sentDate ? `<br>Issued: ${q.sentDate}` : ''}${q.validUntil ? `<br>Valid until: ${q.validUntil}` : ''}</div></div>
 <div style="font-size:22px;font-weight:700;margin-bottom:4px">Pricing proposal</div>
 <div style="color:#64748b">${q.client} · ${q.contact} · ${q.email}</div>

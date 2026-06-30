@@ -67,7 +67,7 @@ export function quoteEmail(q: {
     </p>
   </div>
   <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
-    AlgoLend · Mint Platforms (Pty) Ltd · <a href="https://mintplatforms.co.za" style="color:#7C3AED">mintplatforms.co.za</a>
+    AlgoLend · MINT Platforms (Pty) Ltd · <a href="https://mintplatforms.co.za" style="color:#7C3AED">mintplatforms.co.za</a>
   </div>
 </div>
 </body></html>`;
@@ -116,7 +116,7 @@ export function invoiceReminderEmail(inv: {
     <p style="color:#555;font-size:14px">Please arrange payment at your earliest convenience. If you have already paid, please disregard this message.</p>`}
   </div>
   <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
-    AlgoLend · Mint Platforms (Pty) Ltd
+    AlgoLend · MINT Platforms (Pty) Ltd
   </div>
 </div>
 </body></html>`;
@@ -148,7 +148,7 @@ export function quotaWarningEmail(q: {
     </p>
   </div>
   <div style="background:#f5f6fa;padding:16px;text-align:center;font-size:11px;color:#aaa">
-    AlgoLend · Mint Platforms (Pty) Ltd
+    AlgoLend · MINT Platforms (Pty) Ltd
   </div>
 </div>
 </body></html>`;
@@ -186,7 +186,7 @@ export function quotaExceededEmail(q: {
     <p style="color:#888;font-size:13px;margin-top:20px">Quota resets automatically on the 1st of next month.</p>
   </div>
   <div style="background:#f5f6fa;padding:16px;text-align:center;font-size:11px;color:#aaa">
-    AlgoLend · Mint Platforms (Pty) Ltd
+    AlgoLend · MINT Platforms (Pty) Ltd
   </div>
 </div>
 </body></html>`;
@@ -238,7 +238,7 @@ export function invoiceReadyEmail(inv: {
     <p style="color:#888;font-size:13px;margin-top:16px">Questions? Reply to this email or contact <a href="mailto:accounts@algolend.co.za" style="color:#7C3AED">accounts@algolend.co.za</a>.</p>`}
   </div>
   <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
-    AlgoLend · Mint Platforms (Pty) Ltd · accounts@algolend.co.za
+    AlgoLend · MINT Platforms (Pty) Ltd · accounts@algolend.co.za
   </div>
 </div>
 </body></html>`;
@@ -272,7 +272,7 @@ export function upgradeRequestEmail(req: {
     </div>
   </div>
   <div style="background:#f5f6fa;padding:16px;text-align:center;font-size:11px;color:#aaa">
-    AlgoLend · Mint Platforms (Pty) Ltd — this is an internal notification
+    AlgoLend · MINT Platforms (Pty) Ltd — this is an internal notification
   </div>
 </div>
 </body></html>`;
@@ -318,7 +318,7 @@ export function userInviteEmail(inv: {
     </p>
   </div>
   <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
-    AlgoLend · Mint Platforms (Pty) Ltd
+    AlgoLend · MINT Platforms (Pty) Ltd
   </div>
 </div>
 </body></html>`;
@@ -350,7 +350,7 @@ export function welcomeClientEmail(client: {
     </p>
   </div>
   <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
-    AlgoLend · Mint Platforms (Pty) Ltd
+    AlgoLend · MINT Platforms (Pty) Ltd
   </div>
 </div>
 </body></html>`;

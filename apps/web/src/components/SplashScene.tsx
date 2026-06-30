@@ -204,7 +204,7 @@ export function SplashScene() {
           <AlgoLendMark />
           <div>
             <p className="text-sm font-bold tracking-tight text-white leading-none">AlgoLend</p>
-            <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-white/40 mt-0.5">by Mint Platforms</p>
+            <p className="text-[9px] font-mono uppercase tracking-[0.2em] text-white/40 mt-0.5">by MINT Platforms</p>
           </div>
         </div>
         <button
@@ -315,7 +315,7 @@ export function SplashScene() {
           className="text-xs font-mono uppercase tracking-[0.32em] text-white/50 mb-6"
           style={{ animation: 'fade-in 0.8s ease-out 2.6s both' }}
         >
-          A product by Mint Platforms
+          A product by MINT Platforms
         </p>
 
         {/* Wordmark — letter by letter */}

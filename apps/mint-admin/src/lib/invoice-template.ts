@@ -133,7 +133,7 @@ export function printableInvoice(inv: InvoiceForTemplate): string {
   <div class="header">
     <div>
       <div class="brand-logo">${logoSvg}<span class="brand-name">AlgoLend</span></div>
-      <div class="brand-sub">A product of Mint Platforms (Pty) Ltd</div>
+      <div class="brand-sub">A product of MINT Platforms (Pty) Ltd</div>
     </div>
     <div>
       <div class="inv-title">Tax Invoice</div>
@@ -144,7 +144,7 @@ export function printableInvoice(inv: InvoiceForTemplate): string {
   <div class="parties">
     <div>
       <div class="party-label">From</div>
-      <div class="party-name">Mint Platforms (Pty) Ltd</div>
+      <div class="party-name">MINT Platforms (Pty) Ltd</div>
       <div class="party-detail">
         3 Gwen Lane, Sandown<br>
         Sandton, 2031, South Africa

@@ -1,6 +1,6 @@
 export const AGREEMENT_TEXT = `SERVICE AGREEMENT
 
-This Service Agreement ("Agreement") is entered into between Mint Platforms (Pty) Ltd, Registration No. 2024/123456/07, ("Service Provider") and the Client identified in this application ("Client").
+This Service Agreement ("Agreement") is entered into between MINT Platforms (Pty) Ltd, Registration No. 2024/123456/07, ("Service Provider") and the Client identified in this application ("Client").
 
 1. SERVICES
 The Service Provider agrees to provide the AlgoLend lending management platform ("Platform") to the Client, including loan origination, borrower management, bureau integrations, and related services as specified in the selected service tier.

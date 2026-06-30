@@ -174,7 +174,7 @@ export function SignAgreementForm({ token, clientName, alreadySigned, signedBy, 
             </button>
 
             <p style={{ fontSize: 11, color: '#3f3f46', textAlign: 'center', marginTop: 16 }}>
-              Secured by Mint Platforms · accounts@algolend.co.za
+              Secured by MINT Platforms · accounts@algolend.co.za
             </p>
           </>
         )}

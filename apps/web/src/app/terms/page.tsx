@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Terms of Service — AlgoLend',
-  description: 'Terms of service for AlgoLend and Mint Platforms (Pty) Ltd.',
+  description: 'Terms of service for AlgoLend and MINT Platforms (Pty) Ltd.',
   alternates: { canonical: 'https://algolend.co.za/terms' },
 };
 
@@ -26,20 +26,20 @@ export default function TermsPage() {
           Terms of Service
         </h1>
         <p className="text-[var(--color-ink-soft)] mb-12">
-          Mint Platforms (Pty) Ltd, operating as AlgoLend — last updated {LAST_UPDATED}
+          MINT Platforms (Pty) Ltd, operating as AlgoLend — last updated {LAST_UPDATED}
         </p>
 
         <div className="prose max-w-none" style={{ color: 'var(--color-ink-soft)', lineHeight: '1.75' }}>
 
           <Section title="1. Agreement">
             <p>
-              By accessing or using the AlgoLend platform or algolend.co.za, you agree to be bound by these Terms of Service and our Privacy Policy. These terms form the entire agreement between you and Mint Platforms (Pty) Ltd (&ldquo;Mint Platforms&rdquo;).
+              By accessing or using the AlgoLend platform or algolend.co.za, you agree to be bound by these Terms of Service and our Privacy Policy. These terms form the entire agreement between you and MINT Platforms (Pty) Ltd (&ldquo;MINT Platforms&rdquo;).
             </p>
           </Section>
 
           <Section title="2. The service">
             <p>
-              AlgoLend is a B2B white-label lending platform provided to corporate credit providers (&ldquo;Lenders&rdquo;). Mint Platforms grants Lenders a non-exclusive, non-transferable licence to use the platform subject to a separate commercial agreement.
+              AlgoLend is a B2B white-label lending platform provided to corporate credit providers (&ldquo;Lenders&rdquo;). MINT Platforms grants Lenders a non-exclusive, non-transferable licence to use the platform subject to a separate commercial agreement.
             </p>
             <p>
               The platform includes a credit management system, borrower portal, credit engine, integrations (Experian, TruID, e-contracts, SureSystems), and reporting tools. Features available depend on the Lender&apos;s selected tier and commercial agreement.
@@ -70,25 +70,25 @@ export default function TermsPage() {
 
           <Section title="5. Intellectual property">
             <p>
-              The AlgoLend platform, all software, designs, and documentation are the exclusive intellectual property of Mint Platforms. The Lender&apos;s custom branding, credit policy configuration, and borrower data remain the Lender&apos;s property.
+              The AlgoLend platform, all software, designs, and documentation are the exclusive intellectual property of MINT Platforms. The Lender&apos;s custom branding, credit policy configuration, and borrower data remain the Lender&apos;s property.
             </p>
           </Section>
 
           <Section title="6. Service availability">
             <p>
-              Mint Platforms targets 99% monthly uptime for the platform. Planned maintenance is communicated with at least 48 hours notice. We are not liable for downtime caused by third-party providers (Supabase, Vercel, Experian, TruID, SureSystems).
+              MINT Platforms targets 99% monthly uptime for the platform. Planned maintenance is communicated with at least 48 hours notice. We are not liable for downtime caused by third-party providers (Supabase, Vercel, Experian, TruID, SureSystems).
             </p>
           </Section>
 
           <Section title="7. Limitation of liability">
             <p>
-              To the maximum extent permitted by South African law, Mint Platforms is not liable for any indirect, incidental, or consequential damages arising from use of the platform. Our total liability in any 12-month period shall not exceed the fees paid by the Lender during that period.
+              To the maximum extent permitted by South African law, MINT Platforms is not liable for any indirect, incidental, or consequential damages arising from use of the platform. Our total liability in any 12-month period shall not exceed the fees paid by the Lender during that period.
             </p>
           </Section>
 
           <Section title="8. Termination">
             <p>
-              Either party may terminate the commercial agreement with 30 days written notice. Upon termination, the Lender&apos;s data will be made available for export for 30 days, after which it will be deleted from Mint Platforms&apos; systems.
+              Either party may terminate the commercial agreement with 30 days written notice. Upon termination, the Lender&apos;s data will be made available for export for 30 days, after which it will be deleted from MINT Platforms&apos; systems.
             </p>
           </Section>
 

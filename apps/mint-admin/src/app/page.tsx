@@ -263,7 +263,7 @@ export default function DashboardPage() {
               Overview
             </h1>
             <p className="text-sm" style={{ color: 'var(--color-text3)' }}>
-              Mint Platforms — AlgoLend admin console
+              MINT Platforms — AlgoLend admin console
             </p>
           </div>
           <div className="flex items-center gap-2 mt-1 shrink-0 px-3 py-1.5 rounded-lg" style={{ border: '1px solid var(--color-border2)', background: 'var(--color-surface2)' }}>

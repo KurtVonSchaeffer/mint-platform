@@ -93,7 +93,7 @@ export async function POST(
     <a href="mailto:accounts@algolend.co.za" style="color:#7C3AED">accounts@algolend.co.za</a>.
   </p>
   <p style="color:#3f3f46;font-size:12px;border-top:1px solid rgba(255,255,255,0.06);padding-top:20px;margin:0">
-    AlgoLend · Powered by Mint Platforms
+    AlgoLend · Powered by MINT Platforms
   </p>
 </div>
 </body></html>`,

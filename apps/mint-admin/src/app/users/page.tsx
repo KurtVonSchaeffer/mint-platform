@@ -221,7 +221,7 @@ export default function UsersPage() {
             <p className="eyebrow mb-2">Admin Console</p>
             <h1 className="headline text-3xl font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>Users</h1>
             <p className="text-sm mt-1.5" style={{ color: 'var(--color-text3)' }}>
-              Manage who has access to the Mint Platforms admin console.
+              Manage who has access to the MINT Platforms admin console.
             </p>
           </div>
           <button

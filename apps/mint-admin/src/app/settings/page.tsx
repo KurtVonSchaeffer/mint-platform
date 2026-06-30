@@ -241,7 +241,7 @@ export default function SettingsPage() {
             <AlertCircle size={14} className="mt-0.5 shrink-0" style={{ color: 'var(--color-amber)' }} />
             <p className="text-xs leading-relaxed" style={{ color: 'var(--color-amber)' }}>
               Env vars must be set per-deployment (Vercel project settings → Environment Variables).
-              Each client deployment uses its own credentials. Mint Platforms never stores client API
+              Each client deployment uses its own credentials. MINT Platforms never stores client API
               keys centrally.
             </p>
           </div>

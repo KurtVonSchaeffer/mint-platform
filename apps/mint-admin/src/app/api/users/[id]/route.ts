@@ -79,7 +79,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:32px;text-align:center">
     <p style="color:#fff;font-size:22px;font-weight:700;margin:0">Reset your password</p>
-    <p style="color:rgba(255,255,255,0.75);font-size:13px;margin:6px 0 0">AlgoLend · Mint Platforms</p>
+    <p style="color:rgba(255,255,255,0.75);font-size:13px;margin:6px 0 0">AlgoLend · MINT Platforms</p>
   </div>
   <div style="padding:32px">
     <p style="font-size:15px;margin:0 0 16px">Hi ${fullName},</p>
@@ -95,7 +95,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
     <p style="color:#888;font-size:13px;text-align:center">This link expires in 24 hours. If you didn't request this, you can safely ignore it.</p>
   </div>
   <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
-    AlgoLend · Mint Platforms (Pty) Ltd
+    AlgoLend · MINT Platforms (Pty) Ltd
   </div>
 </div>
 </body></html>`,

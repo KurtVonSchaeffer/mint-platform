@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy — AlgoLend',
-  description: 'Privacy policy for AlgoLend and Mint Platforms (Pty) Ltd.',
+  description: 'Privacy policy for AlgoLend and MINT Platforms (Pty) Ltd.',
   alternates: { canonical: 'https://algolend.co.za/privacy' },
 };
 
@@ -28,14 +28,14 @@ export default function PrivacyPage() {
           Privacy Policy
         </h1>
         <p className="text-[var(--color-ink-soft)] mb-12">
-          Mint Platforms (Pty) Ltd, operating as AlgoLend — last updated {LAST_UPDATED}
+          MINT Platforms (Pty) Ltd, operating as AlgoLend — last updated {LAST_UPDATED}
         </p>
 
         <div className="prose max-w-none" style={{ color: 'var(--color-ink-soft)', lineHeight: '1.75' }}>
 
           <Section title="1. Who we are">
             <p>
-              Mint Platforms (Pty) Ltd (&ldquo;Mint Platforms&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) is a South African company that develops and operates the AlgoLend white-label lending platform. Our registered address is South Africa.
+              MINT Platforms (Pty) Ltd (&ldquo;MINT Platforms&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) is a South African company that develops and operates the AlgoLend white-label lending platform. Our registered address is South Africa.
             </p>
             <p>
               This policy applies to our marketing website (algolend.co.za) and the AlgoLend platform operated on behalf of our clients (&ldquo;Lenders&rdquo;).
@@ -67,7 +67,7 @@ export default function PrivacyPage() {
               We are committed to compliance with the Protection of Personal Information Act (POPIA), Act 4 of 2013. We process personal information lawfully, with a legitimate purpose, and only to the minimum extent necessary.
             </p>
             <p>
-              Each Lender client operates their own dedicated Supabase database instance. Borrower data is tenant-isolated and encrypted at rest. Mint Platforms accesses Lender data only as necessary to provide platform support.
+              Each Lender client operates their own dedicated Supabase database instance. Borrower data is tenant-isolated and encrypted at rest. MINT Platforms accesses Lender data only as necessary to provide platform support.
             </p>
           </Section>
 

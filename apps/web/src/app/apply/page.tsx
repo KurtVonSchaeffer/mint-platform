@@ -336,7 +336,7 @@ export default function ApplyPage() {
             <p className="mt-1.5 text-sm" style={{ color: '#71717A' }}>
               {step === 'details'   && 'We need these details to set up your platform and verify your credit business.'}
               {step === 'directors' && 'Required for FICA compliance. Add all registered directors of your company.'}
-              {step === 'documents' && 'Files are encrypted and only accessible to Mint Platforms staff for verification.'}
+              {step === 'documents' && 'Files are encrypted and only accessible to MINT Platforms staff for verification.'}
               {step === 'sign'      && 'Read the full agreement below, then draw your signature to proceed.'}
               {step === 'review'    && 'Check everything looks correct before you submit.'}
             </p>

@@ -127,7 +127,7 @@ export default function MintInvoicePage() {
             <div style={{ background: 'linear-gradient(135deg, #4c1d95 0%, #7C3AED 100%)' }} className="inv-header px-10 py-8">
               <div className="flex items-start justify-between">
                 <div>
-                  <Image src="/mint-logo-white.png" alt="Mint Platforms" width={140} height={36} unoptimized
+                  <Image src="/mint-logo-white.png" alt="MINT Platforms" width={140} height={36} unoptimized
                     style={{ height: 36, width: 'auto', opacity: 0.95 }} />
                   <p className="text-indigo-300 text-xs mt-2">{FROM.company}</p>
                 </div>

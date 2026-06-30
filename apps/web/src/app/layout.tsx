@@ -19,8 +19,8 @@ export const metadata: Metadata = {
   description:
     'A fully branded, end-to-end credit management platform for South African corporate lenders. Credit engine, KYC, open banking, e-contracts, SACRRA reporting — configured to your credit policy.',
   keywords: ['lending platform', 'credit management', 'South Africa', 'NCA compliance', 'SACRRA', 'corporate lending', 'white-label fintech'],
-  authors: [{ name: 'Mint Platforms (Pty) Ltd' }],
-  creator: 'Mint Platforms (Pty) Ltd',
+  authors: [{ name: 'MINT Platforms (Pty) Ltd' }],
+  creator: 'MINT Platforms (Pty) Ltd',
   openGraph: {
     type:        'website',
     locale:      'en_ZA',
@@ -67,7 +67,7 @@ const jsonLd = {
     {
       '@type': 'Organization',
       '@id': 'https://algolend.co.za/#organization',
-      name: 'Mint Platforms (Pty) Ltd',
+      name: 'MINT Platforms (Pty) Ltd',
       url: 'https://algolend.co.za',
       logo: {
         '@type': 'ImageObject',

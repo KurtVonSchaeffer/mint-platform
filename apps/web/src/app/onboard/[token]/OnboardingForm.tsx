@@ -293,7 +293,7 @@ export function OnboardingForm({ token, leadId, prefill }: Props) {
               <div>
                 <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--color-ink)' }}>Upload documents</h2>
                 <p className="text-sm mb-4" style={{ color: 'var(--color-ink-soft)' }}>
-                  All 4 required documents must be uploaded before proceeding. Files are encrypted and accessible only to Mint Platforms staff.
+                  All 4 required documents must be uploaded before proceeding. Files are encrypted and accessible only to MINT Platforms staff.
                 </p>
               </div>
               {REQUIRED_DOCS.map((doc) => {

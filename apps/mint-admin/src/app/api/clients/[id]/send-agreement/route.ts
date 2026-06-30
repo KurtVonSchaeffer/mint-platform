@@ -69,7 +69,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
           If you did not expect this email, please contact us at accounts@algolend.co.za
         </p>
         <hr style="border:none;border-top:1px solid #E4E4E7;margin:24px 0">
-        <p style="color:#A1A1AA;font-size:12px">Mint Platforms (Pty) Ltd · accounts@algolend.co.za</p>
+        <p style="color:#A1A1AA;font-size:12px">MINT Platforms (Pty) Ltd · accounts@algolend.co.za</p>
       </div>
     `,
   });

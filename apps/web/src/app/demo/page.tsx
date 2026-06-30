@@ -333,7 +333,7 @@ function PortalSidebar({ active, onSelect }: { active: string; onSelect: (id: st
         <button className="flex items-center gap-2 w-full px-3 py-1.5 rounded-xl text-xs text-slate-400 hover:text-red-400 hover:bg-red-50 transition-colors">
           <LogOut size={12} /> Sign Out
         </button>
-        <p className="text-center mt-2 text-[9px] text-slate-300">Powered by <strong className="text-slate-400">Mint Platforms</strong></p>
+        <p className="text-center mt-2 text-[9px] text-slate-300">Powered by <strong className="text-slate-400">MINT Platforms</strong></p>
       </div>
     </aside>
   );

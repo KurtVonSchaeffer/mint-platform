@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
         </p>
         <hr style="border:none;border-top:1px solid #E4E4E7;margin:24px 0">
         <p style="color:#A1A1AA;font-size:12px">
-          AlgoLend · A product of Mint Platforms (Pty) Ltd · accounts@algolend.co.za
+          AlgoLend · A product of MINT Platforms (Pty) Ltd · accounts@algolend.co.za
         </p>
       </div>
       `,

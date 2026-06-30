@@ -655,7 +655,7 @@ export default function HomePage() {
                     your lending platform?
                   </h2>
                   <p className="text-lg text-white/60 max-w-md mb-8">
-                    Book a 30-minute discovery call with the Mint Platforms team. No commitment, just a conversation about your requirements.
+                    Book a 30-minute discovery call with the MINT Platforms team. No commitment, just a conversation about your requirements.
                   </p>
 
                   <div className="space-y-3 max-w-md">
@@ -698,7 +698,7 @@ export default function HomePage() {
                 <span className="text-3xl font-semibold tracking-[-0.02em]">AlgoLend</span>
               </div>
               <p className="text-sm text-white/55 max-w-xs leading-relaxed mb-6">
-                The bespoke credit management platform for South African corporate lenders. A product of <a href="https://mymint.co.za" className="text-white hover:underline">Mint Platforms (Pty) Ltd</a>.
+                The bespoke credit management platform for South African corporate lenders. A product of <a href="https://mymint.co.za" className="text-white hover:underline">MINT Platforms (Pty) Ltd</a>.
               </p>
 
               {/* Socials */}
@@ -795,7 +795,7 @@ export default function HomePage() {
                   rel="noopener"
                   className="mt-3 inline-flex items-center justify-center gap-2 w-full text-white/55 hover:text-white text-xs font-medium px-5 py-2 rounded-full border border-white/10 hover:border-white/20 transition-all"
                 >
-                  Visit Mint Platforms
+                  Visit MINT Platforms
                   <ArrowUpRight size={12} />
                 </a>
               </div>
@@ -805,7 +805,7 @@ export default function HomePage() {
           {/* Regulatory disclosure */}
           <div className="mt-16 pt-8 border-t border-white/10">
             <p className="text-xs text-white/40 leading-relaxed max-w-5xl">
-              Mint Platforms (Pty) Ltd is an authorised Financial Services Provider (FSP&nbsp;55118)
+              MINT Platforms (Pty) Ltd is an authorised Financial Services Provider (FSP&nbsp;55118)
               regulated by the Financial Sector Conduct Authority and a registered Credit Provider
               (NCRCP&nbsp;22892) under the National Credit Act. AlgoLend is a B2B software platform
               licensed to credit providers; AlgoLend does not itself extend credit. All
@@ -819,7 +819,7 @@ export default function HomePage() {
         {/* Bottom bar */}
         <div className="border-t border-white/10">
           <div className="max-w-[1200px] mx-auto px-6 py-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-xs text-white/40">
-            <span>© 2026 Mint Platforms (Pty) Ltd. All rights reserved.</span>
+            <span>© 2026 MINT Platforms (Pty) Ltd. All rights reserved.</span>
             <nav className="flex flex-wrap gap-x-6 gap-y-2">
               <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
               <Link href="/terms"   className="hover:text-white transition-colors">Terms of Service</Link>
