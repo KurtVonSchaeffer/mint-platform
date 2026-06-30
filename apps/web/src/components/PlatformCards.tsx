@@ -298,9 +298,7 @@ export function CreditLifeCard() {
         <p className="text-sm text-white/55 mb-2 leading-relaxed">
           Embedded cover protecting your loan book and your borrowers against death, disability, and retrenchment.
         </p>
-        <div className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-teal-400/15 text-teal-300 border border-teal-400/25 mb-4">
-          R4.50 per R1,000 insured
-        </div>
+
         <div className="mt-auto space-y-2">
           {[
             { label: 'Death',               detail: 'Outstanding balance settled' },
