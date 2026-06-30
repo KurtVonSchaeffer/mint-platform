@@ -45,14 +45,17 @@ export async function POST(
     return NextResponse.json({ error: storageErr.message }, { status: 500 });
   }
 
-  // Log into documents table using lead_id as reference (client_id will be set on approval)
-  await supabase.from('documents').insert({
+  const { error: dbErr } = await supabase.from('lead_documents').insert({
     lead_id:      lead.id,
     type:         docType,
     file_name:    file.name,
     storage_path: path,
     status:       'pending',
   });
+
+  if (dbErr) {
+    return NextResponse.json({ error: dbErr.message }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true, path });
 }

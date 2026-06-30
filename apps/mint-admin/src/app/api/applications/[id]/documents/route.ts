@@ -11,7 +11,7 @@ export async function GET(
   const { id } = await params;
 
   const { data: docs, error } = await supabaseAdmin
-    .from('documents')
+    .from('lead_documents')
     .select('id, type, file_name, storage_path, status, created_at')
     .eq('lead_id', id)
     .order('created_at', { ascending: true });
