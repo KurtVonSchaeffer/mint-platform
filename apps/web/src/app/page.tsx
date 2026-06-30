@@ -808,10 +808,10 @@ export default function HomePage() {
               MINT Platforms (Pty) Ltd is an authorised Financial Services Provider (FSP&nbsp;55118)
               regulated by the Financial Sector Conduct Authority and a registered Credit Provider
               (NCRCP&nbsp;22892) under the National Credit Act. AlgoLend is a B2B software platform
-              licensed to credit providers; AlgoLend does not itself extend credit. All
-              implementations are subject to the licensee&apos;s own NCR registration and credit
-              policies. Information presented here is for product overview purposes only and does
-              not constitute financial or legal advice.
+              fully owned by MINT Platforms, licensed to credit providers; AlgoLend does not itself
+              extend credit. All implementations are subject to the licensee&apos;s own NCR
+              registration and credit policies. Information presented here is for product overview
+              purposes only and does not constitute financial or legal advice.
             </p>
           </div>
         </div>
