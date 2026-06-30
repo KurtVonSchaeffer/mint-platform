@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { getClientSupabase } from '@/lib/client-db';
+import { pushLoanToLender } from '@/lib/lender-api';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
       id, status, offered_amount, offered_rate_pct, offered_term_months, monthly_installment,
       total_repayment, initiation_fee,
       quote_requests (
-        id, reference, consumer_email, consumer_name,
+        id, reference, consumer_email, consumer_name, consumer_id_number, consumer_mobile, purpose,
         requested_amount, requested_term, credit_profile
       )
     `)
@@ -92,63 +92,50 @@ export async function POST(req: NextRequest) {
 
   console.log(`[marketplace/offers] accepted requestId=${requestId} lenderId=${lenderId} user=${mintUserId ?? 'unknown'}`);
 
-  // Push a loan_application into the lender's own Supabase database (fire-and-forget).
-  // This is what makes the application appear in the lender's AlgoLend dashboard.
+  // Push the accepted offer into the lender's own system via their scoped
+  // integration API (not a direct Supabase connection — see lib/lender-api.ts).
+  // This is what makes the application appear in the lender's dashboard.
   const qr = Array.isArray(offerRow.quote_requests)
     ? offerRow.quote_requests[0]
     : offerRow.quote_requests;
 
   if (qr) {
-    const appRef = `MINT-${requestId.slice(0, 8).toUpperCase()}`;
-    getClientSupabase(lenderId).then(async (clientDb) => {
-      if (!clientDb) {
-        console.warn(`[marketplace/offers] no Supabase credentials for lender=${lenderId} — skipping loan_application insert`);
-        return;
+    if (!qr.consumer_id_number) {
+      console.warn(`[marketplace/offers] requestId=${requestId} has no consumer_id_number — lender push will likely be rejected`);
+    }
+
+    pushLoanToLender(lenderId, {
+      idNumber:   qr.consumer_id_number ?? '',
+      fullName:   qr.consumer_name ?? qr.consumer_email,
+      phone:      qr.consumer_mobile,
+      email:      qr.consumer_email,
+      amount:     offerRow.offered_amount,
+      termMonths: offerRow.offered_term_months,
+      purpose:    qr.purpose ?? 'Personal loan via MINT marketplace',
+      source:     'mint_marketplace',
+    }).then(async (result) => {
+      await supabaseAdmin
+        .from('quote_offers')
+        .update({
+          lender_push_status:    result.ok ? 'sent' : 'failed',
+          lender_push_error:     result.ok ? null : result.error,
+          lender_application_ref: result.applicationId ?? null,
+          lender_pushed_at:      new Date().toISOString(),
+        })
+        .eq('id', offerRow.id);
+
+      if (result.ok) {
+        console.log(`[marketplace/offers] pushed to lender=${lenderId} applicationId=${result.applicationId} mintRequestId=${requestId} mintUserId=${mintUserId ?? 'unknown'}`);
+      } else {
+        console.error(`[marketplace/offers] lender push FAILED lender=${lenderId} requestId=${requestId}:`, result.error);
       }
-
-      // Upsert a borrower profile so the application has a borrower_id
-      const borrowerId = crypto.randomUUID();
-      await clientDb.from('profiles').upsert({
-        id:        borrowerId,
-        full_name: qr.consumer_name ?? qr.consumer_email,
-        email:     qr.consumer_email,
-        role:      'borrower',
-        client_id: lenderId,
-      }, { onConflict: 'email', ignoreDuplicates: true });
-
-      // Resolve actual borrower id (may already exist on email conflict)
-      const { data: existingProfile } = await clientDb
-        .from('profiles')
-        .select('id')
-        .eq('email', qr.consumer_email)
-        .single();
-
-      const { error } = await clientDb.from('loan_applications').insert({
-        reference:     appRef,
-        client_id:     lenderId,
-        borrower_id:   existingProfile?.id ?? borrowerId,
-        product:       'unsecured_personal_loan',
-        amount:        offerRow.offered_amount,
-        term_months:   offerRow.offered_term_months,
-        interest_rate: offerRow.offered_rate_pct,
-        purpose:       'Personal loan via MINT marketplace',
-        status:        'submitted',
-        submitted_at:  new Date().toISOString(),
-        metadata: {
-          mint_request_id:     requestId,
-          mint_user_id:        mintUserId ?? null,
-          monthly_installment: offerRow.monthly_installment,
-          total_repayment:     offerRow.total_repayment,
-          initiation_fee:      offerRow.initiation_fee,
-          credit_score:        (qr.credit_profile as Record<string, unknown> | null)?.creditScore ?? null,
-          source:              'mint_marketplace',
-        },
-      });
-
-      if (error) console.warn(`[marketplace/offers] loan_application insert failed lender=${lenderId}:`, error.message);
-      else console.log(`[marketplace/offers] loan_application pushed to lender DB ref=${appRef} lender=${lenderId}`);
-    }).catch((err: unknown) => {
-      console.error('[marketplace/offers] getClientSupabase error:', (err as Error).message);
+    }).catch(async (err: unknown) => {
+      const message = (err as Error).message;
+      console.error('[marketplace/offers] pushLoanToLender threw:', message);
+      await supabaseAdmin
+        .from('quote_offers')
+        .update({ lender_push_status: 'failed', lender_push_error: message, lender_pushed_at: new Date().toISOString() })
+        .eq('id', offerRow.id);
     });
   }
 

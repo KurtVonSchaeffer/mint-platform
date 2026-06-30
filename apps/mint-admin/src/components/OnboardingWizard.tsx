@@ -93,6 +93,8 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
   const [mpOptIn, setMpOptIn]             = useState(false);
   const [mpLoanTypes, setMpLoanTypes]     = useState<string[]>([]);
   const [mpMaxAmount, setMpMaxAmount]     = useState('50000');
+  const [lenderApiBaseUrl, setLenderApiBaseUrl] = useState('');
+  const [lenderApiKey, setLenderApiKey]         = useState('');
   const [dbUrl, setDbUrl]                 = useState('');
   const [dbServiceKey, setDbServiceKey]   = useState('');
   const [vercelProjectId, setVercelProjectId] = useState('');
@@ -126,6 +128,8 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
       support_email: supportEmail.trim() || undefined, features,
       marketplace_opt_in: mpOptIn,
       marketplace_config: mpOptIn ? { loan_types: mpLoanTypes, max_amount_cents: parseInt(mpMaxAmount || '0', 10) * 100 } : undefined,
+      lender_api_base_url: lenderApiBaseUrl.trim() || undefined,
+      lender_api_key: lenderApiKey.trim() || undefined,
       supabase_url: dbUrl.trim() || undefined,
       supabase_service_key: dbServiceKey.trim() || undefined,
       vercel_project_id: vercelProjectId.trim() || undefined,
@@ -356,16 +360,27 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                   />
                 </F>
 
-                <Divider label="Database credentials" note="optional — required for marketplace" />
+                <Divider label="Lender integration API" note="required for marketplace — ask the client's dev team to expose a scoped loan-intake endpoint" />
 
-                <F label="Supabase URL">
+                <F label="Lender API base URL" hint="e.g. https://clientapp.vercel.app — must expose POST /api/integrations/loans">
+                  <input className="field-input font-mono" value={lenderApiBaseUrl} onChange={(e) => setLenderApiBaseUrl(e.target.value)} placeholder="https://clientapp.vercel.app" />
+                </F>
+                <F label="Lender API key" hint="Scoped key the client issues for this integration — NOT their Supabase key. Stored server-side only.">
+                  <input type="password" className="field-input font-mono" value={lenderApiKey} onChange={(e) => setLenderApiKey(e.target.value)} placeholder="the client's INTEGRATION_API_KEY" />
+                </F>
+                <F label="Vercel project ID" hint="prj_xxx — used for API usage tracking">
+                  <input className="field-input font-mono" value={vercelProjectId} onChange={(e) => setVercelProjectId(e.target.value)} placeholder="prj_xxxxxxxxxxxxxxxxxxxx" />
+                </F>
+
+                <Divider
+                  label="Legacy direct database access"
+                  note="deprecated — only fill these in if the client hasn't built a Lender API endpoint yet. Grants MINT full read/write access to their database; avoid for new clients."
+                />
+                <F label="Supabase URL (legacy)">
                   <input className="field-input font-mono" value={dbUrl} onChange={(e) => setDbUrl(e.target.value)} placeholder="https://xxxxxxxxxxxx.supabase.co" />
                 </F>
-                <F label="Service role key" hint="Stored server-side only — never exposed to the client">
+                <F label="Service role key (legacy)" hint="Full database access — prefer the Lender API key above instead">
                   <input type="password" className="field-input font-mono" value={dbServiceKey} onChange={(e) => setDbServiceKey(e.target.value)} placeholder="eyJhbGci…" />
-                </F>
-                <F label="Vercel project ID" hint="prj_xxx — used for API usage tracking and env var sync">
-                  <input className="field-input font-mono" value={vercelProjectId} onChange={(e) => setVercelProjectId(e.target.value)} placeholder="prj_xxxxxxxxxxxxxxxxxxxx" />
                 </F>
               </div>
             )}
@@ -657,7 +672,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
                     ...(ncrNumber ? [{ label: 'NCR number', value: ncrNumber, mono: true }] : []),
                     { label: 'Tier',         value: `${tier === 'core' ? 'Starter' : 'Enterprise'} · ${fmt(monthlyFeeCents)}/mo` },
                     { label: 'Marketplace',  value: mpOptIn ? `Opted in · ${mpLoanTypes.length > 0 ? mpLoanTypes.join(', ') : 'all loan types'} · max R${parseInt(mpMaxAmount || '0', 10).toLocaleString()}` : 'Not participating' },
-                    { label: 'Database',     value: dbUrl ? `${dbUrl.replace(/^https?:\/\//, '')} · key set` : 'Not configured', mono: !!dbUrl },
+                    { label: 'Lender API',   value: lenderApiBaseUrl ? `${lenderApiBaseUrl.replace(/^https?:\/\//, '')} · key set` : (dbUrl ? 'Legacy direct DB access only' : 'Not configured'), mono: !!lenderApiBaseUrl },
                   ].map(({ label, value, mono }, i, arr) => (
                     <div key={label} className="flex items-start gap-3 px-4 py-3"
                       style={i < arr.length - 1 ? { borderBottom: '1px solid rgba(255,255,255,0.05)' } : undefined}>

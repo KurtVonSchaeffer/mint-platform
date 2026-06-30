@@ -23,6 +23,8 @@ export interface CreateClientInput {
   features: Record<string, boolean>;
   marketplace_opt_in?: boolean;
   marketplace_config?: { loan_types: string[]; max_amount_cents: number } | null;
+  lender_api_base_url?: string;
+  lender_api_key?: string;
   supabase_url?: string;
   supabase_service_key?: string;
   vercel_project_id?: string;
@@ -85,6 +87,8 @@ export async function POST(req: NextRequest) {
       primary_color,
       secondary_color,
       support_email:        support_email ?? null,
+      lender_api_base_url:  body.lender_api_base_url ?? null,
+      lender_api_key:       body.lender_api_key ?? null,
       supabase_url:         body.supabase_url ?? null,
       supabase_service_key: body.supabase_service_key ?? null,
       vercel_project_id:    body.vercel_project_id ?? null,
