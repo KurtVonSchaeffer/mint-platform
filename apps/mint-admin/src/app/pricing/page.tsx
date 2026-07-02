@@ -200,15 +200,10 @@ export default function PricingPage() {
 
   function createQuote() {
     const checks = [...effectiveSelectedIds].map(id => ID_MAP[id]).filter(Boolean);
-    const tier = estVolume <= 50 ? '0-50'
-      : estVolume <= 150 ? '50-150'
-      : estVolume <= 300 ? '151-300'
-      : estVolume <= 1000 ? '500-1000'
-      : '1000-5000';
     sessionStorage.setItem('new_quote_prefill', JSON.stringify({
       monthlyFee: Math.round(flatFee / 100),
       selectedChecks: checks,
-      volumeTier: tier,
+      quota: estVolume,
       branches,
     }));
     window.location.href = '/quotes?new=1';

@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       setup_fee:       body.setupFee   ?? 0,
       monthly_fee:     body.monthlyFee ?? 0,
       selected_checks: body.selectedChecks ?? [],
-      volume_tier:     body.volumeTier ?? '0-50',
+      volume_tier:     String(body.quota ?? 50),
       branches:        body.branches   ?? 1,
       custom_items:    body.customItems ?? [],
       status:          body.status     ?? 'draft',

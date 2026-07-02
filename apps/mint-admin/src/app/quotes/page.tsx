@@ -6,8 +6,8 @@ import { Toast, type ToastKind } from '@/components/Toast';
 import { QuoteEditPanel, type QuoteEditState, type CustomItem } from '@/components/QuoteEditPanel';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
 import {
-  CHECK_CATALOG, VOLUME_TIERS, BRANCH_RATE, computeMonthlyFee, fmtR, fmtRc,
-  type CheckId, type VolumeTierId,
+  CHECK_CATALOG, BRANCH_RATE, computeMonthlyFee, parseQuota, nearestTierLabel, fmtR, fmtRc,
+  type CheckId,
 } from '@/lib/quote-pricing';
 import {
   FileText, Send, Download, Plus, CheckCircle, Clock, XCircle, X, Eye, Sparkles,
@@ -27,7 +27,7 @@ interface Quote {
   setupFee:       number;
   monthlyFee:     number;
   selectedChecks: CheckId[];
-  volumeTier:     VolumeTierId;
+  quota:          number;
   branches:       number;
   customItems:    CustomItem[];
   status:         QuoteStatus;
@@ -49,7 +49,7 @@ function fromRow(row: any): Quote {
     setupFee:       Number(row.setup_fee),
     monthlyFee:     Number(row.monthly_fee),
     selectedChecks: (row.selected_checks ?? []) as CheckId[],
-    volumeTier:     (row.volume_tier ?? '0-50') as VolumeTierId,
+    quota:          parseQuota(row.volume_tier),
     branches:       row.branches ?? 1,
     customItems:    (row.custom_items ?? []) as CustomItem[],
     status:         row.status as QuoteStatus,
@@ -106,9 +106,9 @@ export default function QuotesPage() {
             client:         prefill?.client,
             contact:        prefill?.contact,
             email:          prefill?.email,
-            monthlyFee:     prefill?.monthlyFee     ?? computeMonthlyFee(['bureau', 'banking'], '0-50', 1),
+            monthlyFee:     prefill?.monthlyFee     ?? computeMonthlyFee(['bureau', 'banking'], prefill?.quota ?? 50, 1),
             selectedChecks: prefill?.selectedChecks ?? ['bureau', 'banking'],
-            volumeTier:     prefill?.volumeTier     ?? '0-50',
+            quota:          prefill?.quota          ?? 50,
             branches:       prefill?.branches       ?? 1,
           }, mapped);
         }
@@ -119,15 +119,15 @@ export default function QuotesPage() {
   }, []);
 
   async function createQuote(prefill?: Partial<Quote> & { client?: string; contact?: string; email?: string }, existingQuotes?: Quote[]) {
-    const tier: VolumeTierId = (prefill?.volumeTier as VolumeTierId) ?? '0-50';
+    const quota = prefill?.quota ?? 50;
     const payload = {
       client:         prefill?.client   ?? 'New Prospect (Pty) Ltd',
       contact:        prefill?.contact  ?? 'Contact name',
       email:          prefill?.email    ?? 'contact@example.co.za',
       setupFee:       100000,
-      monthlyFee:     prefill?.monthlyFee ?? computeMonthlyFee(['bureau', 'banking'], tier, 1),
+      monthlyFee:     prefill?.monthlyFee ?? computeMonthlyFee(['bureau', 'banking'], quota, 1),
       selectedChecks: prefill?.selectedChecks ?? ['bureau', 'banking'],
-      volumeTier:     tier,
+      quota,
       branches:       prefill?.branches ?? 1,
       customItems:    [],
       status:         'draft',
@@ -143,7 +143,7 @@ export default function QuotesPage() {
       setEditState({
         client: draft.client, contact: draft.contact, email: draft.email,
         setupFee: String(draft.setupFee), monthlyFee: String(draft.monthlyFee),
-        selectedChecks: draft.selectedChecks, volumeTier: draft.volumeTier,
+        selectedChecks: draft.selectedChecks, quota: String(draft.quota),
         branches: String(draft.branches), customItems: [],
       });
       pushToast('success', `Draft ${draft.id} created.`);
@@ -158,7 +158,7 @@ export default function QuotesPage() {
     setEditState({
       client: q.client, contact: q.contact, email: q.email,
       setupFee: String(q.setupFee), monthlyFee: String(q.monthlyFee),
-      selectedChecks: q.selectedChecks, volumeTier: q.volumeTier,
+      selectedChecks: q.selectedChecks, quota: String(q.quota),
       branches: String(q.branches), customItems: q.customItems,
     });
   }
@@ -177,7 +177,7 @@ export default function QuotesPage() {
       email:          editState.email.trim()    || q.email,
       setupFee, monthlyFee: monthly,
       selectedChecks: editState.selectedChecks,
-      volumeTier:     editState.volumeTier,
+      quota:          Math.max(0, parseInt(editState.quota, 10) || 0),
       branches,
       customItems:    editState.customItems,
     };
@@ -220,7 +220,7 @@ export default function QuotesPage() {
     const until   = todayPlus(30);
     const updated = await patchStatus(q, { status: 'sent', sentDate: todayPlus(0), validUntil: until });
     if (!updated) return;
-    const html = `<p>Dear ${q.contact},</p><p>Please find your AlgoLend pricing proposal <strong>${q.id}</strong> below.</p><p><strong>Monthly fee:</strong> ${fmtR(q.monthlyFee)}/mo<br><strong>Implementation:</strong> ${fmtR(q.setupFee)}<br><strong>Valid until:</strong> ${until}</p><p>Reply to this email with any questions.</p><p>— MINT Platforms (Pty) Ltd</p>`;
+    const html = `<p>Dear ${q.contact},</p><p>Please find your AlgoLend pricing proposal <strong>${q.id}</strong> below.</p><p><strong>Once-off implementation fee (paid before go-live):</strong> ${fmtR(q.setupFee)}<br><strong>Monthly platform licence (recurring, billed monthly — not upfront):</strong> ${fmtR(q.monthlyFee)}/mo, includes ${q.quota.toLocaleString()} API checks/month<br><strong>Usage beyond the included quota</strong> is billed pay-as-you-go at our published per-check rates.<br><strong>Valid until:</strong> ${until}</p><p>Reply to this email with any questions.</p><p>— MINT Platforms (Pty) Ltd</p>`;
     fetch('/api/email', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ to: q.email, subject: `AlgoLend proposal ${q.id} — ${q.client}`, html }),
@@ -329,13 +329,12 @@ export default function QuotesPage() {
                 {filtered.map((q, i) => {
                   const s = statusStyle[q.status];
                   const StatusIcon = s.icon;
-                  const tier = VOLUME_TIERS.find((t) => t.id === q.volumeTier);
                   return (
                     <tr key={q.dbId} className="cursor-pointer" onClick={() => setSelected(q)} style={{ animation: 'fade-up 0.4s cubic-bezier(0.16,1,0.3,1) both', animationDelay: `${i * 40}ms` }}>
                       <td><p className="font-mono text-xs" style={{ color: 'var(--color-violet)' }}>{q.id}</p>{q.sentDate ? <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text3)' }}>Sent {q.sentDate}</p> : null}</td>
                       <td><p className="font-semibold" style={{ color: 'var(--color-text)' }}>{q.client}</p><p className="text-xs mt-0.5" style={{ color: 'var(--color-text3)' }}>{q.contact}</p></td>
                       <td><span className="font-semibold" style={{ color: 'var(--color-text)' }}>{fmtR(q.monthlyFee)}</span><span className="text-xs" style={{ color: 'var(--color-text3)' }}>/mo</span></td>
-                      <td><span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}>{tier?.label ?? q.volumeTier}</span></td>
+                      <td><span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}>{q.quota.toLocaleString()} calls</span></td>
                       <td><span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: s.bg, border: `1px solid ${s.border}`, color: s.color }}><StatusIcon size={11} />{q.status}</span></td>
                       <td className="text-xs" style={{ color: 'var(--color-text3)' }}>{q.validUntil ?? '—'}</td>
                       <td>
@@ -392,18 +391,25 @@ export default function QuotesPage() {
             ) : (
               <div className="p-7 space-y-5">
                 <div>
-                  <p className="eyebrow mb-3">Line items</p>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-baseline"><span className="text-sm" style={{ color: 'var(--color-text2)' }}>One-off implementation</span><span className="font-bold" style={{ color: 'var(--color-text)' }}>{fmtR(selected.setupFee)}</span></div>
-                    <div className="flex justify-between items-baseline"><span className="text-sm" style={{ color: 'var(--color-text2)' }}>Monthly fee ({VOLUME_TIERS.find((t) => t.id === selected.volumeTier)?.label})</span><span className="font-bold" style={{ color: 'var(--color-text)' }}>{fmtR(selected.monthlyFee)}<span className="text-xs font-normal" style={{ color: 'var(--color-text3)' }}>/mo</span></span></div>
-                    {selected.customItems.map((ci, i) => (
-                      <div key={i} className="flex justify-between items-baseline"><span className="text-sm" style={{ color: 'var(--color-text2)' }}>{ci.label || 'Custom item'}</span><span className="font-bold" style={{ color: 'var(--color-text)' }}>{fmtR(ci.amount)}{ci.recurring ? <span className="text-xs font-normal" style={{ color: 'var(--color-text3)' }}>/mo</span> : null}</span></div>
+                  <p className="eyebrow mb-1">One-off, paid before go-live</p>
+                  <div className="space-y-2 mb-4">
+                    <div className="flex justify-between items-baseline"><span className="text-sm" style={{ color: 'var(--color-text2)' }}>Implementation / activation fee</span><span className="font-bold" style={{ color: 'var(--color-text)' }}>{fmtR(selected.setupFee)}</span></div>
+                    {selected.customItems.filter((ci) => !ci.recurring).map((ci, i) => (
+                      <div key={i} className="flex justify-between items-baseline"><span className="text-sm" style={{ color: 'var(--color-text2)' }}>{ci.label || 'Custom item'}</span><span className="font-bold" style={{ color: 'var(--color-text)' }}>{fmtR(ci.amount)}</span></div>
                     ))}
                   </div>
+                  <p className="eyebrow mb-1">Recurring — billed monthly, not upfront</p>
+                  <div className="space-y-1 mb-1">
+                    <div className="flex justify-between items-baseline"><span className="text-sm" style={{ color: 'var(--color-text2)' }}>Platform licence</span><span className="font-bold" style={{ color: 'var(--color-text)' }}>{fmtR(selected.monthlyFee)}<span className="text-xs font-normal" style={{ color: 'var(--color-text3)' }}>/mo</span></span></div>
+                    {selected.customItems.filter((ci) => ci.recurring).map((ci, i) => (
+                      <div key={i} className="flex justify-between items-baseline"><span className="text-sm" style={{ color: 'var(--color-text2)' }}>{ci.label || 'Custom item'}</span><span className="font-bold" style={{ color: 'var(--color-text)' }}>{fmtR(ci.amount)}<span className="text-xs font-normal" style={{ color: 'var(--color-text3)' }}>/mo</span></span></div>
+                    ))}
+                  </div>
+                  <p style={{ fontSize: 10, color: 'var(--color-text3)' }}>Includes {selected.quota.toLocaleString()} API checks/month. Usage beyond this is billed pay-as-you-go at the per-check rates below — never charged upfront.</p>
                 </div>
                 {selected.selectedChecks.length > 0 ? (
                   <div>
-                    <p className="eyebrow mb-2">API checks included</p>
+                    <p className="eyebrow mb-2">Pay-as-you-go rates (beyond included quota)</p>
                     <div className="space-y-1">
                       {selected.selectedChecks.map((id) => {
                         const c = CHECK_CATALOG.find((x) => x.id === id);
@@ -428,9 +434,9 @@ export default function QuotesPage() {
                   </div>
                 ) : null}
                 <div className="tcv-card rounded-2xl p-5" style={{ border: '1px solid rgba(124,58,237,0.3)', boxShadow: '0 0 30px rgba(124,58,237,0.1)' }}>
-                  <p className="tcv-label text-[10px] font-bold uppercase tracking-wider mb-1">Year-one total contract value</p>
+                  <p className="tcv-label text-[10px] font-bold uppercase tracking-wider mb-1">Projected year-one value (not an invoice)</p>
                   <p className="text-3xl font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>{fmtR(selected.setupFee + selected.monthlyFee * 12)}</p>
-                  <p className="tcv-sub text-[11px] mt-1">{fmtR(selected.setupFee)} setup + {fmtR(selected.monthlyFee * 12)} licence (12 mo)</p>
+                  <p className="tcv-sub text-[11px] mt-1">{fmtR(selected.setupFee)} once-off setup + {fmtR(selected.monthlyFee)}/mo × 12 months. Nothing here is due upfront — setup is billed once, licence is billed monthly, and usage above the included quota is billed separately as incurred.</p>
                 </div>
                 {(['sent','viewed'] as QuoteStatus[]).includes(selected.status) ? (
                   <div className="rounded-xl p-4" style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.2)' }}>
@@ -474,7 +480,6 @@ export default function QuotesPage() {
 }
 
 function printableQuote(q: Quote, isSuperAdmin: boolean): string {
-  const tier     = VOLUME_TIERS.find((t) => t.id === q.volumeTier);
   const checksHtml = q.selectedChecks.map((id) => {
     const c = CHECK_CATALOG.find((x) => x.id === id);
     if (!c) return '';
@@ -502,14 +507,19 @@ function printableQuote(q: Quote, isSuperAdmin: boolean): string {
 <div class="meta"><strong>${q.id}</strong>${q.sentDate ? `<br>Issued: ${q.sentDate}` : ''}${q.validUntil ? `<br>Valid until: ${q.validUntil}` : ''}</div></div>
 <div style="font-size:22px;font-weight:700;margin-bottom:4px">Pricing proposal</div>
 <div style="color:#64748b">${q.client} · ${q.contact} · ${q.email}</div>
-<h2>Pricing</h2>
+<h2>Once-off — paid before go-live</h2>
 <table>
-  <tr><td>One-off implementation</td><td class="amt">${fmtR(q.setupFee)}</td></tr>
-  <tr><td>Monthly fee — ${tier?.label ?? q.volumeTier} tier (${tier?.volume ?? ''} checks/mo × 0.95 discount)</td><td class="amt">${fmtR(q.monthlyFee)}/mo</td></tr>
-  ${q.customItems.map((ci) => `<tr><td>${ci.label}</td><td class="amt">${fmtR(ci.amount)}${ci.recurring ? '/mo' : ''}</td></tr>`).join('')}
+  <tr><td>Implementation / activation fee</td><td class="amt">${fmtR(q.setupFee)}</td></tr>
+  ${q.customItems.filter((ci) => !ci.recurring).map((ci) => `<tr><td>${ci.label}</td><td class="amt">${fmtR(ci.amount)}</td></tr>`).join('')}
 </table>
-${checksHtml ? `<h2>API checks included</h2><table>${checksHtml}</table>` : ''}
-<div class="total"><div class="label">Year-one total contract value</div><div class="v">${fmtR(tcv)}</div><div class="sub">${fmtR(q.setupFee)} setup + ${fmtR(q.monthlyFee * 12)} licence (12 months)</div></div>
+<h2>Recurring — billed monthly, not upfront</h2>
+<table>
+  <tr><td>Platform licence — ${nearestTierLabel(q.quota)} tier (includes ${q.quota.toLocaleString()} API checks/mo)</td><td class="amt">${fmtR(q.monthlyFee)}/mo</td></tr>
+  ${q.customItems.filter((ci) => ci.recurring).map((ci) => `<tr><td>${ci.label}</td><td class="amt">${fmtR(ci.amount)}/mo</td></tr>`).join('')}
+</table>
+<p style="font-size:11px;color:#64748b;margin-top:10px">The monthly licence fee already covers ${q.quota.toLocaleString()} API checks. Any usage beyond that quota is billed pay-as-you-go at the per-check rates below — it is never charged upfront.</p>
+${checksHtml ? `<h2>Pay-as-you-go rates (beyond included quota)</h2><table>${checksHtml}</table>` : ''}
+<div class="total"><div class="label">Projected year-one value (not an invoice)</div><div class="v">${fmtR(tcv)}</div><div class="sub">${fmtR(q.setupFee)} once-off setup + ${fmtR(q.monthlyFee)}/mo &times; 12 months. Setup is billed once; the licence recurs monthly; nothing here is due as a single upfront payment.</div></div>
 <p class="foot">Pass-through costs for CIPC, SACRRA, and other bureau data are included in the per-check rates above. This proposal is valid for 30 days from the issue date.</p>
 </body></html>`;
 }

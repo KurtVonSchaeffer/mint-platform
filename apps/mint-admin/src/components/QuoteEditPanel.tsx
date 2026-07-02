@@ -4,9 +4,10 @@ import { useRef, useEffect } from 'react';
 import { Plus, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
 import { PriceReveal } from '@/components/PriceReveal';
 import {
-  CHECK_CATALOG, VOLUME_TIERS, BRANCH_RATE, ADMIN_FEE,
+  CHECK_CATALOG, PUBLISHED_PACKAGES, BRANCH_RATE, ADMIN_FEE,
+  nearestTierLabel,
   fmtR, fmtRc,
-  type CheckId, type VolumeTierId,
+  type CheckId,
 } from '@/lib/quote-pricing';
 
 export interface CustomItem { label: string; amount: number; recurring: boolean }
@@ -18,7 +19,7 @@ export interface QuoteEditState {
   setupFee:       string;
   monthlyFee:     string;
   selectedChecks: CheckId[];
-  volumeTier:     VolumeTierId;
+  quota:          string;
   branches:       string;
   customItems:    CustomItem[];
 }
@@ -72,9 +73,9 @@ const EYEBROW: React.CSSProperties = {
 export function QuoteEditPanel({ state, onChange, isSuperAdmin = false, email = '' }: Props) {
   const branches     = Math.max(1, parseInt(state.branches, 10) || 1);
   const flatFee      = Math.max(0, parseFloat(state.monthlyFee) || 0);
-  const tier         = VOLUME_TIERS.find((t) => t.id === state.volumeTier) ?? VOLUME_TIERS[0];
-  const tierIndex    = VOLUME_TIERS.findIndex((t) => t.id === state.volumeTier);
-  const adjVolume    = tier.volume * 0.95;
+  const quota        = Math.max(0, parseInt(state.quota, 10) || 0);
+  const tierLabel    = nearestTierLabel(quota);
+  const adjVolume    = quota * 0.95;
   const customMo     = state.customItems.filter((c) => c.recurring).reduce((s, c) => s + c.amount, 0);
   const customOnce   = state.customItems.filter((c) => !c.recurring).reduce((s, c) => s + c.amount, 0);
   const setupFee     = parseInt(state.setupFee.replace(/\D/g, ''), 10) || 0;
@@ -201,9 +202,9 @@ export function QuoteEditPanel({ state, onChange, isSuperAdmin = false, email = 
 
           <div style={{ height: 1, background: 'var(--color-border2)' }} />
 
-          {/* Volume tier slider */}
+          {/* Included quota — editable exact number */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
               <label style={EYEBROW}>Included quota / API type / month</label>
               <span style={{
                 fontSize: 11, fontWeight: 700,
@@ -211,22 +212,39 @@ export function QuoteEditPanel({ state, onChange, isSuperAdmin = false, email = 
                 background: 'rgba(124,58,237,0.12)',
                 border: '1px solid rgba(124,58,237,0.3)',
                 borderRadius: 8, padding: '2px 9px',
-              }}>{tier.label} — {tier.volume.toLocaleString()} calls</span>
+              }}>~{tierLabel}</span>
             </div>
-            <input
-              type="range" min="0" max={VOLUME_TIERS.length - 1} step="1"
-              value={tierIndex}
-              onChange={(e) => onChange({ volumeTier: VOLUME_TIERS[parseInt(e.target.value, 10)].id })}
-              style={{ width: '100%', accentColor: '#7C3AED', cursor: 'pointer' }}
-            />
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
-              {VOLUME_TIERS.map((t, i) => (
-                <span key={t.id} style={{
-                  fontSize: 9, fontWeight: i === tierIndex ? 700 : 400,
-                  color: i === tierIndex ? 'var(--color-violet)' : 'var(--color-text3)',
-                  transition: 'color 0.2s',
-                }}>{t.label}</span>
-              ))}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <input
+                value={state.quota}
+                onChange={(e) => onChange({ quota: e.target.value.replace(/\D/g, '') })}
+                className="field-input font-mono"
+                style={{ width: 140 }}
+                placeholder="300"
+                inputMode="numeric"
+              />
+              <span style={{ fontSize: 11, color: 'var(--color-text3)' }}>calls / month</span>
+            </div>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              {PUBLISHED_PACKAGES.map((t) => {
+                const active = quota === t.volume;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => onChange({ quota: String(t.volume) })}
+                    style={{
+                      fontSize: 10, fontWeight: 700, padding: '4px 9px', borderRadius: 8,
+                      cursor: 'pointer', transition: 'all 0.15s ease',
+                      color: active ? '#fff' : 'var(--color-text3)',
+                      background: active ? 'var(--color-purple)' : 'rgba(255,255,255,0.04)',
+                      border: active ? '1px solid rgba(124,58,237,0.5)' : '1px solid var(--color-border2)',
+                    }}
+                  >
+                    {t.label} · {t.volume.toLocaleString()}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

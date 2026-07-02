@@ -38,6 +38,14 @@ export const dynamic = 'force-dynamic';
  *
  *   // Optional — used for lender eligibility gates
  *
+ *   // Optional — required by most lenders' loan-intake APIs (e.g. Zwane's
+ *   // POST /api/integrations/loans rejects applications without idNumber).
+ *   // Pull from your own KYC record, e.g. profiles.id_number or
+ *   // user_onboarding.sumsub_raw.identity_details.identity_number.
+ *   idNumber?: string,
+ *   phone?:    string,
+ *   purpose?:  string,
+ *
  *   // Optional — to persist quote for audit
  *   mintUserId?:     string,
  *   mintRequestRef?: string,    // MINT's own reference
@@ -119,7 +127,7 @@ export async function POST(req: NextRequest) {
     creditScore, monthlyIncome, existingMonthlyObligations,
     openDefaults = 0, enquiriesLast12Months = 0, idVerified = false,
     employmentStatus = 'unknown', requestedAmount, termMonths,
-    mintUserId, mintRequestRef,
+    mintUserId, mintRequestRef, idNumber, phone, purpose,
   } = body as Record<string, unknown>;
 
   if (!creditScore || !monthlyIncome || !requestedAmount || !termMonths) {
@@ -217,17 +225,20 @@ export async function POST(req: NextRequest) {
   // ── 6. Persist quote request for audit trail ──────────────────────────
   const requestId = crypto.randomUUID();
   supabaseAdmin.from('quote_requests').insert({
-    id:               requestId,
-    reference:        `MNT-${Date.now()}`,
-    consumer_email:   String(mintUserId ?? 'unknown@mymint.co.za'),
-    consumer_name:    String(mintUserId ?? 'MINT User'),
-    requested_amount: Number(requestedAmount),
-    requested_term:   Number(termMonths),
-    credit_profile:   profile,
-    credit_pulled_at: new Date().toISOString(),
-    status:           offers.length > 0 ? 'complete' : 'complete',
-    lenders_evaluated: policies.length,
-    offers_count:     offers.length,
+    id:                 requestId,
+    reference:          `MNT-${Date.now()}`,
+    consumer_email:     String(mintUserId ?? 'unknown@mymint.co.za'),
+    consumer_name:      String(mintUserId ?? 'MINT User'),
+    consumer_id_number: idNumber ? String(idNumber) : null,
+    consumer_mobile:    phone ? String(phone) : null,
+    purpose:            purpose ? String(purpose) : null,
+    requested_amount:   Number(requestedAmount),
+    requested_term:     Number(termMonths),
+    credit_profile:     profile,
+    credit_pulled_at:   new Date().toISOString(),
+    status:             offers.length > 0 ? 'complete' : 'complete',
+    lenders_evaluated:  policies.length,
+    offers_count:       offers.length,
   }).then(({ error }) => {
     if (error) console.warn('[marketplace/evaluate] audit persist failed', error.message);
   });

@@ -20,7 +20,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if ('setupFee'       in body) patch.setup_fee       = body.setupFee;
   if ('monthlyFee'     in body) patch.monthly_fee     = body.monthlyFee;
   if ('selectedChecks' in body) patch.selected_checks = body.selectedChecks;
-  if ('volumeTier'     in body) patch.volume_tier     = body.volumeTier;
+  if ('quota'          in body) patch.volume_tier     = String(body.quota);
   if ('branches'       in body) patch.branches        = body.branches;
   if ('customItems'    in body) patch.custom_items    = body.customItems;
   if ('status'         in body) patch.status          = body.status;

@@ -95,48 +95,52 @@ export async function POST(req: NextRequest) {
   // Push the accepted offer into the lender's own system via their scoped
   // integration API (not a direct Supabase connection — see lib/lender-api.ts).
   // This is what makes the application appear in the lender's dashboard.
+  //
+  // Awaited (not fire-and-forget): on Vercel, an un-awaited promise can be
+  // killed once the response is sent, leaving lender_push_status stuck at
+  // 'pending' forever with no error recorded. An accepted loan must reliably
+  // reach the lender, so we accept the extra latency here.
   const qr = Array.isArray(offerRow.quote_requests)
     ? offerRow.quote_requests[0]
     : offerRow.quote_requests;
+
+  let lenderPushResult: { ok: boolean; error?: string; applicationId?: string } | null = null;
 
   if (qr) {
     if (!qr.consumer_id_number) {
       console.warn(`[marketplace/offers] requestId=${requestId} has no consumer_id_number — lender push will likely be rejected`);
     }
 
-    pushLoanToLender(lenderId, {
-      idNumber:   qr.consumer_id_number ?? '',
-      fullName:   qr.consumer_name ?? qr.consumer_email,
-      phone:      qr.consumer_mobile,
-      email:      qr.consumer_email,
-      amount:     offerRow.offered_amount,
-      termMonths: offerRow.offered_term_months,
-      purpose:    qr.purpose ?? 'Personal loan via MINT marketplace',
-      source:     'mint_marketplace',
-    }).then(async (result) => {
-      await supabaseAdmin
-        .from('quote_offers')
-        .update({
-          lender_push_status:    result.ok ? 'sent' : 'failed',
-          lender_push_error:     result.ok ? null : result.error,
-          lender_application_ref: result.applicationId ?? null,
-          lender_pushed_at:      new Date().toISOString(),
-        })
-        .eq('id', offerRow.id);
+    try {
+      lenderPushResult = await pushLoanToLender(lenderId, {
+        idNumber:   qr.consumer_id_number ?? '',
+        fullName:   qr.consumer_name ?? qr.consumer_email,
+        phone:      qr.consumer_mobile,
+        email:      qr.consumer_email,
+        amount:     offerRow.offered_amount,
+        termMonths: offerRow.offered_term_months,
+        purpose:    qr.purpose ?? 'Personal loan via MINT marketplace',
+        source:     'mint_marketplace',
+      });
+    } catch (err: unknown) {
+      lenderPushResult = { ok: false, error: (err as Error).message };
+    }
 
-      if (result.ok) {
-        console.log(`[marketplace/offers] pushed to lender=${lenderId} applicationId=${result.applicationId} mintRequestId=${requestId} mintUserId=${mintUserId ?? 'unknown'}`);
-      } else {
-        console.error(`[marketplace/offers] lender push FAILED lender=${lenderId} requestId=${requestId}:`, result.error);
-      }
-    }).catch(async (err: unknown) => {
-      const message = (err as Error).message;
-      console.error('[marketplace/offers] pushLoanToLender threw:', message);
-      await supabaseAdmin
-        .from('quote_offers')
-        .update({ lender_push_status: 'failed', lender_push_error: message, lender_pushed_at: new Date().toISOString() })
-        .eq('id', offerRow.id);
-    });
+    await supabaseAdmin
+      .from('quote_offers')
+      .update({
+        lender_push_status:     lenderPushResult.ok ? 'sent' : 'failed',
+        lender_push_error:      lenderPushResult.ok ? null : lenderPushResult.error,
+        lender_application_ref: lenderPushResult.applicationId ?? null,
+        lender_pushed_at:       new Date().toISOString(),
+      })
+      .eq('id', offerRow.id);
+
+    if (lenderPushResult.ok) {
+      console.log(`[marketplace/offers] pushed to lender=${lenderId} applicationId=${lenderPushResult.applicationId} mintRequestId=${requestId} mintUserId=${mintUserId ?? 'unknown'}`);
+    } else {
+      console.error(`[marketplace/offers] lender push FAILED lender=${lenderId} requestId=${requestId}:`, lenderPushResult.error);
+    }
   }
 
   return NextResponse.json({
@@ -147,5 +151,8 @@ export async function POST(req: NextRequest) {
       offeredRatePct:     offerRow.offered_rate_pct,
       monthlyInstallment: offerRow.monthly_installment,
     },
+    lenderSync: lenderPushResult
+      ? { ok: lenderPushResult.ok, error: lenderPushResult.error ?? null }
+      : null,
   }, { status: 200, headers: CORS });
 }

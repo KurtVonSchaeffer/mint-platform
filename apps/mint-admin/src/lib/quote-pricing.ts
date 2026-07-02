@@ -3,7 +3,10 @@ export const PKG_DISCOUNT  = 0.05;
 export const ADMIN_FEE     = 1000;   // R/month
 export const BRANCH_RATE   = 250;    // R/branch/month
 
-export const VOLUME_TIERS = [
+// Legacy internal 5-step quoting scale. No longer marketed or shown to staff
+// as selectable presets — kept only so parseQuota() can read old quote rows
+// that still store one of these tier ids (e.g. '151-300').
+const LEGACY_VOLUME_TIERS = [
   { id: '0-50',      label: 'Starter',    volume: 50   },
   { id: '50-150',    label: 'Medium',     volume: 150  },
   { id: '151-300',   label: 'Scale',      volume: 300  },
@@ -11,7 +14,29 @@ export const VOLUME_TIERS = [
   { id: '1000-5000', label: 'Enterprise', volume: 5000 },
 ] as const;
 
-export type VolumeTierId = typeof VOLUME_TIERS[number]['id'];
+// The 2 packages actually marketed on the public pricing page (see
+// app/pricing/page.tsx TIERS). Used for quick-select presets and the
+// nearest-label badge in the quote builder.
+export const PUBLISHED_PACKAGES = [
+  { id: 'starter',    label: 'Starter',    volume: 0    },
+  { id: 'enterprise', label: 'Enterprise', volume: 2000 },
+] as const;
+
+export function parseQuota(raw: string | number | null | undefined): number {
+  if (raw === null || raw === undefined || raw === '') return PUBLISHED_PACKAGES[0].volume;
+  const legacyTier = LEGACY_VOLUME_TIERS.find((t) => t.id === raw);
+  if (legacyTier) return legacyTier.volume;
+  const n = Number(raw);
+  return Number.isFinite(n) && n >= 0 ? n : PUBLISHED_PACKAGES[0].volume;
+}
+
+export function nearestTierLabel(quota: number): string {
+  let best: typeof PUBLISHED_PACKAGES[number] = PUBLISHED_PACKAGES[0];
+  for (const t of PUBLISHED_PACKAGES) {
+    if (Math.abs(t.volume - quota) < Math.abs(best.volume - quota)) best = t;
+  }
+  return best.label;
+}
 
 // baseRate  = what we pay the provider (internal, super_admin only)
 // clientRate = published client-facing price per check (shown on quotes)
@@ -34,11 +59,10 @@ export function rateWithMargin(baseRate: number): number {
 
 export function computeMonthlyFee(
   selectedChecks: CheckId[],
-  volumeTierId:   VolumeTierId,
+  quota:          number,
   branches:       number,
 ): number {
-  const tier      = VOLUME_TIERS.find((t) => t.id === volumeTierId) ?? VOLUME_TIERS[0];
-  const adjVolume = tier.volume * (1 - PKG_DISCOUNT);
+  const adjVolume = quota * (1 - PKG_DISCOUNT);
   const checksCost = selectedChecks.reduce((sum, id) => {
     const check = CHECK_CATALOG.find((c) => c.id === id);
     // Use published client rate; skip free-tier calls
