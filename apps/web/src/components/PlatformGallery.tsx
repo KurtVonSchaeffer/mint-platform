@@ -18,7 +18,7 @@ const VIEWS = [
       'Credit applications pipeline with scoring',
       'Live portfolio health & NPA tracking',
       'SACRRA bureau reporting (auto-28th)',
-      'TruID, Experian & e-contract integrations',
+      'AI statement analysis, Experian & e-contract integrations',
     ],
     src: '/screenshots/lender-dashboard.jpg',
     alt: 'AlgoLend lender admin dashboard',

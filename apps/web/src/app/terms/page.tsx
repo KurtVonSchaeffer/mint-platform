@@ -42,7 +42,7 @@ export default function TermsPage() {
               AlgoLend is a B2B white-label lending platform provided to corporate credit providers (&ldquo;Lenders&rdquo;). MINT Platforms grants Lenders a non-exclusive, non-transferable licence to use the platform subject to a separate commercial agreement.
             </p>
             <p>
-              The platform includes a credit management system, borrower portal, credit engine, integrations (Experian, TruID, e-contracts, SureSystems), and reporting tools. Features available depend on the Lender&apos;s selected tier and commercial agreement.
+              The platform includes a credit management system, borrower portal, credit engine, integrations (Experian, AI bank statement analysis, e-contracts, SureSystems), and reporting tools. Features available depend on the Lender&apos;s selected tier and commercial agreement.
             </p>
           </Section>
 
@@ -76,7 +76,7 @@ export default function TermsPage() {
 
           <Section title="6. Service availability">
             <p>
-              MINT Platforms targets 99% monthly uptime for the platform. Planned maintenance is communicated with at least 48 hours notice. We are not liable for downtime caused by third-party providers (Supabase, Vercel, Experian, TruID, SureSystems).
+              MINT Platforms targets 99% monthly uptime for the platform. Planned maintenance is communicated with at least 48 hours notice. We are not liable for downtime caused by third-party providers (Supabase, Vercel, Experian, SureSystems).
             </p>
           </Section>
 

@@ -8,12 +8,13 @@ const STARTER_FEATURES = [
   'SACRRA bureau reporting (auto-28th)',
   'Credit scoring engine',
   'Borrower application portal',
-  'Term loans & working capital',
+  'Term loans',
+  'Working capital applications',
   'NCA-compliant quotations & audit trail',
   'Bureau enquiry (Experian)',
   'AML / Watchlist: PEPs & sanctions (included)',
   'Address verification',
-  'Open banking: TruID affordability check',
+  'AI bank statement analysis for affordability',
   'Built-in e-signing & digital contracts',
   'Full KYC: liveness, ID & phone verification',
   'Automated emails: onboarding stages & repayment reminders',
@@ -69,7 +70,7 @@ export function PricingSection() {
                   R 1,999
                 </p>
                 <p className="text-sm text-[var(--color-ink-muted)] mb-4">
-                  /month excl. VAT · up to 2 branches · implementation quoted separately
+                  /month excl. VAT · up to 2 branches
                 </p>
                 <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
                   style={{
@@ -137,7 +138,7 @@ export function PricingSection() {
                     R 14,999
                   </p>
                   <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                    /month excl. VAT · unlimited branches · implementation quoted separately
+                    /month excl. VAT · unlimited branches · custom implementation quoted separately
                   </p>
                   <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
                     style={{ background: 'rgba(167,139,250,0.1)', color: '#C4B5FD', border: '1px solid rgba(167,139,250,0.2)' }}>
@@ -190,7 +191,7 @@ export function PricingSection() {
               {
                 label: 'iii. Pass-through costs',
                 title: 'Transparent billing',
-                desc: 'Experian, TruID, SACRRA, and DHA charges are passed through at provider cost.',
+                desc: 'Experian, SACRRA, and DHA charges are passed through at provider cost.',
               },
             ].map(n => (
               <div key={n.label} className="bento-card p-5">

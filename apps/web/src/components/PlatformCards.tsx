@@ -166,9 +166,9 @@ export function OpenBankingCard() {
         <div className="w-9 h-9 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center mb-5 group-hover:bg-cyan-500/25 group-hover:scale-105 transition-all">
           <Landmark size={17} className="text-cyan-300" />
         </div>
-        <h3 className="text-xl font-semibold mb-2 tracking-tight text-white">Open banking, via TruID</h3>
+        <h3 className="text-xl font-semibold mb-2 tracking-tight text-white">AI-powered bank statement analysis</h3>
         <p className="text-sm text-white/55 mb-6 leading-relaxed">
-          Real-time bank statement retrieval and twelve months of cash-flow intelligence from 25+ SA banks.
+          AI reads uploaded bank statements and extracts twelve months of cash-flow intelligence from 25+ SA banks.
         </p>
         <div className="mt-auto bg-white/8 border border-white/15 rounded-xl p-3 backdrop-blur-sm">
           <div className="flex items-center justify-between mb-2">

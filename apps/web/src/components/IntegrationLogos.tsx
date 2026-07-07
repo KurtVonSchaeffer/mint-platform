@@ -6,7 +6,6 @@
  *   SACRRA       — sacrra.png      (RGBA transparent, vendor-supplied)
  *
  * Inline SVG (colour-safe, no file dependency):
- *   TruID    — lime-green [ ] bracket mark from vendor SVG
  *   DocuSeal — blue document + signature mark
  *
  * Inline SVG icon marks:
@@ -74,22 +73,6 @@ export function ExperianLogo({ size = 22, className }: LogoProps) {
       {/* Bottom-right small pink square */}
       <rect x="17" y="15" width="3" height="3" rx="0.6" fill="#C63B8E" />
     </svg>
-  );
-}
-
-/* ─── TruID ─────────────────────────────────────────────────────────── */
-/* Vendor SVG — white paths recoloured to #1a1a1a, lime brackets intact  */
-export function TruIDLogo({ size = 22, className }: LogoProps) {
-  return (
-    <Image
-      src="/logos/truid.svg"
-      alt="TruID"
-      width={size * 3.3}
-      height={size}
-      className={className}
-      style={{ height: size, width: 'auto' }}
-      unoptimized
-    />
   );
 }
 
@@ -184,7 +167,6 @@ export function SanlamLogo({ size = 22, className }: LogoProps) {
 
 /* ─── Lookup ──────────────────────────────────────────────────────── */
 export const LOGO_MAP: Record<string, React.ComponentType<LogoProps>> = {
-  TruID:           TruIDLogo,
   Experian:        ExperianLogo,
   SACRRA:          SacrraLogo,
   'E-Contracts':   DocuSealLogo,

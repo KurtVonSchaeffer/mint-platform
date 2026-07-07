@@ -38,7 +38,6 @@ const stats = [
 ];
 
 const integrations = [
-  { name: 'TruID',       sub: 'Open Banking' },
   { name: 'Experian',    sub: 'Credit Bureau' },
   { name: 'SACRRA',      sub: 'Bureau Reporting' },
   { name: 'E-Contracts', sub: 'Built-in e-signing' },

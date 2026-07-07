@@ -94,7 +94,7 @@ const jsonLd = {
       featureList: [
         'Credit Engine',
         'KYC & Identity Verification',
-        'Open Banking (TruID)',
+        'AI Bank Statement Analysis',
         'E-Contracts & Digital Signatures',
         'SACRRA Bureau Reporting',
         'NCA Compliance',

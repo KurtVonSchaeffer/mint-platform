@@ -37,7 +37,7 @@ const sections = [
     summary: 'From submission to disbursement. Every step of the credit lifecycle in one pipeline.',
     features: [
       'Application intake with document uploads',
-      'TruID open banking affordability check',
+      'AI bank statement analysis for affordability',
       'Experian credit bureau pull (one-click)',
       'Custom scorecard evaluation & approval workflow',
     ],
@@ -95,13 +95,13 @@ const sections = [
       'Company branding (logo, colors, domain)',
       'Product builder (terms, rates, limits)',
       'Role-based access control (admin, analyst, agent)',
-      'Integration credentials (Experian, TruID, e-contracts)',
+      'Integration credentials (Experian, e-contracts)',
     ],
   },
 ];
 
 const integrations = [
-  { name: 'TruID',        desc: 'Open banking: real-time affordability',  color: '#059669' },
+  { name: 'AI Statements', desc: 'AI-powered bank statement analysis',   color: '#059669' },
   { name: 'Experian',     desc: 'Credit bureau: full consumer report',    color: '#3b82f6' },
   { name: 'SACRRA',       desc: 'Bureau reporting: layout 700 auto-sub',  color: '#f59e0b' },
   { name: 'E-Contracts',  desc: 'E-signatures: NCA-compliant contracts',  color: '#8b5cf6' },

@@ -84,7 +84,7 @@ export default function PrivacyPage() {
               <li><strong>Vercel</strong> — application hosting and infrastructure</li>
               <li><strong>Resend</strong> — transactional email</li>
               <li><strong>Experian SA</strong> — credit bureau data (Lender deployments only)</li>
-              <li><strong>TruID</strong> — open banking and affordability (Lender deployments only)</li>
+              <li><strong>AI Bank Statement Analysis</strong> — automated affordability assessment from uploaded statements (Lender deployments only)</li>
               <li><strong>E-contract provider</strong> — e-contract signing (Lender deployments only)</li>
             </ul>
           </Section>

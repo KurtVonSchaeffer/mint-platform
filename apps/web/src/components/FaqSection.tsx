@@ -26,7 +26,7 @@ const FAQS = [
   },
   {
     q: 'What does the monthly fee cover?',
-    a: "Hosting and infrastructure, all security patches, regulatory updates (including SACRRA layout changes), new platform features, and priority support. Pass-through API costs (Experian, TruID, e-contracts) are billed at cost with no markup.",
+    a: "Hosting and infrastructure, all security patches, regulatory updates (including SACRRA layout changes), new platform features, and priority support. Pass-through API costs (Experian, e-contracts) are billed at cost with no markup.",
   },
   {
     q: 'Can we white-label it completely?',
