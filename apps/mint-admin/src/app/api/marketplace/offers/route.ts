@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     .from('quote_offers')
     .select(`
       id, status, offered_amount, offered_rate_pct, offered_term_months, monthly_installment,
-      total_repayment, initiation_fee,
+      total_repayment, initiation_fee, expires_at,
       quote_requests (
         id, reference, consumer_email, consumer_name, consumer_id_number, consumer_mobile, purpose,
         requested_amount, requested_term, credit_profile
@@ -66,6 +66,37 @@ export async function POST(req: NextRequest) {
 
   if (offerRow.status === 'accepted') {
     return NextResponse.json({ error: 'Offer already accepted' }, { status: 409, headers: CORS });
+  }
+
+  // Offers are only valid for 14 days from creation (see migration 021) —
+  // eligibility and rates were evaluated against a credit profile that may
+  // be stale by the time a borrower comes back to accept.
+  if (offerRow.expires_at && new Date(offerRow.expires_at) < new Date()) {
+    await supabaseAdmin
+      .from('quote_offers')
+      .update({ status: 'expired' })
+      .eq('id', offerRow.id);
+    return NextResponse.json({
+      error: 'This offer has expired. Please request a new quote.',
+      code: 'OFFER_EXPIRED',
+    }, { status: 410, headers: CORS });
+  }
+
+  // Block acceptance if there's no ID number on record — every lender's
+  // loan-intake API requires one, so accepting anyway just defers the
+  // failure to the (fire-and-forget-free, but still post-hoc) push below,
+  // leaving the borrower with a false "offer accepted" response that later
+  // fails silently at the lender. Checked before the accept/decline
+  // mutation so a rejected acceptance doesn't still burn the other offers
+  // in this request.
+  const qr = Array.isArray(offerRow.quote_requests)
+    ? offerRow.quote_requests[0]
+    : offerRow.quote_requests;
+  if (!qr?.consumer_id_number) {
+    return NextResponse.json({
+      error: 'This application is missing a required ID number and cannot be accepted yet. Please contact support.',
+      code: 'MISSING_ID_NUMBER',
+    }, { status: 422, headers: CORS });
   }
 
   // Mark offer accepted, decline all others in this request
@@ -100,17 +131,9 @@ export async function POST(req: NextRequest) {
   // killed once the response is sent, leaving lender_push_status stuck at
   // 'pending' forever with no error recorded. An accepted loan must reliably
   // reach the lender, so we accept the extra latency here.
-  const qr = Array.isArray(offerRow.quote_requests)
-    ? offerRow.quote_requests[0]
-    : offerRow.quote_requests;
-
   let lenderPushResult: { ok: boolean; error?: string; applicationId?: string } | null = null;
 
   if (qr) {
-    if (!qr.consumer_id_number) {
-      console.warn(`[marketplace/offers] requestId=${requestId} has no consumer_id_number — lender push will likely be rejected`);
-    }
-
     try {
       lenderPushResult = await pushLoanToLender(lenderId, {
         idNumber:   qr.consumer_id_number ?? '',

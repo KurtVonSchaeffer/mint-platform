@@ -151,6 +151,87 @@ export async function POST(req: NextRequest) {
   if (!Number.isInteger(trm) || trm < 1 || trm > 360)
     return NextResponse.json({ error: 'termMonths must be an integer between 1 and 360' }, { status: 422, headers: CORS });
 
+  // ── 2c. Duplicate-request guard ───────────────────────────────────────
+  // Every call previously created a brand-new quote_requests row with no
+  // idempotency check, so a retried network call or a borrower refreshing
+  // the offers screen re-evaluated against every lender from scratch —
+  // spamming lenders with duplicate applications and inflating enquiry-like
+  // noise. If the same MINT user requested the same amount/term in the last
+  // 5 minutes, return that existing result instead of re-evaluating.
+  const mintUserIdStr = mintUserId ? String(mintUserId) : null;
+  if (mintUserIdStr) {
+    const lookbackCutoff = new Date(Date.now() - 5 * 60_000).toISOString();
+    const { data: recent } = await supabaseAdmin
+      .from('quote_requests')
+      .select('id, created_at')
+      .eq('mint_user_id', mintUserIdStr)
+      .eq('requested_amount', amt)
+      .eq('requested_term', trm)
+      .eq('status', 'complete')
+      .gte('created_at', lookbackCutoff)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (recent) {
+      // quote_offers and lender_policies both reference `clients` separately —
+      // there's no direct FK between them for PostgREST to embed, so fetch
+      // and merge in two queries instead of one embedded select.
+      const nowIso = new Date().toISOString();
+      const { data: existingOffers } = await supabaseAdmin
+        .from('quote_offers')
+        .select('client_id, offered_amount, offered_rate_pct, offered_term_months, monthly_installment, total_repayment, initiation_fee, expires_at')
+        .eq('request_id', recent.id)
+        .eq('status', 'offered')
+        .gt('expires_at', nowIso); // don't reuse a request whose offers have since expired
+
+      // Only short-circuit if there's something live to return. If the prior
+      // request's offers have all since expired (or it had none), fall
+      // through to a full re-evaluation rather than returning an empty
+      // "reused" result that looks like a real no-offers outcome.
+      if (existingOffers && existingOffers.length > 0) {
+        const clientIds = [...new Set(existingOffers.map(o => o.client_id))];
+        const { data: lenderRows } = clientIds.length
+          ? await supabaseAdmin
+              .from('lender_policies')
+              .select('client_id, display_name, logo_url, tagline, avg_turnaround_days')
+              .in('client_id', clientIds)
+          : { data: [] as { client_id: string; display_name: string; logo_url: string | null; tagline: string | null; avg_turnaround_days: number | null }[] };
+        const lenderByClientId = new Map((lenderRows ?? []).map(l => [l.client_id, l]));
+
+        return NextResponse.json({
+          requestId: recent.id,
+          mintRequestRef: mintRequestRef ?? null,
+          offers: existingOffers.map((o) => {
+            const lender = lenderByClientId.get(o.client_id);
+            const totalRepayment = Number(o.total_repayment);
+            const initiationFee  = Number(o.initiation_fee);
+            return {
+              lenderId:           o.client_id,
+              lenderName:         lender?.display_name ?? null,
+              logoUrl:            lender?.logo_url ?? null,
+              tagline:            lender?.tagline ?? null,
+              avgTurnaroundDays:  lender?.avg_turnaround_days ?? null,
+              offeredAmount:      Number(o.offered_amount),
+              offeredRatePct:     Number(o.offered_rate_pct),
+              termMonths:         o.offered_term_months,
+              monthlyInstallment: Number(o.monthly_installment),
+              totalRepayment,
+              initiationFee,
+              effectiveCost:      Math.round((totalRepayment + initiationFee) * 100) / 100,
+              loanType:           'unsecured',
+            };
+          }),
+          declines: [],
+          totalLenders: existingOffers.length,
+          offersCount:  existingOffers.length,
+          evaluatedAt:  recent.created_at,
+          reused:       true,
+        }, { status: 200, headers: CORS });
+      }
+    }
+  }
+
   // ── 3. Build AlgoLend CreditProfile from MINT's data ─────────────────
   const profile: CreditProfile = {
     creditScore:                Number(creditScore),
@@ -216,8 +297,12 @@ export async function POST(req: NextRequest) {
     policies.map(p => Promise.resolve(evaluatePolicy(profile, p, quoteReq)))
   );
 
+  // Rank by total cost of credit (effectiveCost = total repayment + initiation
+  // fee), not just the monthly installment — a lower installment can still be
+  // the more expensive offer once fees are included. Tie-break on installment
+  // for offers with identical total cost.
   const offers  = results.filter((r): r is Offer   => r.type === 'offered')
-    .sort((a, b) => a.monthlyInstallment - b.monthlyInstallment); // cheapest first
+    .sort((a, b) => a.effectiveCost - b.effectiveCost || a.monthlyInstallment - b.monthlyInstallment);
 
   const declines = results.filter((r): r is Decline => r.type === 'declined')
     .map(d => ({ lender: d.displayName, reason: d.reason }));
@@ -229,6 +314,7 @@ export async function POST(req: NextRequest) {
     reference:          `MNT-${Date.now()}`,
     consumer_email:     String(mintUserId ?? 'unknown@mymint.co.za'),
     consumer_name:      String(mintUserId ?? 'MINT User'),
+    mint_user_id:       mintUserIdStr,
     consumer_id_number: idNumber ? String(idNumber) : null,
     consumer_mobile:    phone ? String(phone) : null,
     purpose:            purpose ? String(purpose) : null,
@@ -256,6 +342,7 @@ export async function POST(req: NextRequest) {
         monthly_installment: o.monthlyInstallment,
         total_repayment:     o.totalRepayment,
         initiation_fee:      o.initiationFee,
+        expires_at:          new Date(Date.now() + 14 * 24 * 60 * 60_000).toISOString(),
       }))
     ).then(({ error }) => {
       if (error) console.warn('[marketplace/evaluate] offers persist failed', error.message);

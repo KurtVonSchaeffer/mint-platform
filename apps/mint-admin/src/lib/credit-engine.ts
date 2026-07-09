@@ -62,6 +62,8 @@ export interface Offer {
   totalRepayment:      number;
   initiationFee:       number;
   effectiveCost:       number;
+  requestedAmount:     number;
+  amountAdjusted:      boolean;
 }
 
 export interface Decline {
@@ -93,15 +95,21 @@ export function evaluatePolicy(
     type: 'declined', clientId: policy.clientId, displayName: policy.displayName, reason,
   });
 
-  // Hard gates
+  // Hard gates — each reason carries the actual numbers so a borrower/ops
+  // can see how close they were and what would need to change, instead of
+  // a static string that's identical whether they missed by 1 point or 200.
   if (policy.requireIdVerified && !profile.idVerified)
-    return decline('Identity could not be verified');
+    return decline('Identity could not be verified — ID verification is required by this lender');
   if (profile.openDefaults > policy.maxOpenDefaults)
-    return decline('Open defaults exceed maximum allowed');
+    return decline(`Open defaults (${profile.openDefaults}) exceed this lender's maximum of ${policy.maxOpenDefaults}`);
   if (profile.creditScore < policy.minCreditScore)
-    return decline('Credit score below minimum requirement');
-  // Amount clamping
+    return decline(`Credit score ${profile.creditScore} is below this lender's minimum of ${policy.minCreditScore}`);
+  // Amount clamping — record whether the amount offered differs from what
+  // was actually requested, so the caller can flag it instead of silently
+  // presenting a different figure as if it were the request.
+  const requestedAmount = request.amount;
   const amount = Math.min(Math.max(request.amount, policy.minAmount), policy.maxAmount);
+  const amountAdjusted = amount !== requestedAmount;
 
   // Rate from score bands — highest minScore first; on tie, lowest rateAdjustment wins (best rate for borrower)
   const sorted = [...policy.rateBands].sort((a, b) =>
@@ -109,7 +117,7 @@ export function evaluatePolicy(
   );
   const band = sorted.find(b => profile.creditScore >= b.minScore);
   if (!band || band.rateAdjustment === null)
-    return decline('Credit profile does not qualify for available rate bands');
+    return decline(`Credit score ${profile.creditScore} qualifies on the minimum gate but has no matching rate band for this lender's pricing`);
 
   const finalRate  = Math.max(0, policy.baseRatePct + band.rateAdjustment);
   const installment = pmt(amount, finalRate, request.termMonths);
@@ -117,8 +125,11 @@ export function evaluatePolicy(
   // DSR check
   const totalDebt = profile.existingMonthlyObligations + installment;
   const dsr       = profile.monthlyIncome > 0 ? totalDebt / profile.monthlyIncome : Infinity;
-  if (dsr > policy.maxDsrPct / 100)
-    return decline('Debt service ratio exceeds maximum allowed');
+  if (dsr > policy.maxDsrPct / 100) {
+    const dsrPct    = profile.monthlyIncome > 0 ? Math.round(dsr * 1000) / 10 : null;
+    const dsrLabel  = dsrPct === null ? 'undeterminable (no income on record)' : `${dsrPct}%`;
+    return decline(`Debt service ratio ${dsrLabel} exceeds this lender's maximum of ${policy.maxDsrPct}%`);
+  }
 
   const initiationFee  = amount * (policy.initiationFeePct / 100);
   const totalRepayment = installment * request.termMonths + policy.monthlyServiceFee * request.termMonths;
@@ -137,5 +148,7 @@ export function evaluatePolicy(
     totalRepayment:     Math.round(totalRepayment * 100) / 100,
     initiationFee:      Math.round(initiationFee  * 100) / 100,
     effectiveCost:      Math.round((totalRepayment + initiationFee) * 100) / 100,
+    requestedAmount,
+    amountAdjusted,
   };
 }
