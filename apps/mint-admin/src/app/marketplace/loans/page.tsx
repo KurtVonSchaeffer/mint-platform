@@ -12,6 +12,105 @@ function fmt(n: number) {
   return new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', maximumFractionDigits: 0 }).format(n);
 }
 
+function fmtShortDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+interface ScoreHistoryPoint {
+  credit_score: number;
+  evaluated_at: string;
+}
+
+/**
+ * Score History — a compact single-series line chart of a borrower's score
+ * across every evaluate() call for them, not just the one that became this
+ * accepted loan. Fetched lazily when the row expands, since most rows will
+ * never be opened. Mirrors the same chart built for Zwane's borrower page
+ * (2px line, ~10% area wash, end markers, hairline gridlines, no legend for
+ * a single series, native <title> hover tooltips) for a consistent pattern
+ * across both admin apps, even though this one has no chart library either.
+ */
+function ScoreHistoryChart({ requestId }: { requestId: string }) {
+  const [points, setPoints] = useState<ScoreHistoryPoint[] | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/marketplace/borrower-score-history?requestId=${requestId}`)
+      .then((res) => res.json())
+      .then((json) => { if (!cancelled) setPoints(json.history ?? []); })
+      .catch((err) => { if (!cancelled) setLoadError(err.message); });
+    return () => { cancelled = true; };
+  }, [requestId]);
+
+  if (loadError) return null; // non-critical enhancement — fail silently rather than clutter the row
+  if (!points || points.length < 2) return null; // nothing to trend yet
+
+  const W = 480, H = 110, PAD_L = 32, PAD_R = 12, PAD_T = 12, PAD_B = 20;
+  const plotW = W - PAD_L - PAD_R;
+  const plotH = H - PAD_T - PAD_B;
+
+  const scores  = points.map((p) => p.credit_score);
+  const dataMin = Math.min(...scores);
+  const dataMax = Math.max(...scores);
+  const yMin = Math.max(300, dataMin - 20);
+  const yMax = Math.min(999, Math.max(dataMax + 20, yMin + 40));
+
+  const tMin = new Date(points[0].evaluated_at).getTime();
+  const tMax = new Date(points[points.length - 1].evaluated_at).getTime();
+  const tSpan = Math.max(1, tMax - tMin);
+
+  const coords = points.map((p, i) => {
+    const t = new Date(p.evaluated_at).getTime();
+    const x = tMax === tMin
+      ? PAD_L + (points.length === 1 ? 0 : (i / (points.length - 1)) * plotW)
+      : PAD_L + ((t - tMin) / tSpan) * plotW;
+    const y = PAD_T + (1 - (p.credit_score - yMin) / (yMax - yMin)) * plotH;
+    return { x, y, ...p };
+  });
+
+  const linePath = coords.map((c, i) => `${i === 0 ? 'M' : 'L'} ${c.x.toFixed(1)} ${c.y.toFixed(1)}`).join(' ');
+  const areaPath = `${linePath} L ${coords[coords.length - 1].x.toFixed(1)} ${H - PAD_B} L ${coords[0].x.toFixed(1)} ${H - PAD_B} Z`;
+
+  const first = coords[0];
+  const last  = coords[coords.length - 1];
+  const delta = last.credit_score - first.credit_score;
+  const deltaColor = delta > 0 ? '#16a34a' : delta < 0 ? '#dc2626' : '#6b7280';
+
+  const VIOLET = '#7c3aed';
+
+  return (
+    <div className="col-span-2 mt-1 rounded-lg border border-gray-100 bg-white p-3 md:col-span-4">
+      <div className="mb-1.5 flex items-center justify-between">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">Score History</p>
+        <span className="text-[11px] font-semibold" style={{ color: deltaColor }}>
+          {delta > 0 ? '+' : ''}{delta} since {fmtShortDate(first.evaluated_at)}
+        </span>
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }} role="img" aria-label={`Credit score history from ${first.credit_score} to ${last.credit_score}`}>
+        {[yMin, (yMin + yMax) / 2, yMax].map((t, i) => {
+          const y = PAD_T + (1 - (t - yMin) / (yMax - yMin)) * plotH;
+          return (
+            <g key={i}>
+              <line x1={PAD_L} y1={y} x2={W - PAD_R} y2={y} stroke="#e5e7eb" strokeWidth={1} opacity={0.5} />
+              <text x={PAD_L - 6} y={y + 3} textAnchor="end" fontSize={9} fill="#9ca3af">{Math.round(t)}</text>
+            </g>
+          );
+        })}
+        <path d={areaPath} fill={VIOLET} opacity={0.08} />
+        <path d={linePath} fill="none" stroke={VIOLET} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        {coords.map((c, i) => (
+          <circle key={i} cx={c.x} cy={c.y} r={4} fill={VIOLET} stroke="#fff" strokeWidth={2}>
+            <title>{fmtShortDate(c.evaluated_at)} — score {c.credit_score}</title>
+          </circle>
+        ))}
+        <text x={first.x} y={H - 4} textAnchor="start" fontSize={9} fill="#9ca3af">{fmtShortDate(first.evaluated_at)}</text>
+        <text x={last.x} y={H - 4} textAnchor="end" fontSize={9} fill="#9ca3af">{fmtShortDate(last.evaluated_at)}</text>
+      </svg>
+    </div>
+  );
+}
+
 interface MintLoan {
   id:                  string;
   request_id:          string;
@@ -207,6 +306,7 @@ export default function MintLoansPage() {
                                 </div>
                               ))}
                             </div>
+                            <ScoreHistoryChart requestId={loan.request_id} />
                             {qr?.reference && (
                               <p className="mt-3 text-[10px] font-mono text-gray-400">Ref: {qr.reference}</p>
                             )}

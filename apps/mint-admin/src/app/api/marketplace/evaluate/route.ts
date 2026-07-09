@@ -329,6 +329,26 @@ export async function POST(req: NextRequest) {
     if (error) console.warn('[marketplace/evaluate] audit persist failed', error.message);
   });
 
+  // Persist a credit-score-history row so a borrower's score can be plotted
+  // over time (see migration 022) — mint-admin previously had no history
+  // concept at all, only the single current score on this request. Only
+  // recorded on a genuinely fresh evaluation (this code path never runs on
+  // the duplicate-request reuse path above), and only when we have at least
+  // one identifier to key it by — a history row with neither ID number nor
+  // MINT user id can never be matched back to this borrower later.
+  if (mintUserIdStr || idNumber) {
+    supabaseAdmin.from('credit_score_history').insert({
+      request_id:                    requestId,
+      mint_user_id:                  mintUserIdStr,
+      consumer_id_number:            idNumber ? String(idNumber) : null,
+      credit_score:                  profile.creditScore,
+      monthly_income:                profile.monthlyIncome,
+      existing_monthly_obligations:  profile.existingMonthlyObligations,
+    }).then(({ error }) => {
+      if (error) console.warn('[marketplace/evaluate] credit_score_history persist failed', error.message);
+    });
+  }
+
   // Persist individual offers
   if (offers.length > 0) {
     supabaseAdmin.from('quote_offers').insert(
