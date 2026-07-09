@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
 import {
@@ -80,6 +81,8 @@ export default function UsersPage() {
   const [inviting, setInviting]     = useState(false);
   const [changingRole, setChangingRole] = useState<string | null>(null);
   const [roleDropdown, setRoleDropdown] = useState<string | null>(null);
+  const [dropdownPos, setDropdownPos]   = useState<{ top: number; left: number } | null>(null);
+  const roleBtnRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
   const [resetLink, setResetLink]   = useState<{ email: string; link: string; isInvite?: boolean } | null>(null);
   const [resetting, setResetting]   = useState<string | null>(null);
   const [deleting, setDeleting]     = useState<string | null>(null);
@@ -312,7 +315,21 @@ export default function UsersPage() {
                     <td>
                       <div className="relative inline-block">
                         <button
-                          onClick={() => setRoleDropdown(roleDropdown === u.id ? null : u.id)}
+                          ref={(el) => {
+                            if (el) roleBtnRefs.current.set(u.id, el);
+                            else roleBtnRefs.current.delete(u.id);
+                          }}
+                          onClick={() => {
+                            if (roleDropdown === u.id) {
+                              setRoleDropdown(null);
+                              setDropdownPos(null);
+                              return;
+                            }
+                            const btn = roleBtnRefs.current.get(u.id);
+                            const rect = btn?.getBoundingClientRect();
+                            if (rect) setDropdownPos({ top: rect.bottom + 4, left: rect.left });
+                            setRoleDropdown(u.id);
+                          }}
                           disabled={changingRole === u.id}
                           className="inline-flex items-center gap-1.5 cursor-pointer"
                         >
@@ -322,17 +339,25 @@ export default function UsersPage() {
                           }
                           <ChevronDown size={10} style={{ color: 'var(--color-text3)' }} />
                         </button>
-                        {roleDropdown === u.id && (
+                        {roleDropdown === u.id && dropdownPos && createPortal(
                           <>
-                            <div className="fixed inset-0 z-10" onClick={() => setRoleDropdown(null)} />
+                            {/* Rendered via portal into document.body, positioned with `fixed` from the
+                                button's own getBoundingClientRect() — not `absolute` inside the table.
+                                Table rows/cells are unreliable containing blocks for absolutely-positioned
+                                descendants in Safari, which caused every row's dropdown to render at the
+                                same (wrong) position regardless of which row was actually open. */}
+                            <div className="fixed inset-0 z-10" onClick={() => { setRoleDropdown(null); setDropdownPos(null); }} />
                             <div
-                              className="absolute left-0 top-full mt-1 z-20 rounded-xl overflow-hidden w-56"
-                              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
+                              className="fixed z-20 rounded-xl overflow-hidden w-56"
+                              style={{
+                                top: dropdownPos.top, left: dropdownPos.left,
+                                background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+                              }}
                             >
                               {ROLES.map(r => (
                                 <button
                                   key={r.value}
-                                  onClick={() => changeRole(u, r.value)}
+                                  onClick={() => { changeRole(u, r.value); setDropdownPos(null); }}
                                   className="w-full flex items-start gap-2.5 px-3 py-2.5 text-left transition-colors cursor-pointer"
                                   style={{ borderBottom: '1px solid var(--color-border2)' }}
                                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
@@ -346,7 +371,8 @@ export default function UsersPage() {
                                 </button>
                               ))}
                             </div>
-                          </>
+                          </>,
+                          document.body
                         )}
                       </div>
                     </td>
