@@ -661,6 +661,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   <CheckCircle2 size={12} className="ml-auto opacity-70" />
                 </button>
                 <Link
+                  href="/biztech"
+                  onClick={() => setAppOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-colors"
+                  style={{ color: 'var(--color-text2)' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(13,148,136,0.08)'; (e.currentTarget as HTMLElement).style.color = '#0D9488'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text2)'; }}
+                >
+                  <Building2 size={13} />
+                  <div>
+                    <p className="font-semibold">MINT BizTech</p>
+                    <p className="text-[10px] opacity-60">IT consulting &amp; services</p>
+                  </div>
+                </Link>
+                <Link
                   href="/mint-invoice"
                   onClick={() => setAppOpen(false)}
                   className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-colors"
