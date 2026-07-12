@@ -38,10 +38,10 @@ type NavItem = { label: string; href: string; icon: React.ComponentType<IconProp
 
 const nav: NavItem[] = [
   { label: 'Dashboard',  href: '/biztech',           icon: LayoutGrid  },
-  { label: 'Clients',    href: '/biztech/clients',   icon: Building2,   comingSoon: true },
+  { label: 'Clients',    href: '/biztech/clients',   icon: Building2   },
   { label: 'Services',   href: '/biztech/services',  icon: Wrench,      comingSoon: true },
-  { label: 'Quotes',     href: '/biztech/quotes',    icon: FileText,    comingSoon: true },
-  { label: 'Invoices',   href: '/biztech/invoices',  icon: Receipt,     comingSoon: true },
+  { label: 'Quotes',     href: '/biztech/quotes',    icon: FileText    },
+  { label: 'Invoices',   href: '/biztech/invoices',  icon: Receipt     },
   { label: 'Projects',   href: '/biztech/projects',  icon: FolderKanban, comingSoon: true },
   { label: 'CRM',        href: '/biztech/crm',       icon: Briefcase,   comingSoon: true },
   { label: 'Reports',    href: '/biztech/reports',   icon: BarChart3,   comingSoon: true },
