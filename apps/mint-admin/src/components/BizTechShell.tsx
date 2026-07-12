@@ -44,7 +44,7 @@ const nav: NavItem[] = [
   { label: 'Invoices',   href: '/biztech/invoices',  icon: Receipt     },
   { label: 'Projects',   href: '/biztech/projects',  icon: FolderKanban },
   { label: 'CRM',        href: '/biztech/crm',       icon: Briefcase   },
-  { label: 'Reports',    href: '/biztech/reports',   icon: BarChart3,   comingSoon: true },
+  { label: 'Reports',    href: '/biztech/reports',   icon: BarChart3   },
 ];
 
 const ROLE_LABELS: Record<string, { label: string; color: string }> = {

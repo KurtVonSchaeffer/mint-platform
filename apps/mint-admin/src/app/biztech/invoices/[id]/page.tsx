@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
-import { ArrowLeft, Loader2, Send, CheckCircle2, Ban } from 'lucide-react';
+import { ArrowLeft, Loader2, Send, CheckCircle2, Ban, Mail } from 'lucide-react';
 
 type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'void';
 
@@ -61,6 +61,19 @@ export default function BizTechInvoiceDetailPage() {
     if (res.ok) load(); else setToast({ kind: 'error', message: 'Failed to update status' });
   }
 
+  async function sendReminder() {
+    setBusy(true);
+    const res = await fetch(`/api/biztech/invoices/${id}/remind`, { method: 'POST' });
+    setBusy(false);
+    if (res.ok) {
+      const { sentTo } = await res.json();
+      setToast({ kind: 'success', message: `Reminder sent to ${sentTo}` });
+    } else {
+      const { error } = await res.json();
+      setToast({ kind: 'error', message: error ?? 'Failed to send reminder' });
+    }
+  }
+
   if (loading && !invoice) {
     return <div className="bento-card p-12 flex items-center justify-center"><Loader2 size={24} className="animate-spin" style={{ color: '#5C3BCF' }} /></div>;
   }
@@ -100,6 +113,9 @@ export default function BizTechInvoiceDetailPage() {
           )}
           {(invoice.status === 'sent' || invoice.status === 'overdue') && (
             <>
+              <button disabled={busy} onClick={sendReminder} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>
+                <Mail size={13} /> Send reminder
+              </button>
               <button disabled={busy} onClick={() => setStatus('paid')} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer" style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.3)', color: '#A78BFA' }}>
                 <CheckCircle2 size={13} /> Mark paid
               </button>

@@ -355,3 +355,42 @@ export function welcomeClientEmail(client: {
 </div>
 </body></html>`;
 }
+
+export function biztechInvoiceReminderEmail(inv: {
+  reference: string; clientName: string; contact: string;
+  totalCents: number; dueDate: string; daysOverdue: number;
+}) {
+  const fmt = (c: number) =>
+    new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 2 }).format(c / 100);
+  const isOverdue = inv.daysOverdue > 0;
+
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:${isOverdue ? '#dc2626' : '#5C3BCF'};padding:24px 32px">
+    <p style="color:#fff;font-size:18px;font-weight:700;margin:0">${isOverdue ? `⚠ Invoice Overdue — ${inv.daysOverdue} days` : 'Invoice Payment Reminder'}</p>
+    <p style="color:rgba(255,255,255,0.8);font-size:13px;margin:4px 0 0">${inv.reference}</p>
+  </div>
+  <div style="padding:32px">
+    <p>Hi ${inv.contact},</p>
+    <p style="color:#555;line-height:1.6">
+      ${isOverdue
+        ? `Your invoice <strong>${inv.reference}</strong> for <strong>${fmt(inv.totalCents)}</strong> was due on <strong>${inv.dueDate}</strong> and is now <strong>${inv.daysOverdue} days overdue</strong>.`
+        : `This is a friendly reminder that invoice <strong>${inv.reference}</strong> for <strong>${fmt(inv.totalCents)}</strong> is due on <strong>${inv.dueDate}</strong>.`
+      }
+    </p>
+    <div style="background:#f5f2ff;border-radius:12px;padding:20px;margin:20px 0;text-align:center">
+      <p style="font-size:28px;font-weight:700;color:#5C3BCF;margin:0">${fmt(inv.totalCents)}</p>
+      <p style="color:#888;font-size:13px;margin:4px 0 0">Amount due · Reference: ${inv.reference}</p>
+    </div>
+    <p style="color:#888;font-size:13px;line-height:1.6;border-top:1px solid #eee;padding-top:20px">
+      Please use reference <strong>${inv.reference}</strong> and email your proof of payment to
+      <a href="mailto:accounts@mymint.co.za" style="color:#5C3BCF">accounts@mymint.co.za</a>.
+    </p>
+  </div>
+  <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
+    MINT BizTech · MINT Platforms (Pty) Ltd
+  </div>
+</div>
+</body></html>`;
+}
