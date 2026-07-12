@@ -27,7 +27,7 @@ interface Doc {
 
 const STATUS_CONFIG: Record<ClientStatus, { label: string; bg: string; border: string; color: string }> = {
   lead:     { label: 'Lead',     bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)',  color: 'var(--color-amber)' },
-  active:   { label: 'Active',   bg: 'rgba(45,212,191,0.12)', border: 'rgba(45,212,191,0.3)',   color: '#2DD4BF' },
+  active:   { label: 'Active',   bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.3)',   color: '#A78BFA' },
   paused:   { label: 'Paused',   bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.25)',  color: 'var(--color-sky)' },
   archived: { label: 'Archived', bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.25)', color: 'var(--color-text3)' },
 };
@@ -75,7 +75,7 @@ function AddContactModal({ clientId, onClose, onAdded }: { clientId: string; onC
           </div>
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose} className="flex-1 py-2 rounded-xl text-sm cursor-pointer" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>Cancel</button>
-            <button type="submit" disabled={saving} className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)' }}>
+            <button type="submit" disabled={saving} className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: 'linear-gradient(135deg, #5C3BCF 0%, #7C5CE0 100%)' }}>
               {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
               {saving ? 'Adding…' : 'Add contact'}
             </button>
@@ -141,7 +141,7 @@ export default function BizTechClientDetailPage() {
   if (loading && !client) {
     return (
       <div className="bento-card p-12 flex items-center justify-center">
-        <Loader2 size={24} className="animate-spin" style={{ color: '#0D9488' }} />
+        <Loader2 size={24} className="animate-spin" style={{ color: '#5C3BCF' }} />
       </div>
     );
   }
@@ -198,8 +198,8 @@ export default function BizTechClientDetailPage() {
             onClick={() => setTab(t)}
             className="px-4 py-2.5 text-sm font-medium capitalize cursor-pointer transition-colors"
             style={{
-              color: tab === t ? '#0D9488' : 'var(--color-text3)',
-              borderBottom: tab === t ? '2px solid #0D9488' : '2px solid transparent',
+              color: tab === t ? '#5C3BCF' : 'var(--color-text3)',
+              borderBottom: tab === t ? '2px solid #5C3BCF' : '2px solid transparent',
             }}
           >
             {t === 'contacts' ? `Contacts (${contacts.length})` : t === 'documents' ? `Documents (${docs.length})` : t}
@@ -222,7 +222,7 @@ export default function BizTechClientDetailPage() {
             <button
               onClick={() => setAddContactOpen(true)}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
-              style={{ background: 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)' }}
+              style={{ background: 'linear-gradient(135deg, #5C3BCF 0%, #7C5CE0 100%)' }}
             >
               <Plus size={14} /> Add contact
             </button>
@@ -260,7 +260,7 @@ export default function BizTechClientDetailPage() {
       {tab === 'documents' && (
         <div className="space-y-4">
           <div className="flex justify-end">
-            <label className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)' }}>
+            <label className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: 'linear-gradient(135deg, #5C3BCF 0%, #7C5CE0 100%)' }}>
               {uploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
               {uploading ? 'Uploading…' : 'Upload document'}
               <input type="file" className="sr-only" onChange={uploadFile} disabled={uploading} />
@@ -276,7 +276,7 @@ export default function BizTechClientDetailPage() {
               {docs.map(d => (
                 <div key={d.id} className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                   <div className="min-w-0 flex items-center gap-3">
-                    <FileText size={16} style={{ color: '#0D9488' }} />
+                    <FileText size={16} style={{ color: '#5C3BCF' }} />
                     <div>
                       <p className="font-medium text-sm truncate" style={{ color: 'var(--color-text)' }}>{d.name}</p>
                       <p className="text-[10px] font-mono" style={{ color: 'var(--color-text3)' }}>

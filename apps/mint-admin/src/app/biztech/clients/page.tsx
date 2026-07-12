@@ -21,7 +21,7 @@ interface BizClient {
 
 const STATUS_CONFIG: Record<ClientStatus, { label: string; bg: string; border: string; color: string }> = {
   lead:     { label: 'Lead',     bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)',  color: 'var(--color-amber)' },
-  active:   { label: 'Active',   bg: 'rgba(45,212,191,0.12)', border: 'rgba(45,212,191,0.3)',   color: '#2DD4BF' },
+  active:   { label: 'Active',   bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.3)',   color: '#A78BFA' },
   paused:   { label: 'Paused',   bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.25)',  color: 'var(--color-sky)' },
   archived: { label: 'Archived', bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.25)', color: 'var(--color-text3)' },
 };
@@ -77,7 +77,7 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
               type="submit"
               disabled={saving}
               className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
-              style={{ background: 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)' }}
+              style={{ background: 'linear-gradient(135deg, #5C3BCF 0%, #7C5CE0 100%)' }}
             >
               {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
               {saving ? 'Adding…' : 'Add client'}
@@ -146,7 +146,7 @@ export default function BizTechClientsPage() {
           <button
             onClick={() => setAddOpen(true)}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
-            style={{ background: 'linear-gradient(135deg, #0D9488 0%, #14B8A6 100%)' }}
+            style={{ background: 'linear-gradient(135deg, #5C3BCF 0%, #7C5CE0 100%)' }}
           >
             <Plus size={14} /> Add client
           </button>
@@ -172,11 +172,11 @@ export default function BizTechClientsPage() {
 
       {loading ? (
         <div className="bento-card p-12 flex items-center justify-center">
-          <Loader2 size={24} className="animate-spin" style={{ color: '#0D9488' }} />
+          <Loader2 size={24} className="animate-spin" style={{ color: '#5C3BCF' }} />
         </div>
       ) : clients.length === 0 ? (
         <div className="bento-card p-12 text-center">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(13,148,136,0.1)', color: '#0D9488' }}>
+          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(92,59,207,0.1)', color: '#5C3BCF' }}>
             <Inbox size={20} />
           </div>
           <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--color-text)' }}>No clients yet</h3>
@@ -210,7 +210,7 @@ export default function BizTechClientsPage() {
                   onClick={() => router.push(`/biztech/clients/${client.id}`)}
                   className="p-6 cursor-pointer transition-colors"
                   style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(13,148,136,0.03)'; }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(92,59,207,0.03)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                 >
                   <div className="grid grid-cols-[1fr_auto] gap-6 items-start">

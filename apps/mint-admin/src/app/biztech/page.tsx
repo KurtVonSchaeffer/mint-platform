@@ -34,10 +34,10 @@ export default function BizTechDashboard() {
 
       <div
         className="rounded-2xl p-5 flex items-start gap-3"
-        style={{ background: 'rgba(13,148,136,0.06)', border: '1px solid rgba(13,148,136,0.18)' }}
+        style={{ background: 'rgba(92,59,207,0.06)', border: '1px solid rgba(92,59,207,0.18)' }}
       >
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(13,148,136,0.15)' }}>
-          <Building2 size={16} style={{ color: '#0D9488' }} />
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(92,59,207,0.15)' }}>
+          <Building2 size={16} style={{ color: '#5C3BCF' }} />
         </div>
         <div>
           <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>This workspace is in early setup</p>

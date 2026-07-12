@@ -48,7 +48,7 @@ const nav: NavItem[] = [
 ];
 
 const ROLE_LABELS: Record<string, { label: string; color: string }> = {
-  super_admin: { label: 'Super Admin', color: '#2DD4BF' },
+  super_admin: { label: 'Super Admin', color: '#A78BFA' },
   admin:       { label: 'Admin',       color: '#60A5FA' },
   finance:     { label: 'Finance',     color: '#34D399' },
   support:     { label: 'Support',     color: '#FBBF24' },
@@ -59,7 +59,7 @@ function BizTechLogo({ isLight }: { isLight: boolean }) {
     <div className="flex items-center gap-2">
       <div
         className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-        style={{ background: 'linear-gradient(135deg, #0D9488, #2DD4BF)' }}
+        style={{ background: 'linear-gradient(135deg, #5C3BCF, #A78BFA)' }}
       >
         <span className="text-white font-bold text-xs">M</span>
       </div>
@@ -67,7 +67,7 @@ function BizTechLogo({ isLight }: { isLight: boolean }) {
         className="font-bold text-lg tracking-tight"
         style={{ color: isLight ? '#0D1026' : '#EEF0FF' }}
       >
-        MINT <span style={{ color: '#2DD4BF' }}>BizTech</span>
+        MINT <span style={{ color: '#A78BFA' }}>BizTech</span>
       </span>
     </div>
   );
@@ -118,13 +118,13 @@ export function BizTechShell({ children }: { children: React.ReactNode }) {
     router.refresh();
   }
 
-  const ACCENT = '#0D9488';
+  const ACCENT = '#5C3BCF';
   const colors = {
-    activeBg:   isLight ? 'rgba(13,148,136,0.10)' : 'rgba(45,212,191,0.14)',
-    activeText: isLight ? '#0D9488' : '#5EEAD4',
-    hoverBg:    isLight ? 'rgba(13,148,136,0.06)' : 'rgba(45,212,191,0.08)',
+    activeBg:   isLight ? 'rgba(92,59,207,0.10)' : 'rgba(167,139,250,0.14)',
+    activeText: isLight ? '#5C3BCF' : '#C4B5FD',
+    hoverBg:    isLight ? 'rgba(92,59,207,0.06)' : 'rgba(167,139,250,0.08)',
     normalText: isLight ? '#42466B' : 'rgba(139,144,180,0.8)',
-    border:     isLight ? 'rgba(13,148,136,0.14)' : 'rgba(45,212,191,0.18)',
+    border:     isLight ? 'rgba(92,59,207,0.14)' : 'rgba(167,139,250,0.18)',
   };
 
   return (
@@ -160,7 +160,7 @@ export function BizTechShell({ children }: { children: React.ReactNode }) {
           const PageIcon = page?.icon;
           return (
             <div className="flex items-center gap-2 shrink-0 px-2.5 py-1 rounded-lg"
-              style={{ background: 'rgba(13,148,136,0.10)', border: '1px solid rgba(13,148,136,0.22)' }}>
+              style={{ background: 'rgba(92,59,207,0.10)', border: '1px solid rgba(92,59,207,0.22)' }}>
               {PageIcon && <PageIcon size={12} style={{ color: ACCENT }} />}
               <span className="text-xs font-semibold" style={{ color: ACCENT }}>{page?.label ?? 'Dashboard'}</span>
             </div>
@@ -197,7 +197,7 @@ export function BizTechShell({ children }: { children: React.ReactNode }) {
       >
         <div className="sidebar-brand flex flex-col h-auto px-5 pt-4 pb-3 shrink-0 gap-2">
           <BizTechLogo isLight={isLight} />
-          <p className="text-[9px] tracking-widest uppercase pl-0.5" style={{ color: 'rgba(45,212,191,0.5)' }}>
+          <p className="text-[9px] tracking-widest uppercase pl-0.5" style={{ color: 'rgba(167,139,250,0.5)' }}>
             IT Consulting &amp; Software Services
           </p>
 
@@ -206,7 +206,7 @@ export function BizTechShell({ children }: { children: React.ReactNode }) {
             <button
               onClick={() => setAppOpen(o => !o)}
               className="w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-xs font-medium"
-              style={{ background: 'rgba(13,148,136,0.12)', border: '1px solid rgba(13,148,136,0.2)', color: ACCENT }}
+              style={{ background: 'rgba(92,59,207,0.12)', border: '1px solid rgba(92,59,207,0.2)', color: ACCENT }}
             >
               <span className="flex items-center gap-1.5"><LayoutGrid size={11} />MINT BizTech</span>
               <ChevronDown size={10} className={`transition-transform duration-200 ${appOpen ? 'rotate-180' : ''}`} />
@@ -221,7 +221,7 @@ export function BizTechShell({ children }: { children: React.ReactNode }) {
                 </div>
                 <button
                   className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium text-left"
-                  style={{ background: 'rgba(13,148,136,0.08)', color: ACCENT }}
+                  style={{ background: 'rgba(92,59,207,0.08)', color: ACCENT }}
                   onClick={() => setAppOpen(false)}
                 >
                   <LayoutGrid size={13} />
@@ -257,7 +257,7 @@ export function BizTechShell({ children }: { children: React.ReactNode }) {
                   : { color: colors.normalText }}
               >
                 <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
-                  style={isActive ? { color: colors.activeText, background: 'rgba(13,148,136,0.15)' } : { opacity: 0.65 }}>
+                  style={isActive ? { color: colors.activeText, background: 'rgba(92,59,207,0.15)' } : { opacity: 0.65 }}>
                   <Icon size={14} />
                 </div>
                 <span className="flex-1">{label}</span>
@@ -276,14 +276,14 @@ export function BizTechShell({ children }: { children: React.ReactNode }) {
         <div className="sidebar-footer p-3 shrink-0">
           <div className="sidebar-user flex items-center gap-3 px-3 py-2.5 rounded-xl mb-2">
             <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-              style={{ background: '#0D9488', color: 'white' }}>
+              style={{ background: '#5C3BCF', color: 'white' }}>
               {userInitials}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5">
                 <p className="text-xs font-semibold truncate" style={{ color: 'var(--color-text)' }}>{userName}</p>
                 <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
-                  style={{ background: 'rgba(13,148,136,0.12)', color: ROLE_LABELS[userRole]?.color ?? '#2DD4BF' }}>
+                  style={{ background: 'rgba(92,59,207,0.12)', color: ROLE_LABELS[userRole]?.color ?? '#A78BFA' }}>
                   {ROLE_LABELS[userRole]?.label ?? userRole}
                 </span>
               </div>

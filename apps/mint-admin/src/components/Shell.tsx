@@ -665,7 +665,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                   onClick={() => setAppOpen(false)}
                   className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-colors"
                   style={{ color: 'var(--color-text2)' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(13,148,136,0.08)'; (e.currentTarget as HTMLElement).style.color = '#0D9488'; }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(92,59,207,0.08)'; (e.currentTarget as HTMLElement).style.color = '#5C3BCF'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text2)'; }}
                 >
                   <Building2 size={13} />

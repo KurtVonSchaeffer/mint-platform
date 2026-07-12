@@ -18,8 +18,8 @@ export function BizTechComingSoon({
         <h1 className="headline text-3xl font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>{title}</h1>
       </div>
       <div className="bento-card p-12 flex flex-col items-center justify-center text-center gap-3" style={{ minHeight: 280 }}>
-        <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(13,148,136,0.1)' }}>
-          <Icon size={24} style={{ color: '#0D9488' }} />
+        <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(92,59,207,0.1)' }}>
+          <Icon size={24} style={{ color: '#5C3BCF' }} />
         </div>
         <div className="flex items-center gap-1.5 mt-1">
           <Construction size={12} style={{ color: '#FBBF24' }} />
