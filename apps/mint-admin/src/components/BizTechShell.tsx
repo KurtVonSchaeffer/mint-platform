@@ -42,8 +42,8 @@ const nav: NavItem[] = [
   { label: 'Services',   href: '/biztech/services',  icon: Wrench,      comingSoon: true },
   { label: 'Quotes',     href: '/biztech/quotes',    icon: FileText    },
   { label: 'Invoices',   href: '/biztech/invoices',  icon: Receipt     },
-  { label: 'Projects',   href: '/biztech/projects',  icon: FolderKanban, comingSoon: true },
-  { label: 'CRM',        href: '/biztech/crm',       icon: Briefcase,   comingSoon: true },
+  { label: 'Projects',   href: '/biztech/projects',  icon: FolderKanban },
+  { label: 'CRM',        href: '/biztech/crm',       icon: Briefcase   },
   { label: 'Reports',    href: '/biztech/reports',   icon: BarChart3,   comingSoon: true },
 ];
 
