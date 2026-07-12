@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { Building2, RefreshCw, Plus, X, Loader2, Globe, Inbox } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -89,6 +90,7 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
 }
 
 export default function BizTechClientsPage() {
+  const router = useRouter();
   const [clients, setClients]   = useState<BizClient[]>([]);
   const [loading, setLoading]   = useState(true);
   const [addOpen, setAddOpen]   = useState(false);
@@ -203,7 +205,14 @@ export default function BizTechClientsPage() {
             {filtered.map(client => {
               const cfg = STATUS_CONFIG[client.status];
               return (
-                <article key={client.id} className="p-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                <article
+                  key={client.id}
+                  onClick={() => router.push(`/biztech/clients/${client.id}`)}
+                  className="p-6 cursor-pointer transition-colors"
+                  style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(13,148,136,0.03)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                >
                   <div className="grid grid-cols-[1fr_auto] gap-6 items-start">
                     <div className="min-w-0">
                       <div className="flex items-center gap-3 mb-2 flex-wrap">
