@@ -48,10 +48,18 @@ const API_ROLE_ROUTES: Record<string, string[]> = {
   admin: [
     '/api/clients', '/api/leads', '/api/applications', '/api/quotes',
     '/api/invoices', '/api/billing', '/api/usage', '/api/compliance',
-    '/api/migration', '/api/lender-policies',
+    '/api/migration', '/api/lender-policies', '/api/payfast/checkout',
+    '/api/vercel', '/api/biztech',
   ],
-  finance: ['/api/quotes', '/api/invoices', '/api/billing'],
-  support: ['/api/clients', '/api/leads', '/api/applications'],
+  finance: [
+    '/api/quotes', '/api/invoices', '/api/billing', '/api/payfast/checkout',
+    '/api/biztech/quotes', '/api/biztech/invoices', '/api/biztech/reports',
+  ],
+  support: [
+    '/api/clients', '/api/leads', '/api/applications',
+    '/api/biztech/clients', '/api/biztech/contacts', '/api/biztech/documents',
+    '/api/biztech/projects', '/api/biztech/tasks', '/api/biztech/activities',
+  ],
 };
 
 // Regardless of the map above: these are super_admin only. In particular,
@@ -136,6 +144,9 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/set-password') ||
     pathname.startsWith('/api/auth') ||
     pathname.startsWith('/api/marketplace') ||   // MINT integration — uses its own Bearer auth
+    pathname === '/api/payfast/notify' ||        // PayFast ITN webhook — verified by IP + signature in-route, not a staff session
+    pathname === '/api/billing/cron' ||           // Vercel Cron — verified by CRON_SECRET bearer token in-route, not a staff session
+    pathname === '/api/biztech/invoices/reminders-cron' || // same as above
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon');
 
