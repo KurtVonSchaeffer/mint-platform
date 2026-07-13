@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
+import { StatusDot } from '@/components/biztech/StatusDot';
 import { RefreshCw, Plus, X, Loader2, Inbox } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -15,12 +16,12 @@ interface Project {
 
 interface BizClient { id: string; name: string; }
 
-const STATUS_CONFIG: Record<ProjectStatus, { label: string; bg: string; border: string; color: string }> = {
-  planning:  { label: 'Planning',  bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.25)', color: 'var(--color-text3)' },
-  active:    { label: 'Active',    bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.3)',  color: '#A78BFA' },
-  on_hold:   { label: 'On hold',   bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)',  color: 'var(--color-amber)' },
-  completed: { label: 'Completed', bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.25)',  color: 'var(--color-sky)' },
-  cancelled: { label: 'Cancelled', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', color: 'var(--color-red)' },
+const STATUS_CONFIG: Record<ProjectStatus, { label: string; color: string }> = {
+  planning:  { label: 'Planning',  color: 'var(--color-text3)' },
+  active:    { label: 'Active',    color: '#5C3BCF' },
+  on_hold:   { label: 'On hold',   color: 'var(--color-amber)' },
+  completed: { label: 'Completed', color: 'var(--color-sky)' },
+  cancelled: { label: 'Cancelled', color: 'var(--color-red)' },
 };
 
 function NewProjectModal({ clients, onClose, onCreated }: { clients: BizClient[]; onClose: () => void; onCreated: () => void }) {
@@ -75,7 +76,7 @@ function NewProjectModal({ clients, onClose, onCreated }: { clients: BizClient[]
           </div>
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose} className="flex-1 py-2 rounded-xl text-sm cursor-pointer" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>Cancel</button>
-            <button type="submit" disabled={saving} className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: 'linear-gradient(135deg, #5C3BCF 0%, #7C5CE0 100%)' }}>
+            <button type="submit" disabled={saving} className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: '#5C3BCF' }}>
               {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
               {saving ? 'Creating…' : 'Create project'}
             </button>
@@ -126,7 +127,7 @@ export default function BizTechProjectsPage() {
           <button
             onClick={() => clients.length ? setAddOpen(true) : setToast({ kind: 'error', message: 'Add a client first' })}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
-            style={{ background: 'linear-gradient(135deg, #5C3BCF 0%, #7C5CE0 100%)' }}
+            style={{ background: '#5C3BCF' }}
           >
             <Plus size={14} /> New project
           </button>
@@ -139,9 +140,7 @@ export default function BizTechProjectsPage() {
         </div>
       ) : projects.length === 0 ? (
         <div className="bento-card p-12 text-center">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(92,59,207,0.1)', color: '#5C3BCF' }}>
-            <Inbox size={20} />
-          </div>
+          <Inbox size={22} className="mx-auto mb-4" style={{ color: 'var(--color-text3)' }} />
           <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--color-text)' }}>No projects yet</h3>
           <p className="text-sm max-w-sm mx-auto" style={{ color: 'var(--color-text3)' }}>Start a project for a BizTech client to track delivery.</p>
         </div>
@@ -167,9 +166,7 @@ export default function BizTechProjectsPage() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-3">
                       <p className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{p.name}</p>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color }}>
-                        {cfg.label}
-                      </span>
+                      <StatusDot label={cfg.label} color={cfg.color} />
                     </div>
                     <p className="text-xs mt-1" style={{ color: 'var(--color-text3)' }}>{p.biztech_clients?.name ?? '—'}</p>
                   </div>

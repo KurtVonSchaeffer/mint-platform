@@ -59,7 +59,7 @@ function BizTechLogo({ isLight }: { isLight: boolean }) {
     <div className="flex items-center gap-2">
       <div
         className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-        style={{ background: 'linear-gradient(135deg, #5C3BCF, #A78BFA)' }}
+        style={{ background: '#5C3BCF' }}
       >
         <span className="text-white font-bold text-xs">M</span>
       </div>

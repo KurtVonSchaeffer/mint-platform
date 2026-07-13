@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
+import { StatusDot } from '@/components/biztech/StatusDot';
 import { Building2, RefreshCw, Plus, X, Loader2, Globe, Inbox } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -19,11 +20,11 @@ interface BizClient {
   createdAt: string;
 }
 
-const STATUS_CONFIG: Record<ClientStatus, { label: string; bg: string; border: string; color: string }> = {
-  lead:     { label: 'Lead',     bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)',  color: 'var(--color-amber)' },
-  active:   { label: 'Active',   bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.3)',   color: '#A78BFA' },
-  paused:   { label: 'Paused',   bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.25)',  color: 'var(--color-sky)' },
-  archived: { label: 'Archived', bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.25)', color: 'var(--color-text3)' },
+const STATUS_CONFIG: Record<ClientStatus, { label: string; color: string }> = {
+  lead:     { label: 'Lead',     color: 'var(--color-amber)' },
+  active:   { label: 'Active',   color: '#5C3BCF' },
+  paused:   { label: 'Paused',   color: 'var(--color-sky)' },
+  archived: { label: 'Archived', color: 'var(--color-text3)' },
 };
 
 function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
@@ -77,7 +78,7 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
               type="submit"
               disabled={saving}
               className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
-              style={{ background: 'linear-gradient(135deg, #5C3BCF 0%, #7C5CE0 100%)' }}
+              style={{ background: '#5C3BCF' }}
             >
               {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
               {saving ? 'Adding…' : 'Add client'}
@@ -146,7 +147,7 @@ export default function BizTechClientsPage() {
           <button
             onClick={() => setAddOpen(true)}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
-            style={{ background: 'linear-gradient(135deg, #5C3BCF 0%, #7C5CE0 100%)' }}
+            style={{ background: '#5C3BCF' }}
           >
             <Plus size={14} /> Add client
           </button>
@@ -161,10 +162,10 @@ export default function BizTechClientsPage() {
               key={k}
               onClick={() => setStatusFilter(prev => prev === k ? null : k)}
               className="bento-card p-4 text-left transition-all cursor-pointer"
-              style={isActive ? { background: cfg.bg, border: `1px solid ${cfg.border}`, transform: 'translateY(-1px)' } : {}}
+              style={{ borderLeft: isActive ? `2px solid ${cfg.color}` : '1px solid var(--color-border2)' }}
             >
-              <p className="text-xs mb-1" style={{ color: isActive ? cfg.color : 'var(--color-text3)' }}>{cfg.label}</p>
-              <p className="text-2xl font-bold tracking-tight" style={{ color: cfg.color }}>{byStatus[k] ?? 0}</p>
+              <p className="text-xs mb-1" style={{ color: 'var(--color-text3)' }}>{cfg.label}</p>
+              <p className="text-2xl font-bold tracking-tight" style={{ color: isActive ? cfg.color : 'var(--color-text)' }}>{byStatus[k] ?? 0}</p>
             </button>
           );
         })}
@@ -176,9 +177,7 @@ export default function BizTechClientsPage() {
         </div>
       ) : clients.length === 0 ? (
         <div className="bento-card p-12 text-center">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(92,59,207,0.1)', color: '#5C3BCF' }}>
-            <Inbox size={20} />
-          </div>
+          <Inbox size={22} className="mx-auto mb-4" style={{ color: 'var(--color-text3)' }} />
           <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--color-text)' }}>No clients yet</h3>
           <p className="text-sm max-w-sm mx-auto" style={{ color: 'var(--color-text3)' }}>
             Add your first BizTech client to start tracking their projects, quotes, and invoices.
@@ -194,10 +193,10 @@ export default function BizTechClientsPage() {
             {statusFilter && (
               <button
                 onClick={() => setStatusFilter(null)}
-                className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                style={{ background: STATUS_CONFIG[statusFilter].bg, color: STATUS_CONFIG[statusFilter].color, border: `1px solid ${STATUS_CONFIG[statusFilter].border}` }}
+                className="text-xs font-medium cursor-pointer"
+                style={{ color: 'var(--color-text3)' }}
               >
-                ✕ clear
+                Clear filter
               </button>
             )}
           </div>
@@ -217,12 +216,7 @@ export default function BizTechClientsPage() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <h3 className="font-semibold truncate" style={{ color: 'var(--color-text)' }}>{client.name}</h3>
-                        <span
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                          style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color }}
-                        >
-                          {cfg.label}
-                        </span>
+                        <StatusDot label={cfg.label} color={cfg.color} />
                       </div>
                       <div className="flex items-center gap-4 text-xs flex-wrap" style={{ color: 'var(--color-text3)' }}>
                         {client.industry && (

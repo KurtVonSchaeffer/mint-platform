@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
+import { StatusDot } from '@/components/biztech/StatusDot';
 import { RefreshCw, Plus, X, Loader2, Inbox, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -15,12 +16,12 @@ interface Invoice {
 
 interface BizClient { id: string; name: string; }
 
-const STATUS_CONFIG: Record<InvoiceStatus, { label: string; bg: string; border: string; color: string }> = {
-  draft:   { label: 'Draft',   bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.25)', color: 'var(--color-text3)' },
-  sent:    { label: 'Sent',    bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.25)',  color: 'var(--color-sky)' },
-  paid:    { label: 'Paid',    bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.3)',  color: '#A78BFA' },
-  overdue: { label: 'Overdue', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', color: 'var(--color-red)' },
-  void:    { label: 'Void',    bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.25)', color: 'var(--color-text3)' },
+const STATUS_CONFIG: Record<InvoiceStatus, { label: string; color: string }> = {
+  draft:   { label: 'Draft',   color: 'var(--color-text3)' },
+  sent:    { label: 'Sent',    color: 'var(--color-sky)' },
+  paid:    { label: 'Paid',    color: '#5C3BCF' },
+  overdue: { label: 'Overdue', color: 'var(--color-red)' },
+  void:    { label: 'Void',    color: 'var(--color-text3)' },
 };
 
 function centsToRand(cents: number) {
@@ -111,7 +112,7 @@ function NewInvoiceModal({ clients, onClose, onCreated }: { clients: BizClient[]
 
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose} className="flex-1 py-2 rounded-xl text-sm cursor-pointer" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>Cancel</button>
-            <button type="submit" disabled={saving} className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: 'linear-gradient(135deg, #5C3BCF 0%, #7C5CE0 100%)' }}>
+            <button type="submit" disabled={saving} className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: '#5C3BCF' }}>
               {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
               {saving ? 'Creating…' : 'Create invoice'}
             </button>
@@ -162,7 +163,7 @@ export default function BizTechInvoicesPage() {
           <button
             onClick={() => clients.length ? setAddOpen(true) : setToast({ kind: 'error', message: 'Add a client first' })}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
-            style={{ background: 'linear-gradient(135deg, #5C3BCF 0%, #7C5CE0 100%)' }}
+            style={{ background: '#5C3BCF' }}
           >
             <Plus size={14} /> New invoice
           </button>
@@ -175,9 +176,7 @@ export default function BizTechInvoicesPage() {
         </div>
       ) : invoices.length === 0 ? (
         <div className="bento-card p-12 text-center">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(92,59,207,0.1)', color: '#5C3BCF' }}>
-            <Inbox size={20} />
-          </div>
+          <Inbox size={22} className="mx-auto mb-4" style={{ color: 'var(--color-text3)' }} />
           <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--color-text)' }}>No invoices yet</h3>
           <p className="text-sm max-w-sm mx-auto" style={{ color: 'var(--color-text3)' }}>
             Create an invoice directly, or convert an accepted quote from the Quotes page.
@@ -205,9 +204,7 @@ export default function BizTechInvoicesPage() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-3">
                       <p className="font-mono text-xs" style={{ color: 'var(--color-text3)' }}>{inv.reference}</p>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color }}>
-                        {cfg.label}
-                      </span>
+                      <StatusDot label={cfg.label} color={cfg.color} />
                     </div>
                     <p className="font-semibold text-sm mt-1" style={{ color: 'var(--color-text)' }}>{inv.biztech_clients?.name ?? '—'}</p>
                   </div>

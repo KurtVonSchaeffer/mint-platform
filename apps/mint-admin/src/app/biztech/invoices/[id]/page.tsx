@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
+import { StatusDot } from '@/components/biztech/StatusDot';
 import { ArrowLeft, Loader2, Send, CheckCircle2, Ban, Mail } from 'lucide-react';
 
 type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'void';
@@ -14,12 +15,12 @@ interface InvoiceDetail {
   biztech_clients: { id: string; name: string } | null;
 }
 
-const STATUS_CONFIG: Record<InvoiceStatus, { label: string; bg: string; border: string; color: string }> = {
-  draft:   { label: 'Draft',   bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.25)', color: 'var(--color-text3)' },
-  sent:    { label: 'Sent',    bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.25)',  color: 'var(--color-sky)' },
-  paid:    { label: 'Paid',    bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.3)',  color: '#A78BFA' },
-  overdue: { label: 'Overdue', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', color: 'var(--color-red)' },
-  void:    { label: 'Void',    bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.25)', color: 'var(--color-text3)' },
+const STATUS_CONFIG: Record<InvoiceStatus, { label: string; color: string }> = {
+  draft:   { label: 'Draft',   color: 'var(--color-text3)' },
+  sent:    { label: 'Sent',    color: 'var(--color-sky)' },
+  paid:    { label: 'Paid',    color: '#5C3BCF' },
+  overdue: { label: 'Overdue', color: 'var(--color-red)' },
+  void:    { label: 'Void',    color: 'var(--color-text3)' },
 };
 
 function centsToRand(cents: number) {
@@ -96,9 +97,7 @@ export default function BizTechInvoiceDetailPage() {
           <p className="eyebrow mb-2">MINT BizTech</p>
           <div className="flex items-center gap-3">
             <h1 className="headline text-3xl font-bold tracking-tight font-mono" style={{ color: 'var(--color-text)' }}>{invoice.reference}</h1>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color }}>
-              {cfg.label}
-            </span>
+            <StatusDot label={cfg.label} color={cfg.color} />
           </div>
           <p className="text-sm mt-2" style={{ color: 'var(--color-text2)' }}>
             {invoice.biztech_clients?.name ?? '—'}
@@ -107,7 +106,7 @@ export default function BizTechInvoiceDetailPage() {
         </div>
         <div className="flex items-center gap-2">
           {invoice.status === 'draft' && (
-            <button disabled={busy} onClick={() => setStatus('sent')} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: 'linear-gradient(135deg, #5C3BCF 0%, #7C5CE0 100%)' }}>
+            <button disabled={busy} onClick={() => setStatus('sent')} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: '#5C3BCF' }}>
               <Send size={13} /> Mark as sent
             </button>
           )}

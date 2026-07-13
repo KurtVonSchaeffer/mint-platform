@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
+import { StatusDot } from '@/components/biztech/StatusDot';
 import { ArrowLeft, Loader2, Plus, Trash2, CheckCircle2, Circle } from 'lucide-react';
 
 type ProjectStatus = 'planning' | 'active' | 'on_hold' | 'completed' | 'cancelled';
@@ -15,12 +16,12 @@ interface ProjectDetail {
 }
 interface Task { id: string; title: string; status: TaskStatus; due_date: string | null; }
 
-const STATUS_CONFIG: Record<ProjectStatus, { label: string; bg: string; border: string; color: string }> = {
-  planning:  { label: 'Planning',  bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.25)', color: 'var(--color-text3)' },
-  active:    { label: 'Active',    bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.3)',  color: '#A78BFA' },
-  on_hold:   { label: 'On hold',   bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)',  color: 'var(--color-amber)' },
-  completed: { label: 'Completed', bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.25)',  color: 'var(--color-sky)' },
-  cancelled: { label: 'Cancelled', bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', color: 'var(--color-red)' },
+const STATUS_CONFIG: Record<ProjectStatus, { label: string; color: string }> = {
+  planning:  { label: 'Planning',  color: 'var(--color-text3)' },
+  active:    { label: 'Active',    color: '#5C3BCF' },
+  on_hold:   { label: 'On hold',   color: 'var(--color-amber)' },
+  completed: { label: 'Completed', color: 'var(--color-sky)' },
+  cancelled: { label: 'Cancelled', color: 'var(--color-red)' },
 };
 
 const NEXT_STATUS: ProjectStatus[] = ['planning', 'active', 'on_hold', 'completed', 'cancelled'];
@@ -113,9 +114,7 @@ export default function BizTechProjectDetailPage() {
           <p className="eyebrow mb-2">MINT BizTech</p>
           <div className="flex items-center gap-3">
             <h1 className="headline text-3xl font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>{project.name}</h1>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider" style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color }}>
-              {cfg.label}
-            </span>
+            <StatusDot label={cfg.label} color={cfg.color} />
           </div>
           <p className="text-sm mt-2" style={{ color: 'var(--color-text2)' }}>{project.biztech_clients?.name ?? '—'}</p>
         </div>
@@ -142,7 +141,7 @@ export default function BizTechProjectDetailPage() {
         </div>
         {tasks.map(t => (
           <div key={t.id} className="px-6 py-3 flex items-center gap-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-            <button onClick={() => toggleTask(t)} className="cursor-pointer shrink-0" style={{ color: t.status === 'done' ? '#A78BFA' : 'var(--color-text3)' }}>
+            <button onClick={() => toggleTask(t)} className="cursor-pointer shrink-0" style={{ color: t.status === 'done' ? '#5C3BCF' : 'var(--color-text3)' }}>
               {t.status === 'done' ? <CheckCircle2 size={17} /> : <Circle size={17} />}
             </button>
             <p className="text-sm flex-1" style={{ color: t.status === 'done' ? 'var(--color-text3)' : 'var(--color-text)', textDecoration: t.status === 'done' ? 'line-through' : 'none' }}>
@@ -161,7 +160,7 @@ export default function BizTechProjectDetailPage() {
             value={newTask}
             onChange={e => setNewTask(e.target.value)}
           />
-          <button type="submit" disabled={addingTask} className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer shrink-0" style={{ background: 'linear-gradient(135deg, #5C3BCF 0%, #7C5CE0 100%)' }}>
+          <button type="submit" disabled={addingTask} className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer shrink-0" style={{ background: '#5C3BCF' }}>
             {addingTask ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
           </button>
         </form>

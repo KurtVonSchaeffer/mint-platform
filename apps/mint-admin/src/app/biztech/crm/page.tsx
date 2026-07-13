@@ -15,7 +15,7 @@ interface Activity {
 interface BizClient { id: string; name: string; }
 
 const TYPE_CONFIG: Record<ActivityType, { label: string; icon: typeof Phone; color: string }> = {
-  call:    { label: 'Call',    icon: Phone,      color: '#A78BFA' },
+  call:    { label: 'Call',    icon: Phone,      color: '#5C3BCF' },
   email:   { label: 'Email',   icon: Mail,       color: 'var(--color-sky)' },
   meeting: { label: 'Meeting', icon: Users,      color: 'var(--color-amber)' },
   note:    { label: 'Note',    icon: StickyNote, color: 'var(--color-text3)' },
@@ -69,7 +69,7 @@ function LogActivityModal({ clients, onClose, onCreated }: { clients: BizClient[
           </div>
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose} className="flex-1 py-2 rounded-xl text-sm cursor-pointer" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>Cancel</button>
-            <button type="submit" disabled={saving} className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: 'linear-gradient(135deg, #5C3BCF 0%, #7C5CE0 100%)' }}>
+            <button type="submit" disabled={saving} className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: '#5C3BCF' }}>
               {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
               {saving ? 'Logging…' : 'Log activity'}
             </button>
@@ -119,7 +119,7 @@ export default function BizTechCrmPage() {
           <button
             onClick={() => clients.length ? setAddOpen(true) : setToast({ kind: 'error', message: 'Add a client first' })}
             className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
-            style={{ background: 'linear-gradient(135deg, #5C3BCF 0%, #7C5CE0 100%)' }}
+            style={{ background: '#5C3BCF' }}
           >
             <Plus size={14} /> Log activity
           </button>
@@ -132,9 +132,7 @@ export default function BizTechCrmPage() {
         </div>
       ) : activities.length === 0 ? (
         <div className="bento-card p-12 text-center">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(92,59,207,0.1)', color: '#5C3BCF' }}>
-            <Inbox size={20} />
-          </div>
+          <Inbox size={22} className="mx-auto mb-4" style={{ color: 'var(--color-text3)' }} />
           <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--color-text)' }}>No activity logged yet</h3>
           <p className="text-sm max-w-sm mx-auto" style={{ color: 'var(--color-text3)' }}>Log a call, email, meeting, or note for any client.</p>
         </div>

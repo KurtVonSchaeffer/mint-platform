@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
+import { StatusDot } from '@/components/biztech/StatusDot';
 import {
   ArrowLeft, Building2, Globe, MapPin, Plus, X, Loader2,
   User, Mail, Phone, Star, Trash2, FileText, Upload, Download,
@@ -25,11 +26,11 @@ interface Doc {
   id: string; name: string; type: string | null; created_at: string; signed_url: string | null;
 }
 
-const STATUS_CONFIG: Record<ClientStatus, { label: string; bg: string; border: string; color: string }> = {
-  lead:     { label: 'Lead',     bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)',  color: 'var(--color-amber)' },
-  active:   { label: 'Active',   bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.3)',   color: '#A78BFA' },
-  paused:   { label: 'Paused',   bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.25)',  color: 'var(--color-sky)' },
-  archived: { label: 'Archived', bg: 'rgba(148,163,184,0.1)', border: 'rgba(148,163,184,0.25)', color: 'var(--color-text3)' },
+const STATUS_CONFIG: Record<ClientStatus, { label: string; color: string }> = {
+  lead:     { label: 'Lead',     color: 'var(--color-amber)' },
+  active:   { label: 'Active',   color: '#5C3BCF' },
+  paused:   { label: 'Paused',   color: 'var(--color-sky)' },
+  archived: { label: 'Archived', color: 'var(--color-text3)' },
 };
 
 function AddContactModal({ clientId, onClose, onAdded }: { clientId: string; onClose: () => void; onAdded: () => void }) {
@@ -75,7 +76,7 @@ function AddContactModal({ clientId, onClose, onAdded }: { clientId: string; onC
           </div>
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose} className="flex-1 py-2 rounded-xl text-sm cursor-pointer" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>Cancel</button>
-            <button type="submit" disabled={saving} className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: 'linear-gradient(135deg, #5C3BCF 0%, #7C5CE0 100%)' }}>
+            <button type="submit" disabled={saving} className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: '#5C3BCF' }}>
               {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
               {saving ? 'Adding…' : 'Add contact'}
             </button>
@@ -176,12 +177,7 @@ export default function BizTechClientDetailPage() {
           <p className="eyebrow mb-2">MINT BizTech</p>
           <div className="flex items-center gap-3">
             <h1 className="headline text-3xl font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>{client.name}</h1>
-            <span
-              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
-              style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color }}
-            >
-              {cfg.label}
-            </span>
+            <StatusDot label={cfg.label} color={cfg.color} />
           </div>
           <div className="flex items-center gap-4 text-xs mt-2 flex-wrap" style={{ color: 'var(--color-text3)' }}>
             {client.industry && <span className="inline-flex items-center gap-1.5"><Building2 size={11} />{client.industry}</span>}
@@ -222,7 +218,7 @@ export default function BizTechClientDetailPage() {
             <button
               onClick={() => setAddContactOpen(true)}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
-              style={{ background: 'linear-gradient(135deg, #5C3BCF 0%, #7C5CE0 100%)' }}
+              style={{ background: '#5C3BCF' }}
             >
               <Plus size={14} /> Add contact
             </button>
@@ -260,7 +256,7 @@ export default function BizTechClientDetailPage() {
       {tab === 'documents' && (
         <div className="space-y-4">
           <div className="flex justify-end">
-            <label className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: 'linear-gradient(135deg, #5C3BCF 0%, #7C5CE0 100%)' }}>
+            <label className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: '#5C3BCF' }}>
               {uploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
               {uploading ? 'Uploading…' : 'Upload document'}
               <input type="file" className="sr-only" onChange={uploadFile} disabled={uploading} />

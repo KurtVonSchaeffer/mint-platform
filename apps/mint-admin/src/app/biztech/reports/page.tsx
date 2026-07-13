@@ -64,7 +64,7 @@ export default function BizTechReportsPage() {
           <div className="grid grid-cols-3 gap-3">
             <div className="bento-card p-5">
               <p className="text-xs mb-1" style={{ color: 'var(--color-text3)' }}>Revenue (paid invoices)</p>
-              <p className="text-2xl font-bold tracking-tight" style={{ color: '#A78BFA' }}>{centsToRand(summary.invoices.revenueCents)}</p>
+              <p className="text-2xl font-bold tracking-tight" style={{ color: '#5C3BCF' }}>{centsToRand(summary.invoices.revenueCents)}</p>
             </div>
             <div className="bento-card p-5">
               <p className="text-xs mb-1" style={{ color: 'var(--color-text3)' }}>Outstanding (sent + overdue)</p>
