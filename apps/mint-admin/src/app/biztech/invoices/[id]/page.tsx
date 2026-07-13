@@ -107,20 +107,20 @@ export default function BizTechInvoiceDetailPage() {
         </div>
         <div className="flex items-center gap-2">
           {invoice.status === 'draft' && (
-            <button disabled={busy} onClick={() => setStatus('sent')} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: '#5C3BCF' }}>
+            <button disabled={busy} onClick={() => setStatus('sent')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-white cursor-pointer" style={{ background: '#5C3BCF' }}>
               <Send size={13} /> Mark as sent
             </button>
           )}
           {(invoice.status === 'sent' || invoice.status === 'overdue') && (
             <>
-              <button disabled={busy} onClick={sendReminder} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>
+              <button disabled={busy} onClick={() => setStatus('void')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}>
+                <Ban size={13} /> Void
+              </button>
+              <button disabled={busy} onClick={sendReminder} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>
                 <Mail size={13} /> Send reminder
               </button>
-              <button disabled={busy} onClick={() => setStatus('paid')} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer" style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.3)', color: '#A78BFA' }}>
+              <button disabled={busy} onClick={() => setStatus('paid')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-white cursor-pointer" style={{ background: '#5C3BCF' }}>
                 <CheckCircle2 size={13} /> Mark paid
-              </button>
-              <button disabled={busy} onClick={() => setStatus('void')} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer" style={{ background: 'rgba(148,163,184,0.1)', border: '1px solid rgba(148,163,184,0.25)', color: 'var(--color-text3)' }}>
-                <Ban size={13} /> Void
               </button>
             </>
           )}

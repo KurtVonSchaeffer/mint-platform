@@ -17,14 +17,20 @@ function centsToRand(cents: number) {
 }
 
 function StatusBreakdown({ byStatus }: { byStatus: Record<string, number> }) {
-  const total = Object.values(byStatus).reduce((a, b) => a + b, 0);
+  const entries = Object.entries(byStatus);
+  const total = entries.reduce((a, [, b]) => a + b, 0);
   if (total === 0) return <p className="text-xs" style={{ color: 'var(--color-text3)' }}>No data yet.</p>;
   return (
-    <div className="space-y-1.5">
-      {Object.entries(byStatus).map(([status, count]) => (
-        <div key={status} className="flex items-center justify-between text-xs">
-          <span className="capitalize" style={{ color: 'var(--color-text2)' }}>{status.replace('_', ' ')}</span>
-          <span className="font-mono" style={{ color: 'var(--color-text)' }}>{count}</span>
+    <div className="space-y-2.5">
+      {entries.map(([status, count]) => (
+        <div key={status}>
+          <div className="flex items-center justify-between text-xs mb-1">
+            <span className="capitalize" style={{ color: 'var(--color-text2)' }}>{status.replace('_', ' ')}</span>
+            <span className="font-mono tabular-nums" style={{ color: 'var(--color-text)' }}>{count}</span>
+          </div>
+          <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-border2)' }}>
+            <div className="h-full rounded-full" style={{ width: `${(count / total) * 100}%`, background: '#5C3BCF' }} />
+          </div>
         </div>
       ))}
     </div>
@@ -51,7 +57,7 @@ export default function BizTechReportsPage() {
           <h1 className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--color-text)' }}>Reports</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--color-text3)' }}>Revenue, pipeline, and delivery at a glance</p>
         </div>
-        <button onClick={load} className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors cursor-pointer" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>
+        <button onClick={load} className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors cursor-pointer" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>
           <RefreshCw size={13} /> Refresh
         </button>
       </div>

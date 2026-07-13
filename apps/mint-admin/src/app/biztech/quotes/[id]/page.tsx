@@ -105,22 +105,22 @@ export default function BizTechQuoteDetailPage() {
         </div>
         <div className="flex items-center gap-2">
           {quote.status === 'draft' && (
-            <button disabled={busy} onClick={() => setStatus('sent')} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: '#5C3BCF' }}>
+            <button disabled={busy} onClick={() => setStatus('sent')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-white cursor-pointer" style={{ background: '#5C3BCF' }}>
               <Send size={13} /> Mark as sent
             </button>
           )}
           {quote.status === 'sent' && (
             <>
-              <button disabled={busy} onClick={() => setStatus('accepted')} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer" style={{ background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.3)', color: '#A78BFA' }}>
-                <CheckCircle2 size={13} /> Mark accepted
-              </button>
-              <button disabled={busy} onClick={() => setStatus('declined')} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold cursor-pointer" style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.25)', color: 'var(--color-red)' }}>
+              <button disabled={busy} onClick={() => setStatus('declined')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>
                 <XCircle size={13} /> Mark declined
+              </button>
+              <button disabled={busy} onClick={() => setStatus('accepted')} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-white cursor-pointer" style={{ background: '#5C3BCF' }}>
+                <CheckCircle2 size={13} /> Mark accepted
               </button>
             </>
           )}
           {quote.status === 'accepted' && (
-            <button disabled={busy} onClick={convert} className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: '#5C3BCF' }}>
+            <button disabled={busy} onClick={convert} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-white cursor-pointer" style={{ background: '#5C3BCF' }}>
               <FileOutput size={13} /> Convert to invoice
             </button>
           )}
