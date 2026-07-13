@@ -33,12 +33,54 @@ function maybePrune() {
   }
 }
 
+// ── Server-side role gating for API routes ─────────────────────────────
+// Mirrors src/components/Shell.tsx's ROLE_ROUTES (which only hides nav
+// links — it never blocked the underlying API calls). This is the actual
+// enforcement point. Kept as prefix lists against /api/* rather than
+// per-route checks so every existing route file stays untouched.
+//
+// Unlike Shell.tsx's client-side fallback (missing role → 'super_admin',
+// the MOST privileged), a missing/unrecognised role here falls back to
+// 'support' — the LEAST privileged — since this is the real security
+// boundary, not a UI nicety.
+const API_ROLE_ROUTES: Record<string, string[]> = {
+  super_admin: ['*'],
+  admin: [
+    '/api/clients', '/api/leads', '/api/applications', '/api/quotes',
+    '/api/invoices', '/api/billing', '/api/usage', '/api/compliance',
+    '/api/migration', '/api/lender-policies',
+  ],
+  finance: ['/api/quotes', '/api/invoices', '/api/billing'],
+  support: ['/api/clients', '/api/leads', '/api/applications'],
+};
+
+// Regardless of the map above: these are super_admin only. In particular,
+// /api/users lets a caller create/edit/delete staff accounts and set an
+// arbitrary role (including their own) with zero caller-role check today —
+// any authenticated staff member, even 'support', can currently PATCH their
+// own role to 'super_admin'. This closes that hole.
+const SUPER_ADMIN_ONLY_API = ['/api/users'];
+
+function apiRoleAllowed(pathname: string, role: string): boolean {
+  if (SUPER_ADMIN_ONLY_API.some(p => pathname.startsWith(p))) {
+    return role === 'super_admin';
+  }
+  const allKnownPrefixes = Object.values(API_ROLE_ROUTES).flat().filter(p => p !== '*');
+  const isKnownArea = allKnownPrefixes.some(p => pathname.startsWith(p));
+  if (!isKnownArea) return true; // ungated area — unchanged from today's behaviour
+
+  const allowed = API_ROLE_ROUTES[role] ?? API_ROLE_ROUTES.support;
+  if (allowed[0] === '*') return true;
+  return allowed.some(p => pathname.startsWith(p));
+}
+
 /**
  * Runs on every request.
  * 1. Rate-limits API routes per IP.
  * 2. Refreshes the Supabase session cookie so it never silently expires.
  * 3. Redirects unauthenticated requests to /login.
  * 4. Redirects authenticated users away from /login back to /.
+ * 5. Enforces role-based access to /api/* (see API_ROLE_ROUTES above).
  */
 export async function middleware(request: NextRequest) {
   maybePrune();
@@ -116,6 +158,13 @@ export async function middleware(request: NextRequest) {
     homeUrl.pathname = next;
     homeUrl.search = '';
     return NextResponse.redirect(homeUrl);
+  }
+
+  if (user && pathname.startsWith('/api/') && !isPublic) {
+    const role = (user.user_metadata?.role as string | undefined) ?? 'support';
+    if (!apiRoleAllowed(pathname, role)) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
   }
 
   return response;
