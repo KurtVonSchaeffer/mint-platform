@@ -12,13 +12,16 @@ import { Building2, FolderKanban, FileText, Receipt, TrendingUp, Calendar } from
 
 const PANEL: React.CSSProperties = { background: 'var(--color-surface)', border: '1px solid var(--color-border2)', borderRadius: 10 };
 
+// Real MINT brand colors (pulled from mymint.co.za's own CSS custom
+// properties: --mint-primary-purple, --mint-gold) rotated across the
+// stat tiles so the dashboard isn't monotone purple-on-gray.
 const STATS = [
-  { label: 'Total Clients',       value: '—', icon: Building2,   sub: 'Not yet tracked' },
-  { label: 'Active Projects',     value: '—', icon: FolderKanban, sub: 'Not yet tracked' },
-  { label: 'Quotes Sent',         value: '—', icon: FileText,    sub: 'Not yet tracked' },
-  { label: 'Outstanding Invoices', value: '—', icon: Receipt,    sub: 'Not yet tracked' },
-  { label: 'Revenue (MTD)',       value: '—', icon: TrendingUp,  sub: 'Not yet tracked' },
-  { label: 'Upcoming Tasks',      value: '—', icon: Calendar,    sub: 'Not yet tracked' },
+  { label: 'Total Clients',        value: '—', icon: Building2,    sub: 'Not yet tracked', color: '#5C3BCF' },
+  { label: 'Active Projects',      value: '—', icon: FolderKanban, sub: 'Not yet tracked', color: 'var(--color-sky)' },
+  { label: 'Quotes Sent',          value: '—', icon: FileText,     sub: 'Not yet tracked', color: '#DDC357' },
+  { label: 'Outstanding Invoices', value: '—', icon: Receipt,      sub: 'Not yet tracked', color: 'var(--color-red)' },
+  { label: 'Revenue (MTD)',        value: '—', icon: TrendingUp,   sub: 'Not yet tracked', color: '#22C55E' },
+  { label: 'Upcoming Tasks',       value: '—', icon: Calendar,     sub: 'Not yet tracked', color: 'var(--color-amber)' },
 ];
 
 export default function BizTechDashboard() {
@@ -33,7 +36,7 @@ export default function BizTechDashboard() {
         </p>
       </div>
 
-      <div className="rounded-lg px-5 py-4" style={PANEL}>
+      <div className="rounded-lg px-5 py-4" style={{ ...PANEL, borderLeft: '2px solid #5C3BCF' }}>
         <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>This workspace is in early setup</p>
         <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--color-text3)' }}>
           The workspace switcher, branding, and navigation are live. Client management, quoting,
@@ -44,10 +47,12 @@ export default function BizTechDashboard() {
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {STATS.map((s) => (
-          <div key={s.label} className="p-5" style={PANEL}>
+          <div key={s.label} className="p-5" style={{ ...PANEL, borderLeft: `2px solid ${s.color}` }}>
             <div className="flex items-center justify-between mb-2">
               <p className="text-[11px] uppercase tracking-wide" style={{ color: 'var(--color-text3)' }}>{s.label}</p>
-              <s.icon size={14} style={{ color: 'var(--color-text3)' }} />
+              <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0" style={{ background: `${s.color}1A` }}>
+                <s.icon size={13} style={{ color: s.color }} />
+              </div>
             </div>
             <p className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--color-text)' }}>{s.value}</p>
             <p className="text-xs mt-1.5" style={{ color: 'var(--color-text3)' }}>{s.sub}</p>

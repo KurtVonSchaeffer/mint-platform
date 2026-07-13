@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { StatusDot } from '@/components/biztech/StatusDot';
+import { ClientAvatar } from '@/components/biztech/ClientAvatar';
 import { RefreshCw, Plus, X, Loader2, Inbox } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -228,7 +229,12 @@ export default function BizTechClientsPage() {
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--color-surface2)'; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                   >
-                    <td className="px-4 py-2.5 font-medium" style={{ color: 'var(--color-text)' }}>{client.name}</td>
+                    <td className="px-4 py-2.5 font-medium" style={{ color: 'var(--color-text)' }}>
+                      <div className="flex items-center gap-2.5">
+                        <ClientAvatar name={client.name} />
+                        {client.name}
+                      </div>
+                    </td>
                     <td className="px-4 py-2.5" style={{ color: 'var(--color-text3)' }}>{client.industry ?? '—'}</td>
                     <td className="px-4 py-2.5" style={{ color: 'var(--color-text3)' }}>{client.website ?? '—'}</td>
                     <td className="px-4 py-2.5"><StatusDot label={cfg.label} color={cfg.color} /></td>

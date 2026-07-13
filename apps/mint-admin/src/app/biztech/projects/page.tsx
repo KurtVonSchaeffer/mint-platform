@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { StatusDot } from '@/components/biztech/StatusDot';
+import { ClientAvatar } from '@/components/biztech/ClientAvatar';
 import { RefreshCw, Plus, X, Loader2, Inbox } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -169,7 +170,7 @@ export default function BizTechProjectsPage() {
                     onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                   >
                     <td className="px-4 py-2.5 font-medium" style={{ color: 'var(--color-text)' }}>{p.name}</td>
-                    <td className="px-4 py-2.5" style={{ color: 'var(--color-text3)' }}>{p.biztech_clients?.name ?? '—'}</td>
+                    <td className="px-4 py-2.5" style={{ color: 'var(--color-text)' }}><div className="flex items-center gap-2.5"><ClientAvatar name={p.biztech_clients?.name ?? '—'} />{p.biztech_clients?.name ?? '—'}</div></td>
                     <td className="px-4 py-2.5"><StatusDot label={cfg.label} color={cfg.color} /></td>
                     <td className="px-4 py-2.5 text-right font-mono text-xs" style={{ color: 'var(--color-text3)' }}>{formatDistanceToNow(new Date(p.created_at), { addSuffix: true })}</td>
                   </tr>
