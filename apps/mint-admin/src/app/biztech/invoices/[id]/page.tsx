@@ -23,6 +23,8 @@ const STATUS_CONFIG: Record<InvoiceStatus, { label: string; color: string }> = {
   void:    { label: 'Void',    color: 'var(--color-text3)' },
 };
 
+const PANEL: React.CSSProperties = { background: 'var(--color-surface)', border: '1px solid var(--color-border2)', borderRadius: 10 };
+
 function centsToRand(cents: number) {
   return `R ${(cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`;
 }
@@ -76,10 +78,10 @@ export default function BizTechInvoiceDetailPage() {
   }
 
   if (loading && !invoice) {
-    return <div className="bento-card p-12 flex items-center justify-center"><Loader2 size={24} className="animate-spin" style={{ color: '#5C3BCF' }} /></div>;
+    return <div className="p-12 flex items-center justify-center" style={PANEL}><Loader2 size={24} className="animate-spin" style={{ color: '#5C3BCF' }} /></div>;
   }
   if (!invoice) {
-    return <div className="bento-card p-12 text-center"><p className="text-sm" style={{ color: 'var(--color-text3)' }}>Invoice not found.</p></div>;
+    return <div className="p-12 text-center" style={PANEL}><p className="text-sm" style={{ color: 'var(--color-text3)' }}>Invoice not found.</p></div>;
   }
 
   const cfg = STATUS_CONFIG[invoice.status];
@@ -94,9 +96,8 @@ export default function BizTechInvoiceDetailPage() {
 
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <p className="eyebrow mb-2">MINT BizTech</p>
           <div className="flex items-center gap-3">
-            <h1 className="headline text-3xl font-bold tracking-tight font-mono" style={{ color: 'var(--color-text)' }}>{invoice.reference}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight font-mono" style={{ color: 'var(--color-text)' }}>{invoice.reference}</h1>
             <StatusDot label={cfg.label} color={cfg.color} />
           </div>
           <p className="text-sm mt-2" style={{ color: 'var(--color-text2)' }}>
@@ -126,7 +127,7 @@ export default function BizTechInvoiceDetailPage() {
         </div>
       </div>
 
-      <div className="bento-card overflow-hidden p-0">
+      <div style={{ ...PANEL, overflow: 'hidden' }}>
         <div className="px-6 py-3" style={{ borderBottom: '1px solid var(--color-border2)' }}>
           <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text3)' }}>Line items</span>
         </div>
@@ -149,7 +150,7 @@ export default function BizTechInvoiceDetailPage() {
       </div>
 
       {invoice.notes && (
-        <div className="bento-card p-6">
+        <div className="p-6" style={PANEL}>
           <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--color-text)' }}>Notes</h3>
           <p className="text-sm" style={{ color: 'var(--color-text2)' }}>{invoice.notes}</p>
         </div>

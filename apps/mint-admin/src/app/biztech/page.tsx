@@ -10,6 +10,8 @@ import { Building2, FolderKanban, FileText, Receipt, TrendingUp, Calendar } from
  * live-looking number.
  */
 
+const PANEL: React.CSSProperties = { background: 'var(--color-surface)', border: '1px solid var(--color-border2)', borderRadius: 10 };
+
 const STATS = [
   { label: 'Total Clients',       value: '—', icon: Building2,   sub: 'Not yet tracked' },
   { label: 'Active Projects',     value: '—', icon: FolderKanban, sub: 'Not yet tracked' },
@@ -21,10 +23,9 @@ const STATS = [
 
 export default function BizTechDashboard() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
-        <p className="eyebrow mb-2">MINT BizTech</p>
-        <h1 className="headline text-3xl font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>
+        <h1 className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--color-text)' }}>
           Dashboard
         </h1>
         <p className="text-sm mt-1.5" style={{ color: 'var(--color-text3)' }}>
@@ -32,31 +33,23 @@ export default function BizTechDashboard() {
         </p>
       </div>
 
-      <div
-        className="rounded-2xl p-5 flex items-start gap-3"
-        style={{ background: 'rgba(92,59,207,0.06)', border: '1px solid rgba(92,59,207,0.18)' }}
-      >
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(92,59,207,0.15)' }}>
-          <Building2 size={16} style={{ color: '#5C3BCF' }} />
-        </div>
-        <div>
-          <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>This workspace is in early setup</p>
-          <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--color-text3)' }}>
-            The workspace switcher, branding, and navigation are live. Client management, quoting,
-            invoicing, projects, CRM, and reporting are being built out next — the numbers below are
-            placeholders, not live data.
-          </p>
-        </div>
+      <div className="rounded-lg px-5 py-4" style={PANEL}>
+        <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>This workspace is in early setup</p>
+        <p className="text-xs mt-1 leading-relaxed" style={{ color: 'var(--color-text3)' }}>
+          The workspace switcher, branding, and navigation are live. Client management, quoting,
+          invoicing, projects, CRM, and reporting are being built out next — the numbers below are
+          placeholders, not live data.
+        </p>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {STATS.map((s) => (
-          <div key={s.label} className="bento-card p-5">
+          <div key={s.label} className="p-5" style={PANEL}>
             <div className="flex items-center justify-between mb-2">
-              <p className="eyebrow">{s.label}</p>
+              <p className="text-[11px] uppercase tracking-wide" style={{ color: 'var(--color-text3)' }}>{s.label}</p>
               <s.icon size={14} style={{ color: 'var(--color-text3)' }} />
             </div>
-            <p className="text-3xl font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>{s.value}</p>
+            <p className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--color-text)' }}>{s.value}</p>
             <p className="text-xs mt-1.5" style={{ color: 'var(--color-text3)' }}>{s.sub}</p>
           </div>
         ))}

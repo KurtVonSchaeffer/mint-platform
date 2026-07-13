@@ -33,6 +33,8 @@ const STATUS_CONFIG: Record<ClientStatus, { label: string; color: string }> = {
   archived: { label: 'Archived', color: 'var(--color-text3)' },
 };
 
+const PANEL: React.CSSProperties = { background: 'var(--color-surface)', border: '1px solid var(--color-border2)', borderRadius: 10 };
+
 function AddContactModal({ clientId, onClose, onAdded }: { clientId: string; onClose: () => void; onAdded: () => void }) {
   const [form, setForm]     = useState({ name: '', email: '', phone: '', role: '' });
   const [saving, setSaving] = useState(false);
@@ -52,7 +54,7 @@ function AddContactModal({ clientId, onClose, onAdded }: { clientId: string; onC
 
   return (
     <div className="confirm-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="bento-card w-full max-w-md p-7">
+      <div className="w-full max-w-md p-7" style={PANEL}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-lg" style={{ color: 'var(--color-text)' }}>Add contact</h3>
           <button onClick={onClose} className="cursor-pointer" style={{ color: 'var(--color-text3)' }}><X size={16} /></button>
@@ -141,7 +143,7 @@ export default function BizTechClientDetailPage() {
 
   if (loading && !client) {
     return (
-      <div className="bento-card p-12 flex items-center justify-center">
+      <div className="p-12 flex items-center justify-center" style={PANEL}>
         <Loader2 size={24} className="animate-spin" style={{ color: '#5C3BCF' }} />
       </div>
     );
@@ -149,7 +151,7 @@ export default function BizTechClientDetailPage() {
 
   if (!client) {
     return (
-      <div className="bento-card p-12 text-center">
+      <div className="p-12 text-center" style={PANEL}>
         <p className="text-sm" style={{ color: 'var(--color-text3)' }}>Client not found.</p>
       </div>
     );
@@ -174,9 +176,8 @@ export default function BizTechClientDetailPage() {
 
       <div className="flex items-start justify-between">
         <div>
-          <p className="eyebrow mb-2">MINT BizTech</p>
           <div className="flex items-center gap-3">
-            <h1 className="headline text-3xl font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>{client.name}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--color-text)' }}>{client.name}</h1>
             <StatusDot label={cfg.label} color={cfg.color} />
           </div>
           <div className="flex items-center gap-4 text-xs mt-2 flex-wrap" style={{ color: 'var(--color-text3)' }}>
@@ -204,7 +205,7 @@ export default function BizTechClientDetailPage() {
       </div>
 
       {tab === 'overview' && (
-        <div className="bento-card p-6">
+        <div className="p-6" style={PANEL}>
           <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>Notes</h3>
           <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text2)' }}>
             {client.notes || <span style={{ color: 'var(--color-text3)' }} className="italic">No notes yet.</span>}
@@ -224,12 +225,12 @@ export default function BizTechClientDetailPage() {
             </button>
           </div>
           {contacts.length === 0 ? (
-            <div className="bento-card p-10 text-center">
+            <div className="p-10 text-center" style={PANEL}>
               <User size={20} className="mx-auto mb-3" style={{ color: 'var(--color-text3)' }} />
               <p className="text-sm" style={{ color: 'var(--color-text3)' }}>No contacts added yet.</p>
             </div>
           ) : (
-            <div className="bento-card overflow-hidden p-0">
+            <div style={{ ...PANEL, overflow: 'hidden' }}>
               {contacts.map(c => (
                 <div key={c.id} className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                   <div className="min-w-0">
@@ -263,12 +264,12 @@ export default function BizTechClientDetailPage() {
             </label>
           </div>
           {docs.length === 0 ? (
-            <div className="bento-card p-10 text-center">
+            <div className="p-10 text-center" style={PANEL}>
               <FileText size={20} className="mx-auto mb-3" style={{ color: 'var(--color-text3)' }} />
               <p className="text-sm" style={{ color: 'var(--color-text3)' }}>No documents uploaded yet.</p>
             </div>
           ) : (
-            <div className="bento-card overflow-hidden p-0">
+            <div style={{ ...PANEL, overflow: 'hidden' }}>
               {docs.map(d => (
                 <div key={d.id} className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                   <div className="min-w-0 flex items-center gap-3">

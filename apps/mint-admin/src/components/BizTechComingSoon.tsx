@@ -12,17 +12,17 @@ export function BizTechComingSoon({
   icon: ComponentType<IconProps>;
 }) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
-        <p className="eyebrow mb-2">MINT BizTech</p>
-        <h1 className="headline text-3xl font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>{title}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--color-text)' }}>{title}</h1>
       </div>
-      <div className="bento-card p-12 flex flex-col items-center justify-center text-center gap-3" style={{ minHeight: 280 }}>
-        <div className="w-14 h-14 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(92,59,207,0.1)' }}>
-          <Icon size={24} style={{ color: '#5C3BCF' }} />
-        </div>
+      <div
+        className="p-12 flex flex-col items-center justify-center text-center gap-3"
+        style={{ minHeight: 280, background: 'var(--color-surface)', border: '1px solid var(--color-border2)', borderRadius: 10 }}
+      >
+        <Icon size={22} style={{ color: 'var(--color-text3)' }} />
         <div className="flex items-center gap-1.5 mt-1">
-          <Construction size={12} style={{ color: '#FBBF24' }} />
+          <Construction size={12} style={{ color: 'var(--color-amber)' }} />
           <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Coming soon</p>
         </div>
         <p className="text-xs max-w-sm" style={{ color: 'var(--color-text3)' }}>{description}</p>

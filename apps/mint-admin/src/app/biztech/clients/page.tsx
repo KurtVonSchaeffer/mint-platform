@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { StatusDot } from '@/components/biztech/StatusDot';
-import { Building2, RefreshCw, Plus, X, Loader2, Globe, Inbox } from 'lucide-react';
+import { RefreshCw, Plus, X, Loader2, Inbox } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 type ClientStatus = 'lead' | 'active' | 'paused' | 'archived';
@@ -27,6 +27,8 @@ const STATUS_CONFIG: Record<ClientStatus, { label: string; color: string }> = {
   archived: { label: 'Archived', color: 'var(--color-text3)' },
 };
 
+const PANEL: React.CSSProperties = { background: 'var(--color-surface)', border: '1px solid var(--color-border2)', borderRadius: 10 };
+
 function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
   const [form, setForm]     = useState({ name: '', industry: '', website: '', address: '', notes: '' });
   const [saving, setSaving] = useState(false);
@@ -46,7 +48,7 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
 
   return (
     <div className="confirm-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="bento-card w-full max-w-md p-7" style={{ animation: 'scale-in 0.25s cubic-bezier(0.16,1,0.3,1) both' }}>
+      <div className="w-full max-w-md p-7" style={{ ...PANEL, animation: 'scale-in 0.25s cubic-bezier(0.16,1,0.3,1) both' }}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-lg" style={{ color: 'var(--color-text)' }}>Add client</h3>
           <button onClick={onClose} className="cursor-pointer" style={{ color: 'var(--color-text3)' }}><X size={16} /></button>
@@ -73,11 +75,11 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
             <textarea className="field-input" rows={3} value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} />
           </div>
           <div className="flex gap-2 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-xl text-sm cursor-pointer" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-sm cursor-pointer" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>Cancel</button>
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold text-white cursor-pointer"
               style={{ background: '#5C3BCF' }}
             >
               {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
@@ -120,17 +122,17 @@ export default function BizTechClientsPage() {
     return acc;
   }, {});
 
+  const statusKeys = Object.keys(STATUS_CONFIG) as ClientStatus[];
   const filtered = statusFilter ? clients.filter(c => c.status === statusFilter) : clients;
 
   return (
-    <div className="space-y-6 page-enter">
+    <div className="space-y-5 page-enter">
       {toast && <Toast kind={toast.kind} message={toast.message} onClose={() => setToast(null)} />}
       {addOpen && <AddClientModal onClose={() => setAddOpen(false)} onAdded={load} />}
 
       <div className="flex items-start justify-between">
         <div>
-          <p className="eyebrow mb-2">MINT BizTech</p>
-          <h1 className="headline text-3xl font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>Clients</h1>
+          <h1 className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--color-text)' }}>Clients</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--color-text3)' }}>
             Companies MINT provides IT consulting and services to
           </p>
@@ -138,7 +140,7 @@ export default function BizTechClientsPage() {
         <div className="flex items-center gap-2">
           <button
             onClick={load}
-            className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
             style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}
           >
             <RefreshCw size={13} />
@@ -146,7 +148,7 @@ export default function BizTechClientsPage() {
           </button>
           <button
             onClick={() => setAddOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold text-white cursor-pointer"
             style={{ background: '#5C3BCF' }}
           >
             <Plus size={14} /> Add client
@@ -154,41 +156,45 @@ export default function BizTechClientsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-3">
-        {(Object.entries(STATUS_CONFIG) as [ClientStatus, typeof STATUS_CONFIG[ClientStatus]][]).map(([k, cfg]) => {
+      <div className="flex items-stretch" style={PANEL}>
+        {statusKeys.map((k, i) => {
+          const cfg = STATUS_CONFIG[k];
           const isActive = statusFilter === k;
           return (
             <button
               key={k}
               onClick={() => setStatusFilter(prev => prev === k ? null : k)}
-              className="bento-card p-4 text-left transition-all cursor-pointer"
-              style={{ borderLeft: isActive ? `2px solid ${cfg.color}` : '1px solid var(--color-border2)' }}
+              className="flex-1 text-left px-5 py-3 cursor-pointer transition-colors"
+              style={{
+                borderLeft: i > 0 ? '1px solid var(--color-border2)' : 'none',
+                background: isActive ? 'var(--color-surface2)' : 'transparent',
+              }}
             >
-              <p className="text-xs mb-1" style={{ color: 'var(--color-text3)' }}>{cfg.label}</p>
-              <p className="text-2xl font-bold tracking-tight" style={{ color: isActive ? cfg.color : 'var(--color-text)' }}>{byStatus[k] ?? 0}</p>
+              <p className="text-[11px] uppercase tracking-wide mb-1" style={{ color: 'var(--color-text3)' }}>{cfg.label}</p>
+              <p className="text-xl font-semibold tabular-nums" style={{ color: isActive ? cfg.color : 'var(--color-text)' }}>{byStatus[k] ?? 0}</p>
             </button>
           );
         })}
       </div>
 
       {loading ? (
-        <div className="bento-card p-12 flex items-center justify-center">
-          <Loader2 size={24} className="animate-spin" style={{ color: '#5C3BCF' }} />
+        <div className="p-12 flex items-center justify-center" style={PANEL}>
+          <Loader2 size={22} className="animate-spin" style={{ color: '#5C3BCF' }} />
         </div>
       ) : clients.length === 0 ? (
-        <div className="bento-card p-12 text-center">
-          <Inbox size={22} className="mx-auto mb-4" style={{ color: 'var(--color-text3)' }} />
-          <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--color-text)' }}>No clients yet</h3>
+        <div className="p-12 text-center" style={PANEL}>
+          <Inbox size={20} className="mx-auto mb-4" style={{ color: 'var(--color-text3)' }} />
+          <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--color-text)' }}>No clients yet</h3>
           <p className="text-sm max-w-sm mx-auto" style={{ color: 'var(--color-text3)' }}>
             Add your first BizTech client to start tracking their projects, quotes, and invoices.
           </p>
         </div>
       ) : (
-        <div className="bento-card overflow-hidden p-0">
-          <div className="px-6 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--color-border2)' }}>
-            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text3)' }}>
+        <div style={{ ...PANEL, overflow: 'hidden' }}>
+          <div className="px-4 py-2.5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--color-border2)' }}>
+            <span className="text-xs" style={{ color: 'var(--color-text3)' }}>
               {filtered.length} {filtered.length === 1 ? 'client' : 'clients'}
-              {statusFilter ? ` · ${STATUS_CONFIG[statusFilter].label}` : ' · newest first'}
+              {statusFilter ? ` · ${STATUS_CONFIG[statusFilter].label}` : ''}
             </span>
             {statusFilter && (
               <button
@@ -200,49 +206,40 @@ export default function BizTechClientsPage() {
               </button>
             )}
           </div>
-          <div>
-            {filtered.map(client => {
-              const cfg = STATUS_CONFIG[client.status];
-              return (
-                <article
-                  key={client.id}
-                  onClick={() => router.push(`/biztech/clients/${client.id}`)}
-                  className="p-6 cursor-pointer transition-colors"
-                  style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(92,59,207,0.03)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                >
-                  <div className="grid grid-cols-[1fr_auto] gap-6 items-start">
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-3 mb-2 flex-wrap">
-                        <h3 className="font-semibold truncate" style={{ color: 'var(--color-text)' }}>{client.name}</h3>
-                        <StatusDot label={cfg.label} color={cfg.color} />
-                      </div>
-                      <div className="flex items-center gap-4 text-xs flex-wrap" style={{ color: 'var(--color-text3)' }}>
-                        {client.industry && (
-                          <span className="inline-flex items-center gap-1.5">
-                            <Building2 size={11} />
-                            {client.industry}
-                          </span>
-                        )}
-                        {client.website && (
-                          <span className="inline-flex items-center gap-1.5">
-                            <Globe size={11} />
-                            {client.website}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <p className="text-[10px] font-mono" style={{ color: 'var(--color-text3)' }}>
-                        {formatDistanceToNow(new Date(client.createdAt), { addSuffix: true })}
-                      </p>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
+          <table className="w-full text-sm" style={{ borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                <th className="text-left font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Client</th>
+                <th className="text-left font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Industry</th>
+                <th className="text-left font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Website</th>
+                <th className="text-left font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Status</th>
+                <th className="text-right font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Added</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((client, i) => {
+                const cfg = STATUS_CONFIG[client.status];
+                return (
+                  <tr
+                    key={client.id}
+                    onClick={() => router.push(`/biztech/clients/${client.id}`)}
+                    className="cursor-pointer transition-colors"
+                    style={{ borderBottom: i < filtered.length - 1 ? '1px solid var(--color-border2)' : 'none' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--color-surface2)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                  >
+                    <td className="px-4 py-2.5 font-medium" style={{ color: 'var(--color-text)' }}>{client.name}</td>
+                    <td className="px-4 py-2.5" style={{ color: 'var(--color-text3)' }}>{client.industry ?? '—'}</td>
+                    <td className="px-4 py-2.5" style={{ color: 'var(--color-text3)' }}>{client.website ?? '—'}</td>
+                    <td className="px-4 py-2.5"><StatusDot label={cfg.label} color={cfg.color} /></td>
+                    <td className="px-4 py-2.5 text-right font-mono text-xs" style={{ color: 'var(--color-text3)' }}>
+                      {formatDistanceToNow(new Date(client.createdAt), { addSuffix: true })}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

@@ -21,6 +21,8 @@ const TYPE_CONFIG: Record<ActivityType, { label: string; icon: typeof Phone; col
   note:    { label: 'Note',    icon: StickyNote, color: 'var(--color-text3)' },
 };
 
+const PANEL: React.CSSProperties = { background: 'var(--color-surface)', border: '1px solid var(--color-border2)', borderRadius: 10 };
+
 function LogActivityModal({ clients, onClose, onCreated }: { clients: BizClient[]; onClose: () => void; onCreated: () => void }) {
   const [clientId, setClientId] = useState('');
   const [type, setType] = useState<ActivityType>('note');
@@ -42,7 +44,7 @@ function LogActivityModal({ clients, onClose, onCreated }: { clients: BizClient[
 
   return (
     <div className="confirm-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="bento-card w-full max-w-md p-7">
+      <div className="w-full max-w-md p-7" style={PANEL}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-lg" style={{ color: 'var(--color-text)' }}>Log activity</h3>
           <button onClick={onClose} className="cursor-pointer" style={{ color: 'var(--color-text3)' }}><X size={16} /></button>
@@ -108,8 +110,7 @@ export default function BizTechCrmPage() {
 
       <div className="flex items-start justify-between">
         <div>
-          <p className="eyebrow mb-2">MINT BizTech</p>
-          <h1 className="headline text-3xl font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>CRM</h1>
+          <h1 className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--color-text)' }}>CRM</h1>
           <p className="text-sm mt-1" style={{ color: 'var(--color-text3)' }}>Calls, emails, meetings, and notes across all clients</p>
         </div>
         <div className="flex items-center gap-2">
@@ -127,17 +128,17 @@ export default function BizTechCrmPage() {
       </div>
 
       {loading ? (
-        <div className="bento-card p-12 flex items-center justify-center">
+        <div className="p-12 flex items-center justify-center" style={PANEL}>
           <Loader2 size={24} className="animate-spin" style={{ color: '#5C3BCF' }} />
         </div>
       ) : activities.length === 0 ? (
-        <div className="bento-card p-12 text-center">
+        <div className="p-12 text-center" style={PANEL}>
           <Inbox size={22} className="mx-auto mb-4" style={{ color: 'var(--color-text3)' }} />
           <h3 className="text-base font-semibold mb-2" style={{ color: 'var(--color-text)' }}>No activity logged yet</h3>
           <p className="text-sm max-w-sm mx-auto" style={{ color: 'var(--color-text3)' }}>Log a call, email, meeting, or note for any client.</p>
         </div>
       ) : (
-        <div className="bento-card overflow-hidden p-0">
+        <div style={{ ...PANEL, overflow: 'hidden' }}>
           <div className="px-6 py-3" style={{ borderBottom: '1px solid var(--color-border2)' }}>
             <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text3)' }}>
               {activities.length} {activities.length === 1 ? 'activity' : 'activities'} · most recent first
