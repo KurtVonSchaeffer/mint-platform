@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { StatusDot } from '@/components/biztech/StatusDot';
 import { ClientAvatar } from '@/components/biztech/ClientAvatar';
-import { RefreshCw, Plus, X, Loader2, Inbox, Building2, MapPin, Receipt, FolderKanban, FileText } from 'lucide-react';
+import { RefreshCw, Plus, X, Loader2, Inbox, Building2, MapPin, Receipt, FolderKanban, FileText, Tag, Globe, StickyNote } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface WorkSummary {
@@ -40,6 +40,15 @@ const STATUS_CONFIG: Record<ClientStatus, { label: string; color: string }> = {
 
 const PANEL: React.CSSProperties = { background: 'var(--color-surface)', border: '1px solid var(--color-border2)', borderRadius: 10 };
 
+function IconField({ icon: Icon, top, children }: { icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>; top?: boolean; children: React.ReactNode }) {
+  return (
+    <div className="relative">
+      <Icon size={14} style={{ position: 'absolute', left: 11, top: top ? 12 : '50%', transform: top ? 'none' : 'translateY(-50%)', color: 'var(--color-text3)', pointerEvents: 'none' }} />
+      {children}
+    </div>
+  );
+}
+
 function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
   const [form, setForm]     = useState({ name: '', industry: '', website: '', address: '', notes: '' });
   const [saving, setSaving] = useState(false);
@@ -71,12 +80,16 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
       >
         <div className="flex items-center justify-between px-7 py-5" style={{ borderBottom: '1px solid var(--color-border2)' }}>
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(92,59,207,0.12)' }}>
-              <Building2 size={16} style={{ color: '#5C3BCF' }} />
-            </div>
+            {form.name.trim() ? (
+              <ClientAvatar name={form.name} size={36} />
+            ) : (
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(92,59,207,0.12)' }}>
+                <Building2 size={16} style={{ color: '#5C3BCF' }} />
+              </div>
+            )}
             <div>
               <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: 'var(--color-text3)' }}>New client</p>
-              <h3 className="font-semibold text-base" style={{ color: 'var(--color-text)' }}>Add a BizTech client</h3>
+              <h3 className="font-semibold text-base" style={{ color: 'var(--color-text)' }}>{form.name.trim() || 'Add a BizTech client'}</h3>
             </div>
           </div>
           <button onClick={onClose} className="cursor-pointer p-1 rounded-md" style={{ color: 'var(--color-text3)' }}><X size={16} /></button>
@@ -85,34 +98,46 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
         <form onSubmit={submit}>
           <div className="px-7 py-6 space-y-5 max-h-[65vh] overflow-y-auto">
             <div className="space-y-3">
-              <p className="text-[10px] uppercase tracking-widest font-semibold" style={{ color: 'var(--color-text3)' }}>Company details</p>
+              <p className="text-[10px] uppercase tracking-widest font-semibold flex items-center gap-1.5" style={{ color: '#5C3BCF' }}>
+                <Building2 size={11} /> Company details
+              </p>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text2)' }}>Company name</label>
-                <input type="text" required autoFocus className="field-input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
+                <IconField icon={Building2}>
+                  <input type="text" required autoFocus className="field-input" style={{ paddingLeft: 34 }} value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
+                </IconField>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text2)' }}>Industry</label>
-                  <input type="text" className="field-input" value={form.industry} onChange={e => setForm(p => ({ ...p, industry: e.target.value }))} />
+                  <IconField icon={Tag}>
+                    <input type="text" className="field-input" style={{ paddingLeft: 34 }} value={form.industry} onChange={e => setForm(p => ({ ...p, industry: e.target.value }))} />
+                  </IconField>
                 </div>
                 <div>
                   <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text2)' }}>Website</label>
-                  <input type="text" className="field-input" value={form.website} onChange={e => setForm(p => ({ ...p, website: e.target.value }))} />
+                  <IconField icon={Globe}>
+                    <input type="text" className="field-input" style={{ paddingLeft: 34 }} value={form.website} onChange={e => setForm(p => ({ ...p, website: e.target.value }))} />
+                  </IconField>
                 </div>
               </div>
             </div>
 
             <div className="space-y-3 pt-2" style={{ borderTop: '1px solid var(--color-border2)' }}>
-              <p className="text-[10px] uppercase tracking-widest font-semibold flex items-center gap-1.5" style={{ color: 'var(--color-text3)' }}>
+              <p className="text-[10px] uppercase tracking-widest font-semibold flex items-center gap-1.5" style={{ color: 'var(--color-sky)' }}>
                 <MapPin size={11} /> Location &amp; notes
               </p>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text2)' }}>Address</label>
-                <input type="text" className="field-input" value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} />
+                <IconField icon={MapPin}>
+                  <input type="text" className="field-input" style={{ paddingLeft: 34 }} value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} />
+                </IconField>
               </div>
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text2)' }}>Notes (optional)</label>
-                <textarea className="field-input" rows={3} value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} />
+                <IconField icon={StickyNote} top>
+                  <textarea className="field-input" style={{ paddingLeft: 34 }} rows={3} value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} />
+                </IconField>
               </div>
             </div>
           </div>
