@@ -173,6 +173,27 @@ export default function MintLoansPage() {
     ? loans.reduce((s, l) => s + (l.offered_rate_pct ?? 0), 0) / loans.length
     : 0;
 
+  // Group rows by lender (client_id) so multiple loans from the same lender
+  // sit under one heading instead of repeating the lender cell on every row.
+  const groups = new Map<string, { name: string; loans: MintLoan[] }>();
+  for (const loan of filtered) {
+    const key = loan.client_id;
+    const existing = groups.get(key);
+    if (existing) existing.loans.push(loan);
+    else groups.set(key, { name: loan.clients?.name ?? loan.client_id, loans: [loan] });
+  }
+  const groupedEntries = Array.from(groups.values()).sort((a, b) => b.loans.length - a.loans.length);
+
+  /** consumer_name is sometimes populated with the email itself upstream —
+   * in that case showing it twice (bold name + email sub-line) is just
+   * noise, so fall back to a plain single line. */
+  function borrowerDisplay(qr: MintLoan['quote_requests']) {
+    const name = qr?.consumer_name?.trim();
+    const email = qr?.consumer_email?.trim();
+    const nameIsEmail = !!name && !!email && name.toLowerCase() === email.toLowerCase();
+    return { name: nameIsEmail ? null : (name || null), email: email || null };
+  }
+
   return (
     <Shell>
       <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
@@ -235,7 +256,6 @@ export default function MintLoansPage() {
               <thead className="border-b border-gray-100 bg-gray-50 text-xs font-medium uppercase tracking-wide text-gray-400">
                 <tr>
                   <th className="px-4 py-3 text-left">Borrower</th>
-                  <th className="px-4 py-3 text-left">Lender</th>
                   <th className="px-4 py-3 text-right">Amount</th>
                   <th className="px-4 py-3 text-right">Rate</th>
                   <th className="px-4 py-3 text-right">Monthly</th>
@@ -243,80 +263,86 @@ export default function MintLoansPage() {
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filtered.map((loan) => {
-                  const qr    = loan.quote_requests;
-                  const score = (qr?.credit_profile as Record<string, unknown> | null)?.creditScore as number | undefined;
-                  const open  = expanded === loan.id;
-                  return (
-                    <>
-                      <tr key={loan.id} className="hover:bg-gray-50/60">
-                        <td className="px-4 py-3">
-                          <p className="font-medium text-gray-900">{qr?.consumer_name || '—'}</p>
-                          <p className="text-xs text-gray-400">{qr?.consumer_email || '—'}</p>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-100 text-violet-600">
-                              <Building2 size={13} />
-                            </div>
-                            <span className="font-medium text-gray-800">{loan.clients?.name ?? loan.client_id}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-right font-semibold text-gray-900">{fmt(loan.offered_amount)}</td>
-                        <td className="px-4 py-3 text-right text-gray-700">{loan.offered_rate_pct?.toFixed(1)}%</td>
-                        <td className="px-4 py-3 text-right text-gray-700">{fmt(loan.monthly_installment)}</td>
-                        <td className="px-4 py-3 text-gray-500">
-                          {loan.accepted_at
-                            ? formatDistanceToNow(new Date(loan.accepted_at), { addSuffix: true })
-                            : '—'}
-                        </td>
-                        <td className="px-4 py-3">
-                          <button
-                            onClick={() => setExpanded(open ? null : loan.id)}
-                            className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                          >
-                            {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                          </button>
-                        </td>
-                      </tr>
-
-                      {open && (
-                        <tr key={`${loan.id}-detail`}>
-                          <td colSpan={7} className="bg-gray-50/80 px-4 pb-5 pt-3">
-                            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                              {[
-                                { icon: User,      label: 'Full name',       value: qr?.consumer_name  || '—' },
-                                { icon: Mail,      label: 'Email',           value: qr?.consumer_email || '—' },
-                                { icon: TrendingUp,label: 'Credit score',    value: score ? String(score) : '—' },
-                                { icon: Clock,     label: 'Term',            value: `${loan.offered_term_months} months` },
-                                { icon: HandCoins, label: 'Total repayment', value: fmt(loan.total_repayment) },
-                                { icon: HandCoins, label: 'Initiation fee',  value: fmt(loan.initiation_fee) },
-                                { icon: Calendar,  label: 'Applied',         value: qr?.created_at ? new Date(qr.created_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : '—' },
-                                { icon: Building2, label: 'Lender',          value: loan.clients?.name ?? loan.client_id },
-                              ].map(({ icon: Icon, label, value }) => (
-                                <div key={label} className="flex items-start gap-2">
-                                  <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-white text-gray-400 shadow-sm">
-                                    <Icon size={12} />
-                                  </div>
-                                  <div>
-                                    <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">{label}</p>
-                                    <p className="text-sm font-medium text-gray-800">{value}</p>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                            <ScoreHistoryChart requestId={loan.request_id} />
-                            {qr?.reference && (
-                              <p className="mt-3 text-[10px] font-mono text-gray-400">Ref: {qr.reference}</p>
-                            )}
+              {groupedEntries.map((group) => (
+                <tbody key={group.name} className="divide-y divide-gray-50">
+                  <tr>
+                    <td colSpan={6} className="bg-violet-50/60 px-4 py-2">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-md bg-violet-100 text-violet-600">
+                          <Building2 size={12} />
+                        </div>
+                        <span className="text-xs font-semibold text-violet-700">{group.name}</span>
+                        <span className="text-[11px] text-violet-400">· {group.loans.length} {group.loans.length === 1 ? 'loan' : 'loans'}</span>
+                      </div>
+                    </td>
+                  </tr>
+                  {group.loans.map((loan) => {
+                    const qr    = loan.quote_requests;
+                    const score = (qr?.credit_profile as Record<string, unknown> | null)?.creditScore as number | undefined;
+                    const open  = expanded === loan.id;
+                    const borrower = borrowerDisplay(qr);
+                    return (
+                      <>
+                        <tr key={loan.id} className="hover:bg-gray-50/60">
+                          <td className="px-4 py-3">
+                            {borrower.name && <p className="font-medium text-gray-900">{borrower.name}</p>}
+                            <p className={borrower.name ? 'text-xs text-gray-400' : 'font-medium text-gray-900'}>{borrower.email || '—'}</p>
+                          </td>
+                          <td className="px-4 py-3 text-right font-semibold text-gray-900">{fmt(loan.offered_amount)}</td>
+                          <td className="px-4 py-3 text-right text-gray-700">{loan.offered_rate_pct?.toFixed(1)}%</td>
+                          <td className="px-4 py-3 text-right text-gray-700">{fmt(loan.monthly_installment)}</td>
+                          <td className="px-4 py-3 text-gray-500">
+                            {loan.accepted_at
+                              ? formatDistanceToNow(new Date(loan.accepted_at), { addSuffix: true })
+                              : '—'}
+                          </td>
+                          <td className="px-4 py-3">
+                            <button
+                              onClick={() => setExpanded(open ? null : loan.id)}
+                              className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                            >
+                              {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                            </button>
                           </td>
                         </tr>
-                      )}
-                    </>
-                  );
-                })}
-              </tbody>
+
+                        {open && (
+                          <tr key={`${loan.id}-detail`}>
+                            <td colSpan={6} className="bg-gray-50/80 px-4 pb-5 pt-3">
+                              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                                {[
+                                  { icon: User,      label: 'Full name',       value: borrower.name  || '—' },
+                                  { icon: Mail,      label: 'Email',           value: borrower.email || '—' },
+                                  { icon: TrendingUp,label: 'Credit score',    value: score ? String(score) : '—' },
+                                  { icon: Clock,     label: 'Term',            value: `${loan.offered_term_months} months` },
+                                  { icon: HandCoins, label: 'Total repayment', value: fmt(loan.total_repayment) },
+                                  { icon: HandCoins, label: 'Initiation fee',  value: fmt(loan.initiation_fee) },
+                                  { icon: Calendar,  label: 'Applied',         value: qr?.created_at ? new Date(qr.created_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : '—' },
+                                  { icon: Building2, label: 'Lender',          value: loan.clients?.name ?? loan.client_id },
+                                ].map(({ icon: Icon, label, value }) => (
+                                  <div key={label} className="flex items-start gap-2">
+                                    <div className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-md bg-white text-gray-400 shadow-sm">
+                                      <Icon size={12} />
+                                    </div>
+                                    <div>
+                                      <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">{label}</p>
+                                      <p className="text-sm font-medium text-gray-800">{value}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                              <ScoreHistoryChart requestId={loan.request_id} />
+                              {qr?.reference && (
+                                <p className="mt-3 text-[10px] font-mono text-gray-400">Ref: {qr.reference}</p>
+                              )}
+                            </td>
+                          </tr>
+                        )}
+                      </>
+                    );
+                  })}
+                </tbody>
+              ))}
             </table>
           )}
         </div>

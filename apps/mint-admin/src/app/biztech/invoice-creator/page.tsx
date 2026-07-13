@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Plus, Trash2, Printer } from 'lucide-react';
+import { Toast, type ToastKind } from '@/components/Toast';
+import { Plus, Trash2, Printer, CheckCircle2, Loader2 } from 'lucide-react';
 
 const FROM = {
   company: 'ALGOHIVE PTY LTD',
@@ -20,6 +22,8 @@ const BANKING = {
 };
 
 interface LineItem { id: number; desc: string; sub: string; qty: number; rate: number; }
+interface BizClient { id: string; name: string; address: string | null; }
+interface Contact { name: string; email: string | null; phone: string | null; is_primary: boolean; }
 
 let nextId = 2;
 
@@ -44,6 +48,13 @@ function fmt(n: number) {
 const inp = 'w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-violet-400 focus:border-violet-400 placeholder:text-gray-300';
 
 export default function MintInvoicePage() {
+  const router = useRouter();
+  const [clients, setClients] = useState<BizClient[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState('');
+  const [creating, setCreating] = useState(false);
+  const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ kind: ToastKind; message: string } | null>(null);
+
   const [clientName,  setClientName]  = useState('');
   const [clientAddr,  setClientAddr]  = useState('');
   const [clientPhone, setClientPhone] = useState('');
@@ -59,6 +70,37 @@ export default function MintInvoicePage() {
   const [vatEnabled,  setVatEnabled]  = useState(false);
   const [notes,       setNotes]       = useState('');
   const [items, setItems] = useState<LineItem[]>([{ id: 1, desc: '', sub: '', qty: 1, rate: 0 }]);
+
+  // Load real BizTech clients for the "select client" dropdown.
+  useEffect(() => {
+    fetch('/api/biztech/clients')
+      .then(r => r.ok ? r.json() : { clients: [] })
+      .then(({ clients }) => setClients(clients ?? []))
+      .catch(() => {});
+  }, []);
+
+  // Selecting a client auto-fills Bill To from the client record + their
+  // primary contact — fields stay editable afterwards for ad-hoc tweaks.
+  const applyClient = useCallback(async (clientId: string) => {
+    setSelectedClientId(clientId);
+    if (!clientId) return;
+    const client = clients.find(c => c.id === clientId);
+    if (client) {
+      setClientName(client.name);
+      setClientAddr(client.address ?? '');
+    }
+    try {
+      const res = await fetch(`/api/biztech/clients/${clientId}/contacts`);
+      if (res.ok) {
+        const { contacts } = await res.json() as { contacts: Contact[] };
+        const primary = contacts?.find(c => c.is_primary) ?? contacts?.[0];
+        if (primary) {
+          setClientPhone(primary.phone ?? '');
+          setClientEmail(primary.email ?? '');
+        }
+      }
+    } catch { /* non-critical — Bill To fields stay editable regardless */ }
+  }, [clients]);
 
   // Auto-set document title → browser uses this as the default PDF filename
   useEffect(() => {
@@ -78,8 +120,43 @@ export default function MintInvoicePage() {
   const total    = subtotal + vat;
   const invNo    = invoiceNo(clientName, invoiceSeq);
 
+  async function createInvoice() {
+    if (!selectedClientId) {
+      setToast({ kind: 'error', message: 'Select a BizTech client first' });
+      return;
+    }
+    if (!items.some(i => i.desc.trim())) {
+      setToast({ kind: 'error', message: 'Add at least one line item' });
+      return;
+    }
+    setCreating(true);
+    const res = await fetch('/api/biztech/invoices', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_id: selectedClientId,
+        due_at: dueDate || null,
+        notes: notes || null,
+        items: items.filter(i => i.desc.trim()).map(i => ({
+          description: i.sub ? `${i.desc} — ${i.sub}` : i.desc,
+          quantity: i.qty,
+          unit_price_cents: Math.round(i.rate * 100),
+        })),
+      }),
+    });
+    setCreating(false);
+    if (res.ok) {
+      const { invoice } = await res.json();
+      setCreatedInvoiceId(invoice.id);
+      setToast({ kind: 'success', message: `Invoice ${invoice.reference} created` });
+    } else {
+      setToast({ kind: 'error', message: 'Failed to create invoice' });
+    }
+  }
+
   return (
     <>
+      {toast && <Toast kind={toast.kind} message={toast.message} onClose={() => setToast(null)} />}
       <style>{`
         @media print {
           .no-print { display: none !important; }
@@ -270,6 +347,14 @@ export default function MintInvoicePage() {
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
               <p className="text-xs font-bold uppercase tracking-widest text-gray-400">Bill To</p>
               <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">BizTech client</label>
+                <select value={selectedClientId} onChange={e => applyClient(e.target.value)} className={inp}>
+                  <option value="">Select client…</option>
+                  {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+                <p className="text-[10px] text-gray-400 mt-1">Selecting a client auto-fills the fields below and lets you save this as a real invoice.</p>
+              </div>
+              <div>
                 <label className="block text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1.5">Company / Name</label>
                 <input value={clientName} onChange={e => setClientName(e.target.value)}
                   placeholder="e.g. Zwane Official" className={inp} />
@@ -374,6 +459,25 @@ export default function MintInvoicePage() {
                 placeholder="Additional notes for the client…"
                 className={`${inp} resize-none`} />
             </div>
+
+            {createdInvoiceId ? (
+              <div className="rounded-2xl p-4 space-y-2" style={{ background: '#f0fdf4', border: '1px solid #d1fae5' }}>
+                <div className="flex items-center gap-2 text-sm font-semibold text-green-700">
+                  <CheckCircle2 size={15} /> Saved to Invoices
+                </div>
+                <button onClick={() => router.push(`/biztech/invoices/${createdInvoiceId}`)}
+                  className="w-full py-2 rounded-lg text-xs font-semibold text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
+                  View invoice →
+                </button>
+              </div>
+            ) : (
+              <button onClick={createInvoice} disabled={creating}
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-bold text-white cursor-pointer disabled:opacity-60"
+                style={{ background: '#16a34a' }}>
+                {creating ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
+                {creating ? 'Creating…' : 'Create Invoice'}
+              </button>
+            )}
 
             <button onClick={() => { try { localStorage.setItem('mint_invoice_seq', String(invoiceSeq)); } catch {} window.print(); }}
               className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl text-sm font-bold text-white"
