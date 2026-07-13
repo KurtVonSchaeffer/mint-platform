@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from 'react';
 import {
   LayoutGrid, Building2, Briefcase, FileText, Receipt, FolderKanban,
   Users2, BarChart3, Wrench, LogOut, Sun, Moon, Menu, X, ChevronDown,
-  CheckCircle2,
+  CheckCircle2, Printer,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { createBrowserClient } from '@supabase/ssr';
@@ -45,6 +45,7 @@ const nav: NavItem[] = [
   { label: 'Projects',   href: '/biztech/projects',  icon: FolderKanban },
   { label: 'CRM',        href: '/biztech/crm',       icon: Briefcase   },
   { label: 'Reports',    href: '/biztech/reports',   icon: BarChart3   },
+  { label: 'Invoice Creator', href: '/biztech/invoice-creator', icon: Printer },
 ];
 
 const ROLE_LABELS: Record<string, { label: string; color: string }> = {

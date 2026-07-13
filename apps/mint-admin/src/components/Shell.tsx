@@ -674,20 +674,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
                     <p className="text-[10px] opacity-60">IT consulting &amp; services</p>
                   </div>
                 </Link>
-                <Link
-                  href="/mint-invoice"
-                  onClick={() => setAppOpen(false)}
-                  className="flex items-center gap-2.5 px-3 py-2.5 text-xs font-medium transition-colors"
-                  style={{ color: 'var(--color-text2)' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                >
-                  <Receipt size={13} />
-                  <div>
-                    <p className="font-semibold">Mint Invoice Creator</p>
-                    <p className="text-[10px] opacity-60">Internal billing tool</p>
-                  </div>
-                </Link>
               </div>
             )}
           </div>

@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
-import { Plus, Trash2, ArrowLeft, Printer } from 'lucide-react';
+import { Plus, Trash2, Printer } from 'lucide-react';
 
 const FROM = {
   company: 'ALGOHIVE PTY LTD',
@@ -98,25 +97,7 @@ export default function MintInvoicePage() {
         body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       `}</style>
 
-      <div className="min-h-screen" style={{ background: '#f1f5f9' }}>
-
-        {/* Top bar */}
-        <div className="no-print sticky top-0 z-10 flex items-center justify-between px-8 h-14 bg-white border-b border-gray-100">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-1.5 text-xs font-medium text-gray-400 hover:text-violet-600 transition-colors">
-              <ArrowLeft size={13} /> Back to Admin
-            </Link>
-            <span className="text-gray-200">|</span>
-            <p className="text-sm font-semibold text-gray-700">Invoice Creator</p>
-          </div>
-          <button
-            onClick={() => { try { localStorage.setItem('mint_invoice_seq', String(invoiceSeq)); } catch {} window.print(); }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
-            style={{ background: 'linear-gradient(135deg,#4c1d95,#7C3AED)' }}
-          >
-            <Printer size={14} /> Print / Save PDF
-          </button>
-        </div>
+      <div className="-m-6 lg:-m-10 min-h-screen" style={{ background: '#f1f5f9' }}>
 
         <div className="print-root max-w-6xl mx-auto px-6 py-8 grid lg:grid-cols-[1fr_310px] gap-8 items-start">
 
