@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { Fragment, useState, useEffect, useCallback } from 'react';
 import { Shell } from '@/components/Shell';
 import {
   HandCoins, RefreshCw, Loader2, ChevronDown, ChevronUp,
@@ -141,6 +141,7 @@ export default function MintLoansPage() {
   const [loans, setLoans]         = useState<MintLoan[]>([]);
   const [loading, setLoading]     = useState(true);
   const [expanded, setExpanded]   = useState<string | null>(null);
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
   const [search, setSearch]       = useState('');
 
   const load = useCallback(async () => {
@@ -192,7 +193,17 @@ export default function MintLoansPage() {
     if (existing) existing.loans.push(loan);
     else groups.set(key, { ...borrowerDisplay(loan.quote_requests), loans: [loan] });
   }
-  const groupedEntries = Array.from(groups.values()).sort((a, b) => b.loans.length - a.loans.length);
+  const groupedEntries = Array.from(groups.entries())
+    .map(([key, g]) => ({ key, ...g }))
+    .sort((a, b) => b.loans.length - a.loans.length);
+
+  function toggleGroup(key: string) {
+    setOpenGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  }
 
   return (
     <Shell>
@@ -263,28 +274,33 @@ export default function MintLoansPage() {
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
-              {groupedEntries.map((group) => (
-                <tbody key={group.email ?? group.loans[0].id} className="divide-y divide-gray-50">
-                  <tr>
+              {groupedEntries.map((group) => {
+                const isOpen = openGroups.has(group.key);
+                return (
+                <tbody key={group.key} className="divide-y divide-gray-50">
+                  <tr className="cursor-pointer hover:bg-violet-50" onClick={() => toggleGroup(group.key)}>
                     <td colSpan={6} className="bg-violet-50/60 px-4 py-2">
                       <div className="flex items-center gap-2">
                         <div className="flex h-6 w-6 items-center justify-center rounded-md bg-violet-100 text-violet-600">
                           <User size={12} />
                         </div>
                         {group.name && <span className="text-xs font-semibold text-violet-700">{group.name}</span>}
-                        <span className={group.name ? 'text-[11px] text-violet-400' : 'text-xs font-semibold text-violet-700'}>{group.name ? group.email : (group.email || '—')}</span>
+                        <span className={group.name ? 'text-[11px] text-violet-400' : 'text-xs font-semibold text-violet-700'}>{group.email || '—'}</span>
                         <span className="text-[11px] text-violet-400">· {group.loans.length} {group.loans.length === 1 ? 'loan' : 'loans'}</span>
+                        <span className="ml-auto text-violet-400">
+                          {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        </span>
                       </div>
                     </td>
                   </tr>
-                  {group.loans.map((loan) => {
+                  {isOpen && group.loans.map((loan) => {
                     const qr    = loan.quote_requests;
                     const score = (qr?.credit_profile as Record<string, unknown> | null)?.creditScore as number | undefined;
                     const open  = expanded === loan.id;
                     const borrower = borrowerDisplay(qr);
                     return (
-                      <>
-                        <tr key={loan.id} className="hover:bg-gray-50/60">
+                      <Fragment key={loan.id}>
+                        <tr className="hover:bg-gray-50/60">
                           <td className="px-4 py-3">
                             <p className="font-medium text-gray-900">{loan.clients?.name ?? loan.client_id}</p>
                           </td>
@@ -338,11 +354,12 @@ export default function MintLoansPage() {
                             </td>
                           </tr>
                         )}
-                      </>
+                      </Fragment>
                     );
                   })}
                 </tbody>
-              ))}
+                );
+              })}
             </table>
           )}
         </div>
