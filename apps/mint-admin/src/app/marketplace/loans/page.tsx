@@ -173,17 +173,6 @@ export default function MintLoansPage() {
     ? loans.reduce((s, l) => s + (l.offered_rate_pct ?? 0), 0) / loans.length
     : 0;
 
-  // Group rows by lender (client_id) so multiple loans from the same lender
-  // sit under one heading instead of repeating the lender cell on every row.
-  const groups = new Map<string, { name: string; loans: MintLoan[] }>();
-  for (const loan of filtered) {
-    const key = loan.client_id;
-    const existing = groups.get(key);
-    if (existing) existing.loans.push(loan);
-    else groups.set(key, { name: loan.clients?.name ?? loan.client_id, loans: [loan] });
-  }
-  const groupedEntries = Array.from(groups.values()).sort((a, b) => b.loans.length - a.loans.length);
-
   /** consumer_name is sometimes populated with the email itself upstream —
    * in that case showing it twice (bold name + email sub-line) is just
    * noise, so fall back to a plain single line. */
@@ -193,6 +182,17 @@ export default function MintLoansPage() {
     const nameIsEmail = !!name && !!email && name.toLowerCase() === email.toLowerCase();
     return { name: nameIsEmail ? null : (name || null), email: email || null };
   }
+
+  // Group rows by borrower (the consumer) so every lender they have a loan
+  // with rolls up under one heading, instead of one row per lender per loan.
+  const groups = new Map<string, { name: string | null; email: string | null; loans: MintLoan[] }>();
+  for (const loan of filtered) {
+    const key = (loan.quote_requests?.consumer_email ?? loan.request_id).toLowerCase();
+    const existing = groups.get(key);
+    if (existing) existing.loans.push(loan);
+    else groups.set(key, { ...borrowerDisplay(loan.quote_requests), loans: [loan] });
+  }
+  const groupedEntries = Array.from(groups.values()).sort((a, b) => b.loans.length - a.loans.length);
 
   return (
     <Shell>
@@ -255,7 +255,7 @@ export default function MintLoansPage() {
             <table className="w-full text-sm">
               <thead className="border-b border-gray-100 bg-gray-50 text-xs font-medium uppercase tracking-wide text-gray-400">
                 <tr>
-                  <th className="px-4 py-3 text-left">Borrower</th>
+                  <th className="px-4 py-3 text-left">Lender</th>
                   <th className="px-4 py-3 text-right">Amount</th>
                   <th className="px-4 py-3 text-right">Rate</th>
                   <th className="px-4 py-3 text-right">Monthly</th>
@@ -264,14 +264,15 @@ export default function MintLoansPage() {
                 </tr>
               </thead>
               {groupedEntries.map((group) => (
-                <tbody key={group.name} className="divide-y divide-gray-50">
+                <tbody key={group.email ?? group.loans[0].id} className="divide-y divide-gray-50">
                   <tr>
                     <td colSpan={6} className="bg-violet-50/60 px-4 py-2">
                       <div className="flex items-center gap-2">
                         <div className="flex h-6 w-6 items-center justify-center rounded-md bg-violet-100 text-violet-600">
-                          <Building2 size={12} />
+                          <User size={12} />
                         </div>
-                        <span className="text-xs font-semibold text-violet-700">{group.name}</span>
+                        {group.name && <span className="text-xs font-semibold text-violet-700">{group.name}</span>}
+                        <span className={group.name ? 'text-[11px] text-violet-400' : 'text-xs font-semibold text-violet-700'}>{group.name ? group.email : (group.email || '—')}</span>
                         <span className="text-[11px] text-violet-400">· {group.loans.length} {group.loans.length === 1 ? 'loan' : 'loans'}</span>
                       </div>
                     </td>
@@ -285,8 +286,7 @@ export default function MintLoansPage() {
                       <>
                         <tr key={loan.id} className="hover:bg-gray-50/60">
                           <td className="px-4 py-3">
-                            {borrower.name && <p className="font-medium text-gray-900">{borrower.name}</p>}
-                            <p className={borrower.name ? 'text-xs text-gray-400' : 'font-medium text-gray-900'}>{borrower.email || '—'}</p>
+                            <p className="font-medium text-gray-900">{loan.clients?.name ?? loan.client_id}</p>
                           </td>
                           <td className="px-4 py-3 text-right font-semibold text-gray-900">{fmt(loan.offered_amount)}</td>
                           <td className="px-4 py-3 text-right text-gray-700">{loan.offered_rate_pct?.toFixed(1)}%</td>

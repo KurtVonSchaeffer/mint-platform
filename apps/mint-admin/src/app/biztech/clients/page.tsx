@@ -5,8 +5,18 @@ import { useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { StatusDot } from '@/components/biztech/StatusDot';
 import { ClientAvatar } from '@/components/biztech/ClientAvatar';
-import { RefreshCw, Plus, X, Loader2, Inbox, Building2, MapPin } from 'lucide-react';
+import { RefreshCw, Plus, X, Loader2, Inbox, Building2, MapPin, Receipt, FolderKanban, FileText } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+
+interface WorkSummary {
+  invoices: { outstandingCents: number };
+  quotes:   { pipelineCents: number };
+  projects: { byStatus: Record<string, number> };
+}
+
+function centsToRand(cents: number) {
+  return `R ${(cents / 100).toLocaleString('en-ZA', { minimumFractionDigits: 0 })}`;
+}
 
 type ClientStatus = 'lead' | 'active' | 'paused' | 'archived';
 
@@ -131,7 +141,7 @@ export default function BizTechClientsPage() {
   const [loading, setLoading]   = useState(true);
   const [addOpen, setAddOpen]   = useState(false);
   const [toast, setToast]       = useState<{ kind: ToastKind; message: string } | null>(null);
-  const [statusFilter, setStatusFilter] = useState<ClientStatus | null>(null);
+  const [work, setWork]         = useState<WorkSummary | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -149,14 +159,15 @@ export default function BizTechClientsPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    fetch('/api/biztech/reports/summary')
+      .then(r => r.ok ? r.json() : null)
+      .then(setWork)
+      .catch(() => {});
+  }, []);
 
-  const byStatus = clients.reduce<Record<string, number>>((acc, c) => {
-    acc[c.status] = (acc[c.status] ?? 0) + 1;
-    return acc;
-  }, {});
-
-  const statusKeys = Object.keys(STATUS_CONFIG) as ClientStatus[];
-  const filtered = statusFilter ? clients.filter(c => c.status === statusFilter) : clients;
+  const activeProjects = work ? Object.entries(work.projects.byStatus).filter(([s]) => s !== 'completed' && s !== 'cancelled').reduce((s, [, n]) => s + n, 0) : 0;
+  const filtered = clients;
 
   return (
     <div className="space-y-5 page-enter">
@@ -189,25 +200,20 @@ export default function BizTechClientsPage() {
         </div>
       </div>
 
-      <div className="flex items-stretch" style={PANEL}>
-        {statusKeys.map((k, i) => {
-          const cfg = STATUS_CONFIG[k];
-          const isActive = statusFilter === k;
-          return (
-            <button
-              key={k}
-              onClick={() => setStatusFilter(prev => prev === k ? null : k)}
-              className="flex-1 text-left px-5 py-3 cursor-pointer transition-colors"
-              style={{
-                borderLeft: i > 0 ? '1px solid var(--color-border2)' : 'none',
-                background: isActive ? 'var(--color-surface2)' : 'transparent',
-              }}
-            >
-              <p className="text-[11px] uppercase tracking-wide mb-1" style={{ color: 'var(--color-text3)' }}>{cfg.label}</p>
-              <p className="text-xl font-semibold tabular-nums" style={{ color: isActive ? cfg.color : 'var(--color-text)' }}>{byStatus[k] ?? 0}</p>
-            </button>
-          );
-        })}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: 'Outstanding invoices', value: work ? centsToRand(work.invoices.outstandingCents) : '—', icon: Receipt, color: 'var(--color-amber)' },
+          { label: 'Active projects',      value: work ? String(activeProjects) : '—',                       icon: FolderKanban, color: '#5C3BCF' },
+          { label: 'Quote pipeline',       value: work ? centsToRand(work.quotes.pipelineCents) : '—',        icon: FileText, color: 'var(--color-sky)' },
+        ].map(s => (
+          <div key={s.label} className="px-5 py-4" style={{ ...PANEL, borderLeft: `2px solid ${s.color}` }}>
+            <div className="flex items-center justify-between mb-1.5">
+              <p className="text-[11px] uppercase tracking-wide" style={{ color: 'var(--color-text3)' }}>{s.label}</p>
+              <s.icon size={13} style={{ color: s.color }} />
+            </div>
+            <p className="text-xl font-semibold tabular-nums" style={{ color: 'var(--color-text)' }}>{s.value}</p>
+          </div>
+        ))}
       </div>
 
       {loading ? (
@@ -224,20 +230,10 @@ export default function BizTechClientsPage() {
         </div>
       ) : (
         <div style={{ ...PANEL, overflow: 'hidden' }}>
-          <div className="px-4 py-2.5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--color-border2)' }}>
+          <div className="px-4 py-2.5" style={{ borderBottom: '1px solid var(--color-border2)' }}>
             <span className="text-xs" style={{ color: 'var(--color-text3)' }}>
               {filtered.length} {filtered.length === 1 ? 'client' : 'clients'}
-              {statusFilter ? ` · ${STATUS_CONFIG[statusFilter].label}` : ''}
             </span>
-            {statusFilter && (
-              <button
-                onClick={() => setStatusFilter(null)}
-                className="text-xs font-medium cursor-pointer"
-                style={{ color: 'var(--color-text3)' }}
-              >
-                Clear filter
-              </button>
-            )}
           </div>
           <table className="w-full text-sm" style={{ borderCollapse: 'collapse' }}>
             <thead>
