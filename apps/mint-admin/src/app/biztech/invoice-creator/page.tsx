@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Toast, type ToastKind } from '@/components/Toast';
-import { Plus, Trash2, Printer, CheckCircle2, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Printer, CheckCircle2, Loader2, ArrowLeft } from 'lucide-react';
 
 const FROM = {
   company: 'ALGOHIVE PTY LTD',
@@ -175,6 +175,15 @@ export default function MintInvoicePage() {
       `}</style>
 
       <div className="-m-6 lg:-m-10 min-h-screen" style={{ background: '#f1f5f9' }}>
+
+        <div className="no-print max-w-6xl mx-auto px-6 pt-6">
+          <button
+            onClick={() => router.push('/biztech/invoices')}
+            className="inline-flex items-center gap-1.5 text-xs font-medium cursor-pointer text-gray-500 hover:text-gray-700"
+          >
+            <ArrowLeft size={13} /> Back to invoices
+          </button>
+        </div>
 
         <div className="print-root max-w-6xl mx-auto px-6 py-8 grid lg:grid-cols-[1fr_310px] gap-8 items-start">
 
