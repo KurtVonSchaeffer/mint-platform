@@ -80,6 +80,17 @@ export function BizTechShell({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole]       = useState('super_admin');
   const appRef = useRef<HTMLDivElement>(null);
 
+  const [clientsOpen, setClientsOpen] = useState(false);
+  const [bizClients, setBizClients]   = useState<{ id: string; name: string }[] | null>(null);
+
+  useEffect(() => {
+    if (!clientsOpen || bizClients) return;
+    fetch('/api/biztech/clients')
+      .then(r => r.ok ? r.json() : { clients: [] })
+      .then(({ clients }) => setBizClients(clients ?? []))
+      .catch(() => setBizClients([]));
+  }, [clientsOpen, bizClients]);
+
   useEffect(() => {
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -239,6 +250,66 @@ export function BizTechShell({ children }: { children: React.ReactNode }) {
         <nav className="flex-1 py-3 px-2.5 space-y-0.5 overflow-y-auto">
           {nav.map(({ label, href, icon: Icon, comingSoon }) => {
             const isActive = href === '/biztech' ? pathname === '/biztech' : pathname.startsWith(href);
+            const isClients = href === '/biztech/clients';
+
+            if (isClients) {
+              return (
+                <div key={href}>
+                  <div
+                    className="relative flex items-center gap-3 rounded-xl text-sm transition-all duration-150"
+                    style={isActive
+                      ? { background: colors.activeBg, color: colors.activeText, fontWeight: 600 }
+                      : { color: colors.normalText }}
+                  >
+                    <Link
+                      href={href}
+                      onClick={() => setSidebarOpen(false)}
+                      className="flex items-center gap-3 px-3 py-2.5 flex-1 min-w-0"
+                    >
+                      <div className="w-6 h-6 rounded-md flex items-center justify-center shrink-0"
+                        style={isActive ? { color: colors.activeText, background: 'rgba(92,59,207,0.15)' } : { opacity: 0.65 }}>
+                        <Icon size={14} />
+                      </div>
+                      <span className="flex-1">{label}</span>
+                    </Link>
+                    <button
+                      onClick={() => setClientsOpen(o => !o)}
+                      aria-label={clientsOpen ? 'Collapse clients list' : 'Expand clients list'}
+                      className="p-2.5 pl-1 shrink-0 cursor-pointer"
+                    >
+                      <ChevronDown size={13} className={`transition-transform duration-200 ${clientsOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                  </div>
+                  {clientsOpen && (
+                    <div className="ml-4 pl-3 mt-0.5 space-y-0.5" style={{ borderLeft: `1px solid ${colors.border}` }}>
+                      {!bizClients ? (
+                        <div className="px-3 py-2 text-xs" style={{ color: colors.normalText }}>Loading…</div>
+                      ) : bizClients.length === 0 ? (
+                        <div className="px-3 py-2 text-xs" style={{ color: colors.normalText }}>No clients yet</div>
+                      ) : (
+                        bizClients.map(c => {
+                          const clientActive = pathname === `/biztech/clients/${c.id}`;
+                          return (
+                            <Link
+                              key={c.id}
+                              href={`/biztech/clients/${c.id}`}
+                              onClick={() => setSidebarOpen(false)}
+                              className="block px-3 py-1.5 rounded-lg text-xs truncate transition-colors"
+                              style={clientActive
+                                ? { background: colors.activeBg, color: colors.activeText, fontWeight: 600 }
+                                : { color: colors.normalText }}
+                            >
+                              {c.name}
+                            </Link>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
             return (
               <Link
                 key={href}
