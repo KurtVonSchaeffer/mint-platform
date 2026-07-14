@@ -5,6 +5,20 @@
    "Obsidian Command" — deep navy cosmos, electric purple authority
    ───────────────────────────────────────────────────────────────── */
 
+/* MINT BizTech heading font — scoped to the BizTech workspace only,
+   applied via .biztech-content (BizTechShell's main wrapper). */
+@font-face {
+  font-family: 'Future Earth';
+  src: url('/fonts/future-earth.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+.biztech-content h1 {
+  font-family: 'Future Earth', var(--font-display);
+  letter-spacing: 0.02em;
+}
+
 @theme {
   /* Font stack (loaded in layout.tsx) */
   --font-sans:    var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
