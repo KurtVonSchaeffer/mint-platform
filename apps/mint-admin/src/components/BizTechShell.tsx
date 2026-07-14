@@ -58,9 +58,9 @@ function BizTechLogo({ isLight }: { isLight: boolean }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/biztech-logo.svg"
-      alt="MINT BizTech"
-      className="h-8 w-auto shrink-0"
+      src="/mint-logo-v2.svg"
+      alt="MINT"
+      className="h-7 w-auto shrink-0"
       style={{ filter: isLight ? 'none' : 'brightness(0) invert(1)' }}
     />
   );
@@ -202,7 +202,7 @@ export function BizTechShell({ children }: { children: React.ReactNode }) {
         <div className="sidebar-brand flex flex-col h-auto px-5 pt-4 pb-3 shrink-0 gap-2">
           <BizTechLogo isLight={isLight} />
           <p className="text-[9px] tracking-widest uppercase pl-0.5" style={{ color: 'rgba(167,139,250,0.5)' }}>
-            IT Consulting &amp; Software Services
+            BizTech Admin Portal
           </p>
 
           {/* Workspace switcher — back to AlgoLend */}
