@@ -61,7 +61,25 @@ function SetPasswordForm() {
       return;
     }
 
-    // Path 2: Implicit flow — #access_token= in hash (Supabase admin generateLink)
+    // Path 2: Implicit flow — #access_token=&refresh_token= in hash (from
+    // supabaseAdmin.auth.admin.generateLink). @supabase/ssr's browser client
+    // hardcodes flowType: 'pkce', which makes its automatic hash-detection
+    // unreliable for these implicit-flow links — it can silently never fire
+    // an auth event, which used to fall through to the 6s timeout and show
+    // a false "link expired". Parse the hash and set the session directly
+    // instead of trusting auto-detection.
+    const hashParams   = new URLSearchParams(window.location.hash.slice(1));
+    const accessToken  = hashParams.get('access_token');
+    const refreshToken = hashParams.get('refresh_token');
+
+    if (accessToken && refreshToken) {
+      supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(({ error: err }) => {
+        if (err) setExpired(true);
+        else setReady(true);
+      });
+      return;
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') setReady(true);
     });
