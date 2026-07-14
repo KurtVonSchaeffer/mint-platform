@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const BUCKET = 'biztech-documents';
+const BUCKET = 'client-documents';
 
 export async function GET(
   _req: NextRequest,

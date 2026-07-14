@@ -26,6 +26,8 @@ interface Doc {
   id: string; name: string; type: string | null; created_at: string; signed_url: string | null;
 }
 
+const DOC_TYPES = ['Contract', 'Proposal', 'Invoice', 'Other'] as const;
+
 const STATUS_CONFIG: Record<ClientStatus, { label: string; color: string }> = {
   lead:     { label: 'Lead',     color: 'var(--color-amber)' },
   active:   { label: 'Active',   color: '#5C3BCF' },
@@ -100,6 +102,7 @@ export default function BizTechClientDetailPage() {
   const [loading, setLoading]   = useState(true);
   const [addContactOpen, setAddContactOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadType, setUploadType] = useState<string>('Contract');
   const [toast, setToast]       = useState<{ kind: ToastKind; message: string } | null>(null);
 
   const load = useCallback(async () => {
@@ -136,6 +139,7 @@ export default function BizTechClientDetailPage() {
     setUploading(true);
     const fd = new FormData();
     fd.append('file', file);
+    fd.append('type', uploadType);
     const res = await fetch(`/api/biztech/clients/${id}/documents`, { method: 'POST', body: fd });
     setUploading(false);
     if (res.ok) { load(); } else { setToast({ kind: 'error', message: 'Upload failed' }); }
@@ -199,7 +203,7 @@ export default function BizTechClientDetailPage() {
               borderBottom: tab === t ? '2px solid #5C3BCF' : '2px solid transparent',
             }}
           >
-            {t === 'contacts' ? `Contacts (${contacts.length})` : t === 'documents' ? `Documents (${docs.length})` : t}
+            {t === 'contacts' ? `Contacts (${contacts.length})` : t === 'documents' ? `Documents & Contracts (${docs.length})` : t}
           </button>
         ))}
       </div>
@@ -254,49 +258,89 @@ export default function BizTechClientDetailPage() {
         </div>
       )}
 
-      {tab === 'documents' && (
-        <div className="space-y-4">
-          <div className="flex justify-end">
-            <label className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: '#5C3BCF' }}>
-              {uploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
-              {uploading ? 'Uploading…' : 'Upload document'}
-              <input type="file" className="sr-only" onChange={uploadFile} disabled={uploading} />
-            </label>
-          </div>
-          {docs.length === 0 ? (
-            <div className="p-10 text-center" style={PANEL}>
-              <FileText size={20} className="mx-auto mb-3" style={{ color: 'var(--color-text3)' }} />
-              <p className="text-sm" style={{ color: 'var(--color-text3)' }}>No documents uploaded yet.</p>
-            </div>
-          ) : (
-            <div style={{ ...PANEL, overflow: 'hidden' }}>
-              {docs.map(d => (
-                <div key={d.id} className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                  <div className="min-w-0 flex items-center gap-3">
-                    <FileText size={16} style={{ color: '#5C3BCF' }} />
-                    <div>
+      {tab === 'documents' && (() => {
+        const contracts = docs.filter(d => d.type === 'Contract');
+        const other     = docs.filter(d => d.type !== 'Contract');
+
+        const DocList = ({ items }: { items: Doc[] }) => (
+          <div style={{ ...PANEL, overflow: 'hidden' }}>
+            {items.map(d => (
+              <div key={d.id} className="p-4 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                <div className="min-w-0 flex items-center gap-3">
+                  <FileText size={16} style={{ color: '#5C3BCF' }} />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
                       <p className="font-medium text-sm truncate" style={{ color: 'var(--color-text)' }}>{d.name}</p>
-                      <p className="text-[10px] font-mono" style={{ color: 'var(--color-text3)' }}>
-                        {formatDistanceToNow(new Date(d.created_at), { addSuffix: true })}
-                      </p>
+                      {d.type && d.type !== 'Contract' && (
+                        <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded" style={{ color: 'var(--color-text3)', border: '1px solid var(--color-border2)' }}>{d.type}</span>
+                      )}
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {d.signed_url && (
-                      <a href={d.signed_url} target="_blank" rel="noreferrer" className="cursor-pointer p-1.5 rounded-lg" style={{ color: 'var(--color-text3)' }}>
-                        <Download size={14} />
-                      </a>
-                    )}
-                    <button onClick={() => removeDoc(d.id)} className="cursor-pointer p-1.5 rounded-lg" style={{ color: 'var(--color-text3)' }}>
-                      <Trash2 size={14} />
-                    </button>
+                    <p className="text-[10px] font-mono" style={{ color: 'var(--color-text3)' }}>
+                      {formatDistanceToNow(new Date(d.created_at), { addSuffix: true })}
+                    </p>
                   </div>
                 </div>
-              ))}
+                <div className="flex items-center gap-1 shrink-0">
+                  {d.signed_url && (
+                    <a href={d.signed_url} target="_blank" rel="noreferrer" className="cursor-pointer p-1.5 rounded-lg" style={{ color: 'var(--color-text3)' }}>
+                      <Download size={14} />
+                    </a>
+                  )}
+                  <button onClick={() => removeDoc(d.id)} className="cursor-pointer p-1.5 rounded-lg" style={{ color: 'var(--color-text3)' }}>
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-end items-center gap-2">
+              <select
+                className="field-input w-auto text-sm"
+                value={uploadType}
+                onChange={e => setUploadType(e.target.value)}
+                disabled={uploading}
+              >
+                {DOC_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <label className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: '#5C3BCF' }}>
+                {uploading ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
+                {uploading ? 'Uploading…' : 'Upload'}
+                <input type="file" className="sr-only" onChange={uploadFile} disabled={uploading} />
+              </label>
             </div>
-          )}
-        </div>
-      )}
+
+            {docs.length === 0 ? (
+              <div className="p-10 text-center" style={PANEL}>
+                <FileText size={20} className="mx-auto mb-3" style={{ color: 'var(--color-text3)' }} />
+                <p className="text-sm" style={{ color: 'var(--color-text3)' }}>No documents or contracts uploaded yet.</p>
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text3)' }}>Contracts ({contracts.length})</h3>
+                  {contracts.length === 0 ? (
+                    <p className="text-sm" style={{ color: 'var(--color-text3)' }}>No contracts uploaded yet.</p>
+                  ) : (
+                    <DocList items={contracts} />
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text3)' }}>Other documents ({other.length})</h3>
+                  {other.length === 0 ? (
+                    <p className="text-sm" style={{ color: 'var(--color-text3)' }}>No other documents uploaded yet.</p>
+                  ) : (
+                    <DocList items={other} />
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
