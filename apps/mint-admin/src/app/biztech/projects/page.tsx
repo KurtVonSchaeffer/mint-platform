@@ -147,35 +147,35 @@ export default function BizTechProjectsPage() {
           <p className="text-sm max-w-sm mx-auto" style={{ color: 'var(--color-text3)' }}>Start a project for a BizTech client to track delivery.</p>
         </div>
       ) : (
-        <div style={{ ...PANEL, overflow: 'hidden' }}>
-          <table className="w-full text-sm" style={{ borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                <th className="text-left font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Project</th>
-                <th className="text-left font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Client</th>
-                <th className="text-left font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Status</th>
-                <th className="text-right font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Created</th>
-              </tr>
-            </thead>
-            <tbody>
-              {projects.map((p, i) => {
-                const cfg = STATUS_CONFIG[p.status];
-                return (
-                  <tr
-                    key={p.id}
-                    onClick={() => router.push(`/biztech/projects/${p.id}`)}
-                    className="biztech-row cursor-pointer"
-                    style={{ borderBottom: i < projects.length - 1 ? '1px solid var(--color-border2)' : 'none' }}
-                  >
-                    <td className="px-4 py-2.5 font-medium" style={{ color: 'var(--color-text)' }}>{p.name}</td>
-                    <td className="px-4 py-2.5" style={{ color: 'var(--color-text)' }}><div className="flex items-center gap-2.5"><ClientAvatar name={p.biztech_clients?.name ?? '—'} />{p.biztech_clients?.name ?? '—'}</div></td>
-                    <td className="px-4 py-2.5"><StatusDot label={cfg.label} color={cfg.color} /></td>
-                    <td className="px-4 py-2.5 text-right font-mono text-xs" style={{ color: 'var(--color-text3)' }}>{formatDistanceToNow(new Date(p.created_at), { addSuffix: true })}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {projects.map((p, i) => {
+            const cfg = STATUS_CONFIG[p.status];
+            return (
+              <div
+                key={p.id}
+                onClick={() => router.push(`/biztech/projects/${p.id}`)}
+                className="biztech-card biztech-field-in cursor-pointer p-5"
+                style={{ ...PANEL, animationDelay: `${Math.min(i, 8) * 40}ms` }}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <ClientAvatar name={p.biztech_clients?.name ?? '—'} size={32} />
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm truncate" style={{ color: 'var(--color-text)' }}>{p.name}</p>
+                      <p className="text-xs truncate" style={{ color: 'var(--color-text3)' }}>{p.biztech_clients?.name ?? '—'}</p>
+                    </div>
+                  </div>
+                  <StatusDot label={cfg.label} color={cfg.color} />
+                </div>
+                <div className="pt-3" style={{ borderTop: '1px solid var(--color-border2)' }}>
+                  <div className="flex items-center justify-between text-xs">
+                    <span style={{ color: 'var(--color-text3)' }}>Created</span>
+                    <span className="font-mono" style={{ color: 'var(--color-text2)' }}>{formatDistanceToNow(new Date(p.created_at), { addSuffix: true })}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

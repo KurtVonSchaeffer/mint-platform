@@ -256,49 +256,44 @@ export default function BizTechClientsPage() {
           </p>
         </div>
       ) : (
-        <div style={{ ...PANEL, overflow: 'hidden' }}>
-          <div className="px-4 py-2.5" style={{ borderBottom: '1px solid var(--color-border2)' }}>
-            <span className="text-xs" style={{ color: 'var(--color-text3)' }}>
-              {filtered.length} {filtered.length === 1 ? 'client' : 'clients'}
-            </span>
-          </div>
-          <table className="w-full text-sm" style={{ borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                <th className="text-left font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Client</th>
-                <th className="text-left font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Industry</th>
-                <th className="text-left font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Website</th>
-                <th className="text-left font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Status</th>
-                <th className="text-right font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Added</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((client, i) => {
-                const cfg = STATUS_CONFIG[client.status];
-                return (
-                  <tr
-                    key={client.id}
-                    onClick={() => router.push(`/biztech/clients/${client.id}`)}
-                    className="biztech-row cursor-pointer"
-                    style={{ borderBottom: i < filtered.length - 1 ? '1px solid var(--color-border2)' : 'none' }}
-                  >
-                    <td className="px-4 py-2.5 font-medium" style={{ color: 'var(--color-text)' }}>
-                      <div className="flex items-center gap-2.5">
-                        <ClientAvatar name={client.name} />
-                        {client.name}
+        <div className="space-y-3">
+          <span className="text-xs" style={{ color: 'var(--color-text3)' }}>
+            {filtered.length} {filtered.length === 1 ? 'client' : 'clients'}
+          </span>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {filtered.map((client, i) => {
+              const cfg = STATUS_CONFIG[client.status];
+              return (
+                <div
+                  key={client.id}
+                  onClick={() => router.push(`/biztech/clients/${client.id}`)}
+                  className="biztech-card biztech-field-in cursor-pointer p-5"
+                  style={{ ...PANEL, animationDelay: `${Math.min(i, 8) * 40}ms` }}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <ClientAvatar name={client.name} size={32} />
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm truncate" style={{ color: 'var(--color-text)' }}>{client.name}</p>
+                        <p className="text-xs truncate" style={{ color: 'var(--color-text3)' }}>{client.industry ?? 'No industry set'}</p>
                       </div>
-                    </td>
-                    <td className="px-4 py-2.5" style={{ color: 'var(--color-text3)' }}>{client.industry ?? '—'}</td>
-                    <td className="px-4 py-2.5" style={{ color: 'var(--color-text3)' }}>{client.website ?? '—'}</td>
-                    <td className="px-4 py-2.5"><StatusDot label={cfg.label} color={cfg.color} /></td>
-                    <td className="px-4 py-2.5 text-right font-mono text-xs" style={{ color: 'var(--color-text3)' }}>
-                      {formatDistanceToNow(new Date(client.createdAt), { addSuffix: true })}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </div>
+                    <StatusDot label={cfg.label} color={cfg.color} />
+                  </div>
+                  <div className="space-y-1.5 pt-3" style={{ borderTop: '1px solid var(--color-border2)' }}>
+                    <div className="flex items-center justify-between text-xs">
+                      <span style={{ color: 'var(--color-text3)' }}>Website</span>
+                      <span className="truncate max-w-[60%]" style={{ color: 'var(--color-text2)' }}>{client.website ?? '—'}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span style={{ color: 'var(--color-text3)' }}>Added</span>
+                      <span className="font-mono" style={{ color: 'var(--color-text2)' }}>{formatDistanceToNow(new Date(client.createdAt), { addSuffix: true })}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

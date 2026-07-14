@@ -185,37 +185,39 @@ export default function BizTechQuotesPage() {
           </p>
         </div>
       ) : (
-        <div style={{ ...PANEL, overflow: 'hidden' }}>
-          <table className="w-full text-sm" style={{ borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                <th className="text-left font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Reference</th>
-                <th className="text-left font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Client</th>
-                <th className="text-left font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Status</th>
-                <th className="text-right font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Total</th>
-                <th className="text-right font-medium px-4 py-2 text-xs" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>Created</th>
-              </tr>
-            </thead>
-            <tbody>
-              {quotes.map((q, i) => {
-                const cfg = STATUS_CONFIG[q.status];
-                return (
-                  <tr
-                    key={q.id}
-                    onClick={() => router.push(`/biztech/quotes/${q.id}`)}
-                    className="biztech-row cursor-pointer"
-                    style={{ borderBottom: i < quotes.length - 1 ? '1px solid var(--color-border2)' : 'none' }}
-                  >
-                    <td className="px-4 py-2.5 font-mono text-xs" style={{ color: 'var(--color-text3)' }}>{q.reference}</td>
-                    <td className="px-4 py-2.5 font-medium" style={{ color: 'var(--color-text)' }}><div className="flex items-center gap-2.5"><ClientAvatar name={q.biztech_clients?.name ?? '—'} />{q.biztech_clients?.name ?? '—'}</div></td>
-                    <td className="px-4 py-2.5"><StatusDot label={cfg.label} color={cfg.color} /></td>
-                    <td className="px-4 py-2.5 text-right font-medium tabular-nums" style={{ color: 'var(--color-text)' }}>{centsToRand(q.total_cents)}</td>
-                    <td className="px-4 py-2.5 text-right font-mono text-xs" style={{ color: 'var(--color-text3)' }}>{formatDistanceToNow(new Date(q.created_at), { addSuffix: true })}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {quotes.map((q, i) => {
+            const cfg = STATUS_CONFIG[q.status];
+            return (
+              <div
+                key={q.id}
+                onClick={() => router.push(`/biztech/quotes/${q.id}`)}
+                className="biztech-card biztech-field-in cursor-pointer p-5"
+                style={{ ...PANEL, animationDelay: `${Math.min(i, 8) * 40}ms` }}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <ClientAvatar name={q.biztech_clients?.name ?? '—'} size={32} />
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm truncate" style={{ color: 'var(--color-text)' }}>{q.biztech_clients?.name ?? '—'}</p>
+                      <p className="text-xs font-mono truncate" style={{ color: 'var(--color-text3)' }}>{q.reference}</p>
+                    </div>
+                  </div>
+                  <StatusDot label={cfg.label} color={cfg.color} />
+                </div>
+                <div className="space-y-1.5 pt-3" style={{ borderTop: '1px solid var(--color-border2)' }}>
+                  <div className="flex items-center justify-between text-xs">
+                    <span style={{ color: 'var(--color-text3)' }}>Total</span>
+                    <span className="font-semibold tabular-nums" style={{ color: 'var(--color-text)' }}>{centsToRand(q.total_cents)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span style={{ color: 'var(--color-text3)' }}>Created</span>
+                    <span className="font-mono" style={{ color: 'var(--color-text2)' }}>{formatDistanceToNow(new Date(q.created_at), { addSuffix: true })}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

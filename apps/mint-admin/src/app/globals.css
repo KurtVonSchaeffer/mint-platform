@@ -519,6 +519,19 @@ html[data-theme="light"] .biztech-tile:hover {
   animation: fade-up 0.35s cubic-bezier(0.16,1,0.3,1) both;
 }
 
+/* ─── BizTech card (list-as-cards) — lift + border glow on hover ──── */
+.biztech-card {
+  transition: transform 0.2s cubic-bezier(0.16,1,0.3,1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.biztech-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(92,59,207,0.35) !important;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.18);
+}
+html[data-theme="light"] .biztech-card:hover {
+  box-shadow: 0 12px 28px rgba(0,0,0,0.1);
+}
+
 /* ─── Reduced motion ───────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
