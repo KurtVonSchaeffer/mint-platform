@@ -50,7 +50,7 @@ function IconField({ icon: Icon, top, children }: { icon: React.ComponentType<{ 
 }
 
 function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
-  const [form, setForm]     = useState({ name: '', industry: '', website: '', address: '', notes: '' });
+  const [form, setForm]     = useState({ name: '', industry: '', website: '', address: '', notes: '', status: 'active' as ClientStatus });
   const [saving, setSaving] = useState(false);
 
   async function submit(e: React.FormEvent) {
@@ -122,6 +122,21 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
                     <input type="text" className="field-input" style={{ paddingLeft: 34 }} value={form.website} onChange={e => setForm(p => ({ ...p, website: e.target.value }))} />
                   </IconField>
                 </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text2)' }}>Status</label>
+                <select
+                  className="field-input"
+                  value={form.status}
+                  onChange={e => setForm(p => ({ ...p, status: e.target.value as ClientStatus }))}
+                >
+                  {(Object.keys(STATUS_CONFIG) as ClientStatus[]).map(s => (
+                    <option key={s} value={s}>{STATUS_CONFIG[s].label}</option>
+                  ))}
+                </select>
+                <p className="text-[10px] mt-1.5" style={{ color: 'var(--color-text3)' }}>
+                  Already an onboarded client? Leave this as Active. Use Lead for prospects not yet signed.
+                </p>
               </div>
             </div>
 
