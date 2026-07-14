@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { StatusDot } from '@/components/biztech/StatusDot';
 import { ClientAvatar } from '@/components/biztech/ClientAvatar';
-import { RefreshCw, Plus, X, Loader2, Inbox, Building2, MapPin, Receipt, FolderKanban, FileText, Tag, Globe, StickyNote } from 'lucide-react';
+import { RefreshCw, Plus, X, Loader2, Inbox, Building2, MapPin, Receipt, FolderKanban, FileText, Tag, Globe, StickyNote, Users2, ArrowRight, ChevronDown } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface WorkSummary {
@@ -177,6 +177,112 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
   );
 }
 
+interface QuickCounts { contacts: number; documents: number; projects: number; }
+
+function QuickView({ clients }: { clients: BizClient[] }) {
+  const router = useRouter();
+  const [selectedId, setSelectedId] = useState('');
+  const [counts, setCounts]         = useState<QuickCounts | null>(null);
+  const [countsLoading, setCountsLoading] = useState(false);
+
+  const selected = clients.find(c => c.id === selectedId) ?? null;
+
+  useEffect(() => {
+    if (!selectedId) { setCounts(null); return; }
+    setCountsLoading(true);
+    Promise.all([
+      fetch(`/api/biztech/clients/${selectedId}/contacts`).then(r => r.ok ? r.json() : { contacts: [] }),
+      fetch(`/api/biztech/clients/${selectedId}/documents`).then(r => r.ok ? r.json() : { documents: [] }),
+      fetch(`/api/biztech/projects?client_id=${selectedId}`).then(r => r.ok ? r.json() : { projects: [] }),
+    ]).then(([c, d, p]) => {
+      setCounts({ contacts: (c.contacts ?? []).length, documents: (d.documents ?? []).length, projects: (p.projects ?? []).length });
+      setCountsLoading(false);
+    }).catch(() => setCountsLoading(false));
+  }, [selectedId]);
+
+  return (
+    <div style={{ ...PANEL, overflow: 'hidden' }}>
+      <div className="px-5 py-3.5 flex items-center gap-3" style={{ borderBottom: '1px solid var(--color-border2)' }}>
+        <p className="text-sm font-semibold shrink-0" style={{ color: 'var(--color-text)' }}>Quick view</p>
+        <div className="relative flex-1 max-w-xs">
+          <select
+            className="field-input w-full text-sm appearance-none"
+            style={{ paddingRight: 30 }}
+            value={selectedId}
+            onChange={e => setSelectedId(e.target.value)}
+          >
+            <option value="">Select a client…</option>
+            {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <ChevronDown size={13} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text3)', pointerEvents: 'none' }} />
+        </div>
+      </div>
+
+      {!selected ? (
+        <div className="px-5 py-8 text-center">
+          <p className="text-sm" style={{ color: 'var(--color-text3)' }}>Pick a client above to see their details here.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2">
+          <div className="p-5 space-y-3" style={{ borderRight: '1px solid var(--color-border2)' }}>
+            <div className="flex items-center gap-2.5">
+              <ClientAvatar name={selected.name} size={34} />
+              <div className="min-w-0">
+                <p className="font-semibold text-sm truncate" style={{ color: 'var(--color-text)' }}>{selected.name}</p>
+                <StatusDot label={STATUS_CONFIG[selected.status].label} color={STATUS_CONFIG[selected.status].color} />
+              </div>
+            </div>
+            <div className="space-y-2 pt-2">
+              <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--color-text2)' }}>
+                <Building2 size={12} style={{ color: 'var(--color-text3)' }} /> {selected.industry ?? 'No industry set'}
+              </div>
+              <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--color-text2)' }}>
+                <Globe size={12} style={{ color: 'var(--color-text3)' }} /> {selected.website ?? '—'}
+              </div>
+              <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--color-text2)' }}>
+                <MapPin size={12} style={{ color: 'var(--color-text3)' }} /> {selected.address ?? '—'}
+              </div>
+              <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--color-text2)' }}>
+                <StickyNote size={12} style={{ color: 'var(--color-text3)' }} />
+                <span className="truncate">{selected.notes ?? 'No notes yet.'}</span>
+              </div>
+            </div>
+          </div>
+          <div className="p-5 flex flex-col">
+            <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: 'var(--color-text3)' }}>At a glance</p>
+            {countsLoading || !counts ? (
+              <div className="flex-1 flex items-center justify-center">
+                <Loader2 size={16} className="animate-spin" style={{ color: '#5C3BCF' }} />
+              </div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                {[
+                  { label: 'Contacts',  value: counts.contacts,  icon: Users2 },
+                  { label: 'Documents', value: counts.documents, icon: FileText },
+                  { label: 'Projects',  value: counts.projects,  icon: FolderKanban },
+                ].map(s => (
+                  <div key={s.label} className="rounded-lg px-2.5 py-2 text-center" style={{ background: 'var(--color-surface2)' }}>
+                    <s.icon size={12} className="mx-auto mb-1" style={{ color: '#5C3BCF' }} />
+                    <p className="text-base font-semibold tabular-nums" style={{ color: 'var(--color-text)' }}>{s.value}</p>
+                    <p className="text-[9px] uppercase tracking-wide" style={{ color: 'var(--color-text3)' }}>{s.label}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              onClick={() => router.push(`/biztech/clients/${selected.id}`)}
+              className="mt-auto inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold text-white cursor-pointer"
+              style={{ background: '#5C3BCF' }}
+            >
+              View full profile <ArrowRight size={12} />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function BizTechClientsPage() {
   const router = useRouter();
   const [clients, setClients]   = useState<BizClient[]>([]);
@@ -257,6 +363,8 @@ export default function BizTechClientsPage() {
           </div>
         ))}
       </div>
+
+      {clients.length > 0 && <QuickView clients={clients} />}
 
       {loading ? (
         <div className="p-12 flex items-center justify-center" style={PANEL}>
