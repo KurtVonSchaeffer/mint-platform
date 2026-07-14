@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { StatusDot } from '@/components/biztech/StatusDot';
 import { ClientAvatar } from '@/components/biztech/ClientAvatar';
-import { RefreshCw, Plus, X, Loader2, Inbox, Building2, MapPin, Receipt, FolderKanban, FileText, Tag, Globe, StickyNote, Users2, ArrowRight, ChevronDown } from 'lucide-react';
+import { RefreshCw, Plus, X, Loader2, Inbox, Building2, MapPin, Receipt, FolderKanban, FileText, Tag, Globe, StickyNote, Users2, ArrowRight, ChevronDown, Search, Mail, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { useTheme } from '@/components/ThemeProvider';
 
 interface WorkSummary {
   invoices: { outstandingCents: number };
@@ -29,6 +30,8 @@ interface BizClient {
   address:   string | null;
   notes:     string | null;
   createdAt: string;
+  updatedAt: string;
+  primaryContact: { name: string; email: string | null } | null;
 }
 
 const STATUS_CONFIG: Record<ClientStatus, { label: string; color: string }> = {
@@ -283,22 +286,30 @@ function QuickView({ clients }: { clients: BizClient[] }) {
   );
 }
 
+const FILTER_OPTIONS = ['All', 'Lead', 'Active', 'Paused', 'Archived'] as const;
+
 export default function BizTechClientsPage() {
   const router = useRouter();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const [clients, setClients]   = useState<BizClient[]>([]);
   const [loading, setLoading]   = useState(true);
   const [addOpen, setAddOpen]   = useState(false);
   const [toast, setToast]       = useState<{ kind: ToastKind; message: string } | null>(null);
   const [work, setWork]         = useState<WorkSummary | null>(null);
+  const [search, setSearch]     = useState('');
+  const [statusFilter, setStatusFilter] = useState<typeof FILTER_OPTIONS[number]>('All');
 
   const load = useCallback(async () => {
     setLoading(true);
     const res = await fetch('/api/biztech/clients');
     if (res.ok) {
       const { clients: raw } = await res.json();
-      setClients((raw ?? []).map((c: Record<string, string>) => ({
+      setClients((raw ?? []).map((c: Record<string, unknown>) => ({
         ...c,
-        createdAt: c.created_at ?? c.createdAt,
+        createdAt: (c.created_at ?? c.createdAt) as string,
+        updatedAt: (c.updated_at ?? c.updatedAt) as string,
+        primaryContact: (c.primary_contact ?? c.primaryContact ?? null) as BizClient['primaryContact'],
       })));
     } else {
       setToast({ kind: 'error', message: 'Failed to load clients' });
@@ -315,7 +326,12 @@ export default function BizTechClientsPage() {
   }, []);
 
   const activeProjects = work ? Object.entries(work.projects.byStatus).filter(([s]) => s !== 'completed' && s !== 'cancelled').reduce((s, [, n]) => s + n, 0) : 0;
-  const filtered = clients;
+  const filtered = clients.filter(c => {
+    const matchesStatus = statusFilter === 'All' || c.status === statusFilter.toLowerCase();
+    const q = search.trim().toLowerCase();
+    const matchesSearch = !q || c.name.toLowerCase().includes(q) || (c.industry ?? '').toLowerCase().includes(q);
+    return matchesStatus && matchesSearch;
+  });
 
   return (
     <div className="space-y-5 page-enter">
@@ -380,9 +396,33 @@ export default function BizTechClientsPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          <span className="text-xs" style={{ color: 'var(--color-text3)' }}>
-            {filtered.length} {filtered.length === 1 ? 'client' : 'clients'}
-          </span>
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1 max-w-sm">
+              <Search size={14} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text3)' }} />
+              <input
+                type="text"
+                placeholder="Search…"
+                className="field-input w-full text-sm"
+                style={{ paddingLeft: 32 }}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="relative">
+              <select
+                className="field-input text-sm appearance-none"
+                style={{ paddingRight: 30 }}
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value as typeof FILTER_OPTIONS[number])}
+              >
+                {FILTER_OPTIONS.map(o => <option key={o} value={o}>{o} Filter</option>)}
+              </select>
+              <ChevronDown size={13} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text3)', pointerEvents: 'none' }} />
+            </div>
+            <span className="text-xs ml-auto shrink-0" style={{ color: 'var(--color-text3)' }}>
+              {filtered.length} {filtered.length === 1 ? 'client' : 'clients'}
+            </span>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {filtered.map((client, i) => {
               const cfg = STATUS_CONFIG[client.status];
@@ -403,16 +443,36 @@ export default function BizTechClientsPage() {
                     </div>
                     <StatusDot label={cfg.label} color={cfg.color} />
                   </div>
-                  <div className="space-y-1.5 pt-3" style={{ borderTop: '1px solid var(--color-border2)' }}>
-                    <div className="flex items-center justify-between text-xs">
-                      <span style={{ color: 'var(--color-text3)' }}>Website</span>
-                      <span className="truncate max-w-[60%]" style={{ color: 'var(--color-text2)' }}>{client.website ?? '—'}</span>
+                  {isLight ? (
+                    <div className="space-y-1.5 pt-3" style={{ borderTop: '1px solid var(--color-border2)' }}>
+                      <div className="flex items-center justify-between text-xs">
+                        <span style={{ color: 'var(--color-text3)' }}>Website</span>
+                        <span className="truncate max-w-[60%]" style={{ color: 'var(--color-text2)' }}>{client.website ?? '—'}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span style={{ color: 'var(--color-text3)' }}>Added</span>
+                        <span className="font-mono" style={{ color: 'var(--color-text2)' }}>{formatDistanceToNow(new Date(client.createdAt), { addSuffix: true })}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span style={{ color: 'var(--color-text3)' }}>Added</span>
-                      <span className="font-mono" style={{ color: 'var(--color-text2)' }}>{formatDistanceToNow(new Date(client.createdAt), { addSuffix: true })}</span>
+                  ) : (
+                    <div className="space-y-1.5 pt-3" style={{ borderTop: '1px solid var(--color-border2)' }}>
+                      <div className="flex items-center gap-2 text-xs">
+                        <Users2 size={11} style={{ color: 'var(--color-text3)' }} />
+                        <span style={{ color: 'var(--color-text3)' }}>Contact</span>
+                        <span className="truncate ml-auto" style={{ color: 'var(--color-text2)' }}>{client.primaryContact?.name ?? '—'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs">
+                        <Mail size={11} style={{ color: 'var(--color-text3)' }} />
+                        <span style={{ color: 'var(--color-text3)' }}>Email</span>
+                        <span className="truncate ml-auto" style={{ color: 'var(--color-text2)' }}>{client.primaryContact?.email ?? '—'}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs">
+                        <Clock size={11} style={{ color: 'var(--color-text3)' }} />
+                        <span style={{ color: 'var(--color-text3)' }}>Last activity</span>
+                        <span className="font-mono ml-auto" style={{ color: 'var(--color-text2)' }}>{formatDistanceToNow(new Date(client.updatedAt ?? client.createdAt), { addSuffix: true })}</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             })}
