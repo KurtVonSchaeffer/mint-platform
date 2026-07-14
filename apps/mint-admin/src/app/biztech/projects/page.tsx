@@ -164,10 +164,8 @@ export default function BizTechProjectsPage() {
                   <tr
                     key={p.id}
                     onClick={() => router.push(`/biztech/projects/${p.id}`)}
-                    className="cursor-pointer transition-colors"
+                    className="biztech-row cursor-pointer"
                     style={{ borderBottom: i < projects.length - 1 ? '1px solid var(--color-border2)' : 'none' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--color-surface2)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                   >
                     <td className="px-4 py-2.5 font-medium" style={{ color: 'var(--color-text)' }}>{p.name}</td>
                     <td className="px-4 py-2.5" style={{ color: 'var(--color-text)' }}><div className="flex items-center gap-2.5"><ClientAvatar name={p.biztech_clients?.name ?? '—'} />{p.biztech_clients?.name ?? '—'}</div></td>

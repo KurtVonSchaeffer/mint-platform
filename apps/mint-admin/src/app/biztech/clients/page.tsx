@@ -81,9 +81,11 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
         <div className="flex items-center justify-between px-7 py-5" style={{ borderBottom: '1px solid var(--color-border2)' }}>
           <div className="flex items-center gap-3">
             {form.name.trim() ? (
-              <ClientAvatar name={form.name} size={36} />
+              <div key="avatar" style={{ animation: 'scale-in 0.25s cubic-bezier(0.16,1,0.3,1) both' }}>
+                <ClientAvatar name={form.name} size={36} />
+              </div>
             ) : (
-              <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(92,59,207,0.12)' }}>
+              <div key="icon" className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(92,59,207,0.12)' }}>
                 <Building2 size={16} style={{ color: '#5C3BCF' }} />
               </div>
             )}
@@ -97,7 +99,7 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
 
         <form onSubmit={submit}>
           <div className="px-7 py-6 space-y-5 max-h-[65vh] overflow-y-auto">
-            <div className="space-y-3">
+            <div className="space-y-3 biztech-field-in" style={{ animationDelay: '0ms' }}>
               <p className="text-[10px] uppercase tracking-widest font-semibold flex items-center gap-1.5" style={{ color: '#5C3BCF' }}>
                 <Building2 size={11} /> Company details
               </p>
@@ -123,7 +125,7 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
               </div>
             </div>
 
-            <div className="space-y-3 pt-2" style={{ borderTop: '1px solid var(--color-border2)' }}>
+            <div className="space-y-3 pt-2 biztech-field-in" style={{ borderTop: '1px solid var(--color-border2)', animationDelay: '80ms' }}>
               <p className="text-[10px] uppercase tracking-widest font-semibold flex items-center gap-1.5" style={{ color: 'var(--color-sky)' }}>
                 <MapPin size={11} /> Location &amp; notes
               </p>
@@ -143,11 +145,11 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
           </div>
 
           <div className="flex gap-2 px-7 py-5" style={{ borderTop: '1px solid var(--color-border2)' }}>
-            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-sm cursor-pointer" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>Cancel</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-sm cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98]" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>Cancel</button>
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold text-white cursor-pointer"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold text-white cursor-pointer transition-transform hover:scale-[1.02] active:scale-[0.98] disabled:hover:scale-100"
               style={{ background: '#5C3BCF' }}
             >
               {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
@@ -231,12 +233,12 @@ export default function BizTechClientsPage() {
           { label: 'Active projects',      value: work ? String(activeProjects) : '—',                       icon: FolderKanban, color: '#5C3BCF' },
           { label: 'Quote pipeline',       value: work ? centsToRand(work.quotes.pipelineCents) : '—',        icon: FileText, color: 'var(--color-sky)' },
         ].map(s => (
-          <div key={s.label} className="px-5 py-4" style={{ ...PANEL, borderLeft: `2px solid ${s.color}` }}>
+          <div key={s.label} className="biztech-tile px-5 py-4" style={{ ...PANEL, borderLeft: `2px solid ${s.color}` }}>
             <div className="flex items-center justify-between mb-1.5">
               <p className="text-[11px] uppercase tracking-wide" style={{ color: 'var(--color-text3)' }}>{s.label}</p>
               <s.icon size={13} style={{ color: s.color }} />
             </div>
-            <p className="text-xl font-semibold tabular-nums" style={{ color: 'var(--color-text)' }}>{s.value}</p>
+            <p className="stat-value text-xl font-semibold tabular-nums" style={{ color: 'var(--color-text)' }}>{s.value}</p>
           </div>
         ))}
       </div>
@@ -277,10 +279,8 @@ export default function BizTechClientsPage() {
                   <tr
                     key={client.id}
                     onClick={() => router.push(`/biztech/clients/${client.id}`)}
-                    className="cursor-pointer transition-colors"
+                    className="biztech-row cursor-pointer"
                     style={{ borderBottom: i < filtered.length - 1 ? '1px solid var(--color-border2)' : 'none' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--color-surface2)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                   >
                     <td className="px-4 py-2.5 font-medium" style={{ color: 'var(--color-text)' }}>
                       <div className="flex items-center gap-2.5">

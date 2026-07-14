@@ -492,6 +492,33 @@ select.field-input option { background: var(--color-surface2); }
   animation: count-reveal 0.7s var(--ease-spring) both;
 }
 
+/* ─── BizTech table row — hover lift with a colored edge, no glow ── */
+.biztech-row {
+  transition: background 0.15s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+.biztech-row:hover {
+  background: var(--color-surface2);
+  box-shadow: inset 3px 0 0 0 var(--biztech-row-accent, #5C3BCF);
+  transform: translateX(1px);
+}
+
+/* ─── BizTech stat tile — hover lift ──────────────────────────────── */
+.biztech-tile {
+  transition: transform 0.18s cubic-bezier(0.16,1,0.3,1), box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.biztech-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.16);
+}
+html[data-theme="light"] .biztech-tile:hover {
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+/* ─── BizTech modal field — staggered reveal ──────────────────────── */
+.biztech-field-in {
+  animation: fade-up 0.35s cubic-bezier(0.16,1,0.3,1) both;
+}
+
 /* ─── Reduced motion ───────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

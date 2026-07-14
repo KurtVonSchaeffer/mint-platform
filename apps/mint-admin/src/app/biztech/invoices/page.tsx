@@ -203,10 +203,8 @@ export default function BizTechInvoicesPage() {
                   <tr
                     key={inv.id}
                     onClick={() => router.push(`/biztech/invoices/${inv.id}`)}
-                    className="cursor-pointer transition-colors"
+                    className="biztech-row cursor-pointer"
                     style={{ borderBottom: i < invoices.length - 1 ? '1px solid var(--color-border2)' : 'none' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--color-surface2)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                   >
                     <td className="px-4 py-2.5 font-mono text-xs" style={{ color: 'var(--color-text3)' }}>{inv.reference}</td>
                     <td className="px-4 py-2.5 font-medium" style={{ color: 'var(--color-text)' }}><div className="flex items-center gap-2.5"><ClientAvatar name={inv.biztech_clients?.name ?? '—'} />{inv.biztech_clients?.name ?? '—'}</div></td>

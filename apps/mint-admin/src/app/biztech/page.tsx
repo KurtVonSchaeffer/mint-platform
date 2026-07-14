@@ -78,7 +78,7 @@ export default function BizTechDashboard() {
             <button
               key={a.label}
               onClick={() => router.push(a.href)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer transition-transform hover:scale-[1.04] active:scale-[0.97]"
               style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}
             >
               <Plus size={12} /> {a.label}
@@ -92,10 +92,8 @@ export default function BizTechDashboard() {
           <button
             key={s.label}
             onClick={() => router.push(s.href)}
-            className="p-5 text-left cursor-pointer transition-colors"
+            className="biztech-tile p-5 text-left cursor-pointer"
             style={{ ...PANEL, borderLeft: `2px solid ${s.color}` }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--color-surface2)'; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'var(--color-surface)'; }}
           >
             <div className="flex items-center justify-between mb-2">
               <p className="text-[11px] uppercase tracking-wide" style={{ color: 'var(--color-text3)' }}>{s.label}</p>
@@ -106,7 +104,7 @@ export default function BizTechDashboard() {
             {loading ? (
               <Loader2 size={16} className="animate-spin mt-1" style={{ color: 'var(--color-text3)' }} />
             ) : (
-              <p className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--color-text)' }}>{s.value}</p>
+              <p className="stat-value text-2xl font-semibold tracking-tight" style={{ color: 'var(--color-text)' }}>{s.value}</p>
             )}
             <p className="text-xs mt-1.5" style={{ color: 'var(--color-text3)' }}>{s.sub}</p>
           </button>
