@@ -7,6 +7,7 @@ import { StatusDot } from '@/components/biztech/StatusDot';
 import {
   ArrowLeft, Building2, Globe, MapPin, Plus, X, Loader2,
   User, Mail, Phone, Star, Trash2, FileText, Upload, Download,
+  FolderKanban, AlertTriangle,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -26,7 +27,21 @@ interface Doc {
   id: string; name: string; type: string | null; created_at: string; signed_url: string | null;
 }
 
+type ProjectStatus = 'planning' | 'active' | 'on_hold' | 'completed' | 'cancelled';
+
+interface Project {
+  id: string; name: string; status: ProjectStatus; due_date: string | null;
+}
+
 const DOC_TYPES = ['Contract', 'Proposal', 'Invoice', 'Other'] as const;
+
+const PROJECT_STATUS_CONFIG: Record<ProjectStatus, { label: string; color: string }> = {
+  planning:  { label: 'Planning',  color: 'var(--color-amber)' },
+  active:    { label: 'Active',    color: '#5C3BCF' },
+  on_hold:   { label: 'On hold',   color: 'var(--color-sky)' },
+  completed: { label: 'Completed', color: '#22C55E' },
+  cancelled: { label: 'Cancelled', color: 'var(--color-text3)' },
+};
 
 const STATUS_CONFIG: Record<ClientStatus, { label: string; color: string }> = {
   lead:     { label: 'Lead',     color: 'var(--color-amber)' },
@@ -91,6 +106,45 @@ function AddContactModal({ clientId, onClose, onAdded }: { clientId: string; onC
   );
 }
 
+function DeleteClientModal({ clientName, onClose, onConfirm, deleting, error }: {
+  clientName: string; onClose: () => void; onConfirm: () => void; deleting: boolean; error: string | null;
+}) {
+  return (
+    <div className="confirm-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-sm p-6" style={PANEL}>
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: 'rgba(248,113,113,0.12)' }}>
+            <AlertTriangle size={16} style={{ color: 'var(--color-red)' }} />
+          </div>
+          <h3 className="font-bold text-base" style={{ color: 'var(--color-text)' }}>Delete {clientName}?</h3>
+        </div>
+        <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--color-text2)' }}>
+          This permanently removes the client, their contacts, and their documents. This can&apos;t be undone.
+        </p>
+        {error && (
+          <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl text-xs mb-4" style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', color: 'var(--color-red)' }}>
+            <AlertTriangle size={13} className="shrink-0 mt-0.5" />
+            {error}
+          </div>
+        )}
+        <div className="flex gap-2">
+          <button type="button" onClick={onClose} disabled={deleting} className="flex-1 py-2 rounded-xl text-sm cursor-pointer" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>Cancel</button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={deleting}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer"
+            style={{ background: 'var(--color-red)' }}
+          >
+            {deleting ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+            {deleting ? 'Deleting…' : 'Delete client'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function BizTechClientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -98,23 +152,29 @@ export default function BizTechClientDetailPage() {
   const [client, setClient]     = useState<BizClient | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [docs, setDocs]         = useState<Doc[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [tab, setTab]           = useState<'overview' | 'contacts' | 'documents'>('overview');
   const [loading, setLoading]   = useState(true);
   const [addContactOpen, setAddContactOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadType, setUploadType] = useState<string>('Contract');
   const [toast, setToast]       = useState<{ kind: ToastKind; message: string } | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting]     = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    const [cRes, ctRes, dRes] = await Promise.all([
+    const [cRes, ctRes, dRes, pRes] = await Promise.all([
       fetch(`/api/biztech/clients/${id}`),
       fetch(`/api/biztech/clients/${id}/contacts`),
       fetch(`/api/biztech/clients/${id}/documents`),
+      fetch(`/api/biztech/projects?client_id=${id}`),
     ]);
     if (cRes.ok) setClient((await cRes.json()).client);
     if (ctRes.ok) setContacts((await ctRes.json()).contacts ?? []);
     if (dRes.ok) setDocs((await dRes.json()).documents ?? []);
+    if (pRes.ok) setProjects((await pRes.json()).projects ?? []);
     setLoading(false);
   }, [id]);
 
@@ -124,6 +184,23 @@ export default function BizTechClientDetailPage() {
     setContacts(prev => prev.filter(c => c.id !== contactId));
     const res = await fetch(`/api/biztech/contacts/${contactId}`, { method: 'DELETE' });
     if (!res.ok) { setToast({ kind: 'error', message: 'Failed to remove contact' }); load(); }
+  }
+
+  async function deleteClient() {
+    setDeleting(true);
+    setDeleteError(null);
+    const res = await fetch(`/api/biztech/clients/${id}`, { method: 'DELETE' });
+    if (res.ok) {
+      router.push('/biztech/clients');
+    } else {
+      const json = await res.json().catch(() => ({}));
+      const raw = json.error ?? '';
+      const friendly = /foreign key|violates|restrict/i.test(raw)
+        ? 'This client still has quotes, invoices, or projects attached. Remove those first, then delete the client.'
+        : raw || 'Failed to delete client';
+      setDeleteError(friendly);
+      setDeleting(false);
+    }
   }
 
   async function removeDoc(docId: string) {
@@ -169,6 +246,15 @@ export default function BizTechClientDetailPage() {
       {addContactOpen && (
         <AddContactModal clientId={id} onClose={() => setAddContactOpen(false)} onAdded={load} />
       )}
+      {deleteOpen && (
+        <DeleteClientModal
+          clientName={client.name}
+          onClose={() => { setDeleteOpen(false); setDeleteError(null); }}
+          onConfirm={deleteClient}
+          deleting={deleting}
+          error={deleteError}
+        />
+      )}
 
       <button
         onClick={() => router.push('/biztech/clients')}
@@ -190,6 +276,13 @@ export default function BizTechClientDetailPage() {
             {client.address && <span className="inline-flex items-center gap-1.5"><MapPin size={11} />{client.address}</span>}
           </div>
         </div>
+        <button
+          onClick={() => setDeleteOpen(true)}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium cursor-pointer"
+          style={{ border: '1px solid rgba(248,113,113,0.3)', color: 'var(--color-red)' }}
+        >
+          <Trash2 size={14} /> Delete client
+        </button>
       </div>
 
       <div className="flex items-center gap-1 border-b" style={{ borderColor: 'var(--color-border2)' }}>
@@ -209,11 +302,51 @@ export default function BizTechClientDetailPage() {
       </div>
 
       {tab === 'overview' && (
-        <div className="p-6" style={PANEL}>
-          <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>Notes</h3>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text2)' }}>
-            {client.notes || <span style={{ color: 'var(--color-text3)' }} className="italic">No notes yet.</span>}
-          </p>
+        <div className="space-y-4">
+          <div className="p-6" style={PANEL}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold flex items-center gap-1.5" style={{ color: 'var(--color-text)' }}>
+                <FolderKanban size={14} style={{ color: '#5C3BCF' }} /> Projects we&apos;re working on
+              </h3>
+              <button onClick={() => router.push('/biztech/projects')} className="text-xs font-medium cursor-pointer" style={{ color: '#5C3BCF' }}>
+                View all
+              </button>
+            </div>
+            {projects.length === 0 ? (
+              <p className="text-sm" style={{ color: 'var(--color-text3)' }}>No projects for this client yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {projects.map(p => {
+                  const pcfg = PROJECT_STATUS_CONFIG[p.status];
+                  return (
+                    <div
+                      key={p.id}
+                      onClick={() => router.push(`/biztech/projects/${p.id}`)}
+                      className="biztech-row cursor-pointer flex items-center justify-between px-3 py-2.5 rounded-lg"
+                      style={{ border: '1px solid var(--color-border2)' }}
+                    >
+                      <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>{p.name}</span>
+                      <div className="flex items-center gap-3">
+                        {p.due_date && (
+                          <span className="text-[10px] font-mono" style={{ color: 'var(--color-text3)' }}>
+                            Due {new Date(p.due_date).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}
+                          </span>
+                        )}
+                        <StatusDot label={pcfg.label} color={pcfg.color} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="p-6" style={PANEL}>
+            <h3 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text)' }}>Notes</h3>
+            <p className="text-sm leading-relaxed" style={{ color: 'var(--color-text2)' }}>
+              {client.notes || <span style={{ color: 'var(--color-text3)' }} className="italic">No notes yet.</span>}
+            </p>
+          </div>
         </div>
       )}
 

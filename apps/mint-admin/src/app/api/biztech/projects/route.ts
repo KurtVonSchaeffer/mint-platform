@@ -4,11 +4,17 @@ import { supabaseAdmin } from '@/lib/supabase';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
-  const { data, error } = await supabaseAdmin
+export async function GET(req: NextRequest) {
+  const clientId = req.nextUrl.searchParams.get('client_id');
+
+  let query = supabaseAdmin
     .from('biztech_projects')
     .select('*, biztech_clients(name)')
     .order('created_at', { ascending: false });
+
+  if (clientId) query = query.eq('client_id', clientId);
+
+  const { data, error } = await query;
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ projects: data });
