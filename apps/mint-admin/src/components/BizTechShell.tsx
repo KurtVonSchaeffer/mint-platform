@@ -57,20 +57,13 @@ const ROLE_LABELS: Record<string, { label: string; color: string }> = {
 
 function BizTechLogo({ isLight }: { isLight: boolean }) {
   return (
-    <div className="flex items-center gap-2">
-      <div
-        className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
-        style={{ background: '#5C3BCF' }}
-      >
-        <span className="text-white font-bold text-xs">M</span>
-      </div>
-      <span
-        className="font-bold text-lg tracking-tight"
-        style={{ color: isLight ? '#0D1026' : '#EEF0FF' }}
-      >
-        MINT <span style={{ color: '#A78BFA' }}>BizTech</span>
-      </span>
-    </div>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/biztech-logo.svg"
+      alt="MINT BizTech"
+      className="h-8 w-auto shrink-0"
+      style={{ filter: isLight ? 'none' : 'brightness(0) invert(1)' }}
+    />
   );
 }
 
