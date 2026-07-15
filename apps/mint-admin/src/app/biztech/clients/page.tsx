@@ -149,12 +149,12 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
                   value={form.status}
                   onChange={e => setForm(p => ({ ...p, status: e.target.value as ClientStatus }))}
                 >
-                  {(Object.keys(STATUS_CONFIG) as ClientStatus[]).map(s => (
+                  {(Object.keys(STATUS_CONFIG) as ClientStatus[]).filter(s => s !== 'lead').map(s => (
                     <option key={s} value={s}>{STATUS_CONFIG[s].label}</option>
                   ))}
                 </select>
                 <p className="text-[10px] mt-1.5" style={{ color: 'var(--color-text3)' }}>
-                  Already an onboarded client? Leave this as Active. Use Lead for prospects not yet signed.
+                  Only add companies MINT is actually engaged with — pause or archive them if the relationship changes.
                 </p>
               </div>
               <div>
@@ -344,7 +344,7 @@ function QuickView({ clients, onChanged }: { clients: BizClient[]; onChanged: ()
   );
 }
 
-const FILTER_OPTIONS = ['All', 'Lead', 'Active', 'Paused', 'Archived'] as const;
+const FILTER_OPTIONS = ['All', 'Active', 'Paused', 'Archived'] as const;
 
 export default function BizTechClientsPage() {
   const router = useRouter();
