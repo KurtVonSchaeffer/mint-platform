@@ -6,7 +6,7 @@ import { Toast, type ToastKind } from '@/components/Toast';
 import { BiztechInvoiceDetailPanel, type BiztechInvoiceDetail, type BiztechInvoiceItem } from '@/components/biztech/BiztechInvoiceDetailPanel';
 import { printableBiztechDoc } from '@/lib/biztech-doc-template';
 import { fmt, fmtDate, daysOverdue } from '@/lib/invoice-helpers';
-import { Plus, Loader2, Download, Send, CheckCircle } from 'lucide-react';
+import { Plus, Loader2, Download, Send, CheckCircle, RefreshCw } from 'lucide-react';
 
 type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'void';
 
@@ -127,12 +127,21 @@ export default function BizTechInvoicesPage() {
           <h1 className="text-3xl font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>Invoices</h1>
           <p className="text-sm mt-1.5" style={{ color: 'var(--color-text3)' }}>Billing for BizTech clients</p>
         </div>
-        <button
-          onClick={() => hasClients ? router.push('/biztech/invoice-creator') : setToast({ kind: 'error', message: 'Add a client first' })}
-          className="btn-purple btn-shine inline-flex items-center gap-1.5"
-        >
-          <Plus size={15} /> New invoice
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => router.push('/biztech/invoices/recurring')}
+            className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+            style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}
+          >
+            <RefreshCw size={13} /> Recurring
+          </button>
+          <button
+            onClick={() => hasClients ? router.push('/biztech/invoice-creator') : setToast({ kind: 'error', message: 'Add a client first' })}
+            className="btn-purple btn-shine inline-flex items-center gap-1.5"
+          >
+            <Plus size={15} /> New invoice
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
