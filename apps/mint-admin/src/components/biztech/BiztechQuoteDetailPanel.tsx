@@ -1,6 +1,6 @@
 'use client';
 
-import { X, CheckCircle, XCircle, Loader2, Send, Download, Sparkles } from 'lucide-react';
+import { X, CheckCircle, XCircle, Loader2, Send, Download, Sparkles, Trash2 } from 'lucide-react';
 import { fmt, fmtDate } from '@/lib/invoice-helpers';
 
 type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'expired';
@@ -44,9 +44,10 @@ interface Props {
   onAction:         (quote: BiztechQuoteDetail, action: QuoteAction) => void;
   onConvert:        (quote: BiztechQuoteDetail) => void;
   onDownloadPDF:    (quote: BiztechQuoteDetail, items: BiztechQuoteItem[]) => void;
+  onDelete:         (quote: BiztechQuoteDetail) => void;
 }
 
-export function BiztechQuoteDetailPanel({ quote, items, actioning, onClose, onAction, onConvert, onDownloadPDF }: Props) {
+export function BiztechQuoteDetailPanel({ quote, items, actioning, onClose, onAction, onConvert, onDownloadPDF, onDelete }: Props) {
   const s = STATUS_STYLE[quote.status];
 
   return (
@@ -179,6 +180,15 @@ export function BiztechQuoteDetailPanel({ quote, items, actioning, onClose, onAc
             style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}
           >
             <Download size={14} /> Download PDF
+          </button>
+          <button
+            onClick={() => onDelete(quote)}
+            disabled={actioning === quote.id + 'delete'}
+            className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-60"
+            style={{ border: '1px solid rgba(248,113,113,0.25)', color: 'var(--color-red)' }}
+          >
+            {actioning === quote.id + 'delete' ? <Loader2 size={14} className="animate-spin" /> : <Trash2 size={14} />}
+            Delete quote
           </button>
         </div>
       </div>

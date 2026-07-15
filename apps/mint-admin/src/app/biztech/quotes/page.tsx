@@ -205,6 +205,17 @@ export default function BizTechQuotesPage() {
     load();
   }
 
+  async function deleteQuote(quote: BiztechQuoteDetail) {
+    if (!window.confirm(`Delete quote ${quote.reference}? This can't be undone.`)) return;
+    setActioning(quote.id + 'delete');
+    const res = await fetch(`/api/biztech/quotes/${quote.id}`, { method: 'DELETE' });
+    setActioning(null);
+    if (!res.ok) { setToast({ kind: 'error', message: 'Failed to delete quote' }); return; }
+    setToast({ kind: 'success', message: `Quote ${quote.reference} deleted` });
+    setSelected(null);
+    setQuotes(prev => prev.filter(q => q.id !== quote.id));
+  }
+
   function downloadPDF(quote: BiztechQuoteDetail, items: BiztechQuoteItem[]) {
     const w = window.open('', '_blank', 'width=820,height=1200');
     if (!w) { setToast({ kind: 'error', message: 'Pop-up blocked — allow pop-ups for this site.' }); return; }
@@ -419,6 +430,7 @@ export default function BizTechQuotesPage() {
           onAction={doAction}
           onConvert={convertToInvoice}
           onDownloadPDF={downloadPDF}
+          onDelete={deleteQuote}
         />
       )}
     </div>
