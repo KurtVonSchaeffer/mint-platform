@@ -85,21 +85,31 @@ function NewQuoteModal({ clients, onClose, onCreated }: { clients: BizClient[]; 
 
           <div className="pt-2">
             <p className="text-[10px] font-medium mb-2 uppercase tracking-wider" style={{ color: 'var(--color-text3)' }}>Line items</p>
+            <div className="grid gap-x-2 mb-1.5" style={{ gridTemplateColumns: '1fr 64px 96px 96px 24px' }}>
+              <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text3)' }}>Description</span>
+              <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text3)' }}>Qty</span>
+              <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text3)' }}>Unit price</span>
+              <span className="text-[9px] font-semibold uppercase tracking-wider text-right" style={{ color: 'var(--color-text3)' }}>Total</span>
+              <span />
+            </div>
             <div className="space-y-2">
               {items.map((it, idx) => (
-                <div key={idx} className="flex gap-2 items-start">
-                  <input type="text" placeholder="Description" required className="field-input flex-1" value={it.description}
+                <div key={idx} className="grid gap-2 items-center" style={{ gridTemplateColumns: '1fr 64px 96px 96px 24px' }}>
+                  <input type="text" placeholder="e.g. Website revamp" required className="field-input" value={it.description}
                     onChange={e => updateItem(idx, { description: e.target.value })} />
-                  <input type="number" min={1} className="field-input w-16" value={it.quantity}
+                  <input type="number" min={1} className="field-input" value={it.quantity}
                     onChange={e => updateItem(idx, { quantity: Number(e.target.value) })} />
-                  <input type="number" min={0} placeholder="Price (R)" className="field-input w-28"
+                  <input type="number" min={0} step={0.01} placeholder="0.00" className="field-input"
                     value={it.unit_price_cents / 100}
                     onChange={e => updateItem(idx, { unit_price_cents: Math.round(Number(e.target.value) * 100) })} />
-                  {items.length > 1 && (
-                    <button type="button" onClick={() => setItems(prev => prev.filter((_, i) => i !== idx))} className="cursor-pointer p-2" style={{ color: 'var(--color-text3)' }}>
+                  <span className="text-xs font-mono text-right tabular-nums" style={{ color: 'var(--color-text2)' }}>
+                    {fmt(it.quantity * it.unit_price_cents)}
+                  </span>
+                  {items.length > 1 ? (
+                    <button type="button" onClick={() => setItems(prev => prev.filter((_, i) => i !== idx))} className="cursor-pointer p-1 justify-self-end" style={{ color: 'var(--color-text3)' }}>
                       <Trash2 size={14} />
                     </button>
-                  )}
+                  ) : <span />}
                 </div>
               ))}
             </div>
