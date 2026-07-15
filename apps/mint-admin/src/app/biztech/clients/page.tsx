@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { StatusDot } from '@/components/biztech/StatusDot';
 import { ClientAvatar } from '@/components/biztech/ClientAvatar';
-import { RefreshCw, Plus, X, Loader2, Inbox, Building2, MapPin, Receipt, FolderKanban, FileText, Tag, Globe, StickyNote, Users2, ArrowRight, ChevronDown, Search, Mail, Clock } from 'lucide-react';
+import { RefreshCw, Plus, X, Loader2, Inbox, Building2, MapPin, Receipt, FolderKanban, FileText, Tag, Globe, StickyNote, Users2, ArrowRight, ChevronDown, Search, Mail, Clock, UserRound } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useTheme } from '@/components/ThemeProvider';
 
@@ -32,6 +32,20 @@ interface BizClient {
   createdAt: string;
   updatedAt: string;
   primaryContact: { name: string; email: string | null } | null;
+  assignedTo: string | null;
+}
+
+interface StaffUser { id: string; name: string; email: string | null; }
+
+function useStaffUsers() {
+  const [users, setUsers] = useState<StaffUser[]>([]);
+  useEffect(() => {
+    fetch('/api/users')
+      .then(r => r.ok ? r.json() : { users: [] })
+      .then(({ users }) => setUsers((users ?? []).map((u: { id: string; name: string; email: string }) => ({ id: u.id, name: u.name, email: u.email }))))
+      .catch(() => {});
+  }, []);
+  return users;
 }
 
 const STATUS_CONFIG: Record<ClientStatus, { label: string; color: string }> = {
@@ -53,8 +67,9 @@ function IconField({ icon: Icon, top, children }: { icon: React.ComponentType<{ 
 }
 
 function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
-  const [form, setForm]     = useState({ name: '', industry: '', website: '', address: '', notes: '', status: 'active' as ClientStatus });
+  const [form, setForm]     = useState({ name: '', industry: '', website: '', address: '', notes: '', status: 'active' as ClientStatus, assigned_to: '' });
   const [saving, setSaving] = useState(false);
+  const staff = useStaffUsers();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -141,6 +156,20 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
                   Already an onboarded client? Leave this as Active. Use Lead for prospects not yet signed.
                 </p>
               </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text2)' }}>Assigned to</label>
+                <IconField icon={UserRound}>
+                  <select
+                    className="field-input"
+                    style={{ paddingLeft: 34 }}
+                    value={form.assigned_to}
+                    onChange={e => setForm(p => ({ ...p, assigned_to: e.target.value }))}
+                  >
+                    <option value="">Unassigned</option>
+                    {staff.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+                  </select>
+                </IconField>
+              </div>
             </div>
 
             <div className="space-y-3 pt-2 biztech-field-in" style={{ borderTop: '1px solid var(--color-border2)', animationDelay: '80ms' }}>
@@ -182,13 +211,27 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
 
 interface QuickCounts { contacts: number; documents: number; projects: number; }
 
-function QuickView({ clients }: { clients: BizClient[] }) {
+function QuickView({ clients, onChanged }: { clients: BizClient[]; onChanged: () => void }) {
   const router = useRouter();
+  const staff = useStaffUsers();
   const [selectedId, setSelectedId] = useState('');
   const [counts, setCounts]         = useState<QuickCounts | null>(null);
   const [countsLoading, setCountsLoading] = useState(false);
+  const [savingOwner, setSavingOwner] = useState(false);
 
   const selected = clients.find(c => c.id === selectedId) ?? null;
+
+  async function setOwner(userId: string) {
+    if (!selected) return;
+    setSavingOwner(true);
+    await fetch(`/api/biztech/clients/${selected.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ assigned_to: userId || null }),
+    });
+    setSavingOwner(false);
+    onChanged();
+  }
 
   useEffect(() => {
     if (!selectedId) { setCounts(null); return; }
@@ -252,6 +295,20 @@ function QuickView({ clients }: { clients: BizClient[] }) {
             </div>
           </div>
           <div className="p-5 flex flex-col">
+            <div className="mb-4">
+              <p className="text-[10px] uppercase tracking-widest font-semibold mb-1.5 flex items-center gap-1.5" style={{ color: 'var(--color-text3)' }}>
+                <UserRound size={11} /> Assigned to {savingOwner && <Loader2 size={10} className="animate-spin" />}
+              </p>
+              <select
+                className="field-input w-full text-sm"
+                value={selected.assignedTo ?? ''}
+                onChange={e => setOwner(e.target.value)}
+                disabled={savingOwner}
+              >
+                <option value="">Unassigned</option>
+                {staff.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+              </select>
+            </div>
             <p className="text-[10px] uppercase tracking-widest font-semibold mb-3" style={{ color: 'var(--color-text3)' }}>At a glance</p>
             {countsLoading || !counts ? (
               <div className="flex-1 flex items-center justify-center">
@@ -310,6 +367,7 @@ export default function BizTechClientsPage() {
         createdAt: (c.created_at ?? c.createdAt) as string,
         updatedAt: (c.updated_at ?? c.updatedAt) as string,
         primaryContact: (c.primary_contact ?? c.primaryContact ?? null) as BizClient['primaryContact'],
+        assignedTo: (c.assigned_to ?? c.assignedTo ?? null) as string | null,
       })));
     } else {
       setToast({ kind: 'error', message: 'Failed to load clients' });
@@ -380,7 +438,7 @@ export default function BizTechClientsPage() {
         ))}
       </div>
 
-      {clients.length > 0 && <QuickView clients={clients} />}
+      {clients.length > 0 && <QuickView clients={clients} onChanged={load} />}
 
       {loading ? (
         <div className="p-12 flex items-center justify-center" style={PANEL}>

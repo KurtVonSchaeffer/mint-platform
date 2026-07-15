@@ -23,7 +23,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { name, industry, website, address, notes, status = 'lead' } = body;
+  const { name, industry, website, address, notes, status = 'lead', assigned_to } = body;
 
   if (!name) {
     return NextResponse.json({ error: 'name required' }, { status: 422 });
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabaseAdmin
     .from('biztech_clients')
-    .insert({ name, industry, website, address, notes, status })
+    .insert({ name, industry, website, address, notes, status, assigned_to: assigned_to || null })
     .select()
     .single();
 

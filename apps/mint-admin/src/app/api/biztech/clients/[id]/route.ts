@@ -26,11 +26,14 @@ export async function PATCH(
 ) {
   const { id } = await params;
   const body = await req.json();
-  const { name, industry, website, address, notes, status } = body;
+  const { name, industry, website, address, notes, status, assigned_to } = body;
+
+  const patch: Record<string, unknown> = { name, industry, website, address, notes, status };
+  if (assigned_to !== undefined) patch.assigned_to = assigned_to || null;
 
   const { data, error } = await supabaseAdmin
     .from('biztech_clients')
-    .update({ name, industry, website, address, notes, status })
+    .update(patch)
     .eq('id', id)
     .select()
     .single();
