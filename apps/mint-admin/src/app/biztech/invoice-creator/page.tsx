@@ -7,12 +7,14 @@ import { Toast, type ToastKind } from '@/components/Toast';
 import { Plus, Trash2, Printer, CheckCircle2, Loader2, ArrowLeft } from 'lucide-react';
 
 const FROM = {
-  company: 'ALGOHIVE PTY LTD',
+  company: 'MINT PLATFORMS (PTY) LTD',
   address: ['3 Gwen Lane, Sandown', 'Sandton, 2031, South Africa'],
-  reg:     '2024/644796/07',
+  reg:     '',
   email:   'info@mymint.co.za',
 };
 
+// Bank account is still held under Algohive (Pty) Ltd — only shown in the
+// EFT banking details block, not as the invoicing/issuing company above.
 const BANKING = {
   bank:   'Capitec Bank',
   name:   'ALGOHIVE PTY LTD',
@@ -323,7 +325,7 @@ export default function MintInvoicePage() {
             {/* ── Footer ── */}
             <div className="inv-footer px-10 py-4 flex items-center justify-between text-xs text-gray-400"
               style={{ borderTop: '1px solid #f3f4f6' }}>
-              <span>{FROM.company} · Reg. {FROM.reg}</span>
+              <span>{FROM.company}{FROM.reg ? ` · Reg. ${FROM.reg}` : ''}</span>
               <span>{FROM.email}</span>
             </div>
           </div>
