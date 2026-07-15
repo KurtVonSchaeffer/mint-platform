@@ -359,10 +359,12 @@ export function welcomeClientEmail(client: {
 export function biztechInvoiceReminderEmail(inv: {
   reference: string; clientName: string; contact: string;
   totalCents: number; dueDate: string; daysOverdue: number;
+  invoiceId?: string;
 }) {
   const fmt = (c: number) =>
     new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 2 }).format(c / 100);
   const isOverdue = inv.daysOverdue > 0;
+  const payUrl = inv.invoiceId ? `https://algolend.co.za/biztech-invoice/${inv.invoiceId}` : null;
 
   return `<!DOCTYPE html>
 <html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
@@ -383,9 +385,97 @@ export function biztechInvoiceReminderEmail(inv: {
       <p style="font-size:28px;font-weight:700;color:#5C3BCF;margin:0">${fmt(inv.totalCents)}</p>
       <p style="color:#888;font-size:13px;margin:4px 0 0">Amount due · Reference: ${inv.reference}</p>
     </div>
+    ${payUrl ? `
+    <div style="text-align:center;margin:24px 0">
+      <a href="${payUrl}" style="background:#5C3BCF;color:#fff;padding:13px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block">
+        View &amp; pay ${fmt(inv.totalCents)} →
+      </a>
+    </div>` : ''}
     <p style="color:#888;font-size:13px;line-height:1.6;border-top:1px solid #eee;padding-top:20px">
-      Please use reference <strong>${inv.reference}</strong> and email your proof of payment to
+      Prefer a bank transfer? Use reference <strong>${inv.reference}</strong> and email your proof of payment to
       <a href="mailto:accounts@mymint.co.za" style="color:#5C3BCF">accounts@mymint.co.za</a>.
+    </p>
+  </div>
+  <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
+    MINT BizTech · MINT Platforms (Pty) Ltd
+  </div>
+</div>
+</body></html>`;
+}
+
+export function biztechInvoiceReadyEmail(inv: {
+  reference: string; clientName: string; contact: string;
+  totalCents: number; dueDate: string; invoiceId: string;
+}) {
+  const fmt = (c: number) =>
+    new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 2 }).format(c / 100);
+  const payUrl = `https://algolend.co.za/biztech-invoice/${inv.invoiceId}`;
+
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:linear-gradient(135deg,#31005E,#5C3BCF);padding:32px;text-align:center">
+    <p style="color:#fff;font-size:24px;font-weight:700;margin:0">MINT<span style="color:#DDC357">BizTech</span></p>
+    <p style="color:rgba(255,255,255,0.7);font-size:12px;letter-spacing:3px;text-transform:uppercase;margin:4px 0 0">Tax Invoice</p>
+  </div>
+  <div style="padding:32px">
+    <p style="font-size:16px;margin:0 0 8px">Hi ${inv.contact},</p>
+    <p style="color:#555;line-height:1.6;margin:0 0 24px">
+      Please find your invoice from MINT BizTech below.
+    </p>
+    <div style="background:#f5f2ff;border:1px solid #e5e0ff;border-radius:12px;padding:20px;margin-bottom:24px;text-align:center">
+      <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#5C3BCF;margin:0 0 12px">${inv.reference}</p>
+      <p style="font-size:28px;font-weight:700;color:#5C3BCF;margin:0">${fmt(inv.totalCents)}</p>
+      <p style="color:#888;font-size:13px;margin:6px 0 0">Due ${inv.dueDate}</p>
+    </div>
+    <div style="text-align:center;margin:24px 0">
+      <a href="${payUrl}" style="background:#5C3BCF;color:#fff;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px;display:inline-block">
+        View &amp; pay ${fmt(inv.totalCents)} →
+      </a>
+    </div>
+    <p style="color:#888;font-size:13px;line-height:1.6;border-top:1px solid #eee;padding-top:20px">
+      Prefer a bank transfer? Use reference <strong>${inv.reference}</strong> and email your proof of payment to
+      <a href="mailto:accounts@mymint.co.za" style="color:#5C3BCF">accounts@mymint.co.za</a>.
+    </p>
+  </div>
+  <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
+    MINT BizTech · MINT Platforms (Pty) Ltd · accounts@mymint.co.za
+  </div>
+</div>
+</body></html>`;
+}
+
+export function biztechQuoteEmail(q: {
+  reference: string; clientName: string; contact: string;
+  totalCents: number; validUntil: string | null; quoteId: string;
+}) {
+  const fmt = (c: number) =>
+    new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 2 }).format(c / 100);
+  const viewUrl = `https://algolend.co.za/biztech-quote/${q.quoteId}`;
+
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:linear-gradient(135deg,#31005E,#5C3BCF);padding:32px;text-align:center">
+    <p style="color:#fff;font-size:24px;font-weight:700;margin:0">MINT<span style="color:#DDC357">BizTech</span></p>
+    <p style="color:rgba(255,255,255,0.7);font-size:12px;letter-spacing:3px;text-transform:uppercase;margin:4px 0 0">Quote</p>
+  </div>
+  <div style="padding:32px">
+    <p style="font-size:16px;margin:0 0 8px">Hi ${q.contact},</p>
+    <p style="color:#555;line-height:1.6;margin:0 0 24px">
+      Please find your quote from MINT BizTech below${q.validUntil ? `, valid until <strong>${q.validUntil}</strong>` : ''}.
+    </p>
+    <div style="background:#f5f2ff;border:1px solid #e5e0ff;border-radius:12px;padding:20px;margin-bottom:24px;text-align:center">
+      <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#5C3BCF;margin:0 0 12px">${q.reference}</p>
+      <p style="font-size:28px;font-weight:700;color:#5C3BCF;margin:0">${fmt(q.totalCents)}</p>
+    </div>
+    <div style="text-align:center;margin:24px 0">
+      <a href="${viewUrl}" style="background:#5C3BCF;color:#fff;padding:14px 36px;border-radius:10px;text-decoration:none;font-weight:700;font-size:16px;display:inline-block">
+        View quote &amp; respond →
+      </a>
+    </div>
+    <p style="color:#888;font-size:13px;line-height:1.6">
+      Questions? Reply to this email or contact <a href="mailto:accounts@mymint.co.za" style="color:#5C3BCF">accounts@mymint.co.za</a>.
     </p>
   </div>
   <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">

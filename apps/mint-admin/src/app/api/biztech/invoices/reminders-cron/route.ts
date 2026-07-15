@@ -7,14 +7,18 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
 
+const MAX_REMINDERS = 3;
+
 /**
  * GET /api/biztech/invoices/reminders-cron
  *
  * Called by Vercel Cron daily. Two jobs:
  *   1. Flip any "sent" invoice past its due_at to "overdue".
  *   2. Email a reminder for every "overdue" invoice not reminded in the
- *      last 3 days (so it nags periodically, not once and never again,
- *      but also not on every single run).
+ *      last 3 days (so it nags periodically, not once and never again),
+ *      capped at MAX_REMINDERS total. Stops automatically once the
+ *      invoice is paid, since paid invoices no longer match status
+ *      'overdue' and drop out of the query below.
  *
  * Protected by CRON_SECRET, same pattern as /api/billing/cron.
  */
@@ -49,6 +53,7 @@ export async function GET(req: NextRequest) {
     .from('biztech_invoices')
     .select('*, biztech_clients(id, name)')
     .eq('status', 'overdue')
+    .lt('reminder_count', MAX_REMINDERS)
     .or(`reminder_sent_at.is.null,reminder_sent_at.lt.${threeDaysAgo}`);
 
   if (fetchError) return NextResponse.json({ error: fetchError.message }, { status: 500 });
@@ -72,6 +77,7 @@ export async function GET(req: NextRequest) {
         totalCents: invoice.total_cents,
         dueDate: invoice.due_at,
         daysOverdue,
+        invoiceId: invoice.id,
       }),
     });
 
@@ -79,7 +85,7 @@ export async function GET(req: NextRequest) {
       sent++;
       await supabaseAdmin
         .from('biztech_invoices')
-        .update({ reminder_sent_at: now.toISOString() })
+        .update({ reminder_sent_at: now.toISOString(), reminder_count: (invoice.reminder_count ?? 0) + 1 })
         .eq('id', invoice.id);
     } else {
       skipped++;

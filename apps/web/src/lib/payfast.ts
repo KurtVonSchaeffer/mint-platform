@@ -47,3 +47,35 @@ export function buildInvoiceForm(p: {
   params.signature = buildSignature(params, process.env.PAYFAST_PASSPHRASE);
   return params;
 }
+
+/** Same as buildInvoiceForm but for MINT BizTech invoices (separate table/ID space from AlgoLend's own invoices). */
+export function buildBiztechInvoiceForm(p: {
+  invoiceId:    string;
+  reference:    string;
+  clientName:   string;
+  contactEmail: string;
+  amountCents:  number;
+}): Record<string, string> {
+  const base   = (process.env.NEXT_PUBLIC_APP_URL ?? 'https://algolend.co.za').replace(/\/$/, '');
+  const amount = (p.amountCents / 100).toFixed(2);
+
+  const params: Record<string, string> = {
+    merchant_id:          process.env.PAYFAST_MERCHANT_ID  ?? '',
+    merchant_key:         process.env.PAYFAST_MERCHANT_KEY ?? '',
+    return_url:           `${base}/biztech-invoice/${p.invoiceId}?status=complete`,
+    cancel_url:           `${base}/biztech-invoice/${p.invoiceId}?status=cancelled`,
+    notify_url:           process.env.PAYFAST_NOTIFY_URL ?? 'https://admin.algolend.co.za/api/payfast/notify',
+    // "biztech-" prefix lets the shared ITN handler know to update biztech_invoices, not invoices.
+    m_payment_id:         `biztech-${p.invoiceId}`,
+    amount,
+    item_name:            `MINT BizTech Invoice ${p.reference}`,
+    item_description:     `Invoice for ${p.clientName}`,
+    name_first:           p.clientName.split(' ')[0] ?? p.clientName,
+    name_last:            p.clientName.split(' ').slice(1).join(' ') || p.clientName,
+    email_address:        p.contactEmail,
+    email_confirmation:   '1',
+    confirmation_address: 'accounts@mymint.co.za',
+  };
+  params.signature = buildSignature(params, process.env.PAYFAST_PASSPHRASE);
+  return params;
+}

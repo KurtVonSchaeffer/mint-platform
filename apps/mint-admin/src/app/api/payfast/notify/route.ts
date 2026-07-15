@@ -110,6 +110,29 @@ export async function POST(req: NextRequest) {
       return new NextResponse(null, { status: 200 });
     }
 
+    /* ── One-off MINT BizTech invoice payment ("biztech-" prefixed id) ── */
+    if (mPaymentId.startsWith('biztech-')) {
+      const biztechInvoiceId = mPaymentId.replace('biztech-', '');
+      const { data: biztechInv, error: biztechError } = await supabaseAdmin
+        .from('biztech_invoices')
+        .select('id, notes')
+        .eq('id', biztechInvoiceId)
+        .single();
+
+      if (biztechError || !biztechInv) {
+        console.error('[payfast/notify] BizTech invoice not found:', biztechInvoiceId);
+        return new NextResponse(null, { status: 200 });
+      }
+
+      await supabaseAdmin
+        .from('biztech_invoices')
+        .update({ status: 'paid', paid_at: now, notes: `Paid via PayFast. PF ID: ${pfId}.` })
+        .eq('id', biztechInv.id);
+
+      console.log('[payfast/notify] BizTech invoice paid:', biztechInvoiceId, { pfId });
+      return new NextResponse(null, { status: 200 });
+    }
+
     /* ── One-off invoice payment ─────────────────────────────────────── */
     const { data: inv, error } = await supabaseAdmin
       .from('invoices')

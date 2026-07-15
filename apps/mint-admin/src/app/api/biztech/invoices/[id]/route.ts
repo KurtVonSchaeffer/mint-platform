@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { sendEmail, biztechInvoiceReadyEmail } from '@/lib/email';
+import { findClientContact } from '@/lib/biztech';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -51,10 +53,29 @@ export async function PATCH(
     .from('biztech_invoices')
     .update(patch)
     .eq('id', id)
-    .select()
+    .select('*, biztech_clients(id, name)')
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  if (status === 'sent') {
+    const contact = await findClientContact(data.client_id);
+    if (contact) {
+      await sendEmail({
+        to: contact.email,
+        subject: `Invoice ${data.reference} from MINT BizTech`,
+        html: biztechInvoiceReadyEmail({
+          reference: data.reference,
+          clientName: data.biztech_clients?.name ?? '',
+          contact: contact.name,
+          totalCents: data.total_cents,
+          dueDate: data.due_at ?? '',
+          invoiceId: data.id,
+        }),
+      });
+    }
+  }
+
   return NextResponse.json({ invoice: data });
 }
 
