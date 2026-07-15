@@ -26,15 +26,34 @@ const STATUS_STYLE: Record<QuoteStatus, { bg: string; border: string; color: str
 
 const FIELD: React.CSSProperties = {};
 
+interface CatalogService { id: string; name: string; unit_price_cents: number; unit: string; }
+
 function NewQuoteModal({ clients, onClose, onCreated }: { clients: BizClient[]; onClose: () => void; onCreated: () => void }) {
   const [clientId, setClientId] = useState('');
   const [validUntil, setValidUntil] = useState('');
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState([{ description: '', quantity: 1, unit_price_cents: 0 }]);
   const [saving, setSaving] = useState(false);
+  const [services, setServices] = useState<CatalogService[]>([]);
+
+  useEffect(() => {
+    fetch('/api/biztech/services')
+      .then(r => r.ok ? r.json() : { services: [] })
+      .then(({ services }) => setServices((services ?? []).filter((s: { active: boolean }) => s.active)))
+      .catch(() => {});
+  }, []);
 
   function updateItem(idx: number, patch: Partial<typeof items[0]>) {
     setItems(prev => prev.map((it, i) => i === idx ? { ...it, ...patch } : it));
+  }
+
+  function addFromCatalog(serviceId: string) {
+    const svc = services.find(s => s.id === serviceId);
+    if (!svc) return;
+    setItems(prev => {
+      const blank = prev.length === 1 && !prev[0].description ? prev.slice(1) : prev;
+      return [...blank, { description: svc.name, quantity: 1, unit_price_cents: svc.unit_price_cents }];
+    });
   }
 
   async function submit(e: React.FormEvent) {
@@ -113,10 +132,23 @@ function NewQuoteModal({ clients, onClose, onCreated }: { clients: BizClient[]; 
                 </div>
               ))}
             </div>
-            <button type="button" onClick={() => setItems(prev => [...prev, { description: '', quantity: 1, unit_price_cents: 0 }])}
-              className="text-xs mt-2 cursor-pointer" style={{ color: '#5C3BCF' }}>
-              + Add line item
-            </button>
+            <div className="flex items-center gap-3 mt-2">
+              <button type="button" onClick={() => setItems(prev => [...prev, { description: '', quantity: 1, unit_price_cents: 0 }])}
+                className="text-xs cursor-pointer" style={{ color: '#5C3BCF' }}>
+                + Add line item
+              </button>
+              {services.length > 0 && (
+                <select
+                  className="text-xs cursor-pointer bg-transparent"
+                  style={{ color: 'var(--color-text3)', border: 'none', outline: 'none' }}
+                  value=""
+                  onChange={e => { if (e.target.value) addFromCatalog(e.target.value); }}
+                >
+                  <option value="">+ From catalog…</option>
+                  {services.map(s => <option key={s.id} value={s.id}>{s.name} — {fmt(s.unit_price_cents)}/{s.unit}</option>)}
+                </select>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center justify-between pt-2 text-sm" style={{ borderTop: '1px solid var(--color-border2)' }}>

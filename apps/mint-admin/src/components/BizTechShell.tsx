@@ -39,7 +39,7 @@ type NavItem = { label: string; href: string; icon: React.ComponentType<IconProp
 const nav: NavItem[] = [
   { label: 'Dashboard',  href: '/biztech',           icon: LayoutGrid  },
   { label: 'Clients',    href: '/biztech/clients',   icon: Building2   },
-  { label: 'Services',   href: '/biztech/services',  icon: Wrench,      comingSoon: true },
+  { label: 'Services',   href: '/biztech/services',  icon: Wrench },
   { label: 'Quotes',     href: '/biztech/quotes',    icon: FileText    },
   { label: 'Invoices',   href: '/biztech/invoices',  icon: Receipt     },
   { label: 'Projects',   href: '/biztech/projects',  icon: FolderKanban },
