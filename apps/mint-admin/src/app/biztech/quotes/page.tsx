@@ -54,7 +54,18 @@ function NewQuoteModal({ clients, onClose, onCreated }: { clients: BizClient[]; 
 
   return (
     <div className="confirm-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-xl p-7 max-h-[90vh] overflow-y-auto" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border2)', borderRadius: 10 }}>
+      <div
+        className="w-full max-w-xl max-h-[90vh] overflow-y-auto overflow-x-hidden"
+        style={{
+          background: 'var(--color-surface)',
+          border: '1px solid rgba(92,59,207,0.22)',
+          borderRadius: 16,
+          boxShadow: '0 32px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(92,59,207,0.16), 0 0 60px rgba(92,59,207,0.12)',
+          animation: 'scale-in 0.25s cubic-bezier(0.16,1,0.3,1) both',
+        }}
+      >
+        <div style={{ height: 4, background: 'linear-gradient(90deg, #5C3BCF, #DDC357)' }} />
+        <div className="p-7">
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-bold text-lg" style={{ color: 'var(--color-text)' }}>New quote</h3>
           <button onClick={onClose} className="cursor-pointer" style={{ color: 'var(--color-text3)' }}><X size={16} /></button>
@@ -116,6 +127,7 @@ function NewQuoteModal({ clients, onClose, onCreated }: { clients: BizClient[]; 
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );
