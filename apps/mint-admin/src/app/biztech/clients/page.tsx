@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { StatusDot } from '@/components/biztech/StatusDot';
 import { ClientAvatar } from '@/components/biztech/ClientAvatar';
-import { RefreshCw, Plus, X, Loader2, Inbox, Building2, MapPin, Receipt, FolderKanban, FileText, Tag, Globe, StickyNote, Users2, ArrowRight, ChevronDown, Search, Mail, Clock, UserRound } from 'lucide-react';
+import { RefreshCw, Plus, X, Loader2, Inbox, Building2, MapPin, Receipt, FolderKanban, FileText, Tag, Globe, StickyNote, Users2, ArrowRight, ChevronDown, Search, Mail, Clock, UserRound, Phone } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useTheme } from '@/components/ThemeProvider';
 
@@ -68,17 +68,33 @@ function IconField({ icon: Icon, top, children }: { icon: React.ComponentType<{ 
 
 function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
   const [form, setForm]     = useState({ name: '', industry: '', website: '', address: '', notes: '', status: 'active' as ClientStatus, assigned_to: '' });
+  const [contactName, setContactName]   = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
   const [saving, setSaving] = useState(false);
   const staff = useStaffUsers();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    await fetch('/api/biztech/clients', {
+    const res = await fetch('/api/biztech/clients', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
     });
+    const data = await res.json();
+    if (res.ok && data.client?.id && (contactName.trim() || contactEmail.trim())) {
+      await fetch(`/api/biztech/clients/${data.client.id}/contacts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: contactName.trim() || contactEmail.trim(),
+          email: contactEmail.trim() || null,
+          phone: contactPhone.trim() || null,
+          is_primary: true,
+        }),
+      });
+    }
     setSaving(false);
     onAdded();
     onClose();
@@ -173,7 +189,36 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
               </div>
             </div>
 
-            <div className="space-y-3 pt-2 biztech-field-in" style={{ borderTop: '1px solid var(--color-border2)', animationDelay: '80ms' }}>
+            <div className="space-y-3 pt-2 biztech-field-in" style={{ borderTop: '1px solid var(--color-border2)', animationDelay: '60ms' }}>
+              <p className="text-[10px] uppercase tracking-widest font-semibold flex items-center gap-1.5" style={{ color: 'var(--color-green)' }}>
+                <Mail size={11} /> Primary contact
+              </p>
+              <p className="text-[10px] -mt-1.5" style={{ color: 'var(--color-text3)' }}>
+                Needed to send this client quotes and invoices by email — you can add more contacts later.
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text2)' }}>Contact name</label>
+                  <IconField icon={UserRound}>
+                    <input type="text" className="field-input" style={{ paddingLeft: 34 }} value={contactName} onChange={e => setContactName(e.target.value)} />
+                  </IconField>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text2)' }}>Phone (optional)</label>
+                  <IconField icon={Phone}>
+                    <input type="text" className="field-input" style={{ paddingLeft: 34 }} value={contactPhone} onChange={e => setContactPhone(e.target.value)} />
+                  </IconField>
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text2)' }}>Email</label>
+                <IconField icon={Mail}>
+                  <input type="email" className="field-input" style={{ paddingLeft: 34 }} value={contactEmail} onChange={e => setContactEmail(e.target.value)} />
+                </IconField>
+              </div>
+            </div>
+
+            <div className="space-y-3 pt-2 biztech-field-in" style={{ borderTop: '1px solid var(--color-border2)', animationDelay: '90ms' }}>
               <p className="text-[10px] uppercase tracking-widest font-semibold flex items-center gap-1.5" style={{ color: 'var(--color-sky)' }}>
                 <MapPin size={11} /> Location &amp; notes
               </p>
