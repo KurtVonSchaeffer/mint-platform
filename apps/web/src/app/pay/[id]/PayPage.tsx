@@ -12,7 +12,7 @@ interface Props {
   amountStr:    string;   // pre-formatted e.g. "R 9 500.00"
   dueDate:      string;
   payfastUrl:   string;
-  payfastFields: Record<string, string>;
+  payfastFields: Record<string, string> | null;
   bankName:     string;
   bankAccount:  string;
   branchCode:   string;
@@ -48,6 +48,7 @@ export function PayPage(props: Props) {
   const status = params.get('status');
 
   function submitPayFast() {
+    if (!props.payfastFields) return;
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = props.payfastUrl;
@@ -126,27 +127,29 @@ export function PayPage(props: Props) {
           </div>
         </div>
 
-        {/* PayFast */}
-        <div style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 14, padding: '20px 24px', marginBottom: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <CreditCard size={16} color="#7C3AED" />
-            <p style={{ fontSize: 13, fontWeight: 700, color: '#e4e4e7', margin: 0 }}>Pay online</p>
+        {/* PayFast — hidden until merchant credentials are configured */}
+        {props.payfastFields && (
+          <div style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 14, padding: '20px 24px', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <CreditCard size={16} color="#7C3AED" />
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#e4e4e7', margin: 0 }}>Pay online</p>
+            </div>
+            <p style={{ fontSize: 12, color: '#71717a', margin: '0 0 16px', lineHeight: 1.6 }}>
+              Card, instant EFT, or SnapScan — secured by PayFast.
+            </p>
+            <button
+              onClick={submitPayFast}
+              style={{
+                width: '100%', background: 'linear-gradient(135deg,#6D28D9,#7C3AED)',
+                color: '#fff', border: 'none', borderRadius: 10, padding: '13px',
+                fontWeight: 700, fontSize: 14, cursor: 'pointer',
+                boxShadow: '0 6px 20px -4px rgba(124,58,237,0.45)',
+              }}
+            >
+              Pay {props.amountStr} via PayFast →
+            </button>
           </div>
-          <p style={{ fontSize: 12, color: '#71717a', margin: '0 0 16px', lineHeight: 1.6 }}>
-            Card, instant EFT, or SnapScan — secured by PayFast.
-          </p>
-          <button
-            onClick={submitPayFast}
-            style={{
-              width: '100%', background: 'linear-gradient(135deg,#6D28D9,#7C3AED)',
-              color: '#fff', border: 'none', borderRadius: 10, padding: '13px',
-              fontWeight: 700, fontSize: 14, cursor: 'pointer',
-              boxShadow: '0 6px 20px -4px rgba(124,58,237,0.45)',
-            }}
-          >
-            Pay {props.amountStr} via PayFast →
-          </button>
-        </div>
+        )}
 
         {/* EFT */}
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: '20px 24px' }}>

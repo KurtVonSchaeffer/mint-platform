@@ -46,13 +46,19 @@ export default async function PaymentPage({ params }: { params: Promise<{ id: st
   const clientName   = client?.name          ?? 'Client';
   const contactEmail = client?.contact_email ?? '';
 
-  const payfastFields = buildInvoiceForm({
-    invoiceId:    inv.id,
-    reference:    inv.reference,
-    clientName,
-    contactEmail,
-    amountCents:  inv.total_cents,
-  });
+  // PayFast merchant credentials aren't configured in this environment yet —
+  // hide the PayFast option and fall back to EFT-only until they are set.
+  const payfastEnabled = !!process.env.PAYFAST_MERCHANT_ID && !!process.env.PAYFAST_MERCHANT_KEY;
+
+  const payfastFields = payfastEnabled
+    ? buildInvoiceForm({
+        invoiceId:    inv.id,
+        reference:    inv.reference,
+        clientName,
+        contactEmail,
+        amountCents:  inv.total_cents,
+      })
+    : null;
 
   return (
     <Suspense>

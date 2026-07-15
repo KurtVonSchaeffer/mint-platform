@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, CheckCircle, Loader2, Send, Mail, Download, Sparkles, CreditCard } from 'lucide-react';
 import { fmt, fmtDate, statusStyle, typeStyle, type Invoice } from '@/lib/invoice-helpers';
 
@@ -19,6 +19,16 @@ interface Props {
 export function InvoiceDetailPanel({ inv, actioning, onClose, onAction, onReminder, onDownloadPDF, onGenerateInvoice }: Props) {
   const [pfLoading, setPfLoading] = useState(false);
   const [pfError,   setPfError]   = useState<string | null>(null);
+  const [pfEnabled, setPfEnabled] = useState(false);
+
+  // PayFast merchant credentials aren't configured yet — hide the button
+  // until they are, rather than let people hit a broken checkout.
+  useEffect(() => {
+    fetch('/api/payfast/status')
+      .then(r => r.ok ? r.json() : { enabled: false })
+      .then(({ enabled }) => setPfEnabled(!!enabled))
+      .catch(() => setPfEnabled(false));
+  }, []);
 
   async function payViaPayFast() {
     setPfLoading(true);
@@ -155,15 +165,17 @@ export function InvoiceDetailPanel({ inv, actioning, onClose, onAction, onRemind
         >
           {(inv.status === 'sent' || inv.status === 'overdue') ? (
             <>
-              <button
-                onClick={payViaPayFast}
-                disabled={pfLoading}
-                className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-0.5 disabled:opacity-60"
-                style={{ background: 'linear-gradient(135deg, #0a6ee0, #34a7ff)', boxShadow: '0 4px 16px rgba(10,110,224,0.3)' }}
-              >
-                {pfLoading ? <Loader2 size={14} className="animate-spin" /> : <CreditCard size={14} />}
-                {pfLoading ? 'Redirecting to PayFast…' : 'Pay via PayFast'}
-              </button>
+              {pfEnabled && (
+                <button
+                  onClick={payViaPayFast}
+                  disabled={pfLoading}
+                  className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-0.5 disabled:opacity-60"
+                  style={{ background: 'linear-gradient(135deg, #0a6ee0, #34a7ff)', boxShadow: '0 4px 16px rgba(10,110,224,0.3)' }}
+                >
+                  {pfLoading ? <Loader2 size={14} className="animate-spin" /> : <CreditCard size={14} />}
+                  {pfLoading ? 'Redirecting to PayFast…' : 'Pay via PayFast'}
+                </button>
+              )}
               {pfError && <p className="text-[11px] text-center" style={{ color: 'var(--color-red)' }}>{pfError}</p>}
               <button
                 onClick={() => onAction(inv, 'mark_paid')}

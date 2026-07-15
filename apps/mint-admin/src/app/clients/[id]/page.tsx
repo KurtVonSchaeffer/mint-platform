@@ -1223,8 +1223,20 @@ Governed by the laws of the Republic of South Africa. Disputes resolved in Gaute
 function PayFastSubscriptionCard({ clientId, monthlyFeeCents }: { clientId: string; monthlyFeeCents: number }) {
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState<string | null>(null);
+  const [pfEnabled, setPfEnabled] = useState(false);
   const grossCents = Math.round(monthlyFeeCents * 1.15);
   const fmt = (c: number) => `R ${(c / 100).toLocaleString('en-ZA', { minimumFractionDigits: 2 })}`;
+
+  // PayFast merchant credentials aren't configured yet — hide this card
+  // until they are, rather than let people hit a broken checkout.
+  useEffect(() => {
+    fetch('/api/payfast/status')
+      .then(r => r.ok ? r.json() : { enabled: false })
+      .then(({ enabled }) => setPfEnabled(!!enabled))
+      .catch(() => setPfEnabled(false));
+  }, []);
+
+  if (!pfEnabled) return null;
 
   async function setupSubscription() {
     setLoading(true);
