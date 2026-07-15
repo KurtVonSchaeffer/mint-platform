@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { RefreshCw, Loader2 } from 'lucide-react';
+import { RefreshCw, Loader2, Download } from 'lucide-react';
 
 interface Summary {
   clients: { total: number; byStatus: Record<string, number> };
@@ -37,9 +37,26 @@ function StatusBreakdown({ byStatus }: { byStatus: Record<string, number> }) {
   );
 }
 
+function toCsv(rows: (string | number)[][]) {
+  return rows.map(row => row.map(cell => {
+    const s = String(cell);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  }).join(',')).join('\n');
+}
+
+function downloadCsv(filename: string, csv: string) {
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export default function BizTechReportsPage() {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -49,6 +66,67 @@ export default function BizTechReportsPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  async function exportInvoices() {
+    setExporting('invoices');
+    const res = await fetch('/api/biztech/invoices');
+    const data = await res.json();
+    const rows: (string | number)[][] = [
+      ['Reference', 'Client', 'Status', 'Subtotal', 'VAT', 'Total', 'Issued', 'Due', 'Paid'],
+      ...(data.invoices ?? []).map((i: Record<string, unknown>) => [
+        i.reference as string,
+        (i.biztech_clients as { name?: string } | null)?.name ?? '',
+        i.status as string,
+        ((i.subtotal_cents as number) / 100).toFixed(2),
+        ((i.vat_cents as number) / 100).toFixed(2),
+        ((i.total_cents as number) / 100).toFixed(2),
+        (i.issued_at as string) ?? '',
+        (i.due_at as string) ?? '',
+        (i.paid_at as string) ?? '',
+      ]),
+    ];
+    downloadCsv(`biztech-invoices-${new Date().toISOString().slice(0, 10)}.csv`, toCsv(rows));
+    setExporting(null);
+  }
+
+  async function exportQuotes() {
+    setExporting('quotes');
+    const res = await fetch('/api/biztech/quotes');
+    const data = await res.json();
+    const rows: (string | number)[][] = [
+      ['Reference', 'Client', 'Status', 'Subtotal', 'VAT', 'Total', 'Valid until', 'Created'],
+      ...(data.quotes ?? []).map((q: Record<string, unknown>) => [
+        q.reference as string,
+        (q.biztech_clients as { name?: string } | null)?.name ?? '',
+        q.status as string,
+        ((q.subtotal_cents as number) / 100).toFixed(2),
+        ((q.vat_cents as number) / 100).toFixed(2),
+        ((q.total_cents as number) / 100).toFixed(2),
+        (q.valid_until as string) ?? '',
+        (q.created_at as string) ?? '',
+      ]),
+    ];
+    downloadCsv(`biztech-quotes-${new Date().toISOString().slice(0, 10)}.csv`, toCsv(rows));
+    setExporting(null);
+  }
+
+  async function exportClients() {
+    setExporting('clients');
+    const res = await fetch('/api/biztech/clients');
+    const data = await res.json();
+    const rows: (string | number)[][] = [
+      ['Name', 'Industry', 'Website', 'Status', 'Added'],
+      ...(data.clients ?? []).map((c: Record<string, unknown>) => [
+        c.name as string,
+        (c.industry as string) ?? '',
+        (c.website as string) ?? '',
+        c.status as string,
+        (c.created_at as string) ?? '',
+      ]),
+    ];
+    downloadCsv(`biztech-clients-${new Date().toISOString().slice(0, 10)}.csv`, toCsv(rows));
+    setExporting(null);
+  }
 
   return (
     <div className="space-y-6 page-enter">
@@ -103,9 +181,25 @@ export default function BizTechReportsPage() {
           </div>
 
           <div className="p-5" style={PANEL}>
-            <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
-              PDF/Excel/CSV export isn&apos;t built yet — this page is a live read-only dashboard for now.
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--color-text3)' }}>Export CSV</p>
+            <div className="flex items-center gap-2 flex-wrap">
+              {[
+                { key: 'invoices', label: 'Invoices', fn: exportInvoices },
+                { key: 'quotes', label: 'Quotes', fn: exportQuotes },
+                { key: 'clients', label: 'Clients', fn: exportClients },
+              ].map(({ key, label, fn }) => (
+                <button
+                  key={key}
+                  onClick={fn}
+                  disabled={exporting === key}
+                  className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-60"
+                  style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}
+                >
+                  {exporting === key ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
         </>
       )}
