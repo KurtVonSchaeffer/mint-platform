@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { X, CheckCircle, XCircle, Loader2, Send, Download, Sparkles, Trash2 } from 'lucide-react';
+import { X, CheckCircle, XCircle, Loader2, Send, Download, Sparkles, Trash2, FolderKanban } from 'lucide-react';
 import { fmt, fmtDate } from '@/lib/invoice-helpers';
 
 type QuoteStatus = 'draft' | 'sent' | 'accepted' | 'declined' | 'expired';
@@ -44,11 +44,12 @@ interface Props {
   onClose:          () => void;
   onAction:         (quote: BiztechQuoteDetail, action: QuoteAction) => void;
   onConvert:        (quote: BiztechQuoteDetail) => void;
+  onCreateProject:  (quote: BiztechQuoteDetail) => void;
   onDownloadPDF:    (quote: BiztechQuoteDetail, items: BiztechQuoteItem[]) => void;
   onDelete:         (quote: BiztechQuoteDetail) => void;
 }
 
-export function BiztechQuoteDetailPanel({ quote, items, actioning, onClose, onAction, onConvert, onDownloadPDF, onDelete }: Props) {
+export function BiztechQuoteDetailPanel({ quote, items, actioning, onClose, onAction, onConvert, onCreateProject, onDownloadPDF, onDelete }: Props) {
   const s = STATUS_STYLE[quote.status];
 
   return (
@@ -174,6 +175,17 @@ export function BiztechQuoteDetailPanel({ quote, items, actioning, onClose, onAc
             >
               {actioning === quote.id + 'convert' ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
               Convert to invoice
+            </button>
+          ) : null}
+          {quote.status === 'accepted' ? (
+            <button
+              onClick={() => onCreateProject(quote)}
+              disabled={actioning === quote.id + 'project'}
+              className="w-full inline-flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-colors disabled:opacity-60"
+              style={{ border: '1px solid rgba(92,59,207,0.3)', color: '#5C3BCF' }}
+            >
+              {actioning === quote.id + 'project' ? <Loader2 size={14} className="animate-spin" /> : <FolderKanban size={14} />}
+              Create project
             </button>
           ) : null}
           <button

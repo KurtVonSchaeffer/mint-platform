@@ -205,6 +205,16 @@ export default function BizTechQuotesPage() {
     load();
   }
 
+  async function createProject(quote: BiztechQuoteDetail) {
+    setActioning(quote.id + 'project');
+    const res = await fetch(`/api/biztech/quotes/${quote.id}/convert-to-project`, { method: 'POST' });
+    const data = await res.json();
+    setActioning(null);
+    if (!res.ok) { setToast({ kind: 'error', message: data.error ?? 'Failed to create project' }); return; }
+    setToast({ kind: 'success', message: `Project "${data.project.name}" created` });
+    setSelected(null);
+  }
+
   async function deleteQuote(quote: BiztechQuoteDetail) {
     if (!window.confirm(`Delete quote ${quote.reference}? This can't be undone.`)) return;
     setActioning(quote.id + 'delete');
@@ -429,6 +439,7 @@ export default function BizTechQuotesPage() {
           onClose={() => setSelected(null)}
           onAction={doAction}
           onConvert={convertToInvoice}
+          onCreateProject={createProject}
           onDownloadPDF={downloadPDF}
           onDelete={deleteQuote}
         />
