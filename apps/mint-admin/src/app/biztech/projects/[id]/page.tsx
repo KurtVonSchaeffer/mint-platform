@@ -6,7 +6,7 @@ import { Toast, type ToastKind } from '@/components/Toast';
 import { StatusDot } from '@/components/biztech/StatusDot';
 import {
   ArrowLeft, Loader2, Plus, Trash2, CheckCircle2, Circle,
-  FileText, Upload, Download, Pencil, Save,
+  FileText, Upload, Download, Pencil, Save, Clock,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -20,6 +20,10 @@ interface ProjectDetail {
 }
 interface Task { id: string; title: string; status: TaskStatus; due_date: string | null; }
 interface Doc { id: string; name: string; type: string | null; created_at: string; signed_url: string | null; }
+interface TimeEntry {
+  id: string; description: string | null; minutes: number; billable: boolean; occurred_on: string;
+  biztech_project_tasks: { title: string } | null;
+}
 
 const DOC_TYPES = ['Spec', 'Design', 'Deliverable', 'Other'] as const;
 
@@ -32,6 +36,10 @@ const STATUS_CONFIG: Record<ProjectStatus, { label: string; color: string }> = {
 };
 
 const PANEL: React.CSSProperties = { background: 'var(--color-surface)', border: '1px solid var(--color-border2)', borderRadius: 10 };
+
+function fmtDate2(d: string) {
+  return new Date(d).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+}
 
 const NEXT_STATUS: ProjectStatus[] = ['planning', 'active', 'on_hold', 'completed', 'cancelled'];
 
@@ -53,11 +61,18 @@ export default function BizTechProjectDetailPage() {
   const [uploading, setUploading] = useState(false);
   const [uploadType, setUploadType] = useState<string>('Spec');
 
+  const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
+  const [logMinutes, setLogMinutes] = useState('');
+  const [logDesc, setLogDesc] = useState('');
+  const [logBillable, setLogBillable] = useState(true);
+  const [logging, setLogging] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
-    const [pRes, dRes] = await Promise.all([
+    const [pRes, dRes, tRes] = await Promise.all([
       fetch(`/api/biztech/projects/${id}`),
       fetch(`/api/biztech/projects/${id}/documents`),
+      fetch(`/api/biztech/projects/${id}/time-entries`),
     ]);
     if (pRes.ok) {
       const data = await pRes.json();
@@ -67,6 +82,7 @@ export default function BizTechProjectDetailPage() {
       setToast({ kind: 'error', message: 'Failed to load project' });
     }
     if (dRes.ok) setDocs((await dRes.json()).documents ?? []);
+    if (tRes.ok) setTimeEntries((await tRes.json()).entries ?? []);
     setLoading(false);
   }, [id]);
 
@@ -147,6 +163,28 @@ export default function BizTechProjectDetailPage() {
     if (!res.ok) { setToast({ kind: 'error', message: 'Failed to remove task' }); load(); }
   }
 
+  async function logTime(e: React.FormEvent) {
+    e.preventDefault();
+    const minutes = Math.round(Number(logMinutes) * 60);
+    if (!minutes || minutes <= 0) { setToast({ kind: 'error', message: 'Enter hours logged' }); return; }
+    setLogging(true);
+    const res = await fetch(`/api/biztech/projects/${id}/time-entries`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ minutes, description: logDesc || null, billable: logBillable }),
+    });
+    setLogging(false);
+    if (!res.ok) { setToast({ kind: 'error', message: 'Failed to log time' }); return; }
+    setLogMinutes(''); setLogDesc(''); setLogBillable(true);
+    load();
+  }
+
+  async function removeTimeEntry(entryId: string) {
+    setTimeEntries(prev => prev.filter(t => t.id !== entryId));
+    const res = await fetch(`/api/biztech/time-entries/${entryId}`, { method: 'DELETE' });
+    if (!res.ok) { setToast({ kind: 'error', message: 'Failed to remove entry' }); load(); }
+  }
+
   if (loading && !project) {
     return <div className="p-12 flex items-center justify-center" style={PANEL}><Loader2 size={24} className="animate-spin" style={{ color: '#5C3BCF' }} /></div>;
   }
@@ -156,6 +194,9 @@ export default function BizTechProjectDetailPage() {
 
   const cfg = STATUS_CONFIG[project.status];
   const doneCount = tasks.filter(t => t.status === 'done').length;
+  const totalMinutes = timeEntries.reduce((s, e) => s + e.minutes, 0);
+  const billableMinutes = timeEntries.filter(e => e.billable).reduce((s, e) => s + e.minutes, 0);
+  const fmtHrs = (m: number) => (m / 60).toLocaleString('en-ZA', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 
   return (
     <div className="space-y-6 page-enter">
@@ -247,6 +288,53 @@ export default function BizTechProjectDetailPage() {
           />
           <button type="submit" disabled={addingTask} className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer shrink-0" style={{ background: '#5C3BCF' }}>
             {addingTask ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
+          </button>
+        </form>
+      </div>
+
+      {/* ── Time tracking ── */}
+      <div style={{ ...PANEL, overflow: 'hidden' }}>
+        <div className="px-6 py-3 flex items-center justify-between gap-4 flex-wrap" style={{ borderBottom: '1px solid var(--color-border2)' }}>
+          <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text3)' }}>
+            Time logged
+          </span>
+          <div className="flex items-center gap-4 text-xs">
+            <span style={{ color: 'var(--color-text2)' }}>Total: <strong style={{ color: 'var(--color-text)' }}>{fmtHrs(totalMinutes)}h</strong></span>
+            <span style={{ color: 'var(--color-text2)' }}>Billable: <strong style={{ color: '#5C3BCF' }}>{fmtHrs(billableMinutes)}h</strong></span>
+          </div>
+        </div>
+        {timeEntries.map(t => (
+          <div key={t.id} className="px-6 py-3 flex items-center gap-3" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+            <Clock size={14} style={{ color: t.billable ? '#5C3BCF' : 'var(--color-text3)' }} />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm truncate" style={{ color: 'var(--color-text)' }}>{t.description || t.biztech_project_tasks?.title || 'Time logged'}</p>
+              <p className="text-[10px] font-mono" style={{ color: 'var(--color-text3)' }}>
+                {fmtDate2(t.occurred_on)} {!t.billable && '· non-billable'}
+              </p>
+            </div>
+            <span className="text-sm font-semibold tabular-nums" style={{ color: 'var(--color-text2)' }}>{fmtHrs(t.minutes)}h</span>
+            <button onClick={() => removeTimeEntry(t.id)} className="cursor-pointer p-1" style={{ color: 'var(--color-text3)' }}>
+              <Trash2 size={13} />
+            </button>
+          </div>
+        ))}
+        <form onSubmit={logTime} className="px-6 py-3 flex items-center gap-2 flex-wrap">
+          <input
+            type="number" min={0.25} step={0.25} placeholder="Hours"
+            className="field-input" style={{ width: 90 }}
+            value={logMinutes} onChange={e => setLogMinutes(e.target.value)}
+          />
+          <input
+            type="text" placeholder="What did you work on?"
+            className="field-input flex-1" style={{ minWidth: 160 }}
+            value={logDesc} onChange={e => setLogDesc(e.target.value)}
+          />
+          <label className="inline-flex items-center gap-1.5 text-xs cursor-pointer shrink-0" style={{ color: 'var(--color-text3)' }}>
+            <input type="checkbox" checked={logBillable} onChange={e => setLogBillable(e.target.checked)} />
+            Billable
+          </label>
+          <button type="submit" disabled={logging} className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer shrink-0" style={{ background: '#5C3BCF' }}>
+            {logging ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
           </button>
         </form>
       </div>

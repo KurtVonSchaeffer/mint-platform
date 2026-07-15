@@ -59,6 +59,7 @@ const API_ROLE_ROUTES: Record<string, string[]> = {
     '/api/clients', '/api/leads', '/api/applications',
     '/api/biztech/clients', '/api/biztech/contacts', '/api/biztech/documents',
     '/api/biztech/projects', '/api/biztech/tasks', '/api/biztech/activities',
+    '/api/biztech/time-entries', '/api/biztech/services',
   ],
 };
 
