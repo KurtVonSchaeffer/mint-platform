@@ -53,15 +53,18 @@ export function BiztechQuoteDetailPanel({ quote, items, actioning, onClose, onAc
     <>
       <div className="slideover-backdrop" onClick={onClose} />
       <div className="slideover-panel w-full max-w-lg flex flex-col" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-start justify-between p-7" style={{ borderBottom: '1px solid var(--color-border2)' }}>
-          <div>
-            <p className="eyebrow mb-1">Quote</p>
-            <h2 className="font-mono text-base font-bold tracking-tight leading-tight" style={{ color: 'var(--color-text)' }}>{quote.reference}</h2>
-            <p className="text-sm mt-1" style={{ color: 'var(--color-text3)' }}>{quote.biztech_clients?.name ?? '—'}</p>
+        <div className="px-7 pt-6 pb-7 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #31005E 0%, #5C3BCF 100%)' }}>
+          <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full" style={{ background: 'radial-gradient(circle, rgba(221,195,87,0.25), transparent 70%)' }} />
+          <div className="flex items-start justify-between relative">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: '#DDC357' }}>MINT BizTech · Quote</p>
+              <h2 className="font-mono text-lg font-bold tracking-tight leading-tight mt-1.5 text-white">{quote.reference}</h2>
+              <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>{quote.biztech_clients?.name ?? '—'}</p>
+            </div>
+            <button onClick={onClose} className="p-1.5 rounded-lg transition-colors text-white/70 hover:text-white hover:bg-white/10" aria-label="Close">
+              <X size={16} />
+            </button>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg transition-colors" aria-label="Close" style={{ color: 'var(--color-text3)' }}>
-            <X size={16} />
-          </button>
         </div>
 
         <div className="p-7 space-y-6">
