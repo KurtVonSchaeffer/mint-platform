@@ -125,7 +125,7 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
               <div>
                 <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text2)' }}>Company name</label>
                 <IconField icon={Building2}>
-                  <input type="text" required autoFocus className="field-input" style={{ paddingLeft: 34 }} value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
+                  <input type="text" required autoFocus autoComplete="off" name="biztech-company-name" className="field-input" style={{ paddingLeft: 34 }} value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
                 </IconField>
               </div>
               <div className="grid grid-cols-2 gap-3">
