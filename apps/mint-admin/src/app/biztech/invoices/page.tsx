@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { StatusDot } from '@/components/biztech/StatusDot';
 import { ClientAvatar } from '@/components/biztech/ClientAvatar';
+import { BiztechInvoiceDetailPanel, type BiztechInvoiceDetail, type BiztechInvoiceItem } from '@/components/biztech/BiztechInvoiceDetailPanel';
+import { printableBiztechDoc } from '@/lib/biztech-doc-template';
 import { RefreshCw, Plus, Loader2, Inbox } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -37,6 +39,57 @@ export default function BizTechInvoicesPage() {
   const [clients, setClients] = useState<BizClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<{ kind: ToastKind; message: string } | null>(null);
+  const [selected, setSelected] = useState<{ invoice: BiztechInvoiceDetail; items: BiztechInvoiceItem[] } | null>(null);
+  const [actioning, setActioning] = useState<string | null>(null);
+
+  const openInvoice = useCallback(async (id: string) => {
+    const res = await fetch(`/api/biztech/invoices/${id}`);
+    if (!res.ok) { setToast({ kind: 'error', message: 'Failed to load invoice' }); return; }
+    const data = await res.json();
+    setSelected({ invoice: data.invoice, items: data.items ?? [] });
+  }, []);
+
+  async function doAction(invoice: BiztechInvoiceDetail, action: 'sent' | 'paid' | 'void') {
+    setActioning(invoice.id + action);
+    const res = await fetch(`/api/biztech/invoices/${invoice.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: action }),
+    });
+    setActioning(null);
+    if (!res.ok) { setToast({ kind: 'error', message: 'Action failed' }); return; }
+    const data = await res.json();
+    setSelected(prev => prev ? { ...prev, invoice: data.invoice } : prev);
+    setInvoices(prev => prev.map(i => i.id === invoice.id ? { ...i, status: data.invoice.status } : i));
+    setToast({ kind: 'success', message: `Invoice ${action === 'sent' ? 'sent' : action === 'paid' ? 'marked as paid' : 'voided'}` });
+  }
+
+  async function sendReminder(invoice: BiztechInvoiceDetail) {
+    const res = await fetch(`/api/biztech/invoices/${invoice.id}/remind`, { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) { setToast({ kind: 'error', message: data.error ?? 'Failed to send reminder' }); return; }
+    setToast({ kind: 'success', message: `Reminder sent to ${data.sentTo}` });
+  }
+
+  function downloadPDF(invoice: BiztechInvoiceDetail, items: BiztechInvoiceItem[]) {
+    const w = window.open('', '_blank');
+    if (!w) return;
+    w.document.write(printableBiztechDoc({
+      kind: 'Invoice',
+      reference: invoice.reference,
+      clientName: invoice.biztech_clients?.name ?? '—',
+      status: invoice.status,
+      dateLabel: 'Due',
+      dateValue: invoice.due_at,
+      subtotal_cents: invoice.subtotal_cents,
+      vat_cents: invoice.vat_cents,
+      total_cents: invoice.total_cents,
+      notes: invoice.notes,
+      items,
+    }));
+    w.document.close();
+    setTimeout(() => w.print(), 250);
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -55,6 +108,17 @@ export default function BizTechInvoicesPage() {
   return (
     <div className="space-y-5 page-enter">
       {toast && <Toast kind={toast.kind} message={toast.message} onClose={() => setToast(null)} />}
+      {selected && (
+        <BiztechInvoiceDetailPanel
+          invoice={selected.invoice}
+          items={selected.items}
+          actioning={actioning}
+          onClose={() => setSelected(null)}
+          onAction={doAction}
+          onReminder={sendReminder}
+          onDownloadPDF={downloadPDF}
+        />
+      )}
 
       <div className="flex items-start justify-between">
         <div>
@@ -94,7 +158,7 @@ export default function BizTechInvoicesPage() {
             return (
               <div
                 key={inv.id}
-                onClick={() => router.push(`/biztech/invoices/${inv.id}`)}
+                onClick={() => openInvoice(inv.id)}
                 className="biztech-card biztech-field-in cursor-pointer p-5"
                 style={{ ...PANEL, animationDelay: `${Math.min(i, 8) * 40}ms` }}
               >

@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { StatusDot } from '@/components/biztech/StatusDot';
 import { ClientAvatar } from '@/components/biztech/ClientAvatar';
+import { BiztechQuoteDetailPanel, type BiztechQuoteDetail, type BiztechQuoteItem } from '@/components/biztech/BiztechQuoteDetailPanel';
+import { printableBiztechDoc } from '@/lib/biztech-doc-template';
 import { RefreshCw, Plus, X, Loader2, Inbox, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -127,12 +128,66 @@ function NewQuoteModal({ clients, onClose, onCreated }: { clients: BizClient[]; 
 }
 
 export default function BizTechQuotesPage() {
-  const router = useRouter();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [clients, setClients] = useState<BizClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [addOpen, setAddOpen] = useState(false);
   const [toast, setToast] = useState<{ kind: ToastKind; message: string } | null>(null);
+  const [selected, setSelected] = useState<{ quote: BiztechQuoteDetail; items: BiztechQuoteItem[] } | null>(null);
+  const [actioning, setActioning] = useState<string | null>(null);
+
+  const openQuote = useCallback(async (id: string) => {
+    const res = await fetch(`/api/biztech/quotes/${id}`);
+    if (!res.ok) { setToast({ kind: 'error', message: 'Failed to load quote' }); return; }
+    const data = await res.json();
+    setSelected({ quote: data.quote, items: data.items ?? [] });
+  }, []);
+
+  async function doAction(quote: BiztechQuoteDetail, action: 'sent' | 'accepted' | 'declined') {
+    setActioning(quote.id + action);
+    const res = await fetch(`/api/biztech/quotes/${quote.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: action }),
+    });
+    setActioning(null);
+    if (!res.ok) { setToast({ kind: 'error', message: 'Action failed' }); return; }
+    const data = await res.json();
+    setSelected(prev => prev ? { ...prev, quote: data.quote } : prev);
+    setQuotes(prev => prev.map(q => q.id === quote.id ? { ...q, status: data.quote.status } : q));
+    setToast({ kind: 'success', message: `Quote ${action === 'sent' ? 'sent' : action === 'accepted' ? 'marked as accepted' : 'marked as declined'}` });
+  }
+
+  async function convertToInvoice(quote: BiztechQuoteDetail) {
+    setActioning(quote.id + 'convert');
+    const res = await fetch(`/api/biztech/quotes/${quote.id}/convert`, { method: 'POST' });
+    const data = await res.json();
+    setActioning(null);
+    if (!res.ok) { setToast({ kind: 'error', message: data.error ?? 'Failed to convert quote' }); return; }
+    setToast({ kind: 'success', message: `Invoice ${data.invoice.reference} created` });
+    setSelected(null);
+    load();
+  }
+
+  function downloadPDF(quote: BiztechQuoteDetail, items: BiztechQuoteItem[]) {
+    const w = window.open('', '_blank');
+    if (!w) return;
+    w.document.write(printableBiztechDoc({
+      kind: 'Quote',
+      reference: quote.reference,
+      clientName: quote.biztech_clients?.name ?? '—',
+      status: quote.status,
+      dateLabel: 'Valid until',
+      dateValue: quote.valid_until,
+      subtotal_cents: quote.subtotal_cents,
+      vat_cents: quote.vat_cents,
+      total_cents: quote.total_cents,
+      notes: quote.notes,
+      items,
+    }));
+    w.document.close();
+    setTimeout(() => w.print(), 250);
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -152,6 +207,17 @@ export default function BizTechQuotesPage() {
     <div className="space-y-5 page-enter">
       {toast && <Toast kind={toast.kind} message={toast.message} onClose={() => setToast(null)} />}
       {addOpen && <NewQuoteModal clients={clients} onClose={() => setAddOpen(false)} onCreated={load} />}
+      {selected && (
+        <BiztechQuoteDetailPanel
+          quote={selected.quote}
+          items={selected.items}
+          actioning={actioning}
+          onClose={() => setSelected(null)}
+          onAction={doAction}
+          onConvert={convertToInvoice}
+          onDownloadPDF={downloadPDF}
+        />
+      )}
 
       <div className="flex items-start justify-between">
         <div>
@@ -191,7 +257,7 @@ export default function BizTechQuotesPage() {
             return (
               <div
                 key={q.id}
-                onClick={() => router.push(`/biztech/quotes/${q.id}`)}
+                onClick={() => openQuote(q.id)}
                 className="biztech-card biztech-field-in cursor-pointer p-5"
                 style={{ ...PANEL, animationDelay: `${Math.min(i, 8) * 40}ms` }}
               >
