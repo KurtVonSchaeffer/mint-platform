@@ -51,6 +51,15 @@ export function BiztechQuotePage(props: Props) {
     }
   }
 
+  const footer = (
+    <div style={{ marginTop: 40, paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.07)', textAlign: 'center' }}>
+      <p style={{ fontSize: 11, color: '#52525b', margin: '0 0 4px' }}>MINT Platforms (Pty) Ltd · 3 Gwen Lane, Sandown, Sandton, 2031, South Africa</p>
+      <p style={{ fontSize: 11, color: '#52525b', margin: 0 }}>
+        <a href="mailto:support@mymint.co.za" style={{ color: '#8b6ce8' }}>support@mymint.co.za</a>
+      </p>
+    </div>
+  );
+
   if (status === 'accepted' || status === 'declined') {
     const accepted = status === 'accepted';
     return (
@@ -66,6 +75,7 @@ export function BiztechQuotePage(props: Props) {
             {accepted ? "Thanks — we'll follow up shortly to get started." : 'Thanks for letting us know.'}
           </p>
           <p style={{ color: '#52525b', fontSize: 12, marginTop: 16, fontFamily: 'monospace' }}>{props.reference}</p>
+          {footer}
         </div>
       </div>
     );
@@ -144,6 +154,7 @@ export function BiztechQuotePage(props: Props) {
           </>
         )}
 
+        {footer}
       </div>
     </div>
   );
