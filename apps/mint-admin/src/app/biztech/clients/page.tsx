@@ -90,12 +90,13 @@ function AddClientModal({ onClose, onAdded }: { onClose: () => void; onAdded: ()
         className="w-full max-w-lg overflow-hidden"
         style={{
           background: 'var(--color-surface)',
-          border: '1px solid var(--color-border2)',
+          border: '1px solid rgba(92,59,207,0.22)',
           borderRadius: 16,
-          boxShadow: '0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(92,59,207,0.12)',
+          boxShadow: '0 32px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(92,59,207,0.16), 0 0 60px rgba(92,59,207,0.12)',
           animation: 'scale-in 0.25s cubic-bezier(0.16,1,0.3,1) both',
         }}
       >
+        <div style={{ height: 4, background: 'linear-gradient(90deg, #5C3BCF, #DDC357)' }} />
         <div className="flex items-center justify-between px-7 py-5" style={{ borderBottom: '1px solid var(--color-border2)' }}>
           <div className="flex items-center gap-3">
             {form.name.trim() ? (

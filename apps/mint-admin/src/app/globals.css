@@ -727,8 +727,8 @@ html[data-theme="light"] .arr-hero {
 
 /* Confirmation modal backdrop in light */
 html[data-theme="light"] .confirm-backdrop {
-  background: rgba(0,0,0,0.12) !important;
-  backdrop-filter: none !important;
+  background: rgba(15,10,30,0.32) !important;
+  backdrop-filter: blur(3px) !important;
 }
 
 /* ─── Topbar gradient bleed ────────────────────────────────────── */
