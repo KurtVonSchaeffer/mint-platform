@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { X, CheckCircle, Loader2, Send, Mail, Download } from 'lucide-react';
 import { fmt, fmtDate } from '@/lib/invoice-helpers';
 
@@ -57,7 +58,8 @@ export function BiztechInvoiceDetailPanel({ invoice, items, actioning, onClose, 
           <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full" style={{ background: 'radial-gradient(circle, rgba(221,195,87,0.25), transparent 70%)' }} />
           <div className="flex items-start justify-between relative">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.14em]" style={{ color: '#DDC357' }}>MINT BizTech · Invoice</p>
+              <Image src="/mint-logo-white.png" alt="MINT Platforms" width={110} height={28} unoptimized style={{ height: 22, width: 'auto', opacity: 0.96 }} />
+              <p className="text-[10px] font-bold uppercase tracking-[0.14em] mt-2" style={{ color: '#DDC357' }}>BizTech · Invoice</p>
               <h2 className="font-mono text-lg font-bold tracking-tight leading-tight mt-1.5 text-white">{invoice.reference}</h2>
               <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.75)' }}>{invoice.biztech_clients?.name ?? '—'}</p>
             </div>
