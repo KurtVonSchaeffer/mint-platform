@@ -7,7 +7,7 @@ import { StatusDot } from '@/components/biztech/StatusDot';
 import {
   ArrowLeft, Building2, Globe, MapPin, Plus, X, Loader2,
   User, Mail, Phone, Star, Trash2, FileText, Upload, Download,
-  FolderKanban, AlertTriangle,
+  FolderKanban, AlertTriangle, Pencil, Save,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -52,18 +52,29 @@ const STATUS_CONFIG: Record<ClientStatus, { label: string; color: string }> = {
 
 const PANEL: React.CSSProperties = { background: 'var(--color-surface)', border: '1px solid var(--color-border2)', borderRadius: 10 };
 
-function AddContactModal({ clientId, onClose, onAdded }: { clientId: string; onClose: () => void; onAdded: () => void }) {
-  const [form, setForm]     = useState({ name: '', email: '', phone: '', role: '' });
+function AddContactModal({ clientId, contact, onClose, onAdded }: { clientId: string; contact?: Contact; onClose: () => void; onAdded: () => void }) {
+  const [form, setForm]     = useState({
+    name: contact?.name ?? '', email: contact?.email ?? '', phone: contact?.phone ?? '', role: contact?.role ?? '',
+  });
   const [saving, setSaving] = useState(false);
+  const isEdit = !!contact;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    await fetch(`/api/biztech/clients/${clientId}/contacts`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    });
+    if (isEdit) {
+      await fetch(`/api/biztech/contacts/${contact!.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+    } else {
+      await fetch(`/api/biztech/clients/${clientId}/contacts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+    }
     setSaving(false);
     onAdded();
     onClose();
@@ -73,7 +84,7 @@ function AddContactModal({ clientId, onClose, onAdded }: { clientId: string; onC
     <div className="confirm-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md p-7" style={PANEL}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className="font-bold text-lg" style={{ color: 'var(--color-text)' }}>Add contact</h3>
+          <h3 className="font-bold text-lg" style={{ color: 'var(--color-text)' }}>{isEdit ? 'Edit contact' : 'Add contact'}</h3>
           <button onClick={onClose} className="cursor-pointer" style={{ color: 'var(--color-text3)' }}><X size={16} /></button>
         </div>
         <form onSubmit={submit} className="space-y-3">
@@ -96,11 +107,94 @@ function AddContactModal({ clientId, onClose, onAdded }: { clientId: string; onC
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose} className="flex-1 py-2 rounded-xl text-sm cursor-pointer" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>Cancel</button>
             <button type="submit" disabled={saving} className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-xl text-sm font-semibold text-white cursor-pointer" style={{ background: '#5C3BCF' }}>
-              {saving ? <Loader2 size={13} className="animate-spin" /> : <Plus size={13} />}
-              {saving ? 'Adding…' : 'Add contact'}
+              {saving ? <Loader2 size={13} className="animate-spin" /> : isEdit ? <Save size={13} /> : <Plus size={13} />}
+              {saving ? 'Saving…' : isEdit ? 'Save changes' : 'Add contact'}
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+
+function EditClientModal({ client, onClose, onSaved }: { client: BizClient; onClose: () => void; onSaved: () => void }) {
+  const [form, setForm] = useState({
+    name: client.name, industry: client.industry ?? '', website: client.website ?? '',
+    address: client.address ?? '', notes: client.notes ?? '', status: client.status,
+  });
+  const [saving, setSaving] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    await fetch(`/api/biztech/clients/${client.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    });
+    setSaving(false);
+    onSaved();
+    onClose();
+  }
+
+  return (
+    <div className="confirm-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="w-full max-w-lg overflow-hidden"
+        style={{
+          background: 'var(--color-surface)',
+          border: '1px solid rgba(92,59,207,0.22)',
+          borderRadius: 16,
+          boxShadow: '0 32px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(92,59,207,0.16), 0 0 60px rgba(92,59,207,0.12)',
+          animation: 'scale-in 0.25s cubic-bezier(0.16,1,0.3,1) both',
+        }}
+      >
+        <div style={{ height: 4, background: 'linear-gradient(90deg, #5C3BCF, #DDC357)' }} />
+        <div className="p-7">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="font-bold text-lg" style={{ color: 'var(--color-text)' }}>Edit client info</h3>
+            <button onClick={onClose} className="cursor-pointer" style={{ color: 'var(--color-text3)' }}><X size={16} /></button>
+          </div>
+          <form onSubmit={submit} className="space-y-3 max-h-[65vh] overflow-y-auto pr-1">
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text2)' }}>Company name</label>
+              <input type="text" required className="field-input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text2)' }}>Industry</label>
+                <input type="text" className="field-input" value={form.industry} onChange={e => setForm(p => ({ ...p, industry: e.target.value }))} />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text2)' }}>Website</label>
+                <input type="text" className="field-input" value={form.website} onChange={e => setForm(p => ({ ...p, website: e.target.value }))} />
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text2)' }}>Status</label>
+              <select className="field-input" value={form.status} onChange={e => setForm(p => ({ ...p, status: e.target.value as ClientStatus }))}>
+                {(Object.keys(STATUS_CONFIG) as ClientStatus[]).filter(s => s !== 'lead' || s === client.status).map(s => (
+                  <option key={s} value={s}>{STATUS_CONFIG[s].label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text2)' }}>Address</label>
+              <input type="text" className="field-input" value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: 'var(--color-text2)' }}>Notes</label>
+              <textarea className="field-input" rows={3} value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg text-sm cursor-pointer" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>Cancel</button>
+              <button type="submit" disabled={saving} className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold text-white cursor-pointer" style={{ background: '#5C3BCF' }}>
+                {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+                {saving ? 'Saving…' : 'Save changes'}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
@@ -156,12 +250,14 @@ export default function BizTechClientDetailPage() {
   const [tab, setTab]           = useState<'overview' | 'contacts' | 'documents'>('overview');
   const [loading, setLoading]   = useState(true);
   const [addContactOpen, setAddContactOpen] = useState(false);
+  const [editContact, setEditContact] = useState<Contact | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadType, setUploadType] = useState<string>('Contract');
   const [toast, setToast]       = useState<{ kind: ToastKind; message: string } | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting]     = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [editOpen, setEditOpen]     = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -246,6 +342,9 @@ export default function BizTechClientDetailPage() {
       {addContactOpen && (
         <AddContactModal clientId={id} onClose={() => setAddContactOpen(false)} onAdded={load} />
       )}
+      {editContact && (
+        <AddContactModal clientId={id} contact={editContact} onClose={() => setEditContact(null)} onAdded={load} />
+      )}
       {deleteOpen && (
         <DeleteClientModal
           clientName={client.name}
@@ -254,6 +353,9 @@ export default function BizTechClientDetailPage() {
           deleting={deleting}
           error={deleteError}
         />
+      )}
+      {editOpen && (
+        <EditClientModal client={client} onClose={() => setEditOpen(false)} onSaved={load} />
       )}
 
       <button
@@ -276,13 +378,22 @@ export default function BizTechClientDetailPage() {
             {client.address && <span className="inline-flex items-center gap-1.5"><MapPin size={11} />{client.address}</span>}
           </div>
         </div>
-        <button
-          onClick={() => setDeleteOpen(true)}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium cursor-pointer"
-          style={{ border: '1px solid rgba(248,113,113,0.3)', color: 'var(--color-red)' }}
-        >
-          <Trash2 size={14} /> Delete client
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => setEditOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium cursor-pointer"
+            style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}
+          >
+            <Pencil size={14} /> Edit info
+          </button>
+          <button
+            onClick={() => setDeleteOpen(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium cursor-pointer"
+            style={{ border: '1px solid rgba(248,113,113,0.3)', color: 'var(--color-red)' }}
+          >
+            <Trash2 size={14} /> Delete client
+          </button>
+        </div>
       </div>
 
       <div className="flex items-center gap-1 border-b" style={{ borderColor: 'var(--color-border2)' }}>
@@ -381,9 +492,14 @@ export default function BizTechClientDetailPage() {
                       {c.phone && <span className="inline-flex items-center gap-1"><Phone size={10} />{c.phone}</span>}
                     </div>
                   </div>
-                  <button onClick={() => removeContact(c.id)} className="cursor-pointer p-1.5 rounded-lg" style={{ color: 'var(--color-text3)' }}>
-                    <Trash2 size={14} />
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => setEditContact(c)} className="cursor-pointer p-1.5 rounded-lg" style={{ color: 'var(--color-text3)' }}>
+                      <Pencil size={14} />
+                    </button>
+                    <button onClick={() => removeContact(c.id)} className="cursor-pointer p-1.5 rounded-lg" style={{ color: 'var(--color-text3)' }}>
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
