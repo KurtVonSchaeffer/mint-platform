@@ -202,7 +202,7 @@ function LenderView() {
               then stamp a generic "Your Logo" mark on top. */}
           <div
             className="absolute left-0 top-0 flex items-center gap-1.5 px-3 pointer-events-none"
-            style={{ width: '13.5%', height: '7.5%', background: '#FFFFFF' }}
+            style={{ width: '32%', height: '9%', background: '#FFFFFF' }}
           >
             <span className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.15)' }}>
               <span className="w-2 h-2 rounded-full" style={{ background: '#7C3AED' }} />
