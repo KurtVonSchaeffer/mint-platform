@@ -248,15 +248,21 @@ const BORROWER_SLIDES = [
 /* ─── Carousel hook ──────────────────────────────────────────────── */
 function useCarousel(count: number, autoMs = 5000) {
   const [idx, setIdx] = useState(0);
+  // Once the visitor takes control (swipe, arrow, dot), autoplay stops for
+  // good — it was previously resetting on every idx change including manual
+  // ones, so autoplay could yank the slide away mid-interaction and make it
+  // look like the carousel was "disappearing" while someone tried to swipe.
+  const interacted = useRef(false);
   const next = useCallback(() => setIdx((i) => (i + 1) % count), [count]);
-  const prev = useCallback(() => setIdx((i) => (i - 1 + count) % count), [count]);
-  const goTo = useCallback((n: number) => setIdx(n), []);
-  // auto-advance resets on every idx change (including manual nav)
+  const prev = useCallback(() => { interacted.current = true; setIdx((i) => (i - 1 + count) % count); }, [count]);
+  const goTo = useCallback((n: number) => { interacted.current = true; setIdx(n); }, []);
+  const nextManual = useCallback(() => { interacted.current = true; next(); }, [next]);
   useEffect(() => {
+    if (interacted.current) return;
     const t = setTimeout(next, autoMs);
     return () => clearTimeout(t);
   }, [idx, next, autoMs]);
-  return { idx, next, prev, goTo };
+  return { idx, next: nextManual, prev, goTo };
 }
 
 /* ─── Touch / mouse swipe handler ────────────────────────────────── */
