@@ -235,8 +235,14 @@ function ApplicationsSlide() {
 const SLIDE_COMPONENTS = [DashboardSlide, LoanBookSlide, ApplicationsSlide];
 
 const BORROWER_SLIDES = [
-  { src: '/screenshots/borrower-live-dashboard.jpg', label: 'Dashboard' },
-  { src: '/screenshots/borrower-live-apply.jpg',     label: 'My Loans'  },
+  { src: '/screenshots/borrower-app/01-login.png',       label: 'Login' },
+  { src: '/screenshots/borrower-app/02-dashboard.png',   label: 'Dashboard' },
+  { src: '/screenshots/borrower-app/03-apply.png',       label: 'Apply' },
+  { src: '/screenshots/borrower-app/04-calculator.png',  label: 'Loan calculator' },
+  { src: '/screenshots/borrower-app/05-transactions.png',label: 'Transactions' },
+  { src: '/screenshots/borrower-app/06-transcripts.png', label: 'Credit transcripts' },
+  { src: '/screenshots/borrower-app/07-support.png',     label: 'Support' },
+  { src: '/screenshots/borrower-app/08-profile.png',     label: 'Profile' },
 ];
 
 /* ─── Carousel hook ──────────────────────────────────────────────── */
