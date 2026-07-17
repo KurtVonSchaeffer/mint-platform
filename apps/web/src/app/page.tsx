@@ -820,11 +820,11 @@ export default function HomePage() {
           <div className="max-w-[1200px] mx-auto px-6 py-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-xs text-white/40">
             <span>© 2026 MINT Platforms (Pty) Ltd. All rights reserved.</span>
             <nav className="flex flex-wrap gap-x-6 gap-y-2">
-              <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-              <Link href="/terms"   className="hover:text-white transition-colors">Terms of Service</Link>
-              <Link href="#"        className="hover:text-white transition-colors">Complaints Policy</Link>
-              <Link href="#"        className="hover:text-white transition-colors">AML Policy</Link>
-              <Link href="/privacy" className="hover:text-white transition-colors">POPIA</Link>
+              <Link href="/privacy"        className="hover:text-white transition-colors">Privacy Policy</Link>
+              <Link href="/terms"          className="hover:text-white transition-colors">Terms of Service</Link>
+              <Link href="/acceptable-use" className="hover:text-white transition-colors">Acceptable Use Policy</Link>
+              <Link href="/aml"            className="hover:text-white transition-colors">AML Policy</Link>
+              <Link href="/paia"           className="hover:text-white transition-colors">PAIA Manual</Link>
             </nav>
           </div>
         </div>
