@@ -19,6 +19,7 @@ const MOCK_SLIDES = [
   { src: '/screenshots/admin-app/11-loan-book.png',           label: 'Loan Book',           url: 'admin.algolend.co.za/loan-book' },
   { src: '/screenshots/admin-app/12-cash-ledger.png',         label: 'Cash Ledger',         url: 'admin.algolend.co.za/cash-ledger' },
   { src: '/screenshots/admin-app/13-sacrra.png',               label: 'SACRRA',               url: 'admin.algolend.co.za/sacrra' },
+  { src: '/screenshots/admin-app/13b-sacrra-validator.png',   label: 'SACRRA Validator',    url: 'admin.algolend.co.za/sacrra/validator' },
   { src: '/screenshots/admin-app/14-ncr-reporting.png',       label: 'NCR Reporting',       url: 'admin.algolend.co.za/ncr-reporting' },
   { src: '/screenshots/admin-app/15-ncr-registers.png',       label: 'NCR Registers',       url: 'admin.algolend.co.za/ncr-registers' },
   { src: '/screenshots/admin-app/16-compliance-tracker.png',  label: 'Compliance Tracker',  url: 'admin.algolend.co.za/compliance' },
@@ -195,14 +196,18 @@ function LenderView() {
             ))}
           </div>
 
-          {/* White-label overlay — the admin sidebar's top-left corner is
-              blank real estate in these screenshots; stamp "Your Logo" there
-              on every slide to make the white-labeling message concrete. */}
-          <div className="absolute left-0 top-0 flex items-center gap-1.5 px-3 py-2 pointer-events-none" style={{ width: '11%' }}>
-            <span className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.2)' }}>
-              <span className="w-2 h-2 rounded-full" style={{ background: '#A78BFA' }} />
+          {/* White-label overlay — the real AlgoLend logo + wordmark sits in
+              the sidebar's top-left corner of these screenshots. Cover it
+              with an opaque box matching the sidebar's white background,
+              then stamp a generic "Your Logo" mark on top. */}
+          <div
+            className="absolute left-0 top-0 flex items-center gap-1.5 px-3 pointer-events-none"
+            style={{ width: '13.5%', height: '7.5%', background: '#FFFFFF' }}
+          >
+            <span className="w-4 h-4 rounded-full flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.15)' }}>
+              <span className="w-2 h-2 rounded-full" style={{ background: '#7C3AED' }} />
             </span>
-            <span className="text-[10px] font-bold tracking-tight text-white/90 whitespace-nowrap">Your Logo</span>
+            <span className="text-[10px] font-bold tracking-tight whitespace-nowrap" style={{ color: '#0F0A1E' }}>Your Logo</span>
           </div>
 
           {/* Arrows */}
