@@ -522,10 +522,10 @@ function BorrowerView() {
                     alt={`AlgoLend borrower portal — ${s.label}`}
                     width={390}
                     height={1200}
-                    sizes="(max-width: 768px) 50vw, 25vw"
+                    unoptimized
                     className="w-full object-cover object-top"
                     style={{ height: '100%' }}
-                    priority={i === 0}
+                    priority
                   />
                 </div>
               ))}
