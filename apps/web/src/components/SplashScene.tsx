@@ -62,7 +62,12 @@ function generateParticles(count: number): Particle[] {
 export function SplashScene() {
   const router = useRouter();
   const [exiting, setExiting] = useState(false);
-  const [particles] = useState(() => generateParticles(40));
+  // Generated client-side only: Math.random() during the initial render would
+  // produce different values on the server vs. the client's first render,
+  // causing a hydration mismatch. Starting empty (matches SSR) and filling in
+  // after mount avoids that — the particles are purely decorative.
+  const [particles, setParticles] = useState<Particle[]>([]);
+  useEffect(() => { setParticles(generateParticles(40)); }, []);
   const rafRef = useRef<number | null>(null);
 
   // Mouse-following parallax on the mesh blobs
