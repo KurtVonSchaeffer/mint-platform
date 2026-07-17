@@ -365,7 +365,7 @@ function LenderView() {
         {/* Slides */}
         <div
           className="relative overflow-hidden select-none"
-          style={{ height: 'clamp(260px, 45vw, 440px)' }}
+          style={{ height: 'clamp(260px, 45vw, 440px)', touchAction: 'pan-y' }}
           {...swipe}
         >
           <div
@@ -498,7 +498,7 @@ function BorrowerView() {
           {/* Slides inside phone screen */}
           <div
             className="overflow-hidden rounded-2xl relative select-none cursor-grab active:cursor-grabbing"
-            style={{ height: 528 }}
+            style={{ height: 528, touchAction: 'pan-y' }}
             {...swipe}
           >
             <div
