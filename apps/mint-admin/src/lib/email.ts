@@ -637,6 +637,250 @@ export function commissionUpdateEmail(info: {
 </body></html>`;
 }
 
+export function newLeadNotificationEmail(info: {
+  agentName: string;
+  lead: {
+    id:      string;
+    name:    string;
+    company: string;
+    phone:   string | null;
+    email:   string;
+    message: string | null;
+  };
+  portalUrl: string;
+}) {
+  const leadUrl = `${info.portalUrl}/telemarketer/leads/${info.lead.id}`;
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:28px 32px">
+    <p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 4px">AlgoLend</p>
+    <p style="color:#fff;font-size:20px;font-weight:700;margin:0">New lead assigned to you</p>
+  </div>
+  <div style="padding:28px 32px">
+    <p style="font-size:15px;margin:0 0 6px">Hi ${info.agentName},</p>
+    <p style="color:#555;line-height:1.6;margin:0 0 24px">
+      A new lead has been assigned to you. Reach out as soon as possible — early contact dramatically improves conversion.
+    </p>
+    <div style="background:#f9f7ff;border:1px solid #e5e0ff;border-radius:12px;padding:20px;margin-bottom:24px">
+      <table style="width:100%;border-collapse:collapse">
+        <tr><td style="padding:6px 0;color:#888;font-size:13px;width:90px">Name</td><td style="padding:6px 0;font-weight:600;font-size:15px;color:#1a1f36">${info.lead.name}</td></tr>
+        <tr><td style="padding:6px 0;color:#888;font-size:13px">Company</td><td style="padding:6px 0;color:#1a1f36">${info.lead.company}</td></tr>
+        ${info.lead.phone ? `<tr><td style="padding:6px 0;color:#888;font-size:13px">Phone</td><td style="padding:6px 0"><a href="tel:${info.lead.phone}" style="color:#7C3AED;font-weight:600">${info.lead.phone}</a></td></tr>` : ''}
+        <tr><td style="padding:6px 0;color:#888;font-size:13px">Email</td><td style="padding:6px 0"><a href="mailto:${info.lead.email}" style="color:#7C3AED">${info.lead.email}</a></td></tr>
+        ${info.lead.message ? `<tr><td style="padding:6px 0;color:#888;font-size:13px;vertical-align:top">Message</td><td style="padding:6px 0;color:#555;font-style:italic">"${info.lead.message}"</td></tr>` : ''}
+      </table>
+    </div>
+    <div style="text-align:center">
+      <a href="${leadUrl}" style="background:#7C3AED;color:#fff;padding:13px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block">
+        Open lead →
+      </a>
+    </div>
+    <p style="color:#aaa;font-size:12px;text-align:center;margin-top:16px">
+      Log your first call in the portal to move this lead out of "New Lead" stage.
+    </p>
+  </div>
+  <div style="background:#f5f6fa;padding:16px;text-align:center;font-size:11px;color:#aaa">
+    AlgoLend · MINT Platforms (Pty) Ltd — new lead notification
+  </div>
+</div>
+</body></html>`;
+}
+
+export function demoConfirmationEmail(info: {
+  leadName:    string;
+  company:     string;
+  agentName:   string;
+  agentEmail:  string;
+  demoDate:    string;
+  demoTime:    string | null;
+  platform:    string;
+  meetingLink: string | null;
+}) {
+  const dateLabel = new Date(info.demoDate + 'T00:00:00').toLocaleDateString('en-ZA', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  });
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:32px;text-align:center">
+    <p style="color:#fff;font-size:24px;font-weight:700;margin:0">AlgoLend</p>
+    <p style="color:rgba(255,255,255,0.7);font-size:12px;letter-spacing:3px;text-transform:uppercase;margin:6px 0 0">Demo Confirmation</p>
+  </div>
+  <div style="padding:32px">
+    <p style="font-size:16px;margin:0 0 8px">Hi ${info.leadName},</p>
+    <p style="color:#555;line-height:1.6;margin:0 0 24px">
+      Your AlgoLend platform demo has been confirmed. We're looking forward to showing you what we can do for <strong>${info.company}</strong>.
+    </p>
+    <div style="background:#f9f7ff;border:1px solid #e5e0ff;border-radius:12px;padding:20px;margin-bottom:24px">
+      <table style="width:100%;border-collapse:collapse">
+        <tr><td style="padding:6px 0;color:#888;font-size:13px;width:100px">Date</td><td style="padding:6px 0;font-weight:600">${dateLabel}</td></tr>
+        ${info.demoTime ? `<tr><td style="padding:6px 0;color:#888;font-size:13px">Time</td><td style="padding:6px 0;font-weight:600">${info.demoTime} SAST</td></tr>` : ''}
+        <tr><td style="padding:6px 0;color:#888;font-size:13px">Platform</td><td style="padding:6px 0">${info.platform}</td></tr>
+        <tr><td style="padding:6px 0;color:#888;font-size:13px">Your host</td><td style="padding:6px 0">${info.agentName} · <a href="mailto:${info.agentEmail}" style="color:#7C3AED">${info.agentEmail}</a></td></tr>
+      </table>
+    </div>
+    ${info.meetingLink ? `
+    <div style="text-align:center;margin-bottom:24px">
+      <a href="${info.meetingLink}" style="background:#7C3AED;color:#fff;padding:13px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block">
+        Join meeting →
+      </a>
+      <p style="color:#888;font-size:12px;margin:10px 0 0">${info.meetingLink}</p>
+    </div>` : ''}
+    <p style="color:#555;font-size:14px;line-height:1.6">
+      If you need to reschedule, reply to this email or contact ${info.agentName} directly at
+      <a href="mailto:${info.agentEmail}" style="color:#7C3AED">${info.agentEmail}</a>.
+    </p>
+  </div>
+  <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
+    AlgoLend · MINT Platforms (Pty) Ltd · <a href="https://mintplatforms.co.za" style="color:#7C3AED">mintplatforms.co.za</a>
+  </div>
+</div>
+</body></html>`;
+}
+
+export function staleLeadDigestEmail(info: {
+  agentName: string;
+  leads: { id: string; name: string; company: string; tmStatus: string; daysSince: number }[];
+  portalUrl: string;
+}) {
+  const rows = info.leads.map(l => `
+    <tr style="border-bottom:1px solid #eee">
+      <td style="padding:10px 8px">
+        <a href="${info.portalUrl}/telemarketer/leads/${l.id}" style="font-weight:600;color:#7C3AED;text-decoration:none;font-size:14px">${l.name}</a>
+        <p style="margin:2px 0 0;font-size:12px;color:#888">${l.company}</p>
+      </td>
+      <td style="padding:10px 8px;font-size:13px;color:#555">${l.tmStatus}</td>
+      <td style="padding:10px 8px;text-align:right">
+        <span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:#fef2f2;color:#dc2626">
+          ${l.daysSince}d stale
+        </span>
+      </td>
+    </tr>`).join('');
+
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:620px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:#d97706;padding:24px 32px">
+    <p style="color:#fff;font-size:18px;font-weight:700;margin:0">Stale lead alert — ${info.leads.length} lead${info.leads.length !== 1 ? 's' : ''} need attention</p>
+    <p style="color:rgba(255,255,255,0.85);font-size:13px;margin:4px 0 0">AlgoLend · Weekly pipeline health check</p>
+  </div>
+  <div style="padding:28px 32px">
+    <p style="font-size:15px;margin:0 0 6px">Hi ${info.agentName},</p>
+    <p style="color:#555;line-height:1.6;margin:0 0 24px">
+      These leads in your pipeline haven't been updated in 14+ days. A quick check-in call can keep deals alive.
+    </p>
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="background:#f5f6fa">
+          <th style="padding:10px 8px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888">Lead</th>
+          <th style="padding:10px 8px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888">Stage</th>
+          <th style="padding:10px 8px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888">Idle</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div style="text-align:center;margin-top:28px">
+      <a href="${info.portalUrl}/telemarketer/leads" style="background:#d97706;color:#fff;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;display:inline-block">
+        Review my leads →
+      </a>
+    </div>
+  </div>
+  <div style="background:#f5f6fa;padding:16px;text-align:center;font-size:11px;color:#aaa">
+    AlgoLend · MINT Platforms (Pty) Ltd — weekly pipeline health
+  </div>
+</div>
+</body></html>`;
+}
+
+export function managerApprovalRequestEmail(info: {
+  managerName: string;
+  agentName:   string;
+  leadName:    string;
+  company:     string;
+  amountCents: number;
+  proposalId:  string;
+  adminUrl:    string;
+}) {
+  const fmt = (c: number) =>
+    new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 0 }).format(c / 100);
+  const approvalUrl = `${info.adminUrl}/approvals`;
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:linear-gradient(135deg,#0369a1,#0ea5e9);padding:28px 32px">
+    <p style="color:#fff;font-size:20px;font-weight:700;margin:0">Proposal approval required</p>
+    <p style="color:rgba(255,255,255,0.8);font-size:13px;margin:4px 0 0">AlgoLend · High-value deal</p>
+  </div>
+  <div style="padding:28px 32px">
+    <p style="font-size:15px;margin:0 0 6px">Hi ${info.managerName},</p>
+    <p style="color:#555;line-height:1.6;margin:0 0 20px">
+      <strong>${info.agentName}</strong> has submitted a high-value proposal that requires your approval before it can be sent to the client.
+    </p>
+    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;padding:20px;margin-bottom:24px">
+      <table style="width:100%;border-collapse:collapse">
+        <tr><td style="padding:6px 0;color:#888;font-size:13px;width:100px">Lead</td><td style="padding:6px 0;font-weight:600">${info.leadName}</td></tr>
+        <tr><td style="padding:6px 0;color:#888;font-size:13px">Company</td><td style="padding:6px 0">${info.company}</td></tr>
+        <tr><td style="padding:6px 0;color:#888;font-size:13px">Agent</td><td style="padding:6px 0">${info.agentName}</td></tr>
+        <tr><td style="padding:6px 0;color:#888;font-size:13px">Amount</td><td style="padding:6px 0;font-size:18px;font-weight:700;color:#0369a1">${fmt(info.amountCents)}</td></tr>
+      </table>
+    </div>
+    <div style="text-align:center">
+      <a href="${approvalUrl}" style="background:#0369a1;color:#fff;padding:13px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block">
+        Review &amp; approve →
+      </a>
+    </div>
+  </div>
+  <div style="background:#f5f6fa;padding:16px;text-align:center;font-size:11px;color:#aaa">
+    AlgoLend · MINT Platforms (Pty) Ltd — internal approval request
+  </div>
+</div>
+</body></html>`;
+}
+
+export function proposalApprovalResultEmail(info: {
+  agentName:  string;
+  leadName:   string;
+  company:    string;
+  amountCents: number;
+  approved:   boolean;
+  rejectionNote?: string;
+}) {
+  const fmt = (c: number) =>
+    new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 0 }).format(c / 100);
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:${info.approved ? 'linear-gradient(135deg,#059669,#34D399)' : '#dc2626'};padding:28px 32px">
+    <p style="color:#fff;font-size:20px;font-weight:700;margin:0">
+      Proposal ${info.approved ? 'approved' : 'not approved'}
+    </p>
+    <p style="color:rgba(255,255,255,0.8);font-size:13px;margin:4px 0 0">${info.leadName} · ${info.company}</p>
+  </div>
+  <div style="padding:28px 32px">
+    <p style="font-size:15px;margin:0 0 6px">Hi ${info.agentName},</p>
+    <p style="color:#555;line-height:1.6;margin:0 0 20px">
+      ${info.approved
+        ? `Your proposal for <strong>${fmt(info.amountCents)}</strong> to <strong>${info.company}</strong> has been approved. You can now send it to the client.`
+        : `Your proposal for <strong>${fmt(info.amountCents)}</strong> to <strong>${info.company}</strong> was not approved by your manager.`}
+    </p>
+    ${!info.approved && info.rejectionNote ? `
+    <div style="background:#fef2f2;border-left:3px solid #dc2626;padding:14px 16px;border-radius:0 8px 8px 0;margin-bottom:20px">
+      <p style="font-size:13px;color:#555;margin:0;font-style:italic">"${info.rejectionNote}"</p>
+    </div>` : ''}
+    <p style="color:#888;font-size:13px;line-height:1.6">
+      ${info.approved
+        ? 'Log into the portal to send the proposal to your client.'
+        : 'Please review the feedback and update the proposal before resubmitting.'}
+    </p>
+  </div>
+  <div style="background:#f5f6fa;padding:16px;text-align:center;font-size:11px;color:#aaa">
+    AlgoLend · MINT Platforms (Pty) Ltd
+  </div>
+</div>
+</body></html>`;
+}
+
 export function followUpReminderEmail(info: {
   agentName: string;
   todayLabel: string;

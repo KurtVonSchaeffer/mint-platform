@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { sendEmail, demoConfirmationEmail } from '@/lib/email';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -55,6 +56,31 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Send confirmation email to the lead — fire-and-forget
+  ;(async () => {
+    const { data: lead } = await supabaseAdmin
+      .from('leads').select('name, company, email').eq('id', body.lead_id).single();
+    if (!lead?.email) return;
+    const { data: { user } } = await supabaseAdmin.auth.admin.getUserById(body.agent_id);
+    if (!user?.email) return;
+    const agentName = (user.user_metadata?.full_name as string | undefined) ?? user.email.split('@')[0];
+    await sendEmail({
+      to:      lead.email,
+      subject: `Your AlgoLend demo is confirmed — ${new Date(body.demo_date + 'T00:00:00').toLocaleDateString('en-ZA', { day: 'numeric', month: 'long' })}`,
+      html:    demoConfirmationEmail({
+        leadName:    lead.name,
+        company:     lead.company ?? '',
+        agentName,
+        agentEmail:  user.email,
+        demoDate:    body.demo_date,
+        demoTime:    body.demo_time    ?? null,
+        platform:    body.platform     ?? 'Google Meet',
+        meetingLink: body.meeting_link ?? null,
+      }),
+    });
+  })().catch(() => {});
+
   return NextResponse.json({ demo: data }, { status: 201 });
 }
 

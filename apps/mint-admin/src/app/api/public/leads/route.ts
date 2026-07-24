@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
+import { pickNextAgent, notifyAgentNewLead } from '@/lib/lead-distribution';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -7,6 +8,7 @@ export const dynamic = 'force-dynamic';
 // Public endpoint — no auth required.
 // Called by the MINT/AlgoLend marketing site when a visitor submits a demo booking or contact form.
 // Leads land in the admin /leads queue with status 'new' and source 'marketing-site'.
+// Auto-assigned to the TM with the fewest active leads (round-robin).
 
 const ALLOWED_ORIGINS = [
   'https://algolend.co.za',
@@ -48,16 +50,37 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanPhone = phone?.trim() ?? null;
+
+  // Deduplicate — return the existing lead silently if same email or phone already exists
+  const dupQuery = supabaseAdmin.from('leads').select('id').eq('email', cleanEmail).limit(1);
+  if (cleanPhone) {
+    const { data: byPhone } = await supabaseAdmin.from('leads').select('id').eq('phone', cleanPhone).limit(1);
+    if (byPhone?.length) {
+      return NextResponse.json({ ok: true, id: byPhone[0].id, duplicate: true }, { status: 200, headers: corsHeaders(origin) });
+    }
+  }
+  const { data: byEmail } = await dupQuery;
+  if (byEmail?.length) {
+    return NextResponse.json({ ok: true, id: byEmail[0].id, duplicate: true }, { status: 200, headers: corsHeaders(origin) });
+  }
+
+  // Pick the TM with fewest active leads
+  const assignedTo = await pickNextAgent();
+
   const { data, error } = await supabaseAdmin
     .from('leads')
     .insert({
-      name:    name.trim(),
-      email:   email.trim().toLowerCase(),
-      company: company?.trim() ?? '',
-      phone:   phone?.trim() ?? null,
-      message: message?.trim() ?? null,
-      source:  'marketing-site',
-      status:  'new',
+      name:        name.trim(),
+      email:       cleanEmail,
+      company:     company?.trim() ?? '',
+      phone:       cleanPhone,
+      message:     message?.trim() ?? null,
+      source:      'marketing-site',
+      status:      'new',
+      tm_status:   assignedTo ? 'New Lead' : null,
+      assigned_to: assignedTo,
     })
     .select('id')
     .single();
@@ -67,6 +90,19 @@ export async function POST(req: NextRequest) {
       { error: 'Failed to create lead' },
       { status: 500, headers: corsHeaders(origin) },
     );
+  }
+
+  // Notify the assigned TM — fire-and-forget, don't block the response
+  if (assignedTo) {
+    notifyAgentNewLead({
+      agentId:  assignedTo,
+      leadId:   data.id,
+      leadName: name.trim(),
+      company:  company?.trim() ?? '',
+      phone:    cleanPhone,
+      email:    cleanEmail,
+      message:  message?.trim() ?? null,
+    }).catch(() => {/* swallow — email is best-effort */});
   }
 
   return NextResponse.json(

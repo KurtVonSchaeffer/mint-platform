@@ -9,7 +9,7 @@ import {
   CreditCard, Globe, Scale, Gauge, Link2, Banknote, PiggyBank,
   ToggleLeft, Activity, ShieldCheck, ArrowDownToLine, Users2, SlidersHorizontal,
   LogOut, Sun, Moon, Menu, X, Bell, Plus, UserPlus, ChevronDown, ChevronRight,
-  Loader2, CheckCircle2, AlertTriangle, AlertCircle, Settings, Search, TrendingUp,
+  Loader2, CheckCircle2, AlertTriangle, AlertCircle, Settings, Search, TrendingUp, ClipboardCheck,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { CommandPalette } from '@/components/CommandPalette';
@@ -24,10 +24,10 @@ type NavSection = { section: string };
 // Routes each role can access. super_admin gets everything.
 const ROLE_ROUTES: Record<string, string[]> = {
   super_admin:   ['*'],
-  admin:         ['/', '/clients', '/leads', '/sales', '/applications', '/pricing', '/quotes', '/invoices', '/billing', '/marketplace', '/features', '/usage', '/compliance', '/migration', '/payroll'],
+  admin:         ['/', '/clients', '/leads', '/sales', '/applications', '/pricing', '/quotes', '/invoices', '/billing', '/marketplace', '/features', '/usage', '/compliance', '/migration', '/payroll', '/approvals'],
   finance:       ['/', '/pricing', '/quotes', '/invoices', '/billing', '/payroll'],
   support:       ['/', '/clients', '/leads', '/applications'],
-  manager:       ['/telemarketer', '/payroll'],
+  manager:       ['/telemarketer', '/payroll', '/approvals'],
 };
 
 const ROLE_LABELS: Record<string, { label: string; color: string }> = {
@@ -51,6 +51,7 @@ const nav: (NavItem | NavGroup | NavSection)[] = [
   { label: 'Clients',      href: '/clients',     icon: Building2      },
   { label: 'Leads',        href: '/leads',        icon: Filter         },
   { label: 'Sales',        href: '/sales',        icon: TrendingUp     },
+  { label: 'Approvals',    href: '/approvals',    icon: ClipboardCheck },
   { label: 'Applications', href: '/applications', icon: Inbox          },
   { section: 'Finance' },
   {
