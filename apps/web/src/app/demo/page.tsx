@@ -257,7 +257,7 @@ function ApplyWizard({ onBack }: { onBack?: () => void }) {
           </div>
           <div className="rounded-xl p-4 space-y-2 bg-slate-50 border border-slate-200">
             <div className="flex items-center gap-2 mb-2"><FileText size={12} className="text-slate-400" /><p className="text-xs font-semibold text-slate-800">Loan Agreement BC-2026-00412</p></div>
-            {[`This credit agreement is entered into between Zwane Capital (Pty) Ltd and ${firstName} ${lastName} under the National Credit Act 34 of 2005.`,
+            {[`This credit agreement is entered into between Demo Lender (Pty) Ltd and ${firstName} ${lastName} under the National Credit Act 34 of 2005.`,
               `The Lender advances ${R(q.principal)} to the Borrower, repayable over ${q.term} months in instalments of ${R(q.instalment)}.`,
               `Interest: 27% per annum (simple). Early settlement permitted with settlement statement.`
             ].map((t, i) => <p key={i} className="text-xs leading-relaxed text-slate-500">{t}</p>)}
@@ -533,7 +533,7 @@ function AdminDashboard({ adminPage, setAdminPage }: { adminPage: string; setAdm
           <div className="flex items-start justify-between">
             <div>
               <h1 className="text-xl font-bold text-slate-900">Lender dashboard</h1>
-              <p className="text-slate-500 mt-0.5 text-sm">Zwane Capital (Pty) Ltd — June 2026</p>
+              <p className="text-slate-500 mt-0.5 text-sm">Demo Lender (Pty) Ltd — June 2026</p>
             </div>
             <button onClick={() => setAdminPage('applications')} className="px-3 py-2 rounded-xl text-xs font-bold text-white flex items-center gap-1.5" style={{ background: BRAND }}>
               Review applications <ChevronRight size={12} />
@@ -670,9 +670,9 @@ function AdminSidebar({ active, onSelect }: { active: string; onSelect: (id: str
     <aside className="w-52 shrink-0 flex flex-col h-full" style={{ background: '#0f172a', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
       <div className="flex items-center h-14 px-4 shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-white text-xs" style={{ background: BRAND }}>Z</div>
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-white text-xs" style={{ background: BRAND }}>D</div>
           <div>
-            <p className="text-xs font-bold text-white">Zwane Capital</p>
+            <p className="text-xs font-bold text-white">Demo Lender</p>
             <p className="text-[9px] text-slate-500">Lender console</p>
           </div>
         </div>
@@ -858,7 +858,7 @@ export default function DemoPage() {
                 <div className="flex-1 flex flex-col overflow-hidden" style={{ background: '#f8fafc' }}>
                   <header className="h-14 shrink-0 flex items-center justify-between px-6"
                     style={{ background: 'rgba(248,250,252,0.95)', backdropFilter: 'blur(16px)', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-                    <p className="text-xs text-slate-400">AlgoLend Admin · Zwane Capital</p>
+                    <p className="text-xs text-slate-400">AlgoLend Admin · Demo Lender</p>
                     <div className="flex items-center gap-3">
                       <button className="relative w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-black/5 transition-colors">
                         <Bell size={15} />
