@@ -2,14 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { supabaseAdmin } from '@/lib/supabase';
-import { sendEmail, managerApprovalRequestEmail, proposalApprovalResultEmail } from '@/lib/email';
+import { sendEmail, proposalApprovalResultEmail } from '@/lib/email';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const PORTAL_URL            = process.env.NEXT_PUBLIC_APP_URL ?? 'https://admin.mintplatforms.co.za';
-const APPROVAL_THRESHOLD    = 5_000_000; // R50,000 in cents
-const MANAGER_ROLES         = ['super_admin', 'admin', 'manager'];
+const MANAGER_ROLES = ['super_admin', 'admin', 'manager'];
 
 async function getSessionUser() {
   const cookieStore = await cookies();
@@ -95,45 +93,3 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ proposal, approved });
 }
 
-// Called by proposals POST to trigger approval flow for high-value deals
-export async function triggerApprovalFlow(opts: {
-  proposalId:  string;
-  agentId:     string;
-  leadId:      string;
-  amountCents: number;
-}) {
-  if (opts.amountCents < APPROVAL_THRESHOLD) return;
-
-  // Fetch lead details
-  const { data: lead } = await supabaseAdmin
-    .from('leads')
-    .select('name, company')
-    .eq('id', opts.leadId)
-    .single();
-
-  // Fetch agent name
-  const { data: { user: agent } } = await supabaseAdmin.auth.admin.getUserById(opts.agentId);
-  const agentName = (agent?.user_metadata?.full_name as string | undefined) ?? agent?.email?.split('@')[0] ?? 'Unknown';
-
-  // Email all managers
-  const { data: { users } } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-  const managers = users.filter(u => MANAGER_ROLES.includes((u.user_metadata?.role as string | undefined) ?? ''));
-
-  await Promise.all(managers.map(mgr => {
-    if (!mgr.email) return;
-    const mgrName = (mgr.user_metadata?.full_name as string | undefined) ?? mgr.email.split('@')[0];
-    return sendEmail({
-      to:      mgr.email,
-      subject: `Approval required: ${agentName} — R${Math.round(opts.amountCents / 100).toLocaleString('en-ZA')}`,
-      html:    managerApprovalRequestEmail({
-        managerName: mgrName,
-        agentName,
-        leadName:    lead?.name    ?? '',
-        company:     lead?.company ?? '',
-        amountCents: opts.amountCents,
-        proposalId:  opts.proposalId,
-        adminUrl:    PORTAL_URL,
-      }),
-    });
-  }));
-}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { triggerApprovalFlow } from '@/app/api/admin/approvals/route';
+import { triggerApprovalFlow } from '@/lib/approval-flow';
 
 const APPROVAL_THRESHOLD = 5_000_000; // R50,000 in cents
 

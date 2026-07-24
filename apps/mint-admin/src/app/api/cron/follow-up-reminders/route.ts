@@ -44,7 +44,7 @@ async function sendReminders() {
 
   if (error) return { ok: false, error: error.message };
 
-  const followUps = (rows ?? []) as FollowUpRow[];
+  const followUps = (rows ?? []) as unknown as FollowUpRow[];
 
   if (followUps.length === 0) {
     return { ok: true, message: 'No pending follow-ups due today', agentsNotified: 0 };
