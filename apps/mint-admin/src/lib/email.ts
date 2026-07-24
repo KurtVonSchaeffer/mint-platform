@@ -637,6 +637,95 @@ export function commissionUpdateEmail(info: {
 </body></html>`;
 }
 
+export function followUpReminderEmail(info: {
+  agentName: string;
+  todayLabel: string;
+  followUps: {
+    leadId:   string;
+    leadName: string;
+    company:  string;
+    phone:    string;
+    type:     string;
+    note:     string | null;
+    dueDate:  string;
+    isOverdue: boolean;
+  }[];
+  portalUrl: string;
+}) {
+  const rows = info.followUps.map(f => `
+    <tr style="border-bottom:1px solid #eee">
+      <td style="padding:12px 8px;vertical-align:top">
+        <p style="margin:0;font-weight:600;font-size:14px;color:#1a1f36">
+          <a href="${info.portalUrl}/telemarketer/leads/${f.leadId}" style="color:#7C3AED;text-decoration:none">${f.leadName}</a>
+        </p>
+        <p style="margin:2px 0 0;font-size:12px;color:#888">${f.company}</p>
+      </td>
+      <td style="padding:12px 8px;font-size:13px;color:#555;vertical-align:top">
+        <a href="tel:${f.phone}" style="color:#1a1f36;text-decoration:none">${f.phone}</a>
+      </td>
+      <td style="padding:12px 8px;vertical-align:top;text-align:center">
+        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:rgba(124,58,237,0.1);color:#7C3AED;white-space:nowrap">
+          ${f.type}
+        </span>
+      </td>
+      <td style="padding:12px 8px;vertical-align:top">
+        ${f.isOverdue
+          ? `<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:#fef2f2;color:#dc2626">Overdue · ${f.dueDate}</span>`
+          : `<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:#fefce8;color:#92400e">Today</span>`}
+        ${f.note ? `<p style="margin:4px 0 0;font-size:12px;color:#888;font-style:italic">"${f.note}"</p>` : ''}
+      </td>
+    </tr>`).join('');
+
+  const overdueCount = info.followUps.filter(f => f.isOverdue).length;
+  const todayCount   = info.followUps.length - overdueCount;
+
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:660px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:28px 32px">
+    <p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 4px">AlgoLend</p>
+    <p style="color:#fff;font-size:20px;font-weight:700;margin:0">
+      ${info.followUps.length} follow-up${info.followUps.length !== 1 ? 's' : ''} need your attention
+    </p>
+    <p style="color:rgba(255,255,255,0.8);font-size:13px;margin:6px 0 0">${info.todayLabel}</p>
+  </div>
+  <div style="padding:32px">
+    <p style="font-size:15px;margin:0 0 6px">Hi ${info.agentName},</p>
+    <p style="color:#555;line-height:1.6;margin:0 0 24px">
+      Here's your follow-up summary for today.
+      ${overdueCount > 0 ? `<strong style="color:#dc2626">${overdueCount} overdue</strong> and ` : ''}
+      ${todayCount > 0 ? `<strong>${todayCount} due today</strong>.` : ''}
+    </p>
+
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="background:#f5f6fa">
+          <th style="padding:10px 8px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888">Lead</th>
+          <th style="padding:10px 8px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888">Phone</th>
+          <th style="padding:10px 8px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888">Type</th>
+          <th style="padding:10px 8px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888">Status / Note</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+
+    <div style="text-align:center;margin:28px 0 16px">
+      <a href="${info.portalUrl}/telemarketer/follow-ups"
+        style="background:#7C3AED;color:#fff;padding:13px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block">
+        Open follow-ups →
+      </a>
+    </div>
+    <p style="color:#aaa;font-size:12px;text-align:center;margin:0">
+      Mark each follow-up complete in the portal once done.
+    </p>
+  </div>
+  <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
+    AlgoLend · MINT Platforms (Pty) Ltd — daily follow-up digest
+  </div>
+</div>
+</body></html>`;
+}
+
 export function biztechQuoteEmail(q: {
   reference: string; clientName: string; contact: string;
   totalCents: number; validUntil: string | null; quoteId: string;
