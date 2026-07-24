@@ -26,8 +26,8 @@ export async function GET(req: NextRequest) {
   const [callsRes, notesRes, fuRes, demosRes, proposalsRes, leadsRes] = await Promise.all([
     supabaseAdmin.from('call_logs').select('outcome,called_at').eq('agent_id', agentId),
     supabaseAdmin.from('lead_notes').select('created_at').eq('agent_id', agentId),
-    supabaseAdmin.from('lead_follow_ups').select('completed,scheduled_at,created_at').eq('agent_id', agentId),
-    supabaseAdmin.from('lead_demos').select('status,demo_date').eq('agent_id', agentId),
+    supabaseAdmin.from('follow_ups').select('completed,scheduled_at,created_at').eq('agent_id', agentId),
+    supabaseAdmin.from('demos').select('status,demo_date').eq('agent_id', agentId),
     supabaseAdmin.from('proposals').select('status,amount_cents,created_at').eq('agent_id', agentId),
     supabaseAdmin.from('leads').select('tm_status,estimated_deal_value,expected_close_date,deal_probability').eq('assigned_to', agentId),
   ]);
