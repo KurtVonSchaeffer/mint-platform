@@ -65,9 +65,10 @@ interface Props {
   onClose:       () => void;
   onCreated:     () => void;
   initialValues?: { name?: string; contactEmail?: string; contactName?: string; legalName?: string };
+  leadId?:       string;
 }
 
-export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
+export function OnboardingWizard({ onClose, onCreated, initialValues, leadId }: Props) {
   const [step, setStep]             = useState<Step>('details');
   const [error, setError]           = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -153,6 +154,18 @@ export function OnboardingWizard({ onClose, onCreated, initialValues }: Props) {
 
       setResult({ tenantUrl: data.tenantUrl, clientName: name, marketplaceOptIn: mpOptIn });
       setStep('done');
+
+      // Close the loop: mark the originating lead as won + converted so the
+      // auto-commission fires and the TM's status reflects reality.
+      if (leadId) {
+        const commissionAmount = parseFloat((monthlyFeeCents * 0.25 / 100).toFixed(2));
+        await fetch(`/api/leads/${leadId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'won', tm_status: 'Converted', commission_amount: commissionAmount }),
+        }).catch(() => {/* non-blocking */});
+      }
+
       onCreated();
     } catch { setError('Network error — please try again.'); }
     finally  { setSubmitting(false); }

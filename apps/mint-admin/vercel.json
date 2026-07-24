@@ -5,6 +5,10 @@
       "schedule": "0 4 1 * *"
     },
     {
+      "path": "/api/cron/monthly-statements",
+      "schedule": "0 7 1 * *"
+    },
+    {
       "path": "/api/biztech/invoices/reminders-cron",
       "schedule": "0 5 * * *"
     },

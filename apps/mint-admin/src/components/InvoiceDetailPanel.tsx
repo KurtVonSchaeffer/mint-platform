@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, CheckCircle, Loader2, Send, Mail, Download, Sparkles, CreditCard } from 'lucide-react';
+import { X, CheckCircle, Loader2, Send, Mail, Download, FilePlus, CreditCard } from 'lucide-react';
 import { fmt, fmtDate, statusStyle, typeStyle, type Invoice } from '@/lib/invoice-helpers';
 
 type InvoiceAction = 'send' | 'mark_paid' | 'void';
@@ -240,7 +240,7 @@ export function InvoiceDetailPanel({ inv, actioning, onClose, onAction, onRemind
               onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.08)'; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
             >
-              <Sparkles size={14} /> Generate invoice for {inv.clients.name}
+              <FilePlus size={14} /> Generate invoice for {inv.clients.name}
             </button>
           ) : null}
           <button

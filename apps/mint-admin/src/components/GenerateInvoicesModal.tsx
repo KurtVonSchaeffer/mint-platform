@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, Loader2, Sparkles, ChevronDown } from 'lucide-react';
+import { X, Loader2, FilePlus, ChevronDown } from 'lucide-react';
 
 function fmt(cents: number) {
   return new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 2 }).format(cents / 100);
@@ -81,7 +81,7 @@ export function GenerateInvoicesModal({ onClose, onGenerated, defaultClientId }:
         <div className="flex items-center justify-between px-7 py-5" style={{ borderBottom: '1px solid var(--color-border2)' }}>
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(124,58,237,0.12)', color: 'var(--color-violet)' }}>
-              <Sparkles size={14} />
+              <FilePlus size={14} />
             </div>
             <h2 className="font-bold text-base" style={{ color: 'var(--color-text)' }}>Generate invoices</h2>
           </div>
@@ -143,7 +143,7 @@ export function GenerateInvoicesModal({ onClose, onGenerated, defaultClientId }:
                 disabled={running}
                 className="btn-purple btn-shine w-full inline-flex items-center justify-center gap-2 disabled:opacity-60"
               >
-                {running ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                {running ? <Loader2 size={14} className="animate-spin" /> : <FilePlus size={14} />}
                 {running ? 'Generating…' : `Generate draft${clientId ? '' : 's'}`}
               </button>
             </>

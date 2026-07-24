@@ -5,10 +5,10 @@ import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
 import Link from 'next/link';
 import {
-  Users, DollarSign, Zap, TrendingUp, AlertTriangle,
+  Users, DollarSign, Server, TrendingUp, AlertTriangle,
   Power, ExternalLink, Activity, CheckCircle2, AlertCircle,
   ChevronRight, Globe, FileText, UserPlus, Clock, Wifi, WifiOff,
-  RefreshCw, ArrowUpRight, ArrowDownRight, Sparkles,
+  RefreshCw, ArrowUpRight, ArrowDownRight, CircleDot, ToggleLeft,
 } from 'lucide-react';
 
 type Tier   = 'core' | 'growth' | 'enterprise';
@@ -46,6 +46,65 @@ const PALETTES = [['#7C3AED','#A78BFA'],['#059669','#6EE7B7'],['#2563EB','#93C5F
 function avatarGrad(slug: string) {
   const [a, b] = PALETTES[slug.split('').reduce((s, c) => s + c.charCodeAt(0), 0) % PALETTES.length];
   return `linear-gradient(135deg, ${a}, ${b})`;
+}
+
+// ── Sparkline SVG ────────────────────────────────────────────────────
+function Sparkline({ color, trend }: { color: string; trend: 'up' | 'down' | 'flat' }) {
+  const [drawn, setDrawn] = useState(false);
+  useEffect(() => { const t = setTimeout(() => setDrawn(true), 200); return () => clearTimeout(t); }, []);
+
+  // Seven fake historical data points per trend direction
+  const pts: Record<string, number[]> = {
+    up:   [30, 38, 28, 45, 40, 55, 70],
+    down: [70, 62, 68, 50, 55, 42, 30],
+    flat: [45, 50, 42, 55, 48, 52, 50],
+  };
+  const raw   = pts[trend];
+  const W = 72, H = 28;
+  const min   = Math.min(...raw), max = Math.max(...raw);
+  const range = max - min || 1;
+  const points = raw.map((v, i) => {
+    const x = (i / (raw.length - 1)) * W;
+    const y = H - ((v - min) / range) * (H - 4) - 2;
+    return `${x},${y}`;
+  });
+  const d = `M ${points.join(' L ')}`;
+
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} fill="none" style={{ overflow: 'visible' }}>
+      <defs>
+        <linearGradient id={`sg-${trend}`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {/* Fill area */}
+      <path d={`${d} L ${W},${H} L 0,${H} Z`} fill={`url(#sg-${trend})`} />
+      {/* Line */}
+      <path
+        d={d}
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        style={{
+          strokeDasharray: 200,
+          strokeDashoffset: drawn ? 0 : 200,
+          transition: 'stroke-dashoffset 0.9s cubic-bezier(0.16,1,0.3,1)',
+        }}
+      />
+      {/* End dot */}
+      {drawn && (
+        <circle
+          cx={W}
+          cy={parseFloat(points[points.length - 1].split(',')[1])}
+          r={2.5}
+          fill={color}
+          opacity={0.9}
+        />
+      )}
+    </svg>
+  );
 }
 
 // ── Animated count-up ────────────────────────────────────────────────
@@ -247,7 +306,7 @@ export default function DashboardPage() {
     { label: 'Active clients', value: activeClients, display: String(activeClients), sub: trialClients.length > 0 ? `+${trialClients.length} trial` : 'All paid', accent: '#A78BFA', rgb: '167,139,250', icon: Users, href: '/clients', trend: 'up' },
     { label: 'Monthly MRR', value: totalMRR, display: fmtK(totalMRR), sub: fmtK(totalARR) + ' ARR', accent: '#34D399', rgb: '52,211,153', icon: DollarSign, href: '/billing', trend: totalMRR > 0 ? 'up' : 'flat' },
     { label: 'Leads', value: activity.length, display: String(activity.length), sub: 'Open enquiries', accent: '#FBBF24', rgb: '251,191,36', icon: TrendingUp, href: '/leads', trend: activity.length > 0 ? 'up' : 'flat' },
-    { label: 'Deployments', value: clients.length, display: String(clients.length), sub: suspended.length > 0 ? `${suspended.length} suspended` : 'All operational', accent: '#60A5FA', rgb: '96,165,250', icon: Zap, href: '/clients', trend: suspended.length > 0 ? 'down' : 'flat' },
+    { label: 'Deployments', value: clients.length, display: String(clients.length), sub: suspended.length > 0 ? `${suspended.length} suspended` : 'All operational', accent: '#60A5FA', rgb: '96,165,250', icon: Server, href: '/clients', trend: suspended.length > 0 ? 'down' : 'flat' },
   ] as const;
 
   return (
@@ -286,7 +345,7 @@ export default function DashboardPage() {
           >
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: 'rgba(124,58,237,0.15)' }}>
-                <Sparkles size={16} style={{ color: 'var(--color-violet)' }} />
+                <CircleDot size={16} style={{ color: 'var(--color-violet)' }} />
               </div>
               <div>
                 <p className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>
@@ -440,7 +499,10 @@ export default function DashboardPage() {
                 {loading ? <span className="inline-block w-12 h-8 rounded animate-pulse" style={{ background: 'var(--color-surface2)' }} /> : s.display}
               </p>
 
-              <p className="text-xs font-medium" style={{ color: s.accent }}>{s.sub}</p>
+              <div className="flex items-end justify-between gap-2">
+                <p className="text-xs font-medium" style={{ color: s.accent }}>{s.sub}</p>
+                {!loading && <Sparkline color={s.accent} trend={s.trend} />}
+              </div>
             </Link>
           ))}
         </div>
@@ -529,7 +591,7 @@ export default function DashboardPage() {
               <h2 className="text-sm font-semibold mb-3" style={{ color: 'var(--color-text2)' }}>Quick links</h2>
               <div className="space-y-0.5">
                 {[
-                  { label: 'Feature flags', href: '/features',    icon: Zap },
+                  { label: 'Feature flags', href: '/features',    icon: ToggleLeft },
                   { label: 'API usage',     href: '/usage',       icon: Activity },
                   { label: 'Invoices',      href: '/invoices',    icon: FileText },
                   { label: 'Marketplace',   href: '/marketplace', icon: Globe },

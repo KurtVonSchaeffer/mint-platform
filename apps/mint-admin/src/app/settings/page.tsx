@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Shell } from '@/components/Shell';
-import { Key, Globe, Bell, Shield, Plug, ExternalLink, Check, AlertCircle } from 'lucide-react';
+import { Key, Globe, Bell, Shield, Plug, ExternalLink, Check, AlertCircle, Percent } from 'lucide-react';
 
 const DEFAULT_NOTIFICATIONS = {
   'New client onboarded':     true,
@@ -244,6 +244,31 @@ export default function SettingsPage() {
               Each client deployment uses its own credentials. MINT Platforms never stores client API
               keys centrally.
             </p>
+          </div>
+        </SectionCard>
+
+        {/* Commission Config */}
+        <SectionCard icon={<Percent size={16} />} title="Commission Config">
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs font-semibold mb-1" style={{ color: 'var(--color-text2)' }}>Commission per conversion</p>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text3)' }}>
+                Commission is automatically calculated as <strong style={{ color: 'var(--color-text2)' }}>25% of the plan the client chose</strong> during onboarding.
+                When a telemarketer converts a lead, the commission amount is calculated from the selected subscription tier and applied to their record.
+              </p>
+              <p className="text-xs mt-2 leading-relaxed" style={{ color: 'var(--color-text3)' }}>
+                Example: Starter plan (R 1,999/month) → R 499.75 commission. Enterprise plan (R 14,999/month) → R 3,749.75 commission.
+                The amount can still be edited manually in the Payroll page if needed.
+              </p>
+            </div>
+            <div style={{ borderTop: '1px solid var(--color-border2)', paddingTop: 12 }}>
+              <p className="text-xs font-semibold mb-1" style={{ color: 'var(--color-text2)' }}>Demo booking notifications</p>
+              <p className="text-xs leading-relaxed" style={{ color: 'var(--color-text3)' }}>
+                Set <code className="px-1 py-0.5 rounded text-[11px]" style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}>ADMIN_EMAIL</code> in Vercel to receive
+                an email alert whenever a telemarketer marks a lead as <strong>Demo Booked</strong>.
+                Telemarketers are also automatically emailed when their commission is approved or paid.
+              </p>
+            </div>
           </div>
         </SectionCard>
 

@@ -23,10 +23,22 @@ const ROLES = [
     bg: 'rgba(96,165,250,0.1)', border: 'rgba(96,165,250,0.25)', color: '#60A5FA',
   },
   {
+    value: 'manager',
+    label: 'Manager',
+    description: 'Telemarketer team view, payroll and commission management',
+    bg: 'rgba(251,146,60,0.1)', border: 'rgba(251,146,60,0.25)', color: '#FB923C',
+  },
+  {
+    value: 'telemarketer',
+    label: 'Telemarketer',
+    description: 'Own leads, call logs, clients and commission workspace',
+    bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.25)', color: '#34D399',
+  },
+  {
     value: 'finance',
     label: 'Finance',
     description: 'Pricing, quotes, invoices and billing only',
-    bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.25)', color: '#34D399',
+    bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.25)', color: '#C4B5FD',
   },
   {
     value: 'support',
@@ -255,7 +267,7 @@ export default function UsersPage() {
               </div>
               <div>
                 <label className="block text-[10px] font-medium mb-2" style={{ color: 'var(--color-text3)' }}>Role</label>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
                   {ROLES.map(r => (
                     <button
                       key={r.value}

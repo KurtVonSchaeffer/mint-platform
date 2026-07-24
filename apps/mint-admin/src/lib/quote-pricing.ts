@@ -44,7 +44,7 @@ export function nearestTierLabel(quota: number): string {
 export const CHECK_CATALOG = [
   { id: 'bureau',    label: 'Standard Bureau Check (Experian)',              baseRate: 6.67,  clientRate: 9.20,  firstFree: 0   },
   { id: 'banking',   label: 'Bank Account Linking (TruID)',                  baseRate: 8.50,  clientRate: 11.00, firstFree: 0   },
-  { id: 'contracts', label: 'E-Contracts',                                   baseRate: 3.60,  clientRate: 0.30,  firstFree: 0   },
+  { id: 'contracts', label: 'E-Contracts',                                   baseRate: 0,     clientRate: 0.30,  firstFree: 0   },
   { id: 'liveness',  label: 'Full KYC — Liveness, ID & Phone Verification', baseRate: 5.40,  clientRate: 6.50,  firstFree: 500 },
   { id: 'homeaff',   label: 'Liveness + Home Affairs (DHA)',                 baseRate: 15.50, clientRate: 20.00, firstFree: 0   },
   { id: 'watchlist', label: 'AML / Watchlist — PEPs & Sanctions',           baseRate: 1.95,  clientRate: 0,     firstFree: 0   },

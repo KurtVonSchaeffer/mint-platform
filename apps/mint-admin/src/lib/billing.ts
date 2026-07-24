@@ -182,7 +182,7 @@ export async function generateMonthlyInvoices(yearMonth: string, clientId?: stri
                 quantity:         1,
                 unit_price_cents: activationFee,
                 total_cents:      activationFee,
-                service:          'activation',
+                service:          null,
               });
             }
           }

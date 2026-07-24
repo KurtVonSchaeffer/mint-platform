@@ -45,7 +45,7 @@ export const SERVICE_RATES: ServiceRate[] = [
     id:             'automated_contracts',
     name:           'E-Contracts',
     description:    'E-contract generation, issuing, and digital signing',
-    providerCents:  360,
+    providerCents:  0,
     publishedCents: 30,
     firstFree:      0,
     featureFlag:    'e_contracts',
@@ -132,7 +132,7 @@ export function calculateMonthlyBill({
   selectedServiceIds,
   monthlyVolume,
   numBranches = 1,
-  branchFeeCents = 95000,
+  branchFeeCents = 25000,
   platformLicenceCents = 800000,
 }: {
   selectedServiceIds: string[];

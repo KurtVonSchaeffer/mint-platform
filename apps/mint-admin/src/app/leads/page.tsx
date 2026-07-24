@@ -5,22 +5,28 @@ import { useRouter } from 'next/navigation';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
-import { Inbox, RefreshCw, Sparkles, Mail, Building2, ChevronDown, Plus, X, Loader2, UserPlus, FileText } from 'lucide-react';
+import { Inbox, RefreshCw, Mail, Building2, ChevronDown, Plus, X, Loader2, UserPlus, FileText, UserCheck } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 type LeadStatus = 'new' | 'contacted' | 'qualified' | 'won' | 'lost';
 type LeadSource = 'marketing-site' | 'referral' | 'manual';
 
 interface Lead {
-  id:        string;
-  name:      string;
-  email:     string;
-  company:   string;
-  message:   string | null;
-  source:    LeadSource;
-  status:    LeadStatus;
-  createdAt: string;
+  id:          string;
+  name:        string;
+  email:       string;
+  company:     string;
+  message:     string | null;
+  source:      LeadSource;
+  status:      LeadStatus;
+  assignedTo:  string | null;
+  createdAt:   string;
+  tmStatus:    string | null;
 }
+
+const AGENT_COLORS = ['#A78BFA', '#34D399', '#60A5FA', '#FB923C', '#F472B6', '#FBBF24'];
+
+type Agent = { id: string; name: string; initials: string; color: string };
 
 const STATUS_CONFIG: Record<LeadStatus, { label: string; bg: string; border: string; color: string }> = {
   new:       { label: 'New',       bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)',  color: 'var(--color-amber)'  },
@@ -88,6 +94,91 @@ function StatusDropdown({ lead, onUpdate }: { lead: Lead; onUpdate: (id: string,
   );
 }
 
+function AssignDropdown({ lead, agents, onAssign }: {
+  lead: Lead;
+  agents: Agent[];
+  onAssign: (id: string, agentId: string | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const assigned = agents.find(t => t.id === lead.assignedTo);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer"
+        style={assigned
+          ? { background: `${assigned.color}18`, border: `1px solid ${assigned.color}40`, color: assigned.color }
+          : { border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
+        title="Assign to telemarketer"
+      >
+        {assigned ? (
+          <>
+            <span className="w-4 h-4 rounded-full inline-flex items-center justify-center text-[8px] font-bold shrink-0"
+              style={{ background: assigned.color, color: '#fff' }}>
+              {assigned.initials}
+            </span>
+            {assigned.name.split(' ')[0]}
+          </>
+        ) : (
+          <>
+            <UserCheck size={11} />
+            Assign
+          </>
+        )}
+        <ChevronDown size={9} />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div
+            className="absolute right-0 top-full mt-1 z-20 rounded-xl overflow-hidden min-w-[180px]"
+            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.25)' }}
+          >
+            <div className="px-3 py-2" style={{ borderBottom: '1px solid var(--color-border2)' }}>
+              <p className="text-[9px] font-bold uppercase tracking-widest" style={{ color: 'var(--color-text3)' }}>Assign to agent</p>
+            </div>
+            {agents.length === 0 && (
+              <p className="px-3 py-3 text-xs" style={{ color: 'var(--color-text3)' }}>No telemarketer accounts yet</p>
+            )}
+            {agents.map(t => (
+              <button
+                key={t.id}
+                onClick={() => { onAssign(lead.id, t.id === lead.assignedTo ? null : t.id); setOpen(false); }}
+                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs cursor-pointer transition-colors text-left"
+                style={{ color: t.id === lead.assignedTo ? t.color : 'var(--color-text2)' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+              >
+                <span className="w-5 h-5 rounded-full inline-flex items-center justify-center text-[9px] font-bold shrink-0"
+                  style={{ background: t.color, color: '#fff' }}>
+                  {t.initials}
+                </span>
+                <span className="flex-1">{t.name}</span>
+                {t.id === lead.assignedTo && <span className="text-[9px]">✓</span>}
+              </button>
+            ))}
+            {lead.assignedTo && (
+              <>
+                <div style={{ borderTop: '1px solid var(--color-border2)' }} />
+                <button
+                  onClick={() => { onAssign(lead.id, null); setOpen(false); }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs cursor-pointer transition-colors text-left"
+                  style={{ color: 'var(--color-text3)' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.06)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                >
+                  <X size={10} /> Unassign
+                </button>
+              </>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function AddLeadModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
   const [form, setForm]   = useState({ name: '', email: '', company: '', message: '' });
   const [saving, setSaving] = useState(false);
@@ -145,11 +236,13 @@ function AddLeadModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
 export default function LeadsPage() {
   const router = useRouter();
   const [leads, setLeads]         = useState<Lead[]>([]);
+  const [agents, setAgents]       = useState<Agent[]>([]);
   const [loading, setLoading]     = useState(true);
   const [addOpen, setAddOpen]     = useState(false);
   const [convertLead, setConvertLead] = useState<Lead | null>(null);
   const [toast, setToast]         = useState<{ kind: ToastKind; message: string } | null>(null);
   const [statusFilter, setStatusFilter] = useState<LeadStatus | null>(null);
+  const [agentFilter,  setAgentFilter]  = useState<string | null>(null);
 
   function createQuoteFromLead(lead: Lead) {
     sessionStorage.setItem('new_quote_prefill', JSON.stringify({
@@ -167,13 +260,29 @@ export default function LeadsPage() {
       const { leads: raw } = await res.json();
       setLeads((raw ?? []).map((l: Record<string, string>) => ({
         ...l,
-        createdAt: l.created_at ?? l.createdAt,
+        createdAt:  l.created_at  ?? l.createdAt,
+        assignedTo: l.assigned_to ?? l.assignedTo ?? null,
+        tmStatus:   l.tm_status   ?? null,
       })));
     }
     setLoading(false);
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    fetch('/api/users?role=telemarketer')
+      .then(r => r.json())
+      .then(d => setAgents(
+        (d.users ?? []).map((u: { id: string; name: string }, i: number) => ({
+          id:       u.id,
+          name:     u.name,
+          initials: u.name.split(/\s+/).map((w: string) => w[0]).join('').slice(0, 2).toUpperCase(),
+          color:    AGENT_COLORS[i % AGENT_COLORS.length],
+        }))
+      ))
+      .catch(() => {/* fail silently */});
+  }, []);
 
   async function updateStatus(id: string, status: LeadStatus) {
     // Optimistic update
@@ -189,12 +298,33 @@ export default function LeadsPage() {
     }
   }
 
+  async function assignLead(id: string, agentId: string | null) {
+    setLeads(prev => prev.map(l => l.id === id ? { ...l, assignedTo: agentId } : l));
+    const res = await fetch(`/api/leads/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        assigned_to: agentId,
+        ...(agentId ? { tm_status: 'New Lead' } : {}),
+      }),
+    });
+    if (!res.ok) {
+      setToast({ kind: 'error', message: 'Failed to assign lead' });
+      load();
+      return;
+    }
+    const agent = agents.find(t => t.id === agentId);
+    setToast({ kind: 'success', message: agent ? `Assigned to ${agent.name}` : 'Lead unassigned' });
+  }
+
   const byStatus = leads.reduce<Record<string, number>>((acc, l) => {
     acc[l.status] = (acc[l.status] ?? 0) + 1;
     return acc;
   }, {});
 
-  const filteredLeads = statusFilter ? leads.filter(l => l.status === statusFilter) : leads;
+  const filteredLeads = leads
+    .filter(l => !statusFilter || l.status === statusFilter)
+    .filter(l => !agentFilter  || l.assignedTo === agentFilter);
 
   return (
     <Shell>
@@ -202,6 +332,7 @@ export default function LeadsPage() {
       {addOpen && <AddLeadModal onClose={() => setAddOpen(false)} onAdded={load} />}
       {convertLead && (
         <OnboardingWizard
+          leadId={convertLead.id}
           onClose={() => setConvertLead(null)}
           onCreated={() => {
             setConvertLead(null);
@@ -238,7 +369,7 @@ export default function LeadsPage() {
               Refresh
             </button>
             <button onClick={() => setAddOpen(true)} className="btn-purple btn-shine inline-flex items-center gap-1.5">
-              <Sparkles size={14} /> Add lead
+              <Plus size={14} /> Add lead
             </button>
           </div>
         </div>
@@ -277,6 +408,43 @@ export default function LeadsPage() {
           })}
         </div>
 
+        {/* Agent filter chips */}
+        {agents.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-bold uppercase tracking-wider shrink-0" style={{ color: 'var(--color-text3)' }}>Agent</span>
+            {agents.map(agent => {
+              const isActive = agentFilter === agent.id;
+              const agentLeadCount = leads.filter(l => l.assignedTo === agent.id).length;
+              return (
+                <button
+                  key={agent.id}
+                  onClick={() => setAgentFilter(prev => prev === agent.id ? null : agent.id)}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all"
+                  style={isActive
+                    ? { background: `${agent.color}22`, border: `1px solid ${agent.color}55`, color: agent.color, transform: 'translateY(-1px)' }
+                    : { border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
+                >
+                  <span className="w-4 h-4 rounded-full inline-flex items-center justify-center text-[7px] font-bold shrink-0"
+                    style={{ background: agent.color, color: '#fff' }}>
+                    {agent.initials}
+                  </span>
+                  {agent.name.split(' ')[0]}
+                  <span className="text-[10px] opacity-60">{agentLeadCount}</span>
+                </button>
+              );
+            })}
+            {agentFilter && (
+              <button
+                onClick={() => setAgentFilter(null)}
+                className="text-[10px] px-2 py-0.5 rounded-full transition-colors"
+                style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
+              >
+                ✕ all
+              </button>
+            )}
+          </div>
+        )}
+
         {/* List */}
         {loading ? (
           <div className="bento-card p-12 flex items-center justify-center">
@@ -295,21 +463,39 @@ export default function LeadsPage() {
         ) : (
           <div className="bento-card overflow-hidden p-0">
             <div className="px-6 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--color-border2)' }}>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text3)' }}>
                   {filteredLeads.length} {filteredLeads.length === 1 ? 'lead' : 'leads'}
-                  {statusFilter ? ` · ${STATUS_CONFIG[statusFilter].label}` : ' · newest first'}
+                  {(() => {
+                    const parts: string[] = [];
+                    if (statusFilter) parts.push(STATUS_CONFIG[statusFilter].label);
+                    if (agentFilter) parts.push(agents.find(a => a.id === agentFilter)?.name.split(' ')[0] ?? '');
+                    return parts.length ? ` · ${parts.join(' · ')}` : ' · newest first';
+                  })()}
                 </span>
                 {statusFilter && (
                   <button
                     onClick={() => setStatusFilter(null)}
                     className="text-[10px] font-semibold px-2 py-0.5 rounded-full transition-colors"
                     style={{ background: STATUS_CONFIG[statusFilter].bg, color: STATUS_CONFIG[statusFilter].color, border: `1px solid ${STATUS_CONFIG[statusFilter].border}` }}
-                    title="Clear filter"
+                    title="Clear status filter"
                   >
-                    ✕ clear
+                    ✕ {STATUS_CONFIG[statusFilter].label}
                   </button>
                 )}
+                {agentFilter && (() => {
+                  const agent = agents.find(a => a.id === agentFilter);
+                  return agent ? (
+                    <button
+                      onClick={() => setAgentFilter(null)}
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full transition-colors"
+                      style={{ background: `${agent.color}18`, color: agent.color, border: `1px solid ${agent.color}40` }}
+                      title="Clear agent filter"
+                    >
+                      ✕ {agent.name.split(' ')[0]}
+                    </button>
+                  ) : null;
+                })()}
               </div>
               <span className="text-[10px] font-mono" style={{ color: 'var(--color-green)' }}>● LIVE</span>
             </div>
@@ -321,6 +507,23 @@ export default function LeadsPage() {
                       <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <h3 className="font-semibold truncate" style={{ color: 'var(--color-text)' }}>{lead.name}</h3>
                         <StatusDropdown lead={lead} onUpdate={updateStatus} />
+                        {lead.assignedTo && (() => {
+                          const agent = agents.find(t => t.id === lead.assignedTo);
+                          return agent ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full"
+                              style={{ background: `${agent.color}15`, color: agent.color, border: `1px solid ${agent.color}30` }}>
+                              <span className="w-3 h-3 rounded-full inline-flex items-center justify-center text-[7px] font-bold"
+                                style={{ background: agent.color, color: '#fff' }}>{agent.initials}</span>
+                              {agent.name}
+                            </span>
+                          ) : null;
+                        })()}
+                        {lead.tmStatus && (
+                          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+                            style={{ background: 'rgba(124,58,237,0.08)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.2)' }}>
+                            {lead.tmStatus}
+                          </span>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-4 text-xs mb-3 flex-wrap" style={{ color: 'var(--color-text3)' }}>
@@ -349,7 +552,8 @@ export default function LeadsPage() {
                       <p className="text-[10px] font-mono" style={{ color: 'var(--color-text3)' }}>
                         {formatDistanceToNow(new Date(lead.createdAt), { addSuffix: true })}
                       </p>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap justify-end">
+                        <AssignDropdown lead={lead} agents={agents} onAssign={assignLead} />
                         <a
                           href={`mailto:${lead.email}?subject=Re: ${lead.company} — AlgoLend`}
                           className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"

@@ -445,6 +445,198 @@ export function biztechInvoiceReadyEmail(inv: {
 </body></html>`;
 }
 
+export function commissionStatementEmail(stmt: {
+  agentName: string;
+  month: string;
+  commissions: {
+    clientName: string;
+    loanAmount: number | null;
+    commissionAmount: number;
+    status: string;
+    payrollDate: string | null;
+  }[];
+}) {
+  const fmtR = (n: number) =>
+    new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 2 }).format(n);
+
+  const total        = stmt.commissions.reduce((s, c) => s + c.commissionAmount, 0);
+  const pending      = stmt.commissions.filter(c => c.status === 'Pending Collection').reduce((s, c) => s + c.commissionAmount, 0);
+  const payrollReady = stmt.commissions.filter(c => c.status === 'Payroll Ready').reduce((s, c) => s + c.commissionAmount, 0);
+  const paid         = stmt.commissions.filter(c => c.status === 'Paid').reduce((s, c) => s + c.commissionAmount, 0);
+
+  const rows = stmt.commissions.map(c => `
+    <tr style="border-bottom:1px solid #eee">
+      <td style="padding:10px 8px;font-size:14px;color:#1a1f36">${c.clientName}</td>
+      <td style="padding:10px 8px;font-size:14px;color:#555;text-align:right">${c.loanAmount ? fmtR(c.loanAmount) : '—'}</td>
+      <td style="padding:10px 8px;font-size:14px;font-weight:600;color:#7C3AED;text-align:right">${fmtR(c.commissionAmount)}</td>
+      <td style="padding:10px 8px;text-align:center">
+        <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;
+          background:${c.status === 'Paid' ? '#d1fae5' : c.status === 'Payroll Ready' ? '#dbeafe' : '#fef3c7'};
+          color:${c.status === 'Paid' ? '#065f46' : c.status === 'Payroll Ready' ? '#1e40af' : '#92400e'}">
+          ${c.status}
+        </span>
+      </td>
+      <td style="padding:10px 8px;font-size:13px;color:#888;text-align:right">
+        ${c.payrollDate ? new Date(c.payrollDate + 'T00:00:00').toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+      </td>
+    </tr>`).join('');
+
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:640px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+
+  <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:36px 32px">
+    <p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px">AlgoLend</p>
+    <p style="color:#fff;font-size:22px;font-weight:700;margin:0">Commission Statement</p>
+    <p style="color:rgba(255,255,255,0.85);font-size:14px;margin:6px 0 0">${stmt.month}</p>
+  </div>
+
+  <div style="padding:32px">
+    <p style="font-size:16px;margin:0 0 6px">Hi ${stmt.agentName},</p>
+    <p style="color:#555;line-height:1.6;margin:0 0 28px">
+      Please find your commission statement for <strong>${stmt.month}</strong> below.
+      Commission becomes payable once a client's first deduction is successful.
+    </p>
+
+    <!-- Summary strip -->
+    <table style="width:100%;border-collapse:collapse;margin-bottom:28px">
+      <tr>
+        <td style="width:25%;padding:16px;background:#f9f7ff;border-radius:8px;text-align:center">
+          <p style="font-size:18px;font-weight:700;color:#7C3AED;margin:0">${fmtR(total)}</p>
+          <p style="font-size:11px;color:#888;margin:4px 0 0;text-transform:uppercase;letter-spacing:1px">Total</p>
+        </td>
+        <td style="width:4%"></td>
+        <td style="width:22%;padding:16px;background:#fffbeb;border-radius:8px;text-align:center">
+          <p style="font-size:16px;font-weight:700;color:#92400e;margin:0">${fmtR(pending)}</p>
+          <p style="font-size:11px;color:#888;margin:4px 0 0;text-transform:uppercase;letter-spacing:1px">Pending</p>
+        </td>
+        <td style="width:4%"></td>
+        <td style="width:22%;padding:16px;background:#dbeafe;border-radius:8px;text-align:center">
+          <p style="font-size:16px;font-weight:700;color:#1e40af;margin:0">${fmtR(payrollReady)}</p>
+          <p style="font-size:11px;color:#888;margin:4px 0 0;text-transform:uppercase;letter-spacing:1px">Payroll Ready</p>
+        </td>
+        <td style="width:4%"></td>
+        <td style="width:22%;padding:16px;background:#d1fae5;border-radius:8px;text-align:center">
+          <p style="font-size:16px;font-weight:700;color:#065f46;margin:0">${fmtR(paid)}</p>
+          <p style="font-size:11px;color:#888;margin:4px 0 0;text-transform:uppercase;letter-spacing:1px">Paid</p>
+        </td>
+      </tr>
+    </table>
+
+    <!-- Commission table -->
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead>
+        <tr style="background:#f5f6fa">
+          <th style="padding:10px 8px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888">Client</th>
+          <th style="padding:10px 8px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888">Loan Amount</th>
+          <th style="padding:10px 8px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888">Commission</th>
+          <th style="padding:10px 8px;text-align:center;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888">Status</th>
+          <th style="padding:10px 8px;text-align:right;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#888">Payroll Date</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+      <tfoot>
+        <tr style="background:#f9f7ff">
+          <td colspan="2" style="padding:12px 8px;font-weight:700;font-size:14px">Total Commission — ${stmt.month}</td>
+          <td style="padding:12px 8px;text-align:right;font-weight:700;font-size:16px;color:#7C3AED">${fmtR(total)}</td>
+          <td colspan="2"></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <p style="color:#888;font-size:13px;line-height:1.6;margin-top:28px;border-top:1px solid #eee;padding-top:20px">
+      Questions about your commission? Contact your manager or email
+      <a href="mailto:hr@algolend.co.za" style="color:#7C3AED">hr@algolend.co.za</a>.
+    </p>
+  </div>
+
+  <div style="background:#f5f6fa;padding:20px;text-align:center;font-size:12px;color:#aaa">
+    AlgoLend · MINT Platforms (Pty) Ltd · This is a confidential commission statement.
+  </div>
+</div>
+</body></html>`;
+}
+
+export function demoBookingEmail(info: {
+  leadName: string;
+  leadCompany: string;
+  leadEmail: string;
+  agentName: string;
+}) {
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:28px 32px">
+    <p style="color:#fff;font-size:20px;font-weight:700;margin:0">Demo Booked</p>
+    <p style="color:rgba(255,255,255,0.8);font-size:13px;margin:4px 0 0">AlgoLend · Telemarketer Pipeline</p>
+  </div>
+  <div style="padding:28px 32px">
+    <p style="color:#555;line-height:1.6">
+      <strong>${info.agentName}</strong> has booked a demo for a new prospect.
+    </p>
+    <div style="background:#f9f7ff;border:1px solid #e5e0ff;border-radius:12px;padding:20px;margin:20px 0">
+      <table style="width:100%;border-collapse:collapse">
+        <tr><td style="padding:5px 0;color:#888;font-size:13px;width:110px">Contact</td><td style="padding:5px 0;font-weight:600">${info.leadName}</td></tr>
+        <tr><td style="padding:5px 0;color:#888;font-size:13px">Company</td><td style="padding:5px 0;font-weight:600">${info.leadCompany}</td></tr>
+        <tr><td style="padding:5px 0;color:#888;font-size:13px">Email</td><td style="padding:5px 0"><a href="mailto:${info.leadEmail}" style="color:#7C3AED">${info.leadEmail}</a></td></tr>
+        <tr><td style="padding:5px 0;color:#888;font-size:13px">Agent</td><td style="padding:5px 0">${info.agentName}</td></tr>
+      </table>
+    </div>
+    <div style="text-align:center;margin:20px 0">
+      <a href="https://admin.mintplatforms.co.za/leads" style="background:#7C3AED;color:#fff;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;display:inline-block">
+        View lead in admin →
+      </a>
+    </div>
+  </div>
+  <div style="background:#f5f6fa;padding:16px;text-align:center;font-size:11px;color:#aaa">
+    AlgoLend · MINT Platforms (Pty) Ltd — internal notification
+  </div>
+</div>
+</body></html>`;
+}
+
+export function commissionUpdateEmail(info: {
+  agentName: string;
+  clientName: string;
+  commissionAmount: number;
+  status: 'Payroll Ready' | 'Paid';
+  payrollDate?: string | null;
+}) {
+  const fmtR = (n: number) =>
+    new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 2 }).format(n);
+  const isPaid = info.status === 'Paid';
+
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:${isPaid ? 'linear-gradient(135deg,#059669,#34D399)' : 'linear-gradient(135deg,#7C3AED,#9B5CF6)'};padding:28px 32px">
+    <p style="color:#fff;font-size:20px;font-weight:700;margin:0">${isPaid ? 'Commission Paid' : 'Commission Approved for Payroll'}</p>
+    <p style="color:rgba(255,255,255,0.8);font-size:13px;margin:4px 0 0">AlgoLend · ${info.clientName}</p>
+  </div>
+  <div style="padding:28px 32px">
+    <p style="font-size:16px;margin:0 0 8px">Hi ${info.agentName},</p>
+    <p style="color:#555;line-height:1.6;margin:0 0 20px">
+      ${isPaid
+        ? `Great news — your commission for <strong>${info.clientName}</strong> has been paid.`
+        : `Your commission for <strong>${info.clientName}</strong> has been approved and added to the next payroll run.`}
+    </p>
+    <div style="background:${isPaid ? '#f0fdf4' : '#f9f7ff'};border:1px solid ${isPaid ? '#bbf7d0' : '#e5e0ff'};border-radius:12px;padding:20px;margin-bottom:20px;text-align:center">
+      <p style="font-size:32px;font-weight:700;color:${isPaid ? '#059669' : '#7C3AED'};margin:0">${fmtR(info.commissionAmount)}</p>
+      <p style="color:#888;font-size:13px;margin:4px 0 0">${info.clientName} · ${info.status}</p>
+      ${info.payrollDate ? `<p style="color:#888;font-size:12px;margin:4px 0 0">Payroll date: ${info.payrollDate}</p>` : ''}
+    </div>
+    <p style="color:#888;font-size:13px;line-height:1.6">
+      Questions about your commission? Contact your manager or email
+      <a href="mailto:hr@algolend.co.za" style="color:#7C3AED">hr@algolend.co.za</a>.
+    </p>
+  </div>
+  <div style="background:#f5f6fa;padding:16px;text-align:center;font-size:11px;color:#aaa">
+    AlgoLend · MINT Platforms (Pty) Ltd · This is a confidential commission notification.
+  </div>
+</div>
+</body></html>`;
+}
+
 export function biztechQuoteEmail(q: {
   reference: string; clientName: string; contact: string;
   totalCents: number; validUntil: string | null; quoteId: string;

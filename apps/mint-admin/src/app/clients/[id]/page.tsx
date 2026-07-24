@@ -10,7 +10,7 @@ import { MarketplaceApplications } from '@/components/MarketplaceApplications';
 import {
   ArrowLeft, ExternalLink, Mail, Receipt, CheckCircle, AlertCircle,
   Clock, Send, Loader2, Activity, BarChart3, Building2, Calendar,
-  PlusCircle, X, Zap, Store, CheckCircle2, XCircle, FileText, Upload, CreditCard, Save, ScrollText, Copy, Link2,
+  PlusCircle, X, Zap, Store, CheckCircle2, XCircle, FileText, Upload, CreditCard, Save, ScrollText, Copy, Link2, KeyRound,
 } from 'lucide-react';
 
 // ─── Types ─────────────────────────────────────────────────────────────
@@ -55,6 +55,11 @@ interface AgreementDoc {
   storage_path: string; status: string; created_at: string;
 }
 
+interface ApiKey {
+  id: string; name: string; key_prefix: string;
+  last_used_at: string | null; created_at: string; revoked_at: string | null;
+}
+
 // ─── Helpers ────────────────────────────────────────────────────────────
 function fmt(cents: number) {
   return new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', maximumFractionDigits: 0 }).format(cents / 100);
@@ -88,7 +93,7 @@ export default function ClientDetailPage() {
   const [usage,      setUsage]      = useState<UsageRow[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [toast,      setToast]      = useState<{ kind: ToastKind; message: string } | null>(null);
-  const [activeTab,  setActiveTab]  = useState<'details' | 'invoices' | 'usage' | 'billing' | 'features' | 'marketplace' | 'agreement' | 'documents'>('invoices');
+  const [activeTab,  setActiveTab]  = useState<'details' | 'invoices' | 'usage' | 'billing' | 'features' | 'marketplace' | 'agreement' | 'documents' | 'api-keys'>('invoices');
   const [agreements, setAgreements] = useState<AgreementDoc[]>([]);
   const [documents,  setDocuments]  = useState<AgreementDoc[]>([]);
   const [lead, setLead] = useState<{ id: string; onboarding_token: string; onboarding_status: string; onboarding_data: Record<string, unknown>; created_at: string } | null>(null);
@@ -114,6 +119,13 @@ export default function ClientDetailPage() {
   const [apiSaving,     setApiSaving]     = useState(false);
   const [apiRotating,   setApiRotating]   = useState(false);
 
+  const [apiKeys,        setApiKeys]        = useState<ApiKey[]>([]);
+  const [apiKeysLoading, setApiKeysLoading] = useState(false);
+  const [newKeyName,     setNewKeyName]     = useState('Production');
+  const [newKeyCreating, setNewKeyCreating] = useState(false);
+  const [revealedKey,    setRevealedKey]    = useState<string | null>(null);
+  const [rotating,       setRotating]       = useState(false);
+
   type MpPolicy = { id: string; active: boolean; display_name: string; base_rate_pct: number; min_credit_score: number; min_amount: number; max_amount: number; tagline: string | null };
   const [mpPolicy,  setMpPolicy]  = useState<MpPolicy | null | undefined>(undefined); // undefined=unloaded
   const [mpLoading, setMpLoading] = useState(false);
@@ -128,6 +140,71 @@ export default function ClientDetailPage() {
       setMpPolicy(found);
     } finally {
       setMpLoading(false);
+    }
+  }
+
+  async function loadApiKeys() {
+    setApiKeysLoading(true);
+    try {
+      const res = await fetch(`/api/clients/${params.id}/api-keys`);
+      const data = await res.json();
+      setApiKeys(data.keys ?? []);
+    } finally {
+      setApiKeysLoading(false);
+    }
+  }
+
+  async function createKey() {
+    if (!newKeyName.trim()) return;
+    setNewKeyCreating(true);
+    try {
+      const res = await fetch(`/api/clients/${params.id}/api-keys`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newKeyName.trim() }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      const data = await res.json();
+      setRevealedKey(data.key);
+      setNewKeyName('Production');
+      loadApiKeys();
+    } catch (err) {
+      setToast({ kind: 'error', message: `Failed to create key: ${err instanceof Error ? err.message : err}` });
+    } finally {
+      setNewKeyCreating(false);
+    }
+  }
+
+  async function rotateKeys() {
+    if (!confirm('Rotate all keys? This revokes every active key and issues one new key. Client deployments must update their MINT_API_KEY env var immediately or usage logging will break.')) return;
+    setRotating(true);
+    try {
+      const res = await fetch(`/api/clients/${params.id}/api-keys?rotate=true`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: 'Production' }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      const data = await res.json();
+      setRevealedKey(data.key);
+      loadApiKeys();
+      setToast({ kind: 'success', message: 'All keys rotated — copy the new key now.' });
+    } catch (err) {
+      setToast({ kind: 'error', message: `Rotation failed: ${err instanceof Error ? err.message : err}` });
+    } finally {
+      setRotating(false);
+    }
+  }
+
+  async function revokeKey(keyId: string) {
+    if (!confirm('Revoke this key? Any client deployment using it will lose access immediately.')) return;
+    try {
+      const res = await fetch(`/api/clients/${params.id}/api-keys/${keyId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error((await res.json()).error);
+      setApiKeys(prev => prev.map(k => k.id === keyId ? { ...k, revoked_at: new Date().toISOString() } : k));
+      setToast({ kind: 'success', message: 'Key revoked.' });
+    } catch (err) {
+      setToast({ kind: 'error', message: `Revoke failed: ${err instanceof Error ? err.message : err}` });
     }
   }
 
@@ -389,6 +466,7 @@ export default function ClientDetailPage() {
             { id: 'invoices',    label: 'Invoices',    icon: Receipt,     count: invoices.length },
             { id: 'usage',       label: 'Usage',       icon: BarChart3,   count: null },
             { id: 'billing',     label: 'Billing',     icon: CreditCard,  count: null },
+            { id: 'api-keys',   label: 'API Keys',    icon: KeyRound,    count: null },
             { id: 'features',    label: 'Features',    icon: Activity,    count: enabledFeatures.length },
             { id: 'marketplace', label: 'Marketplace', icon: Store,       count: null },
             { id: 'documents',   label: 'Documents',   icon: Upload,      count: documents.length > 0 ? documents.length : null },
@@ -399,6 +477,7 @@ export default function ClientDetailPage() {
               onClick={() => {
                 setActiveTab(tab.id);
                 if (tab.id === 'marketplace' && mpPolicy === undefined) loadMp(client.id);
+                if (tab.id === 'api-keys' && apiKeys.length === 0 && !apiKeysLoading) loadApiKeys();
               }}
               className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors relative"
               style={{
@@ -839,6 +918,166 @@ export default function ClientDetailPage() {
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {/* ── API Keys tab ─────────────────────────────────────────────── */}
+        {activeTab === 'api-keys' && (
+          <div className="space-y-4 max-w-2xl">
+
+            {/* One-time key reveal banner */}
+            {revealedKey && (
+              <div className="p-4 rounded-xl space-y-3" style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.3)' }}>
+                <div className="flex items-center gap-2">
+                  <CheckCircle size={15} style={{ color: 'var(--color-green)', flexShrink: 0 }} />
+                  <p className="text-sm font-semibold flex-1" style={{ color: 'var(--color-green)' }}>Key generated — copy it now</p>
+                  <button onClick={() => setRevealedKey(null)} style={{ color: 'var(--color-text3)' }}><X size={14} /></button>
+                </div>
+                <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
+                  This key will <strong>not</strong> be shown again. Save it in your password manager before closing.
+                </p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 text-xs px-3 py-2.5 rounded-lg font-mono break-all select-all" style={{ background: 'rgba(0,0,0,0.25)', color: 'var(--color-green)', border: '1px solid rgba(52,211,153,0.2)' }}>
+                    {revealedKey}
+                  </code>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(revealedKey!); setToast({ kind: 'success', message: 'Key copied — store in password manager.' }); }}
+                    className="p-2 rounded-lg shrink-0 transition-colors"
+                    style={{ border: '1px solid rgba(52,211,153,0.3)', color: 'var(--color-green)' }}
+                    title="Copy"
+                  >
+                    <Copy size={13} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Create new key */}
+            <div className="bento-card p-5 space-y-4">
+              <div className="flex items-start justify-between gap-3 flex-wrap">
+                <div>
+                  <p className="eyebrow mb-0.5">Client API Keys</p>
+                  <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
+                    Bearer tokens that authenticate this client&apos;s deployment when calling MINT&apos;s{' '}
+                    <code className="font-mono text-[11px] px-1 rounded" style={{ background: 'rgba(255,255,255,0.06)' }}>POST /api/usage/log</code>.
+                    Keys begin with <code className="font-mono text-[11px] px-1 rounded" style={{ background: 'rgba(255,255,255,0.06)' }}>alg_</code> and are stored as SHA-256 hashes — shown once on creation.
+                  </p>
+                </div>
+                {apiKeys.some(k => !k.revoked_at) && (
+                  <button
+                    onClick={rotateKeys}
+                    disabled={rotating}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 shrink-0"
+                    style={{ background: 'rgba(248,113,113,0.08)', color: 'var(--color-red)', border: '1px solid rgba(248,113,113,0.2)' }}
+                    title="Revoke all active keys and issue one new key"
+                  >
+                    {rotating ? <Loader2 size={12} className="animate-spin" /> : <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>}
+                    {rotating ? 'Rotating…' : 'Rotate all'}
+                  </button>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newKeyName}
+                  onChange={e => setNewKeyName(e.target.value)}
+                  placeholder="Key name (e.g. Production)"
+                  className="field-input flex-1"
+                  onKeyDown={e => { if (e.key === 'Enter') createKey(); }}
+                />
+                <button
+                  onClick={createKey}
+                  disabled={newKeyCreating || !newKeyName.trim()}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50 shrink-0"
+                  style={{ background: 'rgba(124,58,237,0.12)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.25)' }}
+                >
+                  {newKeyCreating ? <Loader2 size={13} className="animate-spin" /> : <PlusCircle size={13} />}
+                  {newKeyCreating ? 'Creating…' : 'Generate key'}
+                </button>
+              </div>
+            </div>
+
+            {/* Key list */}
+            {apiKeysLoading ? (
+              <div className="bento-card p-10 flex items-center justify-center gap-3">
+                <Loader2 size={16} className="animate-spin" style={{ color: 'var(--color-violet)' }} />
+                <span className="text-sm" style={{ color: 'var(--color-text3)' }}>Loading keys…</span>
+              </div>
+            ) : apiKeys.length === 0 ? (
+              <div className="bento-card p-10 text-center">
+                <KeyRound size={20} className="mx-auto mb-3" style={{ color: 'var(--color-text3)' }} />
+                <p className="text-sm" style={{ color: 'var(--color-text3)' }}>No API keys yet — generate one above.</p>
+              </div>
+            ) : (
+              <div className="bento-card overflow-hidden">
+                {apiKeys.map((k, i) => {
+                  const isActive = !k.revoked_at;
+                  return (
+                    <div key={k.id} className="flex items-center gap-4 px-5 py-4" style={{ borderBottom: i < apiKeys.length - 1 ? '1px solid var(--color-border2)' : undefined }}>
+                      <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: isActive ? 'rgba(124,58,237,0.1)' : 'rgba(255,255,255,0.04)' }}>
+                        <KeyRound size={14} style={{ color: isActive ? 'var(--color-violet)' : 'var(--color-text3)' }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                          <p className="text-sm font-semibold" style={{ color: isActive ? 'var(--color-text)' : 'var(--color-text3)' }}>{k.name}</p>
+                          <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full" style={isActive
+                            ? { background: 'rgba(52,211,153,0.1)', color: 'var(--color-green)' }
+                            : { background: 'rgba(255,255,255,0.04)', color: 'var(--color-text3)' }}>
+                            {isActive ? 'Active' : 'Revoked'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-[11px] flex-wrap" style={{ color: 'var(--color-text3)' }}>
+                          <code className="font-mono" style={{ color: 'var(--color-text2)' }}>{k.key_prefix}••••••••••••••••••••</code>
+                          <span>Created {fmtDate(k.created_at)}</span>
+                          {k.last_used_at && <span style={{ color: 'var(--color-sky)' }}>Last used {fmtDate(k.last_used_at)}</span>}
+                          {k.revoked_at && <span style={{ color: 'var(--color-red)' }}>Revoked {fmtDate(k.revoked_at)}</span>}
+                        </div>
+                      </div>
+                      {isActive && (
+                        <button
+                          onClick={() => revokeKey(k.id)}
+                          className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors"
+                          style={{ background: 'rgba(248,113,113,0.08)', color: 'var(--color-red)', border: '1px solid rgba(248,113,113,0.15)' }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.18)'; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.08)'; }}
+                        >
+                          Revoke
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {/* SDK integration guide */}
+            <div className="bento-card p-5 space-y-3">
+              <p className="eyebrow">Integration guide</p>
+              <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
+                Add this to the client&apos;s Vercel project as <code className="font-mono text-[11px] px-1 rounded" style={{ background: 'rgba(255,255,255,0.06)' }}>MINT_API_KEY</code>, then call the endpoint from their server for each billable event.
+              </p>
+              <pre className="text-xs leading-relaxed p-4 rounded-xl overflow-x-auto font-mono" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>{`// server-side — never expose MINT_API_KEY client-side
+await fetch('https://admin.mintplatforms.co.za/api/usage/log', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: \`Bearer \${process.env.MINT_API_KEY}\`,
+  },
+  body: JSON.stringify({
+    service: 'bureau',   // cipc | bureau | banking | liveness | …
+    quantity: 1,
+    metadata: { applicant_id: '…' },
+  }),
+});`}</pre>
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                {['cipc', 'bureau', 'banking', 'contracts', 'liveness', 'homeaff', 'watchlist', 'address'].map(s => (
+                  <div key={s} className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg" style={{ background: 'rgba(124,58,237,0.06)', border: '1px solid rgba(124,58,237,0.12)' }}>
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: 'var(--color-violet)' }} />
+                    <code className="font-mono" style={{ color: 'var(--color-violet)' }}>{s}</code>
+                  </div>
+                ))}
+              </div>
+            </div>
+
           </div>
         )}
 

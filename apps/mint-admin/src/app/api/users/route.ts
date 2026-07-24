@@ -1,17 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { sendEmail, userInviteEmail } from '@/lib/email';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-/** GET /api/users — list all Supabase auth users */
-export async function GET() {
-  const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers();
+/** GET /api/users — list Supabase auth users, optionally filtered by ?role= */
+export async function GET(req: NextRequest) {
+  const role = req.nextUrl.searchParams.get('role');
+
+  const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({
-    users: users.map(u => ({
+  const mapped = users
+    .filter(u => !role || (u.user_metadata?.role ?? 'super_admin') === role)
+    .map(u => ({
       id:         u.id,
       email:      u.email,
       name:       u.user_metadata?.full_name ?? u.email?.split('@')[0] ?? 'Unknown',
@@ -19,17 +22,20 @@ export async function GET() {
       createdAt:  u.created_at,
       lastSignIn: u.last_sign_in_at ?? null,
       confirmed:  !!u.email_confirmed_at,
-    })),
-  });
+    }));
+
+  return NextResponse.json({ users: mapped });
 }
 
 // Roles the DB trigger's user_role enum understands. finance/support are
 // admin-console-only display roles stored in user_metadata, not in the enum.
 const PROFILE_ROLE_MAP: Record<string, string> = {
-  super_admin: 'super_admin',
-  admin:       'admin',
-  finance:     'admin',
-  support:     'admin',
+  super_admin:   'super_admin',
+  admin:         'admin',
+  manager:       'admin',
+  telemarketer:  'admin',
+  finance:       'admin',
+  support:       'admin',
 };
 
 /** POST /api/users — create user and return a one-time setup link (no SMTP required) */

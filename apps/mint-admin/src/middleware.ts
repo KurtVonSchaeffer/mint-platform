@@ -165,12 +165,35 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && pathname === '/login') {
-    // Already logged in → skip login page
-    const next = request.nextUrl.searchParams.get('next') ?? '/';
+    const role = (user.user_metadata?.role as string | undefined) ?? 'support';
+    const next = request.nextUrl.searchParams.get('next');
+    const defaultHome = ['telemarketer', 'manager'].includes(role) ? '/telemarketer' : '/';
     const homeUrl = request.nextUrl.clone();
-    homeUrl.pathname = next;
+    homeUrl.pathname = next ?? defaultHome;
     homeUrl.search = '';
     return NextResponse.redirect(homeUrl);
+  }
+
+  // Gate /telemarketer routes — only these roles may enter
+  if (user && pathname.startsWith('/telemarketer')) {
+    const role = (user.user_metadata?.role as string | undefined) ?? 'support';
+    if (!['super_admin', 'manager', 'telemarketer'].includes(role)) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = '/';
+      redirectUrl.search = '';
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
+  // Redirect telemarketer/manager away from admin routes
+  if (user && !pathname.startsWith('/telemarketer') && !pathname.startsWith('/api/') && !isPublic) {
+    const role = (user.user_metadata?.role as string | undefined) ?? 'support';
+    if (['telemarketer', 'manager'].includes(role)) {
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = '/telemarketer';
+      redirectUrl.search = '';
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
   if (user && pathname.startsWith('/api/') && !isPublic) {

@@ -9,9 +9,10 @@ import {
   CreditCard, Globe, Scale, Gauge, Link2, Banknote, PiggyBank,
   ToggleLeft, Activity, ShieldCheck, ArrowDownToLine, Users2, SlidersHorizontal,
   LogOut, Sun, Moon, Menu, X, Bell, Plus, UserPlus, ChevronDown, ChevronRight,
-  Loader2, CheckCircle2, AlertTriangle, AlertCircle, Settings,
+  Loader2, CheckCircle2, AlertTriangle, AlertCircle, Settings, Search, TrendingUp,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
+import { CommandPalette } from '@/components/CommandPalette';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 
@@ -23,9 +24,10 @@ type NavSection = { section: string };
 // Routes each role can access. super_admin gets everything.
 const ROLE_ROUTES: Record<string, string[]> = {
   super_admin:   ['*'],
-  admin:         ['/', '/clients', '/leads', '/applications', '/pricing', '/quotes', '/invoices', '/billing', '/marketplace', '/features', '/usage', '/compliance', '/migration'],
-  finance:       ['/', '/pricing', '/quotes', '/invoices', '/billing'],
+  admin:         ['/', '/clients', '/leads', '/sales', '/applications', '/pricing', '/quotes', '/invoices', '/billing', '/marketplace', '/features', '/usage', '/compliance', '/migration', '/payroll'],
+  finance:       ['/', '/pricing', '/quotes', '/invoices', '/billing', '/payroll'],
   support:       ['/', '/clients', '/leads', '/applications'],
+  manager:       ['/telemarketer', '/payroll'],
 };
 
 const ROLE_LABELS: Record<string, { label: string; color: string }> = {
@@ -33,6 +35,8 @@ const ROLE_LABELS: Record<string, { label: string; color: string }> = {
   admin:       { label: 'Admin',       color: '#60A5FA' },
   finance:     { label: 'Finance',     color: '#34D399' },
   support:     { label: 'Support',     color: '#FBBF24' },
+  manager:     { label: 'Manager',     color: '#FB923C' },
+  telemarketer:{ label: 'Telemarketer',color: '#34D399' },
 };
 
 function canAccess(href: string, role: string): boolean {
@@ -46,6 +50,7 @@ const nav: (NavItem | NavGroup | NavSection)[] = [
   { label: 'Dashboard',    href: '/',            icon: LayoutGrid     },
   { label: 'Clients',      href: '/clients',     icon: Building2      },
   { label: 'Leads',        href: '/leads',        icon: Filter         },
+  { label: 'Sales',        href: '/sales',        icon: TrendingUp     },
   { label: 'Applications', href: '/applications', icon: Inbox          },
   { section: 'Finance' },
   {
@@ -56,6 +61,7 @@ const nav: (NavItem | NavGroup | NavSection)[] = [
       { label: 'Quotes',        href: '/quotes',   icon: ScrollText },
       { label: 'Invoices',      href: '/invoices', icon: Receipt    },
       { label: 'Subscriptions', href: '/billing',  icon: CreditCard },
+      { label: 'Payroll',       href: '/payroll',  icon: Banknote   },
     ],
   },
   {
@@ -109,8 +115,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [openGroups, setOpenGroups]   = useState<Set<string>>(new Set());
   const [newOpen,    setNewOpen]    = useState(false);
   const [bellOpen,   setBellOpen]   = useState(false);
-  const [searchQ,    setSearchQ]    = useState('');
-  const [searchOpen, setSearchOpen] = useState(false);
+  const [cmdOpen,    setCmdOpen]    = useState(false);
 
   type NotifItem = { kind: 'warn' | 'info' | 'ok'; text: string; sub: string; href: string };
   const [notifs,        setNotifs]        = useState<NotifItem[]>([]);
@@ -122,11 +127,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const [userName,     setUserName]     = useState('Super Admin');
   const [userRole,     setUserRole]     = useState<string>('super_admin');
   const [appOpen, setAppOpen] = useState(false);
+  const [stmtSending, setStmtSending] = useState(false);
+  const [stmtToast,   setStmtToast]   = useState<{ ok: boolean; msg: string } | null>(null);
   const appRef    = useRef<HTMLDivElement>(null);
   const newRef    = useRef<HTMLDivElement>(null);
   const bellRef   = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-expand accordion group when a child route is active
   useEffect(() => {
@@ -163,33 +168,50 @@ export function Shell({ children }: { children: React.ReactNode }) {
       if (appRef.current && !appRef.current.contains(e.target as Node)) setAppOpen(false);
       if (newRef.current && !newRef.current.contains(e.target as Node)) setNewOpen(false);
       if (bellRef.current && !bellRef.current.contains(e.target as Node)) setBellOpen(false);
-      if (searchRef.current && !searchRef.current.contains(e.target as Node)) setSearchOpen(false);
     }
     document.addEventListener('mousedown', handle);
     return () => document.removeEventListener('mousedown', handle);
   }, []);
+
+  async function loadNotifs(): Promise<NotifItem[]> {
+    const [clientsData, leadsData] = await Promise.all([
+      fetch('/api/clients').then(r => r.json()),
+      fetch('/api/leads?tm_status=Demo%20Booked').then(r => r.json()).catch(() => ({ leads: [] })),
+    ]);
+    const items: NotifItem[] = [];
+    if (Array.isArray(clientsData.clients)) {
+      const suspended = clientsData.clients.filter((c: Record<string, unknown>) => c.status === 'suspended');
+      const trials    = clientsData.clients.filter((c: Record<string, unknown>) => c.status === 'trial');
+      const noMrr     = clientsData.clients.filter((c: Record<string, unknown>) => c.status === 'active' && Number(c.monthly_fee_cents ?? 0) === 0);
+      suspended.forEach((c: Record<string, unknown>) =>
+        items.push({ kind: 'warn', text: `${c.name} suspended`, sub: 'Portal unreachable — check payment status', href: `/clients/${c.id}` }));
+      noMrr.forEach((c: Record<string, unknown>) =>
+        items.push({ kind: 'warn', text: `${c.name} has no MRR`, sub: 'Active client with R 0 monthly fee set', href: `/clients/${c.id}` }));
+      if (trials.length > 0)
+        items.push({ kind: 'info', text: `${trials.length} trial client${trials.length > 1 ? 's' : ''} pending`, sub: 'Convert to active to start billing', href: '/clients' });
+    }
+    const demoLeads = Array.isArray(leadsData.leads) ? leadsData.leads : [];
+    if (demoLeads.length > 0) {
+      items.push({
+        kind: 'info',
+        text: `${demoLeads.length} demo${demoLeads.length > 1 ? 's' : ''} booked`,
+        sub:  demoLeads.length === 1
+          ? `${(demoLeads[0] as Record<string, unknown>).company ?? (demoLeads[0] as Record<string, unknown>).name} — awaiting follow-up`
+          : 'Leads with demos booked — review pipeline',
+        href: '/leads',
+      });
+    }
+    if (items.length === 0)
+      items.push({ kind: 'ok', text: 'All clear', sub: 'No issues detected across your platform', href: '/' });
+    return items;
+  }
 
   async function openBell() {
     setBellOpen(o => !o);
     if (notifsLoaded) return;
     setNotifsLoading(true);
     try {
-      const { clients } = await fetch('/api/clients').then(r => r.json());
-      const items: NotifItem[] = [];
-      if (Array.isArray(clients)) {
-        const suspended = clients.filter((c: Record<string, unknown>) => c.status === 'suspended');
-        const trials    = clients.filter((c: Record<string, unknown>) => c.status === 'trial');
-        const noMrr     = clients.filter((c: Record<string, unknown>) => c.status === 'active' && Number(c.monthly_fee_cents ?? 0) === 0);
-        suspended.forEach((c: Record<string, unknown>) =>
-          items.push({ kind: 'warn', text: `${c.name} suspended`, sub: 'Portal unreachable — check payment status', href: `/clients/${c.id}` }));
-        noMrr.forEach((c: Record<string, unknown>) =>
-          items.push({ kind: 'warn', text: `${c.name} has no MRR`, sub: 'Active client with R 0 monthly fee set', href: `/clients/${c.id}` }));
-        if (trials.length > 0)
-          items.push({ kind: 'info', text: `${trials.length} trial client${trials.length > 1 ? 's' : ''} pending`, sub: 'Convert to active to start billing', href: '/clients' });
-        if (items.length === 0)
-          items.push({ kind: 'ok', text: 'All clear', sub: 'No issues detected across your platform', href: '/' });
-      }
-      setNotifs(items);
+      setNotifs(await loadNotifs());
       setNotifsLoaded(true);
     } catch {
       setNotifs([{ kind: 'warn', text: 'Could not load notifications', sub: 'Check your Supabase connection', href: '/settings' }]);
@@ -198,15 +220,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Keyboard shortcut ⌘K / Ctrl+K to focus search
+  // Keyboard shortcut ⌘K / Ctrl+K → Command Palette
   useEffect(() => {
     function handle(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
-        setSearchOpen(true);
-        searchInputRef.current?.focus();
+        setCmdOpen(o => !o);
       }
-      if (e.key === 'Escape') { setSearchOpen(false); setNewOpen(false); }
+      if (e.key === 'Escape') { setNewOpen(false); setCmdOpen(false); }
     }
     document.addEventListener('keydown', handle);
     return () => document.removeEventListener('keydown', handle);
@@ -217,21 +238,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
     router.push('/login');
     router.refresh();
   }
-
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const q = searchQ.trim();
-    if (!q) return;
-    const match = flatNav.find(n => n.label.toLowerCase().includes(q.toLowerCase()));
-    if (match) router.push(match.href);
-    else router.push(`/clients?q=${encodeURIComponent(q)}`);
-    setSearchQ('');
-    setSearchOpen(false);
-  }
-
-  const filteredNav = searchQ.trim()
-    ? flatNav.filter(n => n.label.toLowerCase().includes(searchQ.toLowerCase()))
-    : [];
 
   const isLight = theme === 'light';
 
@@ -266,6 +272,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen" style={{ background: 'var(--color-ink)' }}>
+      {cmdOpen && <CommandPalette onClose={() => setCmdOpen(false)} />}
 
       {/* ── Mobile header ────────────────────────────────────── */}
       <div
@@ -313,68 +320,23 @@ export function Shell({ children }: { children: React.ReactNode }) {
         <span style={{ color: 'var(--color-border3)', fontSize: 12, lineHeight: 1, opacity: 0.5 }}>›</span>
 
         {/* ── Search ── */}
-        <div ref={searchRef} className="flex-1 max-w-md relative">
-          <form onSubmit={handleSearch}>
-            <div className="relative flex items-center">
-              <input
-                ref={searchInputRef}
-                value={searchQ}
-                onChange={e => { setSearchQ(e.target.value); setSearchOpen(true); }}
-                onFocus={() => setSearchOpen(true)}
-                placeholder="Search…"
-                aria-label="Search navigation"
-                className="w-full pl-4 pr-16 py-1.5 text-sm rounded-xl transition-all field-input"
-                style={{
-                  background: navColors.searchBg,
-                  border: `1px solid ${searchOpen ? 'rgba(124,58,237,0.4)' : navColors.topBarBorder}`,
-                  color: 'var(--color-text)',
-                  boxShadow: searchOpen ? '0 0 0 3px rgba(124,58,237,0.1)' : 'none',
-                }}
-              />
-              {!searchQ && (
-                <kbd
-                  className="absolute right-3 text-[10px] px-1.5 py-0.5 rounded font-mono pointer-events-none"
-                  style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--color-text3)', border: '1px solid rgba(255,255,255,0.08)' }}
-                >
-                  ⌘K
-                </kbd>
-              )}
-            </div>
-          </form>
-
-          {/* Search dropdown */}
-          {searchOpen && filteredNav.length > 0 && (
-            <div
-              className="absolute top-full left-0 right-0 mt-2 rounded-xl overflow-hidden shadow-2xl z-50"
-              style={{
-                background: 'var(--color-surface)',
-                border: '1px solid var(--color-border2)',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px rgba(124,58,237,0.1)',
-              }}
-            >
-              {filteredNav.slice(0, 6).map(n => (
-                <Link
-                  key={n.href}
-                  href={n.href}
-                  onClick={() => { setSearchOpen(false); setSearchQ(''); }}
-                  className="flex items-center gap-3 px-4 py-2.5 text-sm transition-colors"
-                  style={{ color: 'var(--color-text2)' }}
-                  onMouseEnter={e => {
-                    (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.08)';
-                    (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)';
-                  }}
-                  onMouseLeave={e => {
-                    (e.currentTarget as HTMLElement).style.background = 'transparent';
-                    (e.currentTarget as HTMLElement).style.color = 'var(--color-text2)';
-                  }}
-                >
-                  <n.icon size={14} className="shrink-0 opacity-60" />
-                  {n.label}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+        <button
+          onClick={() => setCmdOpen(true)}
+          className="flex-1 max-w-md flex items-center gap-2 px-4 py-1.5 text-sm rounded-xl text-left transition-all"
+          style={{
+            background: navColors.searchBg,
+            border: `1px solid ${navColors.topBarBorder}`,
+            color: 'var(--color-text3)',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.4)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = navColors.topBarBorder; }}
+        >
+          <Search size={13} style={{ flexShrink: 0 }} />
+          <span className="flex-1">Search pages, features…</span>
+          <kbd className="text-[10px] px-1.5 py-0.5 rounded font-mono" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            ⌘K
+          </kbd>
+        </button>
 
         <div className="ml-auto flex items-center gap-2">
           {/* Notifications bell */}
@@ -475,18 +437,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                       setNotifs([]);
                       setNotifsLoading(true);
                       try {
-                        const { clients } = await fetch('/api/clients').then(r => r.json());
-                        const items: NotifItem[] = [];
-                        if (Array.isArray(clients)) {
-                          clients.filter((c: Record<string, unknown>) => c.status === 'suspended')
-                            .forEach((c: Record<string, unknown>) => items.push({ kind: 'warn', text: `${c.name} suspended`, sub: 'Portal unreachable — check payment', href: `/clients/${c.id}` }));
-                          clients.filter((c: Record<string, unknown>) => c.status === 'active' && Number(c.monthly_fee_cents ?? 0) === 0)
-                            .forEach((c: Record<string, unknown>) => items.push({ kind: 'warn', text: `${c.name} has no MRR`, sub: 'Active client with R 0 monthly fee', href: `/clients/${c.id}` }));
-                          const trials = clients.filter((c: Record<string, unknown>) => c.status === 'trial');
-                          if (trials.length > 0) items.push({ kind: 'info', text: `${trials.length} trial client${trials.length > 1 ? 's' : ''}`, sub: 'Convert to active to start billing', href: '/clients' });
-                          if (items.length === 0) items.push({ kind: 'ok', text: 'All clear', sub: 'No issues detected', href: '/' });
-                        }
-                        setNotifs(items);
+                        setNotifs(await loadNotifs());
                         setNotifsLoaded(true);
                       } catch {
                         setNotifs([{ kind: 'warn', text: 'Refresh failed', sub: 'Check your connection', href: '/settings' }]);
@@ -523,6 +474,65 @@ export function Shell({ children }: { children: React.ReactNode }) {
           >
             {isLight ? <Moon size={14} /> : <Sun size={14} />}
           </button>
+
+          {/* Send Commission Statements — admin/manager only */}
+          {['super_admin', 'admin', 'manager'].includes(userRole) && (
+            <div className="relative">
+              <button
+                onClick={async () => {
+                  if (stmtSending) return;
+                  setStmtSending(true);
+                  setStmtToast(null);
+                  try {
+                    const res = await fetch('/api/cron/monthly-statements', { method: 'POST' });
+                    const data = await res.json();
+                    setStmtToast(res.ok
+                      ? { ok: true,  msg: `Sent to ${data.agentsProcessed ?? 0} agent${data.agentsProcessed !== 1 ? 's' : ''} (${data.monthLabel ?? ''})` }
+                      : { ok: false, msg: data.error ?? 'Failed to send statements' }
+                    );
+                  } catch {
+                    setStmtToast({ ok: false, msg: 'Network error — statements not sent' });
+                  } finally {
+                    setStmtSending(false);
+                    setTimeout(() => setStmtToast(null), 4000);
+                  }
+                }}
+                disabled={stmtSending}
+                aria-label="Send commission statements"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                style={{
+                  background: 'rgba(167,139,250,0.08)',
+                  color: '#A78BFA',
+                  border: '1px solid rgba(167,139,250,0.2)',
+                  opacity: stmtSending ? 0.6 : 1,
+                }}
+                onMouseEnter={e => { if (!stmtSending) (e.currentTarget as HTMLElement).style.background = 'rgba(167,139,250,0.15)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(167,139,250,0.08)'; }}
+              >
+                {stmtSending
+                  ? <Loader2 size={12} className="animate-spin" />
+                  : <Banknote size={12} />}
+                Statements
+              </button>
+
+              {stmtToast && (
+                <div
+                  className="absolute right-0 top-full mt-2 w-64 px-3 py-2.5 rounded-xl text-xs font-medium z-50"
+                  style={{
+                    background: stmtToast.ok ? 'rgba(52,211,153,0.12)' : 'rgba(248,113,113,0.12)',
+                    border: `1px solid ${stmtToast.ok ? 'rgba(52,211,153,0.25)' : 'rgba(248,113,113,0.25)'}`,
+                    color: stmtToast.ok ? '#34D399' : '#F87171',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                  }}
+                >
+                  {stmtToast.ok
+                    ? <CheckCircle2 size={12} className="inline mr-1.5" />
+                    : <AlertCircle  size={12} className="inline mr-1.5" />}
+                  {stmtToast.msg}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* New+ dropdown */}
           <div ref={newRef} className="relative">
