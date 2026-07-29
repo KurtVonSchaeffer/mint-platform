@@ -91,6 +91,8 @@ export function OnboardingWizard({ onClose, onCreated, initialValues, leadId }: 
     Object.fromEntries(ALL_FEATURES.map((f) => [f, DEFAULT_FEATURES_BY_TIER.core.includes(f)])),
   );
   const [docFiles, setDocFiles]           = useState<Record<string, File | null>>({});
+  const [ncrOcrState, setNcrOcrState]     = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+  const [ncrOcrExtracted, setNcrOcrExtracted] = useState<string | null>(null);
   const [mpOptIn, setMpOptIn]             = useState(false);
   const [mpLoanTypes, setMpLoanTypes]     = useState<string[]>([]);
   const [mpMaxAmount, setMpMaxAmount]     = useState('50000');
@@ -114,6 +116,25 @@ export function OnboardingWizard({ onClose, onCreated, initialValues, leadId }: 
 
   function toggleFeature(flag: string) {
     setFeatures((prev) => ({ ...prev, [flag]: !prev[flag] }));
+  }
+
+  async function runNcrOcr(file: File) {
+    setNcrOcrState('loading');
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res  = await fetch('/api/ocr/ncr', { method: 'POST', body: fd });
+      const data = await res.json();
+      if (res.ok && data.ncr_number) {
+        setNcrOcrExtracted(data.ncr_number);
+        if (!ncrNumber.trim()) setNcrNumber(data.ncr_number);
+        setNcrOcrState('done');
+      } else {
+        setNcrOcrState('error');
+      }
+    } catch {
+      setNcrOcrState('error');
+    }
   }
 
   const stepIndex = STEPS.findIndex((s) => s.id === step);
@@ -662,10 +683,45 @@ export function OnboardingWizard({ onClose, onCreated, initialValues, leadId }: 
                         )}
                       </div>
                       <input type="file" className="sr-only" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                        onChange={(e) => { const f = e.target.files?.[0] ?? null; setDocFiles((p) => ({ ...p, [doc.id]: f })); e.target.value = ''; }} />
+                        onChange={(e) => {
+                          const f = e.target.files?.[0] ?? null;
+                          setDocFiles((p) => ({ ...p, [doc.id]: f }));
+                          if (doc.id === 'ncr_cert' && f) {
+                            setNcrOcrState('idle');
+                            setNcrOcrExtracted(null);
+                            runNcrOcr(f);
+                          }
+                          if (doc.id === 'ncr_cert' && !f) {
+                            setNcrOcrState('idle');
+                            setNcrOcrExtracted(null);
+                          }
+                          e.target.value = '';
+                        }} />
                     </label>
                   );
                 })}
+                {ncrOcrState === 'loading' && (
+                  <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs"
+                    style={{ background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.15)', color: 'var(--color-violet)' }}>
+                    <Loader2 size={12} className="animate-spin shrink-0" />
+                    Reading NCR certificate — NCR number will auto-fill…
+                  </div>
+                )}
+                {ncrOcrState === 'done' && ncrOcrExtracted && (
+                  <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs"
+                    style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)', color: 'var(--color-green)' }}>
+                    <Check size={12} className="shrink-0" strokeWidth={2.5} />
+                    NCR number extracted: <span className="font-mono font-bold ml-1">{ncrOcrExtracted}</span>
+                    <span className="ml-1" style={{ color: 'var(--color-text3)' }}>— pre-filled in Details step</span>
+                  </div>
+                )}
+                {ncrOcrState === 'error' && (
+                  <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs"
+                    style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.2)', color: 'var(--color-red)' }}>
+                    <AlertCircle size={12} className="shrink-0" />
+                    Couldn&apos;t read NCR number automatically — please enter it manually in the Details step.
+                  </div>
+                )}
                 <p className="text-[11px] pt-1" style={{ color: 'var(--color-text3)' }}>
                   Accepted: PDF, JPG, PNG, Word. Missing documents can be uploaded later from the client profile.
                 </p>
