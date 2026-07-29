@@ -72,6 +72,7 @@ function deriveStatements(commissions: ApiCommission[]): MonthlyStatement[] {
 
 function StatementCard({ stmt }: { stmt: MonthlyStatement }) {
   const [expanded, setExpanded] = useState(false);
+  const [pdfFlash, setPdfFlash] = useState(false);
 
   const statusCfg = {
     Paid:       { bg: 'rgba(16,185,129,0.1)',  color: '#10B981', border: 'rgba(16,185,129,0.2)' },
@@ -171,8 +172,8 @@ function StatementCard({ stmt }: { stmt: MonthlyStatement }) {
               style={{ background: 'rgba(124,58,237,0.08)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.2)' }}
               onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.15)'; }}
               onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.08)'; }}
-              onClick={() => alert(`PDF export coming soon for ${stmt.label}.`)}>
-              <Download size={12} /> Download PDF
+              onClick={() => { setPdfFlash(true); setTimeout(() => setPdfFlash(false), 3500); }}>
+              <Download size={12} /> {pdfFlash ? 'PDF export coming soon' : 'Download PDF'}
             </button>
           </div>
         </div>
