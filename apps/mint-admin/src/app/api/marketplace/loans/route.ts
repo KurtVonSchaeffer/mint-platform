@@ -12,10 +12,11 @@ export async function GET() {
       offered_amount, offered_rate_pct, offered_term_months,
       monthly_installment, total_repayment, initiation_fee,
       quote_requests (
-        reference, consumer_email, consumer_name,
-        requested_amount, requested_term, credit_profile, created_at
+        reference, consumer_email, consumer_name, consumer_id_number,
+        consumer_mobile, purpose, requested_amount, requested_term,
+        credit_profile, created_at
       ),
-      clients ( name, slug )
+      clients:client_id ( name, slug )
     `)
     .eq('status', 'accepted')
     .order('accepted_at', { ascending: false });

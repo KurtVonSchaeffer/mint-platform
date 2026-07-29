@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import {
   Loader2, Phone, Calendar, Building2, Plus, RefreshCw,
-  TrendingUp, Trophy, Target, Clock,
+  TrendingUp, Trophy, Target, Clock, Sparkles, MessageSquare,
+  Star, CalendarClock, CalendarCheck2, FileText, Scale, XCircle,
+  PhoneOutgoing, ArrowRight, ChevronRight,
 } from 'lucide-react';
 import { getAgentId } from '@/lib/telemarketer-agent';
 
@@ -20,19 +22,18 @@ interface Lead {
 }
 
 const STAGES = [
-  { id: 'New Lead',           color: '#A78BFA', rgb: '167,139,250', emoji: '🌱' },
-  { id: 'Attempted Contact',  color: '#60A5FA', rgb: '96,165,250',  emoji: '📞' },
-  { id: 'Contacted',          color: '#38BDF8', rgb: '56,189,248',  emoji: '💬' },
-  { id: 'Interested',         color: '#FBBF24', rgb: '251,191,36',  emoji: '⚡' },
-  { id: 'Demo Scheduled',     color: '#FB923C', rgb: '251,146,60',  emoji: '📅' },
-  { id: 'Demo Completed',     color: '#F472B6', rgb: '244,114,182', emoji: '✅' },
-  { id: 'Proposal Sent',      color: '#818CF8', rgb: '129,140,248', emoji: '📄' },
-  { id: 'Negotiation',        color: '#34D399', rgb: '52,211,153',  emoji: '🤝' },
-  { id: 'Won',                color: '#10B981', rgb: '16,185,129',  emoji: '🏆' },
-  { id: 'Lost',               color: '#F87171', rgb: '248,113,113', emoji: '❌' },
+  { id: 'New Lead',          color: '#A78BFA', rgb: '167,139,250', icon: Sparkles,        tip: 'Fresh leads to reach out to'       },
+  { id: 'Attempted Contact', color: '#60A5FA', rgb: '96,165,250',  icon: PhoneOutgoing,   tip: 'Called but no connection yet'      },
+  { id: 'Contacted',         color: '#38BDF8', rgb: '56,189,248',  icon: MessageSquare,   tip: 'Spoke with the lead'               },
+  { id: 'Interested',        color: '#FBBF24', rgb: '251,191,36',  icon: Star,            tip: 'Showing genuine interest'          },
+  { id: 'Demo Scheduled',    color: '#FB923C', rgb: '251,146,60',  icon: CalendarClock,   tip: 'Demo booked and confirmed'         },
+  { id: 'Demo Completed',    color: '#F472B6', rgb: '244,114,182', icon: CalendarCheck2,  tip: 'Demo done, following up'           },
+  { id: 'Proposal Sent',     color: '#818CF8', rgb: '129,140,248', icon: FileText,        tip: 'Proposal delivered'                },
+  { id: 'Negotiation',       color: '#34D399', rgb: '52,211,153',  icon: Scale,           tip: 'Working out the details'           },
+  { id: 'Won',               color: '#10B981', rgb: '16,185,129',  icon: Trophy,          tip: 'Deal closed — commission incoming' },
+  { id: 'Lost',              color: '#F87171', rgb: '248,113,113', icon: XCircle,         tip: 'Mark as lost and move on'          },
 ];
 
-// Map legacy statuses to current pipeline stages
 const LEGACY_MAP: Record<string, string> = {
   Pending:          'New Lead',
   'Call Again':     'Contacted',
@@ -62,6 +63,59 @@ function isOverdue(iso: string | null) {
 function isDueToday(iso: string | null) {
   if (!iso) return false;
   return iso.startsWith(new Date().toISOString().split('T')[0]);
+}
+
+function initials(name: string) {
+  return name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+}
+
+// Mini inline funnel bar — shows lead distribution across stages
+function PipelineFunnel({ leads }: { leads: Lead[] }) {
+  const total = leads.length;
+  if (total === 0) return null;
+
+  const counts = STAGES.map(s => ({
+    ...s,
+    count: leads.filter(l => normalizeStatus(l.tm_status) === s.id).length,
+  })).filter(s => s.count > 0);
+
+  return (
+    <div className="bento-card p-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--color-text3)' }}>
+          Pipeline Distribution
+        </p>
+        <p className="text-[10px]" style={{ color: 'var(--color-text3)' }}>{total} total leads</p>
+      </div>
+      {/* Stacked bar */}
+      <div className="flex h-3 rounded-full overflow-hidden gap-px">
+        {counts.map(s => (
+          <div
+            key={s.id}
+            title={`${s.id}: ${s.count}`}
+            style={{
+              flex: s.count,
+              background: s.color,
+              opacity: 0.85,
+              minWidth: 4,
+              transition: 'flex 0.6s cubic-bezier(0.16,1,0.3,1)',
+            }}
+          />
+        ))}
+      </div>
+      {/* Legend */}
+      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2.5">
+        {counts.map(s => (
+          <div key={s.id} className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full shrink-0" style={{ background: s.color }} />
+            <span className="text-[9px]" style={{ color: 'var(--color-text3)' }}>
+              {s.id} <span className="font-bold" style={{ color: s.color }}>{s.count}</span>
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export default function PipelinePage() {
@@ -102,8 +156,8 @@ export default function PipelinePage() {
   const totalLeads = leads.length;
   const wonLeads   = leads.filter(l => normalizeStatus(l.tm_status) === 'Won').length;
   const convRate   = totalLeads > 0 ? Math.round((wonLeads / totalLeads) * 100) : 0;
+  const overdueAll = leads.filter(l => isOverdue(l.next_follow_up)).length;
   const dueToday   = leads.filter(l => isDueToday(l.next_follow_up)).length;
-  const overdue    = leads.filter(l => isOverdue(l.next_follow_up)).length;
 
   if (loading) {
     return (
@@ -114,74 +168,141 @@ export default function PipelinePage() {
   }
 
   return (
-    <div className="space-y-5 page-enter">
+    <div className="space-y-4 page-enter">
 
-      {/* Header */}
+      {/* ── Header ───────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <p className="eyebrow mb-1">Sales Pipeline</p>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--color-text)', letterSpacing: '-0.025em' }}>
             My Pipeline
           </h1>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--color-text3)' }}>
+            Drag cards between stages to advance leads
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={load}
-            className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors"
-            style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>
+          <button
+            onClick={load}
+            className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors cursor-pointer"
+            style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+          >
             <RefreshCw size={13} /> Refresh
           </button>
-          <Link href="/telemarketer/leads"
-            className="btn-purple btn-shine inline-flex items-center gap-1.5 !text-xs !py-2 !px-3">
+          <Link
+            href="/telemarketer/leads"
+            className="btn-purple btn-shine inline-flex items-center gap-1.5 !text-xs !py-2 !px-3"
+          >
             <Plus size={12} /> Add Lead
           </Link>
         </div>
       </div>
 
-      {/* Summary strip */}
+      {/* ── KPI Strip ────────────────────────────────────── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Total Leads',    value: totalLeads, color: '#A78BFA', icon: Target },
-          { label: 'Won',            value: wonLeads,   color: '#10B981', icon: Trophy },
-          { label: 'Conversion',     value: `${convRate}%`, color: '#FBBF24', icon: TrendingUp },
-          { label: 'Follow-ups Due', value: dueToday + (overdue > 0 ? ` (+${overdue} late)` : ''), color: overdue > 0 ? '#F87171' : '#60A5FA', icon: Clock },
+          {
+            label: 'Total Leads',
+            value: totalLeads,
+            sub: 'In your pipeline',
+            color: '#A78BFA', rgb: '167,139,250',
+            icon: Target,
+          },
+          {
+            label: 'Won',
+            value: wonLeads,
+            sub: 'Deals closed',
+            color: '#10B981', rgb: '16,185,129',
+            icon: Trophy,
+          },
+          {
+            label: 'Conversion',
+            value: `${convRate}%`,
+            sub: 'Lead → Client',
+            color: '#FBBF24', rgb: '251,191,36',
+            icon: TrendingUp,
+          },
+          {
+            label: overdueAll > 0 ? `${overdueAll} Overdue` : 'Follow-ups Due',
+            value: dueToday,
+            sub: overdueAll > 0 ? 'Needs attention now' : 'Due today',
+            color: overdueAll > 0 ? '#F87171' : '#60A5FA',
+            rgb:   overdueAll > 0 ? '248,113,113' : '96,165,250',
+            icon: Clock,
+          },
         ].map(s => {
           const Icon = s.icon;
           return (
-            <div key={s.label} className="bento-card p-4 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                style={{ background: `rgba(${s.color.replace('#','').match(/../g)!.map(h=>parseInt(h,16)).join(',')},0.1)` }}>
-                <Icon size={16} style={{ color: s.color }} />
+            <div
+              key={s.label}
+              className="bento-card p-4 relative overflow-hidden"
+              style={{ borderTop: `3px solid ${s.color}` }}
+            >
+              <div className="absolute -top-6 -right-4 w-16 h-16 rounded-full pointer-events-none"
+                style={{ background: `radial-gradient(circle, rgba(${s.rgb},0.15) 0%, transparent 70%)` }} />
+              <div className="flex items-start justify-between mb-2">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+                  style={{ background: `rgba(${s.rgb},0.12)`, color: s.color }}>
+                  <Icon size={15} />
+                </div>
               </div>
-              <div>
-                <p className="text-lg font-bold leading-none" style={{ color: s.color, fontFamily: 'var(--font-mono)' }}>{s.value}</p>
-                <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text3)' }}>{s.label}</p>
-              </div>
+              <p className="text-2xl font-bold" style={{ color: s.color, fontFamily: 'var(--font-mono)' }}>{s.value}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: 'var(--color-text3)' }}>{s.label}</p>
+              <p className="text-[10px] mt-0.5" style={{ color: s.color, opacity: 0.6 }}>{s.sub}</p>
             </div>
           );
         })}
       </div>
 
-      {/* Kanban board */}
+      {/* ── Pipeline funnel ──────────────────────────────── */}
+      {leads.length > 0 && <PipelineFunnel leads={leads} />}
+
+      {/* ── Kanban Board ─────────────────────────────────── */}
       <div
-        className="flex gap-3 overflow-x-auto pb-4"
-        style={{ minHeight: '60vh' }}
+        className="flex gap-3 overflow-x-auto pb-6"
+        style={{ minHeight: '64vh' }}
         onDragOver={e => e.preventDefault()}
       >
         {STAGES.map(stage => {
           const stageLeads = getLeadsForStage(stage.id);
           const isDragTarget = dragOver === stage.id;
+          const StageIcon = stage.icon;
+          const isWon  = stage.id === 'Won';
+          const isLost = stage.id === 'Lost';
 
           return (
             <div
               key={stage.id}
-              className="shrink-0 flex flex-col"
-              style={{ width: 220 }}
+              className="shrink-0 flex flex-col rounded-2xl transition-all duration-200"
+              style={{
+                width: 228,
+                background: isDragTarget
+                  ? `rgba(${stage.rgb},0.07)`
+                  : isWon
+                    ? 'rgba(16,185,129,0.04)'
+                    : isLost
+                      ? 'rgba(248,113,113,0.04)'
+                      : 'var(--color-surface2)',
+                border: `1px solid ${
+                  isDragTarget
+                    ? `rgba(${stage.rgb},0.45)`
+                    : isWon
+                      ? 'rgba(16,185,129,0.22)'
+                      : isLost
+                        ? 'rgba(248,113,113,0.18)'
+                        : 'var(--color-border2)'
+                }`,
+                boxShadow: isDragTarget
+                  ? `0 0 0 2px rgba(${stage.rgb},0.25), 0 8px 32px rgba(${stage.rgb},0.12)`
+                  : isWon
+                    ? '0 0 24px rgba(16,185,129,0.07)'
+                    : undefined,
+              }}
               onDragOver={e => { e.preventDefault(); setDragOver(stage.id); }}
               onDragLeave={e => {
-                // Only clear if leaving the column entirely
-                if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                  setDragOver(null);
-                }
+                if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragOver(null);
               }}
               onDrop={e => {
                 e.preventDefault();
@@ -193,33 +314,44 @@ export default function PipelinePage() {
             >
               {/* Column header */}
               <div
-                className="rounded-xl p-3 mb-2 transition-all"
+                className="px-3 pt-3 pb-2.5 rounded-t-2xl"
                 style={{
-                  background: isDragTarget
-                    ? `rgba(${stage.rgb},0.15)`
-                    : `rgba(${stage.rgb},0.07)`,
-                  border: `1px solid rgba(${stage.rgb},${isDragTarget ? '0.4' : '0.18'})`,
+                  borderBottom: `1px solid rgba(${stage.rgb},0.14)`,
+                  background: `linear-gradient(180deg, rgba(${stage.rgb},0.10) 0%, transparent 100%)`,
                 }}
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ background: stage.color }} />
+                <div className="flex items-center justify-between mb-1">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ background: `rgba(${stage.rgb},0.18)`, color: stage.color }}
+                    >
+                      <StageIcon size={12} />
+                    </div>
                     <p className="text-[11px] font-bold" style={{ color: stage.color }}>{stage.id}</p>
                   </div>
                   <span
                     className="text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center"
-                    style={{ background: `rgba(${stage.rgb},0.15)`, color: stage.color }}
+                    style={{
+                      background: `rgba(${stage.rgb},0.18)`,
+                      color: stage.color,
+                    }}
                   >
                     {stageLeads.length}
                   </span>
                 </div>
+                <p className="text-[9px] leading-tight pl-8" style={{ color: `rgba(${stage.rgb},0.65)` }}>
+                  {stage.tip}
+                </p>
               </div>
 
-              {/* Cards */}
-              <div className="flex-1 space-y-2 min-h-[40px]">
+              {/* Cards area */}
+              <div className="flex-1 p-2 space-y-2 min-h-[40px]">
                 {stageLeads.map(lead => {
-                  const overdueLead = isOverdue(lead.next_follow_up);
+                  const overdueLead  = isOverdue(lead.next_follow_up);
                   const dueTodayLead = isDueToday(lead.next_follow_up);
+                  const isDraggingThis = dragging === lead.id;
+
                   return (
                     <div
                       key={lead.id}
@@ -230,61 +362,91 @@ export default function PipelinePage() {
                         setDragging(lead.id);
                       }}
                       onDragEnd={() => { setDragging(null); setDragOver(null); }}
-                      className="rounded-xl p-3 cursor-grab active:cursor-grabbing transition-all select-none"
+                      className="rounded-xl p-3 cursor-grab active:cursor-grabbing select-none transition-all group"
                       style={{
-                        background: 'var(--color-surface)',
-                        border: `1px solid ${dragging === lead.id
-                          ? `rgba(${stage.rgb},0.5)`
-                          : 'var(--color-border2)'}`,
-                        opacity: dragging === lead.id ? 0.45 : 1,
-                        transform: dragging === lead.id ? 'scale(0.97)' : undefined,
-                        boxShadow: dragging === lead.id
-                          ? `0 12px 32px rgba(${stage.rgb},0.25)`
-                          : undefined,
+                        background: isDraggingThis
+                          ? `rgba(${stage.rgb},0.08)`
+                          : 'var(--color-surface)',
+                        border: `1px solid ${
+                          isDraggingThis
+                            ? `rgba(${stage.rgb},0.45)`
+                            : overdueLead
+                              ? 'rgba(248,113,113,0.3)'
+                              : 'var(--color-border2)'
+                        }`,
+                        opacity: isDraggingThis ? 0.4 : 1,
+                        transform: isDraggingThis ? 'rotate(2deg) scale(0.97)' : undefined,
+                        boxShadow: isDraggingThis
+                          ? `0 16px 40px rgba(${stage.rgb},0.3)`
+                          : '0 1px 4px rgba(0,0,0,0.08)',
                       }}
                     >
-                      <Link
-                        href={`/telemarketer/leads/${lead.id}`}
-                        onClick={e => e.stopPropagation()}
-                        className="block"
-                        draggable={false}
-                      >
-                        <p className="text-xs font-bold truncate mb-0.5 hover:underline"
-                          style={{ color: 'var(--color-text)' }}>
-                          {lead.name}
-                        </p>
-                      </Link>
-
-                      {lead.company && (
-                        <div className="flex items-center gap-1 text-[10px] mb-2.5" style={{ color: 'var(--color-text3)' }}>
-                          <Building2 size={9} className="shrink-0" />
-                          <span className="truncate">{lead.company}</span>
+                      {/* Avatar + name */}
+                      <div className="flex items-start gap-2 mb-2">
+                        <div
+                          className="w-7 h-7 rounded-lg flex items-center justify-center text-[9px] font-bold text-white shrink-0 mt-0.5"
+                          style={{ background: `linear-gradient(135deg, ${stage.color}cc, ${stage.color}88)` }}
+                        >
+                          {initials(lead.name)}
                         </div>
-                      )}
+                        <div className="flex-1 min-w-0">
+                          <Link
+                            href={`/telemarketer/leads/${lead.id}`}
+                            onClick={e => e.stopPropagation()}
+                            draggable={false}
+                            className="block text-xs font-bold truncate leading-tight hover:underline"
+                            style={{ color: 'var(--color-text)' }}
+                          >
+                            {lead.name}
+                          </Link>
+                          {lead.company && (
+                            <div className="flex items-center gap-1 mt-0.5" style={{ color: 'var(--color-text3)' }}>
+                              <Building2 size={9} className="shrink-0" />
+                              <span className="text-[10px] truncate">{lead.company}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
 
-                      <div className="flex items-center gap-1.5 flex-wrap">
+                      {/* Actions row */}
+                      <div className="flex items-center gap-1.5">
                         {lead.phone && (
                           <a
                             href={`tel:${lead.phone}`}
                             onClick={e => e.stopPropagation()}
                             draggable={false}
-                            className="inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-md transition-opacity hover:opacity-80"
-                            style={{ background: `rgba(${stage.rgb},0.12)`, color: stage.color }}
+                            className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-lg cursor-pointer transition-opacity hover:opacity-80"
+                            style={{ background: `rgba(${stage.rgb},0.14)`, color: stage.color }}
                           >
                             <Phone size={8} /> Call
                           </a>
                         )}
+                        <Link
+                          href={`/telemarketer/leads/${lead.id}`}
+                          onClick={e => e.stopPropagation()}
+                          draggable={false}
+                          className="inline-flex items-center gap-1 text-[9px] font-semibold px-2 py-1 rounded-lg cursor-pointer transition-opacity hover:opacity-80"
+                          style={{ background: 'rgba(124,58,237,0.08)', color: 'var(--color-violet)' }}
+                        >
+                          <ChevronRight size={8} /> View
+                        </Link>
+
+                        {/* Follow-up date */}
                         {lead.next_follow_up && (
                           <div
-                            className="inline-flex items-center gap-1 text-[9px] ml-auto"
+                            className="ml-auto inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-md"
                             style={{
+                              background: overdueLead
+                                ? 'rgba(248,113,113,0.10)'
+                                : dueTodayLead
+                                  ? 'rgba(251,191,36,0.10)'
+                                  : 'transparent',
                               color: overdueLead ? '#F87171' : dueTodayLead ? '#FBBF24' : 'var(--color-text3)',
-                              fontWeight: (overdueLead || dueTodayLead) ? 600 : 400,
                             }}
                           >
                             <Calendar size={8} />
                             {fmtDate(lead.next_follow_up)}
-                            {overdueLead && <span className="text-[8px]">!</span>}
+                            {overdueLead && <span className="text-[8px] font-black">!</span>}
                           </div>
                         )}
                       </div>
@@ -292,25 +454,47 @@ export default function PipelinePage() {
                   );
                 })}
 
-                {/* Drop zone placeholder */}
-                {isDragTarget && (
+                {/* Drop zone */}
+                {isDragTarget && stageLeads.length === 0 && (
                   <div
-                    className="rounded-xl border-2 border-dashed flex items-center justify-center"
+                    className="rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-all"
                     style={{
-                      height: 56,
+                      height: 72,
                       borderColor: stage.color,
-                      background: `rgba(${stage.rgb},0.05)`,
-                      transition: 'all 0.15s',
+                      background: `rgba(${stage.rgb},0.06)`,
+                    }}
+                  >
+                    <ArrowRight size={14} style={{ color: stage.color }} />
+                    <p className="text-[9px] font-bold" style={{ color: stage.color }}>Drop here</p>
+                  </div>
+                )}
+
+                {isDragTarget && stageLeads.length > 0 && (
+                  <div
+                    className="rounded-xl border-2 border-dashed flex items-center justify-center transition-all"
+                    style={{
+                      height: 44,
+                      borderColor: stage.color,
+                      background: `rgba(${stage.rgb},0.04)`,
                     }}
                   >
                     <p className="text-[9px] font-bold" style={{ color: stage.color }}>Drop here</p>
                   </div>
                 )}
 
+                {/* Empty state */}
                 {stageLeads.length === 0 && !isDragTarget && (
-                  <div className="rounded-xl py-5 text-center"
-                    style={{ border: `1px dashed rgba(${stage.rgb},0.12)` }}>
-                    <p className="text-[9px]" style={{ color: 'var(--color-text3)' }}>Empty</p>
+                  <div
+                    className="rounded-xl py-6 px-3 text-center"
+                    style={{ border: `1px dashed rgba(${stage.rgb},0.18)` }}
+                  >
+                    <StageIcon size={16} className="mx-auto mb-1.5" style={{ color: `rgba(${stage.rgb},0.35)` }} />
+                    <p className="text-[9px] font-semibold" style={{ color: `rgba(${stage.rgb},0.45)` }}>
+                      No leads here
+                    </p>
+                    <p className="text-[8px] mt-0.5" style={{ color: 'var(--color-text3)', opacity: 0.6 }}>
+                      Drag a card to move it
+                    </p>
                   </div>
                 )}
               </div>

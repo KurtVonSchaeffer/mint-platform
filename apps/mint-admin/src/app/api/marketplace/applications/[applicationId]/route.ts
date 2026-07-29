@@ -59,19 +59,16 @@ export async function PATCH(
 
   const { error: updateErr } = await supabaseAdmin
     .from('quote_offers')
-    .update({ status: newStatus, [`${action === 'approve' ? 'approved' : 'declined'}_at`]: new Date().toISOString() })
+    .update({
+      status: newStatus,
+      ...(action === 'decline' && declineReason ? { decision_reason: declineReason } : {}),
+    })
     .eq('id', applicationId);
 
   if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 });
 
-  // Update quote_request status
+  // Update quote_request status to 'complete' (already the final consumer state)
   const request = Array.isArray(offer.quote_requests) ? offer.quote_requests[0] : offer.quote_requests;
-  if (request?.id) {
-    await supabaseAdmin
-      .from('quote_requests')
-      .update({ status: newStatus })
-      .eq('id', request.id);
-  }
 
   // Notify borrower by email (fire-and-forget)
   if (request?.consumer_email) {

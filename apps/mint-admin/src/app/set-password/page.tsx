@@ -54,9 +54,13 @@ function SetPasswordForm() {
 
     // Path 1: PKCE flow — ?code= in query string
     if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error: err }) => {
-        if (err) setExpired(true);
-        else setReady(true);
+      // Sign out any existing session first so the recovery token targets
+      // the invited user, not whoever is currently logged in.
+      supabase.auth.signOut().finally(() => {
+        supabase.auth.exchangeCodeForSession(code).then(({ error: err }) => {
+          if (err) setExpired(true);
+          else setReady(true);
+        });
       });
       return;
     }
@@ -73,19 +77,19 @@ function SetPasswordForm() {
     const refreshToken = hashParams.get('refresh_token');
 
     if (accessToken && refreshToken) {
-      supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(({ error: err }) => {
-        if (err) setExpired(true);
-        else setReady(true);
+      // Sign out first so we set the session for the invited user, not the
+      // currently logged-in admin who clicked the link.
+      supabase.auth.signOut().finally(() => {
+        supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken }).then(({ error: err }) => {
+          if (err) setExpired(true);
+          else setReady(true);
+        });
       });
       return;
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') setReady(true);
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setReady(true);
     });
 
     return () => subscription.unsubscribe();
@@ -114,7 +118,10 @@ function SetPasswordForm() {
     }
 
     setDone(true);
-    setTimeout(() => router.replace('/'), 1500);
+    const { data: { user: updatedUser } } = await supabase.auth.getUser();
+    const role = updatedUser?.user_metadata?.role ?? '';
+    const dest = ['telemarketer', 'manager'].includes(role) ? '/telemarketer' : '/';
+    setTimeout(() => router.replace(dest), 1500);
   }
 
   return (
