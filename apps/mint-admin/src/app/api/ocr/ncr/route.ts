@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
-
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+import { generateText } from 'ai';
+import { google } from '@ai-sdk/google';
 
 const IMAGE_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']);
-type ImgMime = 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,18 +23,25 @@ export async function POST(req: NextRequest) {
 
     const b64 = Buffer.from(await file.arrayBuffer()).toString('base64');
 
-    const mediaBlock: Anthropic.MessageParam['content'][number] = isPdf
-      ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64 } }
-      : { type: 'image',    source: { type: 'base64', media_type: mimeType as ImgMime, data: b64 } };
+    const fileBlock = {
+      type:      'file' as const,
+      data:      b64,
+      mediaType: (isPdf ? 'application/pdf' : mimeType) as string,
+    };
 
-    const msg = await client.messages.create({
-      model:      'claude-haiku-4-5-20251001',
-      max_tokens: 128,
-      messages:   [{ role: 'user', content: [mediaBlock, { type: 'text', text: PROMPT }] }],
+    const { text } = await generateText({
+      model: google('gemini-2.0-flash'),
+      messages: [{
+        role: 'user',
+        content: [
+          fileBlock,
+          { type: 'text', text: PROMPT },
+        ],
+      }],
+      maxOutputTokens: 128,
     });
 
-    const raw     = (msg.content[0] as Anthropic.TextBlock).text.trim();
-    const cleaned = raw.replace(/```json\n?|```/g, '').trim();
+    const cleaned = text.trim().replace(/```json\n?|```/g, '').trim();
     const { ncr_number } = JSON.parse(cleaned) as { ncr_number: string | null };
 
     return NextResponse.json({ ncr_number: ncr_number ?? null });
