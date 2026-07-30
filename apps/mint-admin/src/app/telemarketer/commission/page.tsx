@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { DollarSign, Clock, CheckCircle2, Banknote, AlertCircle, Info, Loader2, RefreshCw } from 'lucide-react';
-import { getAgentId } from '@/lib/telemarketer-agent';
+import { getAgentId, getUserRole } from '@/lib/telemarketer-agent';
 
 type CommissionStatus = 'Pending Collection' | 'Pending Payroll' | 'Payroll Ready' | 'Paid';
 
@@ -54,9 +55,16 @@ function mapCommission(c: ApiCommission): CommissionRow {
 function fmt(n: number) { return `R ${n.toLocaleString('en-ZA')}`; }
 
 export default function CommissionPage() {
+  const router = useRouter();
   const [rows,         setRows]         = useState<CommissionRow[]>([]);
   const [loading,      setLoading]      = useState(true);
   const [statusFilter, setStatusFilter] = useState<CommissionStatus | null>(null);
+
+  useEffect(() => {
+    getUserRole().then(role => {
+      if (role !== 'super_admin') router.replace('/telemarketer');
+    });
+  }, [router]);
 
   const load = useCallback(async () => {
     setLoading(true);

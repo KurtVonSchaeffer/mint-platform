@@ -26,7 +26,6 @@ const AGENT_NAV: NavItem[] = [
   { label: 'Follow Ups',        href: '/telemarketer/follow-ups',   icon: Calendar    },
   { label: 'Analytics',         href: '/telemarketer/analytics',    icon: BarChart3   },
   { label: 'Documents',         href: '/telemarketer/documents',    icon: FileUp      },
-  { label: 'Commission Centre', href: '/telemarketer/commission',   icon: DollarSign  },
   { label: 'Statements',        href: '/telemarketer/statements',   icon: FileText    },
   { label: 'Profile',           href: '/telemarketer/profile',      icon: User        },
 ];
@@ -34,6 +33,11 @@ const AGENT_NAV: NavItem[] = [
 // Extra items visible only to super_admin / manager
 const MANAGER_NAV: NavItem[] = [
   { label: 'Team Performance',  href: '/telemarketer/team',         icon: BarChart3   },
+];
+
+// Visible to super_admin only
+const SUPER_ADMIN_NAV: NavItem[] = [
+  { label: 'Commission Centre', href: '/telemarketer/commission',   icon: DollarSign  },
 ];
 
 const AGENT_COLORS = ['#A78BFA', '#34D399', '#60A5FA', '#FB923C', '#F472B6', '#FBBF24'];
@@ -204,7 +208,7 @@ export function TelemarketerShell({ children }: { children: React.ReactNode }) {
       >
         {/* Page pill */}
         {(() => {
-          const allNav = [...MANAGER_NAV, ...AGENT_NAV];
+          const allNav = [...MANAGER_NAV, ...AGENT_NAV, ...SUPER_ADMIN_NAV];
           const page = allNav.find(n =>
             n.href === '/telemarketer' ? pathname === '/telemarketer' : pathname.startsWith(n.href)
           );
@@ -466,6 +470,32 @@ export function TelemarketerShell({ children }: { children: React.ReactNode }) {
             );
           })}
 
+
+          {/* Commission Centre — super_admin only */}
+          {isSuperAdmin && SUPER_ADMIN_NAV.map(({ label, href, icon: Icon }) => {
+            const isActive = pathname.startsWith(href);
+            const isHov    = hovered === href;
+            return (
+              <Link key={href} href={href}
+                onClick={() => setSidebarOpen(false)}
+                onMouseEnter={() => setHovered(href)}
+                onMouseLeave={() => setHovered(null)}
+                className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
+                style={isActive
+                  ? { background: navColors.activeBg, color: navColors.activeText, fontWeight: 600, boxShadow: navColors.activeShadow }
+                  : isHov
+                    ? { background: navColors.hoverBg, color: navColors.hoverText }
+                    : { color: navColors.normalText }}
+              >
+                <div className="relative z-10 w-6 h-6 rounded-md flex items-center justify-center shrink-0"
+                  style={isActive ? { color: navColors.activeText, background: navColors.iconActiveBg } : { color: 'inherit', opacity: 0.65 }}>
+                  <Icon size={14} />
+                </div>
+                <span className="relative z-10 flex-1">{label}</span>
+                {isActive && <ChevronRight size={12} className="relative z-10 shrink-0" style={{ color: 'rgba(124,58,237,0.5)' }} />}
+              </Link>
+            );
+          })}
 
           {/* Admin link for super admin */}
           {isSuperAdmin && (

@@ -8,7 +8,7 @@ import {
   ChevronRight, Target, Banknote, Loader2, Flame,
   PhoneCall,
 } from 'lucide-react';
-import { getAgentId, getAgentName } from '@/lib/telemarketer-agent';
+import { getAgentId, getAgentName, getUserRole } from '@/lib/telemarketer-agent';
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -137,10 +137,12 @@ export default function TelemarketerHomePage() {
   const [todayCalls, setTodayCalls] = useState<TodayCall[]>([]);
   const [loading,    setLoading]    = useState(true);
   const [agentName,  setAgentName]  = useState('');
+  const [userRole,   setUserRole]   = useState<string>('telemarketer');
 
   useEffect(() => {
     async function load() {
-      const [agentId, name] = await Promise.all([getAgentId(), getAgentName()]);
+      const [agentId, name, role] = await Promise.all([getAgentId(), getAgentName(), getUserRole()]);
+      setUserRole(role);
       setAgentName(name);
       const [dashRes, callsRes] = await Promise.all([
         fetch(`/api/telemarketer/dashboard?agent_id=${agentId}`).then(r => r.json()),
@@ -159,6 +161,8 @@ export default function TelemarketerHomePage() {
     clients:  { converted: 0, live: 0, pendingCompliance: 0, complianceApproved: 0 },
     earnings: { commissionPending: 0, commissionEarned: 0, expectedPayroll: 0 },
   };
+
+  const isSuperAdmin = userRole === 'super_admin';
 
   const winRate = s.leads.total > 0
     ? Math.round((s.clients.converted / s.leads.total) * 100)
@@ -203,9 +207,11 @@ export default function TelemarketerHomePage() {
             {!loading && (
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { label: 'Win Rate',    value: `${winRate}%`,               color: '#A78BFA', sub: 'Leads → Clients'     },
-                  { label: 'Live Clients', value: String(s.clients.live),     color: '#34D399', sub: 'Active & earning'    },
-                  { label: 'Pending',     value: fmt(s.earnings.commissionPending), color: '#FBBF24', sub: 'Awaiting payout' },
+                  { label: 'Win Rate',     value: `${winRate}%`,                                                          color: '#A78BFA', sub: 'Leads → Clients'     },
+                  { label: 'Live Clients', value: String(s.clients.live),                                                 color: '#34D399', sub: 'Active & earning'    },
+                  isSuperAdmin
+                    ? { label: 'Pending',  value: fmt(s.earnings.commissionPending), color: '#FBBF24', sub: 'Awaiting payout'    }
+                    : { label: 'New Leads', value: String(s.leads.newThisMonth),     color: '#FBBF24', sub: 'This month'          },
                 ].map(item => (
                   <div key={item.label} className="rounded-xl px-3 py-2.5"
                     style={{ background: 'var(--color-surface2)', border: '1px solid var(--color-border2)' }}>
@@ -309,8 +315,8 @@ export default function TelemarketerHomePage() {
 
       {!loading && (
         <>
-          {/* ══ Row 2: Earnings Spotlight ═════════════════════════════════ */}
-          <div className="bento-card p-6 relative overflow-hidden">
+          {/* ══ Row 2: Earnings Spotlight (super_admin only) ══════════════ */}
+          {isSuperAdmin && <div className="bento-card p-6 relative overflow-hidden">
             <div
               className="pointer-events-none absolute -bottom-10 -right-10 w-48 h-48 rounded-full"
               style={{ background: 'radial-gradient(circle, rgba(52,211,153,0.09) 0%, transparent 70%)' }}
@@ -374,7 +380,7 @@ export default function TelemarketerHomePage() {
                 ))}
               </div>
             </div>
-          </div>
+          </div>}
 
           {/* ══ Row 3: KPI Cards ═════════════════════════════════════════ */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -543,7 +549,7 @@ export default function TelemarketerHomePage() {
                   { label: 'My Leads',          sub: `${s.leads.total} total`,               href: '/telemarketer/leads',      color: '#A78BFA', rgb: '167,139,250', icon: Filter     },
                   { label: 'Follow-Ups',         sub: `${s.activity.followUpsDue} due today`, href: '/telemarketer/follow-ups', color: '#FBBF24', rgb: '251,191,36',  icon: Calendar   },
                   { label: 'My Clients',         sub: `${s.clients.live} live`,               href: '/telemarketer/clients',    color: '#34D399', rgb: '52,211,153',  icon: Users2     },
-                  { label: 'Commission Centre',  sub: fmt(s.earnings.commissionEarned),       href: '/telemarketer/commission', color: '#10B981', rgb: '16,185,129',  icon: DollarSign },
+                  ...(isSuperAdmin ? [{ label: 'Commission Centre', sub: fmt(s.earnings.commissionEarned), href: '/telemarketer/commission', color: '#10B981', rgb: '16,185,129', icon: DollarSign }] : []),
                   { label: 'Analytics',          sub: 'Performance overview',                 href: '/telemarketer/analytics',  color: '#60A5FA', rgb: '96,165,250',  icon: TrendingUp },
                   { label: 'Statements',         sub: 'Download payslips',                    href: '/telemarketer/statements', color: '#FB923C', rgb: '251,146,60',  icon: Banknote   },
                 ].map(a => (

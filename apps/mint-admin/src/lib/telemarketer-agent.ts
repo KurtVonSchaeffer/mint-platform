@@ -23,6 +23,12 @@ export async function getAgentId(): Promise<string> {
   return (typeof window !== 'undefined' ? sessionStorage.getItem(SESSION_KEY_AGENT) : null) ?? '';
 }
 
+/** Returns the Supabase role of the logged-in user. */
+export async function getUserRole(): Promise<string> {
+  const { data: { user } } = await supabase().auth.getUser();
+  return (user?.user_metadata?.role as string | undefined) ?? 'telemarketer';
+}
+
 /** Returns the display name for the current agent. */
 export async function getAgentName(): Promise<string> {
   const { data: { user } } = await supabase().auth.getUser();
