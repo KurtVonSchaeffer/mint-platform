@@ -69,6 +69,28 @@ function initials(name: string) {
   return name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
 }
 
+const STAGE_SCORES: Record<string, number> = {
+  'New Lead': 10, 'Attempted Contact': 20, 'Contacted': 35, 'Interested': 50,
+  'Demo Scheduled': 65, 'Demo Completed': 72, 'Proposal Sent': 80,
+  'Negotiation': 90, 'Won': 100, 'Lost': 5,
+};
+
+function leadScore(lead: Lead): number {
+  let score = STAGE_SCORES[normalizeStatus(lead.tm_status)] ?? 10;
+  const daysOld = Math.floor((Date.now() - new Date(lead.created_at).getTime()) / 86_400_000);
+  if (daysOld < 7) score = Math.min(100, score + 5);
+  if (isOverdue(lead.next_follow_up)) score = Math.max(0, score - 10);
+  else if (lead.next_follow_up) score = Math.min(100, score + 5);
+  return score;
+}
+
+function scoreColor(s: number) {
+  if (s >= 90) return '#A78BFA';
+  if (s >= 70) return '#34D399';
+  if (s >= 40) return '#FBBF24';
+  return '#F87171';
+}
+
 // Mini inline funnel bar — shows lead distribution across stages
 function PipelineFunnel({ leads }: { leads: Lead[] }) {
   const total = leads.length;
@@ -352,6 +374,9 @@ export default function PipelinePage() {
                   const dueTodayLead = isDueToday(lead.next_follow_up);
                   const isDraggingThis = dragging === lead.id;
 
+                  const score = leadScore(lead);
+                  const sColor = scoreColor(score);
+
                   return (
                     <div
                       key={lead.id}
@@ -405,6 +430,14 @@ export default function PipelinePage() {
                               <span className="text-[10px] truncate">{lead.company}</span>
                             </div>
                           )}
+                        </div>
+                        {/* Score badge */}
+                        <div
+                          className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-[9px] font-black mt-0.5"
+                          style={{ background: `${sColor}18`, color: sColor }}
+                          title={`Lead score: ${score}`}
+                        >
+                          {score}
                         </div>
                       </div>
 

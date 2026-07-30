@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Shell } from '@/components/Shell';
 import {
   TrendingUp, Users2, Trophy, Target, DollarSign, Loader2, RefreshCw,
-  BarChart3, TrendingDown,
+  BarChart3, TrendingDown, Download,
 } from 'lucide-react';
 
 interface FunnelStage {
@@ -91,6 +91,22 @@ export default function SalesDashboardPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  function downloadCSV() {
+    const headers = ['Name','Email','Leads','Won','Demos','Proposals','Calls Today','Total Calls','Conv %','Pipeline (R)','Comm Pending (R)','Comm Paid (R)'];
+    const rows = agents.map(a => [
+      a.name, a.email, a.leadsTotal, a.won, a.demosScheduled, a.proposalsSent,
+      a.callsToday, a.totalCalls, a.convRate.toFixed(1), a.pipelineValue,
+      a.commPending, a.commPaid,
+    ]);
+    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sales-dashboard-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const maxFunnelCount = Math.max(...funnel.map(s => s.count), 1);
   const activeFunnel   = funnel.filter(s => ACTIVE_STAGES.includes(s.stage));
   const closedFunnel   = funnel.filter(s => !ACTIVE_STAGES.includes(s.stage));
@@ -110,11 +126,18 @@ export default function SalesDashboardPage() {
               Pipeline health and telemarketer performance
             </p>
           </div>
-          <button onClick={load}
-            className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors"
-            style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>
-            <RefreshCw size={13} /> Refresh
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={downloadCSV} disabled={loading || agents.length === 0}
+              className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors disabled:opacity-40"
+              style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>
+              <Download size={13} /> Export CSV
+            </button>
+            <button onClick={load}
+              className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors"
+              style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>
+              <RefreshCw size={13} /> Refresh
+            </button>
+          </div>
         </div>
 
         {loading ? (

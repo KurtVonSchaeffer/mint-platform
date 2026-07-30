@@ -143,7 +143,9 @@ export async function middleware(request: NextRequest) {
   const isPublic =
     pathname.startsWith('/login') ||
     pathname.startsWith('/set-password') ||
+    pathname.startsWith('/onboard') ||            // public client self-onboarding form
     pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/public/') ||        // public API endpoints (rate-limited)
     pathname.startsWith('/api/marketplace') ||   // MINT integration — uses its own Bearer auth
     pathname === '/api/payfast/notify' ||        // PayFast ITN webhook — verified by IP + signature in-route, not a staff session
     pathname === '/api/billing/cron' ||           // Vercel Cron — verified by CRON_SECRET bearer token in-route, not a staff session
