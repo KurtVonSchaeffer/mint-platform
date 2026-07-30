@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { FileText, Download, DollarSign, TrendingUp, Calendar, ChevronDown, ChevronUp, Loader2, RefreshCw } from 'lucide-react';
-import { getAgentId } from '@/lib/telemarketer-agent';
 
 interface ApiCommission {
   id: string;
@@ -188,8 +187,7 @@ export default function StatementsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const agentId = await getAgentId();
-    const res = await fetch(`/api/telemarketer/commissions?agent_id=${agentId}`);
+    const res = await fetch('/api/telemarketer/my-commissions');
     if (res.ok) {
       const { commissions } = await res.json();
       setStatements(deriveStatements(commissions ?? []));

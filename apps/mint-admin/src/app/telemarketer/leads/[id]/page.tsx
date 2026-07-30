@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Phone, Mail, Building2, Clock, Calendar, FileUp,
   MessageSquare, ChevronLeft, ChevronDown, Plus, CheckCircle2,
   Loader2, RefreshCw, Globe, MapPin, Briefcase, Percent, Video, Save,
-  FileText, Send,
+  FileText, Send, Copy, Timer, PhoneOff,
 } from 'lucide-react';
 import { getAgentId } from '@/lib/telemarketer-agent';
 
@@ -118,10 +118,10 @@ type TEvent = {
   link?: { href: string; label: string };
 };
 
-function LogCallModal({ leadId, agentId, onClose, onSaved }: {
-  leadId: string; agentId: string; onClose: () => void; onSaved: () => void;
+function LogCallModal({ leadId, agentId, onClose, onSaved, initialDuration }: {
+  leadId: string; agentId: string; onClose: () => void; onSaved: () => void; initialDuration?: string;
 }) {
-  const [form, setForm]   = useState({ outcome: 'Spoke', duration: '', notes: '' });
+  const [form, setForm]   = useState({ outcome: 'Spoke', duration: initialDuration ?? '', notes: '' });
   const [saving, setSaving] = useState(false);
 
   async function submit() {
@@ -404,6 +404,44 @@ function CreateProposalModal({ leadId, agentId, onClose, onSaved }: {
   );
 }
 
+// ── Message Templates ─────────────────────────────────────────────────────────
+const ALGOLEND_TEMPLATES = {
+  whatsapp: [
+    {
+      id:    'wa-initial',
+      label: 'Initial Contact',
+      text:  (name: string) =>
+        `Hi ${name}, this is [Agent] from AlgoLend. We help lending businesses like yours streamline operations and grow their loan book with our purpose-built platform. I'd love to schedule a quick 15-minute call to learn more about your business — would you be open to that?`,
+    },
+    {
+      id:    'wa-followup',
+      label: 'Follow-Up After Demo',
+      text:  (name: string) =>
+        `Hi ${name}, great connecting with you earlier! I hope the AlgoLend demo gave you a clear picture of how we can support your business. Do you have any questions, or would you like to discuss next steps? Happy to set up another call at your convenience.`,
+    },
+    {
+      id:    'wa-closing',
+      label: 'Closing — Ready to Apply',
+      text:  (name: string) =>
+        `Hi ${name}, just following up on our recent conversation. We're ready to move your onboarding forward — the process is straightforward and our team will guide you every step of the way. Shall we proceed?`,
+    },
+  ],
+  email: [
+    {
+      id:    'em-intro',
+      label: 'Introduction Email',
+      text:  (name: string) =>
+        `Dear ${name},\n\nThank you for your interest in AlgoLend — South Africa's leading lending management platform. We work with microfinanciers, retail lenders, and financial institutions to modernise their loan origination, management, and collections processes.\n\nI would love to schedule a brief call to understand your business needs and show you how AlgoLend can help you grow with confidence.\n\nPlease reply to this email or let me know a convenient time for a quick chat.\n\nWarm regards,\n[Agent Name]\nBusiness Development | AlgoLend`,
+    },
+    {
+      id:    'em-app-ready',
+      label: 'Application Ready',
+      text:  (name: string) =>
+        `Dear ${name},\n\nExcellent news — we have everything we need to move your AlgoLend onboarding forward. Your application is ready for submission.\n\nKindly review the attached proposal and confirm your acceptance at your earliest convenience. Our onboarding team will be in contact within one business day to arrange your setup and training.\n\nWe look forward to welcoming you to the AlgoLend platform.\n\nWarm regards,\n[Agent Name]\nBusiness Development | AlgoLend`,
+    },
+  ],
+};
+
 export default function LeadDetailPage() {
   const { id } = useParams<{ id: string }>();
 
@@ -427,6 +465,17 @@ export default function LeadDetailPage() {
   const [qualForm,   setQualForm]   = useState<QualForm>(EMPTY_QUAL);
   const [qualSaving, setQualSaving] = useState(false);
   const [qualSaved,  setQualSaved]  = useState(false);
+
+  // ── Call timer ──────────────────────────────────────────────────────────────
+  const [callActive,   setCallActive]   = useState(false);
+  const [callElapsed,  setCallElapsed]  = useState(0);      // seconds
+  const [callDuration, setCallDuration] = useState('');     // formatted, passed to modal
+  const callStartRef     = useRef<number>(0);
+  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ── Templates ───────────────────────────────────────────────────────────────
+  const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [copiedId,      setCopiedId]      = useState<string | null>(null);
 
   const loadActivity = useCallback(async () => {
     const [notesRes, callsRes, fuRes, demosRes, proposalsRes] = await Promise.all([
@@ -593,6 +642,11 @@ export default function LeadDetailPage() {
     init();
   }, [id, loadActivity]);
 
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => { if (timerIntervalRef.current) clearInterval(timerIntervalRef.current); };
+  }, []);
+
   async function changeStatus(s: LeadStatus) {
     setStatus(s);
     setStatusOpen(false);
@@ -601,6 +655,38 @@ export default function LeadDetailPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tm_status: s }),
     });
+  }
+
+  function fmtElapsed(secs: number) {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  }
+
+  function startCall() {
+    callStartRef.current = Date.now();
+    setCallElapsed(0);
+    setCallActive(true);
+    timerIntervalRef.current = setInterval(() => {
+      setCallElapsed(Math.floor((Date.now() - callStartRef.current) / 1000));
+    }, 500);
+  }
+
+  function endCall() {
+    if (timerIntervalRef.current) { clearInterval(timerIntervalRef.current); timerIntervalRef.current = null; }
+    const secs = Math.floor((Date.now() - callStartRef.current) / 1000);
+    const m    = Math.floor(secs / 60);
+    const s    = secs % 60;
+    setCallDuration(`${m}:${s.toString().padStart(2, '0')}`);
+    setCallActive(false);
+    setCallElapsed(0);
+    setLogCallOpen(true);
+  }
+
+  function copyTemplate(id: string, text: string) {
+    navigator.clipboard.writeText(text);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
   }
 
   const currentStep = STATUS_TO_STEP[status] ?? 0;
@@ -624,7 +710,7 @@ export default function LeadDetailPage() {
 
   return (
     <div className="space-y-6 page-enter">
-      {logCallOpen  && <LogCallModal  leadId={id} agentId={agentId} onClose={() => setLogCallOpen(false)}  onSaved={loadActivity} />}
+      {logCallOpen  && <LogCallModal  leadId={id} agentId={agentId} onClose={() => { setLogCallOpen(false); setCallDuration(''); }}  onSaved={loadActivity} initialDuration={callDuration} />}
       {addNoteOpen  && <AddNoteModal  leadId={id} agentId={agentId} onClose={() => setAddNoteOpen(false)}  onSaved={loadActivity} />}
       {scheduleOpen && <ScheduleModal leadId={id} agentId={agentId} onClose={() => setScheduleOpen(false)} onSaved={loadActivity} />}
       {bookDemoOpen   && <BookDemoModal      leadId={id} agentId={agentId} onClose={() => setBookDemoOpen(false)}   onSaved={loadActivity} />}
@@ -690,16 +776,33 @@ export default function LeadDetailPage() {
                 </>
               )}
             </div>
-            {lead.phone && (
-              <a href={`tel:${lead.phone}`} className="btn-purple btn-shine inline-flex items-center gap-1.5 !text-xs !py-1.5 !px-3">
-                <Phone size={12} /> Call Now
-              </a>
+            {!callActive ? (
+              <>
+                {lead.phone && (
+                  <a href={`tel:${lead.phone}`} className="btn-purple btn-shine inline-flex items-center gap-1.5 !text-xs !py-1.5 !px-3">
+                    <Phone size={12} /> Call Now
+                  </a>
+                )}
+                <button onClick={startCall}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                  style={{ background: 'rgba(52,211,153,0.08)', color: '#34D399', border: '1px solid rgba(52,211,153,0.15)' }}>
+                  <Timer size={12} /> Start Call
+                </button>
+              </>
+            ) : (
+              <>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold font-mono tabular-nums"
+                  style={{ background: 'rgba(248,113,113,0.08)', color: '#F87171', border: '1px solid rgba(248,113,113,0.2)', minWidth: 80 }}>
+                  <Timer size={12} className="animate-pulse" />
+                  {fmtElapsed(callElapsed)}
+                </span>
+                <button onClick={endCall}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                  style={{ background: 'rgba(248,113,113,0.1)', color: '#F87171', border: '1px solid rgba(248,113,113,0.2)' }}>
+                  <PhoneOff size={12} /> End Call
+                </button>
+              </>
             )}
-            <button onClick={() => setLogCallOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-              style={{ background: 'rgba(52,211,153,0.08)', color: '#34D399', border: '1px solid rgba(52,211,153,0.15)' }}>
-              <Plus size={12} /> Log Call
-            </button>
             <button onClick={() => setAddNoteOpen(true)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
               style={{ background: 'rgba(124,58,237,0.08)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.15)' }}>
@@ -939,6 +1042,106 @@ export default function LeadDetailPage() {
             <RefreshCw size={13} />
           </button>
         </div>
+      </div>
+
+      {/* ── Message Templates ─────────────────────────────────────────── */}
+      <div className="bento-card overflow-hidden">
+        <button
+          className="w-full flex items-center justify-between p-5 transition-colors"
+          onClick={() => setTemplatesOpen(o => !o)}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.03)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'rgba(96,165,250,0.1)' }}>
+              <Copy size={13} style={{ color: '#60A5FA' }} />
+            </div>
+            <h2 className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>Message Templates</h2>
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+              style={{ background: 'rgba(96,165,250,0.08)', color: '#60A5FA', border: '1px solid rgba(96,165,250,0.15)' }}>
+              5 templates
+            </span>
+          </div>
+          <ChevronDown size={14}
+            className={`transition-transform duration-200 ${templatesOpen ? 'rotate-180' : ''}`}
+            style={{ color: 'var(--color-text3)' }} />
+        </button>
+
+        {templatesOpen && (
+          <div className="px-5 pb-6 space-y-5" style={{ borderTop: '1px solid var(--color-border2)' }}>
+
+            {/* WhatsApp */}
+            <div className="pt-4">
+              <p className="text-[9px] uppercase tracking-widest font-semibold mb-3 flex items-center gap-1.5"
+                style={{ color: 'var(--color-text3)' }}>
+                <MessageSquare size={10} /> WhatsApp
+              </p>
+              <div className="space-y-2">
+                {ALGOLEND_TEMPLATES.whatsapp.map(tpl => {
+                  const body = tpl.text(lead.name);
+                  const copied = copiedId === tpl.id;
+                  return (
+                    <div key={tpl.id} className="rounded-xl p-3.5 relative"
+                      style={{ background: 'var(--color-surface2)', border: '1px solid var(--color-border2)' }}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-bold mb-1.5" style={{ color: 'var(--color-text2)' }}>{tpl.label}</p>
+                          <p className="text-[11px] leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--color-text3)' }}>{body}</p>
+                        </div>
+                        <button
+                          onClick={() => copyTemplate(tpl.id, body)}
+                          className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all"
+                          style={copied
+                            ? { background: 'rgba(52,211,153,0.12)', color: '#34D399', border: '1px solid rgba(52,211,153,0.25)' }
+                            : { background: 'rgba(96,165,250,0.08)', color: '#60A5FA', border: '1px solid rgba(96,165,250,0.15)' }
+                          }>
+                          <Copy size={10} />
+                          {copied ? 'Copied!' : 'Copy'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Email */}
+            <div>
+              <p className="text-[9px] uppercase tracking-widest font-semibold mb-3 flex items-center gap-1.5"
+                style={{ color: 'var(--color-text3)' }}>
+                <Mail size={10} /> Email
+              </p>
+              <div className="space-y-2">
+                {ALGOLEND_TEMPLATES.email.map(tpl => {
+                  const body = tpl.text(lead.name);
+                  const copied = copiedId === tpl.id;
+                  return (
+                    <div key={tpl.id} className="rounded-xl p-3.5 relative"
+                      style={{ background: 'var(--color-surface2)', border: '1px solid var(--color-border2)' }}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-bold mb-1.5" style={{ color: 'var(--color-text2)' }}>{tpl.label}</p>
+                          <p className="text-[11px] leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--color-text3)' }}>{body}</p>
+                        </div>
+                        <button
+                          onClick={() => copyTemplate(tpl.id, body)}
+                          className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all"
+                          style={copied
+                            ? { background: 'rgba(52,211,153,0.12)', color: '#34D399', border: '1px solid rgba(52,211,153,0.25)' }
+                            : { background: 'rgba(167,139,250,0.08)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.15)' }
+                          }>
+                          <Copy size={10} />
+                          {copied ? 'Copied!' : 'Copy'}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+          </div>
+        )}
       </div>
 
       {/* ── Unified Activity Timeline ──────────────────────────────────── */}

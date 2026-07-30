@@ -20,7 +20,7 @@ function getGreeting() {
 interface DashStats {
   leads:    { total: number; newThisMonth: number; awaitingContact: number };
   activity: { callsToday: number; followUpsDue: number; overdue: number };
-  clients:  { converted: number; live: number; pendingCompliance: number; complianceApproved: number };
+  clients:  { converted: number; convertedThisMonth: number; live: number; pendingCompliance: number; complianceApproved: number };
   earnings: { commissionPending: number; commissionEarned: number; expectedPayroll: number };
 }
 
@@ -32,6 +32,7 @@ interface TodayCall {
 function fmt(n: number) { return `R ${n.toLocaleString('en-ZA')}`; }
 
 const DAILY_CALL_GOAL = 20;
+const MONTHLY_LEAD_GOAL = 8;
 const MONTH = new Date().toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' });
 
 // ── SVG call-goal ring (Apple Activity inspired) ─────────────────────────────
@@ -158,7 +159,7 @@ export default function TelemarketerHomePage() {
   const s = stats ?? {
     leads:    { total: 0, newThisMonth: 0, awaitingContact: 0 },
     activity: { callsToday: 0, followUpsDue: 0, overdue: 0 },
-    clients:  { converted: 0, live: 0, pendingCompliance: 0, complianceApproved: 0 },
+    clients:  { converted: 0, convertedThisMonth: 0, live: 0, pendingCompliance: 0, complianceApproved: 0 },
     earnings: { commissionPending: 0, commissionEarned: 0, expectedPayroll: 0 },
   };
 
@@ -167,6 +168,9 @@ export default function TelemarketerHomePage() {
   const winRate = s.leads.total > 0
     ? Math.round((s.clients.converted / s.leads.total) * 100)
     : 0;
+
+  const goalPct = Math.round((s.clients.convertedThisMonth / MONTHLY_LEAD_GOAL) * 100);
+  const goalRemaining = Math.max(MONTHLY_LEAD_GOAL - s.clients.convertedThisMonth, 0);
 
   return (
     <div className="space-y-4 page-enter">
@@ -315,8 +319,8 @@ export default function TelemarketerHomePage() {
 
       {!loading && (
         <>
-          {/* ══ Row 2: Earnings Spotlight (super_admin only) ══════════════ */}
-          {isSuperAdmin && <div className="bento-card p-6 relative overflow-hidden">
+          {/* ══ Row 2: Earnings Spotlight ════════════════════════════════ */}
+          <div className="bento-card p-6 relative overflow-hidden">
             <div
               className="pointer-events-none absolute -bottom-10 -right-10 w-48 h-48 rounded-full"
               style={{ background: 'radial-gradient(circle, rgba(52,211,153,0.09) 0%, transparent 70%)' }}
@@ -380,7 +384,7 @@ export default function TelemarketerHomePage() {
                 ))}
               </div>
             </div>
-          </div>}
+          </div>
 
           {/* ══ Row 3: KPI Cards ═════════════════════════════════════════ */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -441,6 +445,64 @@ export default function TelemarketerHomePage() {
                 <SparkBars data={item.bars} color={item.color} />
               </Link>
             ))}
+          </div>
+
+          {/* ══ Monthly Goal ════════════════════════════════════════════ */}
+          <div className="bento-card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: 'rgba(167,139,250,0.12)', color: '#A78BFA' }}>
+                  <Target size={13} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--color-text3)' }}>
+                    Monthly Goal
+                  </p>
+                  <p className="text-xs font-semibold leading-tight" style={{ color: 'var(--color-text)' }}>
+                    {MONTH}
+                  </p>
+                </div>
+              </div>
+              {goalPct >= 100 && (
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1"
+                  style={{ background: 'rgba(52,211,153,0.10)', color: '#34D399', border: '1px solid rgba(52,211,153,0.25)' }}>
+                  <Flame size={10} /> Goal reached!
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-end justify-between mb-2">
+              <p className="text-2xl font-bold leading-none" style={{ color: 'var(--color-text)', fontFamily: 'var(--font-mono)' }}>
+                {s.clients.convertedThisMonth}
+                <span className="text-base font-normal ml-1" style={{ color: 'var(--color-text3)' }}>/ {MONTHLY_LEAD_GOAL}</span>
+              </p>
+              <p className="text-sm font-bold" style={{ color: goalPct >= 100 ? '#34D399' : '#A78BFA' }}>
+                {goalPct}%
+              </p>
+            </div>
+
+            <div className="h-2 rounded-full overflow-hidden mb-2.5" style={{ background: 'rgba(255,255,255,0.06)' }}>
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${Math.min(goalPct, 100)}%`,
+                  background: goalPct >= 100
+                    ? 'linear-gradient(90deg, #34D399, #10B981)'
+                    : 'linear-gradient(90deg, #7C3AED, #A78BFA)',
+                  boxShadow: goalPct >= 100
+                    ? '0 0 10px rgba(52,211,153,0.4)'
+                    : '0 0 10px rgba(167,139,250,0.4)',
+                  transition: 'width 1.2s cubic-bezier(0.16,1,0.3,1)',
+                }}
+              />
+            </div>
+
+            <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
+              {goalPct >= 100
+                ? 'Outstanding work — you have smashed your monthly conversion target!'
+                : `${goalRemaining} more conversion${goalRemaining !== 1 ? 's' : ''} to hit your target for ${MONTH.split(' ')[0]}`}
+            </p>
           </div>
 
           {/* ══ Compliance nudge ════════════════════════════════════════ */}

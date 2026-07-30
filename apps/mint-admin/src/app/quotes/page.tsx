@@ -11,12 +11,12 @@ import {
 } from '@/lib/quote-pricing';
 import {
   FileText, Send, Download, Plus, CheckCircle, Clock, XCircle, X, Eye, Sparkles,
-  Pencil, Save, UserPlus,
+  Pencil, Save, UserPlus, AlertCircle, ThumbsUp, ThumbsDown,
 } from 'lucide-react';
 import { PriceReveal } from '@/components/PriceReveal';
 import { useRole } from '@/hooks/useRole';
 
-type QuoteStatus = 'draft' | 'sent' | 'viewed' | 'accepted' | 'declined' | 'expired';
+type QuoteStatus = 'pending_approval' | 'draft' | 'sent' | 'viewed' | 'accepted' | 'declined' | 'expired';
 
 interface Quote {
   dbId:           string;       // UUID from DB (used for API calls)
@@ -35,6 +35,8 @@ interface Quote {
   validUntil:     string | null;
   viewedAt:       string | null;
   acceptedAt?:    string;
+  agentId?:       string;
+  submittedBy?:   string;
 }
 
 // Map DB row → Quote
@@ -57,16 +59,19 @@ function fromRow(row: any): Quote {
     validUntil:     row.valid_until ?? null,
     viewedAt:       row.viewed_at  ? row.viewed_at.slice(0, 16).replace('T', ' ') : null,
     acceptedAt:     row.accepted_at ? row.accepted_at.slice(0, 16).replace('T', ' ') : undefined,
+    agentId:        row.agent_id    ?? undefined,
+    submittedBy:    row.submitted_by ?? undefined,
   };
 }
 
 const statusStyle: Record<QuoteStatus, { bg: string; border: string; color: string; icon: typeof Clock }> = {
-  draft:    { bg: 'rgba(75,80,128,0.15)',   border: 'rgba(75,80,128,0.3)',    color: 'var(--color-text3)', icon: FileText    },
-  sent:     { bg: 'rgba(96,165,250,0.1)',   border: 'rgba(96,165,250,0.25)',  color: 'var(--color-sky)',   icon: Send        },
-  viewed:   { bg: 'rgba(251,191,36,0.1)',   border: 'rgba(251,191,36,0.25)', color: 'var(--color-amber)', icon: Clock       },
-  accepted: { bg: 'rgba(52,211,153,0.1)',   border: 'rgba(52,211,153,0.25)', color: 'var(--color-green)', icon: CheckCircle },
-  declined: { bg: 'rgba(248,113,113,0.1)',  border: 'rgba(248,113,113,0.25)',color: 'var(--color-red)',   icon: XCircle     },
-  expired:  { bg: 'rgba(75,80,128,0.1)',    border: 'rgba(75,80,128,0.2)',   color: 'var(--color-text3)', icon: XCircle     },
+  pending_approval: { bg: 'rgba(251,191,36,0.12)',  border: 'rgba(251,191,36,0.3)',   color: '#FBBF24',            icon: AlertCircle },
+  draft:            { bg: 'rgba(75,80,128,0.15)',   border: 'rgba(75,80,128,0.3)',    color: 'var(--color-text3)', icon: FileText    },
+  sent:             { bg: 'rgba(96,165,250,0.1)',   border: 'rgba(96,165,250,0.25)',  color: 'var(--color-sky)',   icon: Send        },
+  viewed:           { bg: 'rgba(251,191,36,0.1)',   border: 'rgba(251,191,36,0.25)', color: 'var(--color-amber)', icon: Clock       },
+  accepted:         { bg: 'rgba(52,211,153,0.1)',   border: 'rgba(52,211,153,0.25)', color: 'var(--color-green)', icon: CheckCircle },
+  declined:         { bg: 'rgba(248,113,113,0.1)',  border: 'rgba(248,113,113,0.25)',color: 'var(--color-red)',   icon: XCircle     },
+  expired:          { bg: 'rgba(75,80,128,0.1)',    border: 'rgba(75,80,128,0.2)',   color: 'var(--color-text3)', icon: XCircle     },
 };
 
 function todayPlus(days: number) {
@@ -251,7 +256,7 @@ export default function QuotesPage() {
   const filtered       = filter === 'all' ? quotes : quotes.filter((q) => q.status === filter);
   const pipelineValue  = quotes.filter((q) => ['sent','viewed'].includes(q.status)).reduce((s, q) => s + q.monthlyFee * 12, 0);
   const acceptedValue  = quotes.filter((q) => q.status === 'accepted').reduce((s, q) => s + q.setupFee + q.monthlyFee * 12, 0);
-  const decidedCount   = quotes.filter((q) => q.status !== 'draft').length;
+  const decidedCount   = quotes.filter((q) => !['draft', 'pending_approval'].includes(q.status)).length;
   const acceptanceRate = decidedCount === 0 ? 0 : Math.round((quotes.filter((q) => q.status === 'accepted').length / decidedCount) * 100);
 
   return (
@@ -283,35 +288,75 @@ export default function QuotesPage() {
           <button onClick={() => createQuote()} disabled={saving} className="btn-purple btn-shine inline-flex items-center gap-1.5 disabled:opacity-50"><Plus size={15} /> New quote</button>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bento-card p-5">
-            <p className="eyebrow mb-1">Pipeline ARR (sent + viewed)</p>
-            <p className="text-3xl font-bold tracking-tight stat-value" style={{ color: 'var(--color-text)' }}>{fmtR(pipelineValue)}</p>
-            <p className="text-xs mt-1.5 font-semibold" style={{ color: 'var(--color-amber)' }}>{quotes.filter((q) => ['sent','viewed'].includes(q.status)).length} awaiting response</p>
-          </div>
-          <div className="bento-card p-5">
-            <p className="eyebrow mb-1">Accepted (TCV — yr 1)</p>
-            <p className="text-3xl font-bold tracking-tight stat-value" style={{ color: 'var(--color-green)' }}>{fmtR(acceptedValue)}</p>
-            <p className="text-xs mt-1.5 font-semibold" style={{ color: 'var(--color-green)' }}>{quotes.filter((q) => q.status === 'accepted').length} accepted</p>
-          </div>
-          <div className="bento-card p-5">
-            <p className="eyebrow mb-1">Acceptance rate</p>
-            <p className="text-3xl font-bold tracking-tight stat-value" style={{ color: 'var(--color-text)' }}>{acceptanceRate}%</p>
-            <p className="text-xs mt-1.5" style={{ color: 'var(--color-text3)' }}>Of {decidedCount} decided</p>
-          </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            {
+              label: 'Pending Review',
+              value: quotes.filter((q) => q.status === 'pending_approval').length,
+              display: String(quotes.filter((q) => q.status === 'pending_approval').length),
+              sub: 'Submitted by team — needs sign-off',
+              subColor: '#FBBF24',
+              rgb: '251,191,36',
+            },
+            {
+              label: 'Pipeline ARR',
+              value: pipelineValue,
+              display: fmtR(pipelineValue),
+              sub: `${quotes.filter((q) => ['sent','viewed'].includes(q.status)).length} awaiting response`,
+              subColor: 'var(--color-sky)',
+              rgb: '96,165,250',
+            },
+            {
+              label: 'Accepted (TCV yr 1)',
+              value: acceptedValue,
+              display: fmtR(acceptedValue),
+              sub: `${quotes.filter((q) => q.status === 'accepted').length} accepted`,
+              subColor: 'var(--color-green)',
+              rgb: '52,211,153',
+            },
+            {
+              label: 'Acceptance Rate',
+              value: acceptanceRate,
+              display: `${acceptanceRate}%`,
+              sub: `Of ${decidedCount} decided`,
+              subColor: 'var(--color-text3)',
+              rgb: '124,58,237',
+            },
+          ].map((card) => (
+            <div key={card.label} className="bento-card p-5 relative overflow-hidden">
+              {/* Dot grid */}
+              <div className="absolute inset-0 pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.12) 1px, transparent 1px)', backgroundSize: '16px 16px', opacity: 0.4 }} />
+              {/* Color wash */}
+              <div className="absolute inset-0 pointer-events-none" style={{ background: `linear-gradient(135deg, rgba(${card.rgb},0.09) 0%, transparent 60%)` }} />
+              <div className="relative">
+                <p className="eyebrow mb-1">{card.label}</p>
+                <p className="text-3xl font-bold tracking-tight stat-value" style={{ color: 'var(--color-text)' }}>{card.display}</p>
+                <p className="text-xs mt-1.5 font-semibold" style={{ color: card.subColor }}>{card.sub}</p>
+              </div>
+            </div>
+          ))}
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
-          {(['all','draft','sent','viewed','accepted','declined'] as const).map((f) => (
-            <button key={f} onClick={() => setFilter(f)} className="px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all"
-              style={filter === f ? { background: 'linear-gradient(135deg, var(--color-purple), var(--color-purple2))', color: '#fff', boxShadow: '0 2px 12px rgba(124,58,237,0.35)' } : { background: 'rgba(255,255,255,0.04)', color: 'var(--color-text3)', border: '1px solid var(--color-border2)' }}
-              onMouseEnter={(e) => { if (filter !== f) (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.08)'; }}
-              onMouseLeave={(e) => { if (filter !== f) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
-            >
-              {f === 'all' ? 'All' : f}
-              {f !== 'all' ? <span className="ml-1.5 opacity-60">{quotes.filter((q) => q.status === f).length}</span> : null}
-            </button>
-          ))}
+          {(['all','pending_approval','draft','sent','viewed','accepted','declined'] as const).map((f) => {
+            const label = f === 'all' ? 'All' : f === 'pending_approval' ? 'Pending Approval' : f.charAt(0).toUpperCase() + f.slice(1);
+            const count = f === 'all' ? quotes.length : quotes.filter((q) => q.status === f).length;
+            const hasPending = f === 'pending_approval' && count > 0;
+            return (
+              <button key={f} onClick={() => setFilter(f)} className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                style={filter === f
+                  ? { background: 'linear-gradient(135deg, var(--color-purple), var(--color-purple2))', color: '#fff', boxShadow: '0 2px 12px rgba(124,58,237,0.35)' }
+                  : hasPending
+                    ? { background: 'rgba(251,191,36,0.1)', color: '#FBBF24', border: '1px solid rgba(251,191,36,0.3)' }
+                    : { background: 'rgba(255,255,255,0.04)', color: 'var(--color-text3)', border: '1px solid var(--color-border2)' }}
+                onMouseEnter={(e) => { if (filter !== f) (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.08)'; }}
+                onMouseLeave={(e) => { if (filter !== f) (e.currentTarget as HTMLElement).style.background = hasPending ? 'rgba(251,191,36,0.1)' : 'rgba(255,255,255,0.04)'; }}
+              >
+                {label}
+                {f !== 'all' ? <span className="ml-1.5 opacity-60">{count}</span> : null}
+              </button>
+            );
+          })}
         </div>
 
         <div className="bento-card overflow-hidden p-0">
@@ -330,7 +375,7 @@ export default function QuotesPage() {
                   const s = statusStyle[q.status];
                   const StatusIcon = s.icon;
                   return (
-                    <tr key={q.dbId} className="cursor-pointer" onClick={() => setSelected(q)} style={{ animation: 'fade-up 0.4s cubic-bezier(0.16,1,0.3,1) both', animationDelay: `${i * 40}ms` }}>
+                    <tr key={q.dbId} className="cursor-pointer" onClick={() => setSelected(q)} style={{ animation: 'fade-up 0.4s cubic-bezier(0.16,1,0.3,1) both', animationDelay: `${i * 40}ms`, borderLeft: q.status === 'pending_approval' ? '3px solid #FBBF24' : undefined }}>
                       <td><p className="font-mono text-xs" style={{ color: 'var(--color-violet)' }}>{q.id}</p>{q.sentDate ? <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text3)' }}>Sent {q.sentDate}</p> : null}</td>
                       <td><p className="font-semibold" style={{ color: 'var(--color-text)' }}>{q.client}</p><p className="text-xs mt-0.5" style={{ color: 'var(--color-text3)' }}>{q.contact}</p></td>
                       <td><span className="font-semibold" style={{ color: 'var(--color-text)' }}>{fmtR(q.monthlyFee)}</span><span className="text-xs" style={{ color: 'var(--color-text3)' }}>/mo</span></td>
@@ -365,9 +410,14 @@ export default function QuotesPage() {
                 <h2 className="font-mono text-lg font-bold tracking-tight" style={{ color: 'var(--color-text)' }}>{selected.id}</h2>
                 <p className="text-sm mt-1" style={{ color: 'var(--color-text2)' }}>{selected.client}</p>
                 <p className="text-xs" style={{ color: 'var(--color-text3)' }}>{selected.contact} · {selected.email}</p>
+                {selected.submittedBy && (
+                  <p className="text-xs mt-1 font-medium" style={{ color: '#FBBF24' }}>
+                    Submitted by {selected.submittedBy} · awaiting approval
+                  </p>
+                )}
               </div>
               <div className="flex items-center gap-1.5 shrink-0 ml-4">
-                {selected.status === 'draft' && !editState ? (
+                {(selected.status === 'draft' || selected.status === 'pending_approval') && !editState ? (
                   <button onClick={() => openEdit(selected)} className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg" style={{ color: 'var(--color-violet)', background: 'rgba(124,58,237,0.08)', border: '1px solid rgba(124,58,237,0.2)' }}>
                     <Pencil size={12} /> Edit
                   </button>
@@ -456,6 +506,27 @@ export default function QuotesPage() {
                 </div>
               ) : (
                 <>
+                  {selected.status === 'pending_approval' ? (
+                    <div className="space-y-2 mb-1">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-center" style={{ color: 'var(--color-text3)' }}>
+                        Submitted by {selected.submittedBy ?? 'your team'} — review before approving
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button onClick={() => patchStatus(selected, { status: 'draft' })} disabled={saving}
+                          className="inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:-translate-y-0.5 disabled:opacity-50"
+                          style={{ background: 'linear-gradient(135deg, #059669, #34d399)', boxShadow: '0 4px 16px rgba(52,211,153,0.3)' }}>
+                          <ThumbsUp size={14} /> Approve
+                        </button>
+                        <button onClick={() => patchStatus(selected, { status: 'declined' })} disabled={saving}
+                          className="inline-flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-sm font-semibold transition-colors disabled:opacity-50"
+                          style={{ border: '1px solid rgba(248,113,113,0.3)', color: '#F87171', background: 'rgba(248,113,113,0.06)' }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.12)'; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(248,113,113,0.06)'; }}>
+                          <ThumbsDown size={14} /> Reject
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
                   {(['draft','sent','viewed'] as QuoteStatus[]).includes(selected.status) ? (
                     <button onClick={() => sendQuote(selected)} disabled={saving} className="btn-purple btn-shine w-full inline-flex items-center justify-center gap-2 disabled:opacity-50"><Send size={14} />{selected.status === 'draft' ? 'Send quote' : 'Resend quote'}</button>
                   ) : null}

@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import {
-  Filter, Plus, Phone, ChevronDown, Loader2, X, Clock,
-  Mail, Building2, FileText, MessageSquare, Calendar,
-  FileUp, RefreshCw,
+  Plus, Phone, ChevronDown, Loader2, X, Clock,
+  MessageSquare, Calendar, FileUp, RefreshCw, Search, Check,
 } from 'lucide-react';
 
 type LeadStatus =
@@ -64,6 +63,19 @@ import { SESSION_KEY_AGENT } from '@/components/TelemarketerShell';
 
 const ALL_STATUSES = Object.keys(STATUS_CFG) as LeadStatus[];
 
+type SortOption = 'newest' | 'oldest' | 'name' | 'followup';
+
+const SORT_LABELS: Record<SortOption, string> = {
+  newest:  'Newest First',
+  oldest:  'Oldest First',
+  name:    'Name A→Z',
+  followup: 'Follow-up Date',
+};
+
+const CALL_OUTCOMES = ['Answered', 'Voicemail', 'No Answer', 'Callback', 'Not Interested'] as const;
+
+// ─── StatusBadge ─────────────────────────────────────────────────────────────
+
 function StatusBadge({ status, onChange }: { status: LeadStatus; onChange: (s: LeadStatus) => void }) {
   const [open, setOpen] = useState(false);
   const cfg = STATUS_CFG[status];
@@ -102,6 +114,8 @@ function StatusBadge({ status, onChange }: { status: LeadStatus; onChange: (s: L
     </div>
   );
 }
+
+// ─── AddLeadModal ─────────────────────────────────────────────────────────────
 
 function AddLeadModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
   const [form, setForm] = useState({ clientName: '', company: '', phone: '', email: '' });
@@ -167,7 +181,93 @@ function AddLeadModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
   );
 }
 
-// Map a raw Supabase lead row to the telemarketer Lead shape
+// ─── CallLogModal ─────────────────────────────────────────────────────────────
+
+function CallLogModal({ lead, onClose }: { lead: Lead; onClose: () => void }) {
+  const [outcome, setOutcome] = useState<string>('Answered');
+  const [duration, setDuration] = useState('');
+  const [notes, setNotes] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    await fetch('/api/telemarketer/call-logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        lead_id:  lead.id,
+        outcome,
+        duration: duration !== '' ? Number(duration) : null,
+        notes,
+      }),
+    });
+    setSaving(false);
+    onClose();
+  }
+
+  return (
+    <div className="confirm-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="bento-card w-full max-w-sm p-7" style={{ animation: 'scale-in 0.25s cubic-bezier(0.16,1,0.3,1) both' }}>
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="font-bold text-lg" style={{ color: 'var(--color-text)' }}>Log Call</h3>
+          <button onClick={onClose} style={{ color: 'var(--color-text3)' }}><X size={16} /></button>
+        </div>
+        <p className="text-xs mb-5" style={{ color: 'var(--color-text3)' }}>
+          {lead.clientName} &middot; {lead.phone}
+        </p>
+        <form onSubmit={submit} className="space-y-3">
+          <div>
+            <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Outcome</label>
+            <select
+              required
+              className="field-input"
+              value={outcome}
+              onChange={e => setOutcome(e.target.value)}
+            >
+              {CALL_OUTCOMES.map(o => (
+                <option key={o} value={o}>{o}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Duration (minutes)</label>
+            <input
+              type="number"
+              min="0"
+              step="1"
+              className="field-input"
+              placeholder="e.g. 5"
+              value={duration}
+              onChange={e => setDuration(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Notes</label>
+            <textarea
+              className="field-input resize-none"
+              rows={3}
+              placeholder="What was discussed…"
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-xl text-sm"
+              style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>Cancel</button>
+            <button type="submit" disabled={saving} className="btn-purple btn-shine flex-1 inline-flex items-center justify-center gap-1.5">
+              {saving ? <Loader2 size={13} className="animate-spin" /> : <Phone size={13} />}
+              {saving ? 'Saving…' : 'Save Log'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 function mapLead(raw: Record<string, string>): Lead {
   return {
     id:           raw.id,
@@ -181,11 +281,28 @@ function mapLead(raw: Record<string, string>): Lead {
   };
 }
 
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 export default function TelemarketerLeadsPage() {
   const [leads,        setLeads]        = useState<Lead[]>([]);
   const [loading,      setLoading]      = useState(true);
   const [filterStatus, setFilterStatus] = useState<LeadStatus | null>(null);
   const [addOpen,      setAddOpen]      = useState(false);
+
+  // Search + sort
+  const [search,   setSearch]   = useState('');
+  const [sortBy,   setSortBy]   = useState<SortOption>('newest');
+  const [sortOpen, setSortOpen] = useState(false);
+
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkSaving,  setBulkSaving]  = useState(false);
+  const selectAllRef = useRef<HTMLInputElement>(null);
+
+  // Quick call log
+  const [callLogLead, setCallLogLead] = useState<Lead | null>(null);
+
+  // ── Data loading ────────────────────────────────────────────────────────────
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -200,6 +317,8 @@ export default function TelemarketerLeadsPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  // ── Status update ───────────────────────────────────────────────────────────
+
   async function updateStatus(id: string, status: LeadStatus) {
     setLeads(prev => prev.map(l => l.id === id ? { ...l, status } : l));
     await fetch(`/api/leads/${id}`, {
@@ -209,16 +328,135 @@ export default function TelemarketerLeadsPage() {
     });
   }
 
-  const filtered = filterStatus ? leads.filter(l => l.status === filterStatus) : leads;
+  // ── Filtered + sorted view ──────────────────────────────────────────────────
+
+  const displayed = useMemo(() => {
+    let result = leads;
+
+    // 1. Status filter
+    if (filterStatus) result = result.filter(l => l.status === filterStatus);
+
+    // 2. Search filter (name, company, phone)
+    const q = search.trim().toLowerCase();
+    if (q) {
+      result = result.filter(l =>
+        l.clientName.toLowerCase().includes(q) ||
+        l.company.toLowerCase().includes(q) ||
+        l.phone.toLowerCase().includes(q)
+      );
+    }
+
+    // 3. Sort
+    return [...result].sort((a, b) => {
+      switch (sortBy) {
+        case 'oldest':
+          return new Date(a.dateAdded).getTime() - new Date(b.dateAdded).getTime();
+        case 'name':
+          return a.clientName.localeCompare(b.clientName);
+        case 'followup': {
+          if (!a.nextFollowUp && !b.nextFollowUp) return 0;
+          if (!a.nextFollowUp) return 1;
+          if (!b.nextFollowUp) return -1;
+          return new Date(a.nextFollowUp).getTime() - new Date(b.nextFollowUp).getTime();
+        }
+        default: // newest
+          return new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime();
+      }
+    });
+  }, [leads, filterStatus, search, sortBy]);
+
+  // ── Checkbox state ──────────────────────────────────────────────────────────
+
+  const allSelected  = displayed.length > 0 && displayed.every(l => selectedIds.has(l.id));
+  const someSelected = selectedIds.size > 0;
+
+  // Drive the native indeterminate property
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someSelected && !allSelected;
+    }
+  }, [someSelected, allSelected]);
+
+  function toggleAll() {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(displayed.map(l => l.id)));
+    }
+  }
+
+  function toggleOne(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  // ── Bulk mark contacted ─────────────────────────────────────────────────────
+
+  async function bulkMarkContacted() {
+    setBulkSaving(true);
+    const ids = [...selectedIds];
+    await Promise.all(ids.map(id =>
+      fetch(`/api/leads/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tm_status: 'Contacted' }),
+      })
+    ));
+    setLeads(prev => prev.map(l => selectedIds.has(l.id) ? { ...l, status: 'Contacted' as LeadStatus } : l));
+    setSelectedIds(new Set());
+    setBulkSaving(false);
+  }
+
+  // ── Status counts for filter strip ──────────────────────────────────────────
 
   const counts = leads.reduce<Partial<Record<LeadStatus, number>>>((acc, l) => {
     acc[l.status] = (acc[l.status] ?? 0) + 1;
     return acc;
   }, {});
 
+  // ── Render ──────────────────────────────────────────────────────────────────
+
   return (
     <div className="space-y-6 page-enter">
-      {addOpen && <AddLeadModal onClose={() => setAddOpen(false)} onAdded={load} />}
+      {addOpen      && <AddLeadModal onClose={() => setAddOpen(false)} onAdded={load} />}
+      {callLogLead  && <CallLogModal lead={callLogLead} onClose={() => setCallLogLead(null)} />}
+
+      {/* Floating bulk action toolbar */}
+      {someSelected && (
+        <div
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-3 rounded-2xl"
+          style={{
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border2)',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.45)',
+          }}
+        >
+          <span className="text-sm font-semibold whitespace-nowrap" style={{ color: 'var(--color-text)' }}>
+            {selectedIds.size} selected
+          </span>
+          <div style={{ width: 1, height: 20, background: 'var(--color-border2)', flexShrink: 0 }} />
+          <button
+            onClick={bulkMarkContacted}
+            disabled={bulkSaving}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap"
+            style={{ background: 'rgba(96,165,250,0.12)', color: '#60A5FA', border: '1px solid rgba(96,165,250,0.25)' }}
+          >
+            {bulkSaving ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
+            Mark as Contacted
+          </button>
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="flex items-center px-1.5 py-1.5 rounded-xl text-xs transition-all"
+            style={{ color: 'var(--color-text3)' }}
+            title="Clear selection"
+          >
+            <X size={13} />
+          </button>
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -274,13 +512,80 @@ export default function TelemarketerLeadsPage() {
         })}
       </div>
 
-      {/* Loading / empty state */}
+      {/* Search + sort controls */}
+      {!loading && leads.length > 0 && (
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Search */}
+          <div className="relative flex-1 min-w-[220px]">
+            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--color-text3)' }} />
+            <input
+              type="text"
+              placeholder="Search by name, company, or phone…"
+              className="field-input"
+              style={{ paddingLeft: 32 }}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+            {search && (
+              <button
+                onClick={() => setSearch('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+                style={{ color: 'var(--color-text3)' }}
+                title="Clear search"
+              >
+                <X size={12} />
+              </button>
+            )}
+          </div>
+
+          {/* Sort dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setSortOpen(o => !o)}
+              className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors whitespace-nowrap"
+              style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)', background: 'var(--color-surface2)' }}
+            >
+              <span className="text-xs">{SORT_LABELS[sortBy]}</span>
+              <ChevronDown size={13} />
+            </button>
+            {sortOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setSortOpen(false)} />
+                <div
+                  className="absolute right-0 top-full mt-1 z-20 rounded-xl overflow-hidden min-w-[160px]"
+                  style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)' }}
+                >
+                  {(Object.entries(SORT_LABELS) as [SortOption, string][]).map(([key, label]) => (
+                    <button
+                      key={key}
+                      onClick={() => { setSortBy(key); setSortOpen(false); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors"
+                      style={{ color: sortBy === key ? 'var(--color-violet)' : 'var(--color-text2)' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                    >
+                      <span
+                        className="w-1.5 h-1.5 rounded-full shrink-0"
+                        style={{ background: sortBy === key ? 'var(--color-violet)' : 'transparent' }}
+                      />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Loading state */}
       {loading && (
         <div className="bento-card p-12 flex items-center justify-center">
           <Loader2 size={22} className="animate-spin" style={{ color: 'var(--color-violet)' }} />
         </div>
       )}
 
+      {/* Empty: no leads at all */}
       {!loading && leads.length === 0 && (
         <div className="bento-card p-12 text-center">
           <p className="text-sm" style={{ color: 'var(--color-text3)' }}>
@@ -289,125 +594,161 @@ export default function TelemarketerLeadsPage() {
         </div>
       )}
 
-      {/* Table */}
-      {!loading && leads.length > 0 && <div className="bento-card overflow-hidden p-0">
-        <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--color-border2)' }}>
-          <p className="text-xs font-semibold" style={{ color: 'var(--color-text3)' }}>
-            {filtered.length} lead{filtered.length !== 1 ? 's' : ''}{filterStatus ? ` · ${filterStatus}` : ' · all statuses'}
+      {/* Empty: leads exist but nothing matches current filters/search */}
+      {!loading && leads.length > 0 && displayed.length === 0 && (
+        <div className="bento-card p-10 text-center">
+          <p className="text-sm" style={{ color: 'var(--color-text3)' }}>
+            No leads match your current filters.
           </p>
-          {filterStatus && (
-            <button
-              onClick={() => setFilterStatus(null)}
-              className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"
-              style={{ background: STATUS_CFG[filterStatus].bg, color: STATUS_CFG[filterStatus].color, border: `1px solid ${STATUS_CFG[filterStatus].border}` }}
-            >
-              <X size={8} /> clear filter
-            </button>
-          )}
         </div>
+      )}
 
-        <div className="overflow-x-auto">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Client</th>
-                <th>Phone</th>
-                <th>Email</th>
-                <th>Date Added</th>
-                <th>Status</th>
-                <th>Next Follow-Up</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(lead => (
-                <tr key={lead.id}>
-                  <td>
-                    <Link href={`/telemarketer/leads/${lead.id}`} className="flex items-center gap-2.5 group">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold text-white shrink-0"
-                        style={{ background: 'linear-gradient(135deg,#7C3AED,#A78BFA)' }}>
-                        {lead.clientName.split(' ').map(w => w[0]).join('').slice(0, 2)}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold group-hover:text-[var(--color-violet)] transition-colors" style={{ color: 'var(--color-text)' }}>{lead.clientName}</p>
-                        <p className="text-xs" style={{ color: 'var(--color-text3)' }}>{lead.company}</p>
-                      </div>
-                    </Link>
-                  </td>
-                  <td>
-                    <a href={`tel:${lead.phone}`} className="text-sm flex items-center gap-1.5 transition-colors"
-                      style={{ color: 'var(--color-text2)' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#34D399'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text2)'; }}
-                    >
-                      <Phone size={11} style={{ opacity: 0.6 }} /> {lead.phone}
-                    </a>
-                  </td>
-                  <td>
-                    <a href={`mailto:${lead.email}`} className="text-xs transition-colors"
-                      style={{ color: 'var(--color-text3)' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; }}
-                    >
-                      {lead.email}
-                    </a>
-                  </td>
-                  <td>
-                    <span className="text-xs" style={{ color: 'var(--color-text3)', fontFamily: 'var(--font-mono)' }}>
-                      {new Date(lead.dateAdded).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}
-                    </span>
-                  </td>
-                  <td>
-                    <StatusBadge status={lead.status} onChange={s => updateStatus(lead.id, s)} />
-                  </td>
-                  <td>
-                    {lead.nextFollowUp ? (
-                      <span className="text-xs flex items-center gap-1" style={{ color: 'var(--color-text3)', fontFamily: 'var(--font-mono)' }}>
-                        <Clock size={10} />
-                        {new Date(lead.nextFollowUp).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}
-                      </span>
-                    ) : (
-                      <span className="text-xs" style={{ color: 'var(--color-text3)', opacity: 0.4 }}>—</span>
-                    )}
-                  </td>
-                  <td>
-                    <div className="flex items-center gap-1.5">
-                      <a href={`tel:${lead.phone}`}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-all"
-                        style={{ background: 'rgba(52,211,153,0.08)', color: '#34D399', border: '1px solid rgba(52,211,153,0.15)' }}
-                        title="Call"
-                      >
-                        <Phone size={10} /> Call
-                      </a>
-                      <Link href={`/telemarketer/leads/${lead.id}`}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-all"
-                        style={{ background: 'rgba(124,58,237,0.08)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.15)' }}
-                        title="View detail"
-                      >
-                        <MessageSquare size={10} /> Notes
-                      </Link>
-                      <Link href={`/telemarketer/leads/${lead.id}`}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-all"
-                        style={{ background: 'rgba(96,165,250,0.08)', color: '#60A5FA', border: '1px solid rgba(96,165,250,0.15)' }}
-                        title="Schedule follow-up"
-                      >
-                        <Calendar size={10} /> Follow-up
-                      </Link>
-                      <Link href={`/telemarketer/documents?lead=${lead.id}`}
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-all"
-                        style={{ background: 'rgba(251,191,36,0.08)', color: '#FBBF24', border: '1px solid rgba(251,191,36,0.15)' }}
-                        title="Upload docs"
-                      >
-                        <FileUp size={10} />
-                      </Link>
-                    </div>
-                  </td>
+      {/* Table */}
+      {!loading && leads.length > 0 && displayed.length > 0 && (
+        <div className="bento-card overflow-hidden p-0">
+          <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--color-border2)' }}>
+            <p className="text-xs font-semibold" style={{ color: 'var(--color-text3)' }}>
+              {displayed.length} lead{displayed.length !== 1 ? 's' : ''}
+              {filterStatus ? ` · ${filterStatus}` : search.trim() ? ` matching “${search.trim()}”` : ' · all statuses'}
+            </p>
+            {filterStatus && (
+              <button
+                onClick={() => setFilterStatus(null)}
+                className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1"
+                style={{ background: STATUS_CFG[filterStatus].bg, color: STATUS_CFG[filterStatus].color, border: `1px solid ${STATUS_CFG[filterStatus].border}` }}
+              >
+                <X size={8} /> clear filter
+              </button>
+            )}
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th style={{ width: 36 }}>
+                    <input
+                      ref={selectAllRef}
+                      type="checkbox"
+                      checked={allSelected}
+                      onChange={toggleAll}
+                      className="w-3.5 h-3.5 rounded cursor-pointer"
+                      style={{ accentColor: 'var(--color-violet)' }}
+                      title={allSelected ? 'Deselect all' : 'Select all'}
+                    />
+                  </th>
+                  <th>Client</th>
+                  <th>Phone</th>
+                  <th>Email</th>
+                  <th>Date Added</th>
+                  <th>Status</th>
+                  <th>Next Follow-Up</th>
+                  <th>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {displayed.map(lead => (
+                  <tr
+                    key={lead.id}
+                    style={selectedIds.has(lead.id) ? { background: 'rgba(124,58,237,0.04)' } : undefined}
+                  >
+                    <td style={{ paddingLeft: 16 }}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(lead.id)}
+                        onChange={() => toggleOne(lead.id)}
+                        className="w-3.5 h-3.5 rounded cursor-pointer"
+                        style={{ accentColor: 'var(--color-violet)' }}
+                      />
+                    </td>
+                    <td>
+                      <Link href={`/telemarketer/leads/${lead.id}`} className="flex items-center gap-2.5 group">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold text-white shrink-0"
+                          style={{ background: 'linear-gradient(135deg,#7C3AED,#A78BFA)' }}>
+                          {lead.clientName.split(' ').map(w => w[0]).join('').slice(0, 2)}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold group-hover:text-[var(--color-violet)] transition-colors" style={{ color: 'var(--color-text)' }}>{lead.clientName}</p>
+                          <p className="text-xs" style={{ color: 'var(--color-text3)' }}>{lead.company}</p>
+                        </div>
+                      </Link>
+                    </td>
+                    <td>
+                      <a href={`tel:${lead.phone}`} className="text-sm flex items-center gap-1.5 transition-colors"
+                        style={{ color: 'var(--color-text2)' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#34D399'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text2)'; }}
+                      >
+                        <Phone size={11} style={{ opacity: 0.6 }} /> {lead.phone}
+                      </a>
+                    </td>
+                    <td>
+                      <a href={`mailto:${lead.email}`} className="text-xs transition-colors"
+                        style={{ color: 'var(--color-text3)' }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)'; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; }}
+                      >
+                        {lead.email}
+                      </a>
+                    </td>
+                    <td>
+                      <span className="text-xs" style={{ color: 'var(--color-text3)', fontFamily: 'var(--font-mono)' }}>
+                        {new Date(lead.dateAdded).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}
+                      </span>
+                    </td>
+                    <td>
+                      <StatusBadge status={lead.status} onChange={s => updateStatus(lead.id, s)} />
+                    </td>
+                    <td>
+                      {lead.nextFollowUp ? (
+                        <span className="text-xs flex items-center gap-1" style={{ color: 'var(--color-text3)', fontFamily: 'var(--font-mono)' }}>
+                          <Clock size={10} />
+                          {new Date(lead.nextFollowUp).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}
+                        </span>
+                      ) : (
+                        <span className="text-xs" style={{ color: 'var(--color-text3)', opacity: 0.4 }}>&mdash;</span>
+                      )}
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setCallLogLead(lead)}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-all"
+                          style={{ background: 'rgba(52,211,153,0.08)', color: '#34D399', border: '1px solid rgba(52,211,153,0.15)' }}
+                          title="Log call"
+                        >
+                          <Phone size={10} /> Call
+                        </button>
+                        <Link href={`/telemarketer/leads/${lead.id}`}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-all"
+                          style={{ background: 'rgba(124,58,237,0.08)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.15)' }}
+                          title="View detail"
+                        >
+                          <MessageSquare size={10} /> Notes
+                        </Link>
+                        <Link href={`/telemarketer/leads/${lead.id}`}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-all"
+                          style={{ background: 'rgba(96,165,250,0.08)', color: '#60A5FA', border: '1px solid rgba(96,165,250,0.15)' }}
+                          title="Schedule follow-up"
+                        >
+                          <Calendar size={10} /> Follow-up
+                        </Link>
+                        <Link href={`/telemarketer/documents?lead=${lead.id}`}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-all"
+                          style={{ background: 'rgba(251,191,36,0.08)', color: '#FBBF24', border: '1px solid rgba(251,191,36,0.15)' }}
+                          title="Upload docs"
+                        >
+                          <FileUp size={10} />
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>}
+      )}
     </div>
   );
 }

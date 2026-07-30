@@ -23,48 +23,90 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const [usersRes, leadsRes, commissionsRes] = await Promise.all([
+  const now        = new Date();
+  const today      = now.toISOString().split('T')[0];
+  const weekStart  = new Date(now);
+  weekStart.setDate(now.getDate() - ((now.getDay() + 6) % 7)); // Monday
+  weekStart.setHours(0, 0, 0, 0);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const [usersRes, leadsRes, commissionsRes, callsRes, followUpsRes, recentCallsRes] = await Promise.all([
     supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
 
     supabaseAdmin
       .from('leads')
-      .select('assigned_to, tm_status')
+      .select('assigned_to, tm_status, created_at')
       .not('assigned_to', 'is', null),
 
     supabaseAdmin
       .from('commissions')
       .select('agent_id, commission_amount, status'),
+
+    supabaseAdmin
+      .from('call_logs')
+      .select('agent_id, called_at, outcome, duration')
+      .gte('called_at', monthStart.toISOString()),
+
+    supabaseAdmin
+      .from('follow_ups')
+      .select('agent_id, due_date, completed')
+      .eq('completed', false),
+
+    supabaseAdmin
+      .from('call_logs')
+      .select('id, agent_id, outcome, duration, notes, called_at, lead_id, leads(name, company)')
+      .order('called_at', { ascending: false })
+      .limit(40),
   ]);
 
   const telemarketers = (usersRes.data?.users ?? [])
     .filter(u => (u.user_metadata?.role as string | undefined) === 'telemarketer');
 
-  const leads = leadsRes.data ?? [];
+  const leads       = leadsRes.data ?? [];
   const commissions = commissionsRes.data ?? [];
+  const calls       = callsRes.data ?? [];
+  const followUps   = followUpsRes.data ?? [];
 
-  // Group leads by agent
-  type LeadBucket = { total: number; converted: number; pending: number };
+  type LeadBucket = { total: number; converted: number; newLead: number; wonThisMonth: number };
   const leadsByAgent = leads.reduce<Record<string, LeadBucket>>((acc, l) => {
     const id = l.assigned_to as string;
-    if (!acc[id]) acc[id] = { total: 0, converted: 0, pending: 0 };
+    if (!acc[id]) acc[id] = { total: 0, converted: 0, newLead: 0, wonThisMonth: 0 };
     acc[id].total++;
-    if (l.tm_status === 'Converted' || l.tm_status === 'Won') acc[id].converted++;
-    if (l.tm_status === 'Pending Collection') acc[id].pending++;
+    if (l.tm_status === 'Converted' || l.tm_status === 'Won') {
+      acc[id].converted++;
+      if (l.created_at >= monthStart.toISOString()) acc[id].wonThisMonth++;
+    }
+    if (!l.tm_status || l.tm_status === 'New Lead') acc[id].newLead++;
     return acc;
   }, {});
 
-  // Group commissions by agent
   type CommBucket = { pending: number; ready: number; paid: number };
   const commByAgent = commissions.reduce<Record<string, CommBucket>>((acc, c) => {
     const id = c.agent_id as string;
     if (!acc[id]) acc[id] = { pending: 0, ready: 0, paid: 0 };
-    if (c.status === 'Pending Collection' || c.status === 'Pending Payroll') {
-      acc[id].pending += c.commission_amount ?? 0;
-    } else if (c.status === 'Payroll Ready') {
-      acc[id].ready += c.commission_amount ?? 0;
-    } else if (c.status === 'Paid') {
-      acc[id].paid += c.commission_amount ?? 0;
-    }
+    if (['Pending Collection', 'Pending Payroll'].includes(c.status)) acc[id].pending += Number(c.commission_amount ?? 0);
+    else if (c.status === 'Payroll Ready') acc[id].ready += Number(c.commission_amount ?? 0);
+    else if (c.status === 'Paid')          acc[id].paid  += Number(c.commission_amount ?? 0);
+    return acc;
+  }, {});
+
+  type CallBucket = { today: number; week: number; month: number; lastCalledAt: string | null };
+  const callsByAgent = calls.reduce<Record<string, CallBucket>>((acc, c) => {
+    const id = c.agent_id as string;
+    if (!acc[id]) acc[id] = { today: 0, week: 0, month: 0, lastCalledAt: null };
+    acc[id].month++;
+    if (c.called_at >= weekStart.toISOString()) acc[id].week++;
+    if (c.called_at.startsWith(today)) acc[id].today++;
+    if (!acc[id].lastCalledAt || c.called_at > acc[id].lastCalledAt!) acc[id].lastCalledAt = c.called_at;
+    return acc;
+  }, {});
+
+  type FuBucket = { overdue: number; dueToday: number };
+  const fuByAgent = followUps.reduce<Record<string, FuBucket>>((acc, f) => {
+    const id = f.agent_id as string;
+    if (!acc[id]) acc[id] = { overdue: 0, dueToday: 0 };
+    if (f.due_date < today) acc[id].overdue++;
+    else if (f.due_date === today) acc[id].dueToday++;
     return acc;
   }, {});
 
@@ -72,21 +114,31 @@ export async function GET() {
 
   const agents = telemarketers.map((u, i) => {
     const name = (u.user_metadata?.full_name as string | undefined) ?? u.email?.split('@')[0] ?? 'Unknown';
-    const lb = leadsByAgent[u.id] ?? { total: 0, converted: 0, pending: 0 };
-    const cb = commByAgent[u.id]  ?? { pending: 0, ready: 0, paid: 0 };
+    const lb   = leadsByAgent[u.id]  ?? { total: 0, converted: 0, newLead: 0, wonThisMonth: 0 };
+    const cb   = commByAgent[u.id]   ?? { pending: 0, ready: 0, paid: 0 };
+    const clb  = callsByAgent[u.id]  ?? { today: 0, week: 0, month: 0, lastCalledAt: null };
+    const fub  = fuByAgent[u.id]     ?? { overdue: 0, dueToday: 0 };
     return {
       id:       u.id,
       name,
       email:    u.email ?? '',
       initials: name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase(),
       color:    COLORS[i % COLORS.length],
-      leadsTotal:          lb.total,
-      leadsConverted:      lb.converted,
-      commissionPending:   cb.pending,
-      commissionReady:     cb.ready,
-      commissionPaid:      cb.paid,
+      leadsTotal:        lb.total,
+      leadsConverted:    lb.converted,
+      leadsNewLead:      lb.newLead,
+      wonThisMonth:      lb.wonThisMonth,
+      callsToday:        clb.today,
+      callsThisWeek:     clb.week,
+      callsThisMonth:    clb.month,
+      lastCalledAt:      clb.lastCalledAt,
+      overdueFollowUps:  fub.overdue,
+      dueTodayFollowUps: fub.dueToday,
+      commissionPending: cb.pending,
+      commissionReady:   cb.ready,
+      commissionPaid:    cb.paid,
     };
   });
 
-  return NextResponse.json({ agents });
+  return NextResponse.json({ agents, recentActivity: recentCallsRes.data ?? [] });
 }

@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { getUserRole } from '@/lib/telemarketer-agent';
 import { DollarSign, Clock, CheckCircle2, Banknote, AlertCircle, Info, Loader2, RefreshCw } from 'lucide-react';
-import { getAgentId, getUserRole } from '@/lib/telemarketer-agent';
 
 type CommissionStatus = 'Pending Collection' | 'Pending Payroll' | 'Payroll Ready' | 'Paid';
 
@@ -68,8 +68,7 @@ export default function CommissionPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const agentId = await getAgentId();
-    const res = await fetch(`/api/telemarketer/commissions?agent_id=${agentId}`);
+    const res = await fetch('/api/telemarketer/my-commissions');
     if (res.ok) {
       const { commissions } = await res.json();
       setRows((commissions ?? []).map(mapCommission));

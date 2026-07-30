@@ -9,7 +9,7 @@ import {
   FileText, User, LogOut, Sun, Moon, Menu, X, Bell,
   ChevronRight, ChevronDown, Phone, TrendingUp, Target,
   Banknote, CheckCircle2, AlertCircle, Loader2, Clock,
-  AlertTriangle, BarChart3, Kanban,
+  AlertTriangle, BarChart3, Kanban, Receipt,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { useRouter } from 'next/navigation';
@@ -26,6 +26,7 @@ const AGENT_NAV: NavItem[] = [
   { label: 'Follow Ups',        href: '/telemarketer/follow-ups',   icon: Calendar    },
   { label: 'Analytics',         href: '/telemarketer/analytics',    icon: BarChart3   },
   { label: 'Documents',         href: '/telemarketer/documents',    icon: FileUp      },
+  { label: 'Quotes',            href: '/telemarketer/quotes',       icon: Receipt     },
   { label: 'Statements',        href: '/telemarketer/statements',   icon: FileText    },
   { label: 'Profile',           href: '/telemarketer/profile',      icon: User        },
 ];
@@ -101,10 +102,8 @@ export function TelemarketerShell({ children }: { children: React.ReactNode }) {
   const viewAsRef = useRef<HTMLDivElement>(null);
 
   type NotifItem = { kind: 'warn' | 'info' | 'ok'; text: string; sub: string };
-  const [notifs, setNotifs] = useState<NotifItem[]>([
-    { kind: 'info', text: '3 follow-ups due today', sub: 'Check your Follow Ups tab' },
-    { kind: 'warn', text: 'Awaiting compliance — 2 clients', sub: 'Pending review in My Clients' },
-  ]);
+  const [notifs,      setNotifs]      = useState<NotifItem[]>([]);
+  const [notifBadge,  setNotifBadge]  = useState(0);
 
   useEffect(() => {
     const supabase = createBrowserClient(
@@ -134,6 +133,20 @@ export function TelemarketerShell({ children }: { children: React.ReactNode }) {
           })
           .catch(() => {/* non-blocking */});
       }
+
+      // Live bell notifications
+      fetch('/api/telemarketer/notifications')
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          if (!d) return;
+          const items: NotifItem[] = [];
+          if (d.overdue > 0)   items.push({ kind: 'warn', text: `${d.overdue} overdue follow-up${d.overdue !== 1 ? 's' : ''}`, sub: 'Past due — needs immediate action' });
+          if (d.dueToday > 0)  items.push({ kind: 'info', text: `${d.dueToday} follow-up${d.dueToday !== 1 ? 's' : ''} due today`, sub: 'Check your Follow Ups tab' });
+          if (d.newLeads > 0)  items.push({ kind: 'ok',   text: `${d.newLeads} new lead${d.newLeads !== 1 ? 's' : ''} assigned`, sub: 'Ready to call in My Leads' });
+          setNotifs(items);
+          setNotifBadge(d.total ?? 0);
+        })
+        .catch(() => {/* non-blocking */});
     });
   }, []);
 
@@ -315,7 +328,7 @@ export function TelemarketerShell({ children }: { children: React.ReactNode }) {
               onMouseLeave={e => { if (!bellOpen) { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; } }}
             >
               <Bell size={15} />
-              {notifs.some(n => n.kind !== 'ok') && (
+              {notifBadge > 0 && (
                 <span className="absolute top-1 right-1 w-2 h-2 rounded-full" style={{ background: 'var(--color-violet)', border: '1.5px solid var(--color-surface)' }} aria-hidden />
               )}
             </button>
@@ -326,9 +339,15 @@ export function TelemarketerShell({ children }: { children: React.ReactNode }) {
               >
                 <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--color-border2)' }}>
                   <p className="text-sm font-bold" style={{ color: 'var(--color-text)' }}>Notifications</p>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(124,58,237,0.12)', color: 'var(--color-violet)' }}>{notifs.length}</span>
+                  {notifBadge > 0 && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: 'rgba(124,58,237,0.12)', color: 'var(--color-violet)' }}>{notifBadge}</span>}
                 </div>
                 <div className="max-h-64 overflow-y-auto">
+                  {notifs.length === 0 && (
+                    <div className="px-4 py-6 text-center">
+                      <CheckCircle2 size={20} className="mx-auto mb-2" style={{ color: '#34D399' }} />
+                      <p className="text-xs" style={{ color: 'var(--color-text3)' }}>All caught up!</p>
+                    </div>
+                  )}
                   {notifs.map((n, i) => {
                     const icon = n.kind === 'ok'
                       ? <CheckCircle2 size={13} style={{ color: '#34D399' }} />
@@ -472,30 +491,35 @@ export function TelemarketerShell({ children }: { children: React.ReactNode }) {
 
 
           {/* Commission Centre — super_admin only */}
-          {isSuperAdmin && SUPER_ADMIN_NAV.map(({ label, href, icon: Icon }) => {
-            const isActive = pathname.startsWith(href);
-            const isHov    = hovered === href;
-            return (
-              <Link key={href} href={href}
-                onClick={() => setSidebarOpen(false)}
-                onMouseEnter={() => setHovered(href)}
-                onMouseLeave={() => setHovered(null)}
-                className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
-                style={isActive
-                  ? { background: navColors.activeBg, color: navColors.activeText, fontWeight: 600, boxShadow: navColors.activeShadow }
-                  : isHov
-                    ? { background: navColors.hoverBg, color: navColors.hoverText }
-                    : { color: navColors.normalText }}
-              >
-                <div className="relative z-10 w-6 h-6 rounded-md flex items-center justify-center shrink-0"
-                  style={isActive ? { color: navColors.activeText, background: navColors.iconActiveBg } : { color: 'inherit', opacity: 0.65 }}>
-                  <Icon size={14} />
-                </div>
-                <span className="relative z-10 flex-1">{label}</span>
-                {isActive && <ChevronRight size={12} className="relative z-10 shrink-0" style={{ color: 'rgba(124,58,237,0.5)' }} />}
-              </Link>
-            );
-          })}
+          {isSuperAdmin && (
+            <>
+              <div className="my-2 mx-3 h-px" style={{ background: 'var(--color-border2)' }} />
+              {SUPER_ADMIN_NAV.map(({ label, href, icon: Icon }) => {
+                const isActive = pathname.startsWith(href);
+                const isHov    = hovered === href;
+                return (
+                  <Link key={href} href={href}
+                    onClick={() => setSidebarOpen(false)}
+                    onMouseEnter={() => setHovered(href)}
+                    onMouseLeave={() => setHovered(null)}
+                    className="relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all duration-200"
+                    style={isActive
+                      ? { background: navColors.activeBg, color: navColors.activeText, fontWeight: 600, boxShadow: navColors.activeShadow }
+                      : isHov
+                        ? { background: navColors.hoverBg, color: navColors.hoverText }
+                        : { color: navColors.normalText }}
+                  >
+                    <div className="relative z-10 w-6 h-6 rounded-md flex items-center justify-center shrink-0"
+                      style={isActive ? { color: navColors.activeText, background: navColors.iconActiveBg } : { color: 'inherit', opacity: 0.65 }}>
+                      <Icon size={14} />
+                    </div>
+                    <span className="relative z-10 flex-1">{label}</span>
+                    {isActive && <ChevronRight size={12} className="relative z-10 shrink-0" style={{ color: 'rgba(124,58,237,0.5)' }} />}
+                  </Link>
+                );
+              })}
+            </>
+          )}
 
           {/* Admin link for super admin */}
           {isSuperAdmin && (

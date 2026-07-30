@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Phone, Calendar, Clock, AlertCircle, CheckCircle2, RefreshCw, Loader2 } from 'lucide-react';
+import { Phone, Calendar, Clock, AlertCircle, CheckCircle2, RefreshCw, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getAgentId } from '@/lib/telemarketer-agent';
 
 interface FollowUp {
@@ -50,6 +50,29 @@ function mapFollowUp(f: ApiFollowUp): FollowUp {
     note:         f.note ?? '',
   };
 }
+
+// --- Week helpers ---
+function getWeekDays(offset: number): Date[] {
+  const today = new Date();
+  const dow = today.getDay(); // 0=Sun
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - ((dow + 6) % 7) + offset * 7);
+  monday.setHours(0, 0, 0, 0);
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return d;
+  });
+}
+
+function toYMD(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// ── List-view components (unchanged) ────────────────────────────────────────
 
 function FollowUpCard({ fu, section, onComplete }: {
   fu: FollowUp;
@@ -167,9 +190,200 @@ function SectionBlock({ title, items, section, color, icon: Icon, onComplete }: 
   );
 }
 
+// ── Week-view components ─────────────────────────────────────────────────────
+
+function WeekCard({ fu, onComplete }: { fu: FollowUp; onComplete: (id: string) => void }) {
+  const [completing, setCompleting] = useState(false);
+
+  async function handleDone() {
+    setCompleting(true);
+    await fetch('/api/telemarketer/follow-ups', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: fu.id, completed: true }),
+    });
+    onComplete(fu.id);
+  }
+
+  return (
+    <div className="rounded-lg p-2.5 transition-all"
+      style={{
+        background: 'var(--color-surface2)',
+        border: '1px solid var(--color-border2)',
+        borderLeft: `3px solid ${fu.statusColor}`,
+      }}>
+      <Link
+        href={`/telemarketer/leads/${fu.leadId}`}
+        className="text-[11px] font-semibold leading-tight block mb-1 hover:underline"
+        style={{ color: 'var(--color-text)' }}>
+        {fu.client}
+      </Link>
+      {fu.note && (
+        <p className="text-[10px] leading-snug mb-2"
+          style={{
+            color: 'var(--color-text3)',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical' as const,
+            overflow: 'hidden',
+          }}>
+          {fu.note}
+        </p>
+      )}
+      <button
+        onClick={handleDone}
+        disabled={completing}
+        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold transition-all"
+        style={{
+          background: 'rgba(52,211,153,0.08)',
+          color: '#34D399',
+          border: '1px solid rgba(52,211,153,0.2)',
+          opacity: completing ? 0.5 : 1,
+        }}>
+        {completing ? <Loader2 size={8} className="animate-spin" /> : <CheckCircle2 size={8} />} Done
+      </button>
+    </div>
+  );
+}
+
+const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+function WeekView({ followUps, weekOffset, setWeekOffset, onComplete }: {
+  followUps: FollowUp[];
+  weekOffset: number;
+  setWeekOffset: (n: number) => void;
+  onComplete: (id: string) => void;
+}) {
+  const days = getWeekDays(weekOffset);
+  const todayYMD = toYMD(new Date());
+
+  const rangeLabel =
+    days[0].toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }) +
+    ' – ' +
+    days[6].toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  const navBtn = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    border: '1px solid var(--color-border2)',
+    color: 'var(--color-text2)',
+    background: 'transparent',
+    cursor: 'pointer',
+    transition: 'background 0.15s',
+  } as React.CSSProperties;
+
+  return (
+    <div>
+      {/* Week navigation header */}
+      <div className="flex items-center gap-3 mb-5 flex-wrap">
+        <button style={navBtn}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+          onClick={() => setWeekOffset(weekOffset - 1)}
+          aria-label="Previous week">
+          <ChevronLeft size={14} />
+        </button>
+        <span className="text-sm font-semibold flex-1 text-center" style={{ color: 'var(--color-text)' }}>
+          {rangeLabel}
+        </span>
+        <button style={navBtn}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+          onClick={() => setWeekOffset(weekOffset + 1)}
+          aria-label="Next week">
+          <ChevronRight size={14} />
+        </button>
+        {weekOffset !== 0 && (
+          <button
+            onClick={() => setWeekOffset(0)}
+            className="text-xs font-semibold px-2.5 py-1 rounded-lg transition-all"
+            style={{
+              border: '1px solid var(--color-violet)',
+              color: 'var(--color-violet)',
+              background: 'transparent',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.08)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+            Today
+          </button>
+        )}
+      </div>
+
+      {/* 7-column calendar grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 10 }}>
+        {days.map((day, i) => {
+          const ymd = toYMD(day);
+          const dayFUs = followUps.filter(f => f.nextFollowUp === ymd);
+          const isToday = ymd === todayYMD;
+          const isPast = ymd < todayYMD;
+          const hasOverdue = isPast && dayFUs.length > 0;
+
+          const topBorderColor = hasOverdue ? '#F87171' : isToday ? '#FBBF24' : 'var(--color-border2)';
+          const columnBg = hasOverdue
+            ? 'rgba(248,113,113,0.03)'
+            : isToday
+            ? 'rgba(251,191,36,0.03)'
+            : 'transparent';
+
+          return (
+            <div key={ymd}
+              className="bento-card p-3 flex flex-col gap-2"
+              style={{
+                borderTop: `2px solid ${topBorderColor}`,
+                background: columnBg,
+                minHeight: 140,
+              }}>
+              {/* Day header */}
+              <div className="text-center pb-2" style={{ borderBottom: '1px solid var(--color-row-border)' }}>
+                <p className="text-[10px] font-bold uppercase tracking-widest"
+                  style={{ color: isToday ? '#FBBF24' : 'var(--color-text3)' }}>
+                  {DAY_LABELS[i]}
+                </p>
+                <p className="text-xl font-bold mt-0.5 leading-none"
+                  style={{ color: isToday ? '#FBBF24' : hasOverdue ? '#F87171' : 'var(--color-text)' }}>
+                  {day.getDate()}
+                </p>
+                {hasOverdue && (
+                  <span className="inline-flex items-center gap-0.5 mt-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                    style={{ background: 'rgba(248,113,113,0.12)', color: '#F87171' }}>
+                    <AlertCircle size={7} /> overdue
+                  </span>
+                )}
+              </div>
+
+              {/* Follow-up cards */}
+              {dayFUs.length === 0 ? (
+                <p className="text-[10px] text-center my-auto" style={{ color: 'var(--color-text3)', opacity: 0.5 }}>
+                  No follow-ups
+                </p>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  {dayFUs.map(fu => (
+                    <WeekCard key={fu.id} fu={fu} onComplete={onComplete} />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Page ─────────────────────────────────────────────────────────────────────
+
+type Tab = 'list' | 'week';
+
 export default function FollowUpsPage() {
   const [followUps, setFollowUps] = useState<FollowUp[]>([]);
   const [loading,   setLoading]   = useState(true);
+  const [activeTab, setActiveTab] = useState<Tab>('list');
+  const [weekOffset, setWeekOffset] = useState(0);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -201,6 +415,7 @@ export default function FollowUpsPage() {
 
   return (
     <div className="space-y-8 page-enter">
+      {/* Page header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <p className="eyebrow mb-1">Action items</p>
@@ -218,13 +433,32 @@ export default function FollowUpsPage() {
         </button>
       </div>
 
+      {/* Tab bar */}
+      <div className="flex items-center gap-1 p-1 rounded-xl w-fit"
+        style={{ background: 'var(--color-surface2)', border: '1px solid var(--color-border2)' }}>
+        {(['list', 'week'] as Tab[]).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className="px-4 py-1.5 rounded-lg text-sm font-semibold capitalize transition-all"
+            style={{
+              background: activeTab === tab ? 'var(--color-violet)' : 'transparent',
+              color: activeTab === tab ? '#fff' : 'var(--color-text2)',
+            }}>
+            {tab === 'list' ? 'List' : 'Week'}
+          </button>
+        ))}
+      </div>
+
+      {/* Loading spinner */}
       {loading && (
         <div className="flex items-center justify-center py-12">
           <Loader2 size={22} className="animate-spin" style={{ color: 'var(--color-violet)' }} />
         </div>
       )}
 
-      {!loading && (
+      {/* Content */}
+      {!loading && activeTab === 'list' && (
         <>
           {/* Stats strip */}
           <div className="grid grid-cols-3 gap-3">
@@ -244,6 +478,15 @@ export default function FollowUpsPage() {
           <SectionBlock title="Overdue"   items={overdue}   section="overdue" color="#F87171" icon={AlertCircle}  onComplete={handleComplete} />
           <SectionBlock title="Upcoming"  items={upcoming}  section="upcoming" color="#60A5FA" icon={Calendar}    onComplete={handleComplete} />
         </>
+      )}
+
+      {!loading && activeTab === 'week' && (
+        <WeekView
+          followUps={followUps}
+          weekOffset={weekOffset}
+          setWeekOffset={setWeekOffset}
+          onComplete={handleComplete}
+        />
       )}
     </div>
   );

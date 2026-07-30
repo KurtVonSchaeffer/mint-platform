@@ -127,7 +127,7 @@ export default function ApprovalsPage() {
             Proposal Approvals
           </h1>
           <p className="text-sm" style={{ color: 'var(--color-text3)' }}>
-            High-value proposals (R50k+) waiting for your sign-off
+            Platform proposals awaiting sign-off before being sent to prospective lender clients
           </p>
         </div>
 
@@ -180,7 +180,7 @@ export default function ApprovalsPage() {
           </div>
           <p className="text-base font-semibold" style={{ color: 'var(--color-text)' }}>All caught up</p>
           <p className="text-sm max-w-xs" style={{ color: 'var(--color-text3)' }}>
-            No proposals waiting for approval. New high-value submissions will appear here automatically.
+            No proposals pending. New platform proposals submitted by your team will appear here for sign-off.
           </p>
         </div>
       )}
@@ -229,7 +229,7 @@ export default function ApprovalsPage() {
                       <p className="text-2xl font-black tracking-tight" style={{ color: '#f59e0b', letterSpacing: '-0.04em' }}>
                         {R(a.amount_cents)}
                       </p>
-                      <p className="text-[10px] font-medium" style={{ color: 'var(--color-text3)' }}>proposal value</p>
+                      <p className="text-[10px] font-medium" style={{ color: 'var(--color-text3)' }}>contract value</p>
                     </div>
                   )}
                 </div>
@@ -248,7 +248,7 @@ export default function ApprovalsPage() {
                     style={{ background: 'var(--color-ink)', border: '1px solid var(--color-border2)' }}>
                     <User2 size={12} style={{ color: 'var(--color-text3)', flexShrink: 0 }} />
                     <div className="min-w-0">
-                      <p className="text-[9px] uppercase tracking-wider font-semibold mb-0.5" style={{ color: 'var(--color-text3)' }}>Lead</p>
+                      <p className="text-[9px] uppercase tracking-wider font-semibold mb-0.5" style={{ color: 'var(--color-text3)' }}>Contact</p>
                       <p className="text-xs font-bold truncate" style={{ color: 'var(--color-text)' }}>{a.leads?.name ?? '—'}</p>
                     </div>
                   </div>
@@ -256,7 +256,7 @@ export default function ApprovalsPage() {
                     style={{ background: 'var(--color-ink)', border: '1px solid var(--color-border2)' }}>
                     <TrendingUp size={12} style={{ color: 'var(--color-text3)', flexShrink: 0 }} />
                     <div className="min-w-0">
-                      <p className="text-[9px] uppercase tracking-wider font-semibold mb-0.5" style={{ color: 'var(--color-text3)' }}>Pipeline value</p>
+                      <p className="text-[9px] uppercase tracking-wider font-semibold mb-0.5" style={{ color: 'var(--color-text3)' }}>Deal value</p>
                       <p className="text-xs font-bold truncate" style={{ color: '#059669' }}>
                         {a.amount_cents ? R(a.amount_cents) : '—'}
                       </p>
@@ -297,7 +297,7 @@ export default function ApprovalsPage() {
                       value={note}
                       onChange={e => setNote(e.target.value)}
                       rows={2}
-                      placeholder="e.g. Pricing too low, needs further review…"
+                      placeholder="e.g. Pricing needs adjustment, scope unclear, requires further review…"
                       className="field-input w-full text-sm resize-none"
                       style={{ borderColor: 'rgba(248,113,113,0.3)' }}
                       autoFocus
