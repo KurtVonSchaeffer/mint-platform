@@ -14,6 +14,10 @@ export interface EmailPayload {
   subject: string;
   html:    string;
   replyTo?: string;
+  attachments?: Array<{
+    filename: string;
+    content:  Buffer | string;
+  }>;
 }
 
 export async function sendEmail(payload: EmailPayload): Promise<{ ok: boolean; id?: string; error?: string }> {

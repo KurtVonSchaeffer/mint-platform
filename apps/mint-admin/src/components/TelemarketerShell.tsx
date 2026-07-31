@@ -140,9 +140,13 @@ export function TelemarketerShell({ children }: { children: React.ReactNode }) {
         .then(d => {
           if (!d) return;
           const items: NotifItem[] = [];
-          if (d.overdue > 0)   items.push({ kind: 'warn', text: `${d.overdue} overdue follow-up${d.overdue !== 1 ? 's' : ''}`, sub: 'Past due — needs immediate action' });
-          if (d.dueToday > 0)  items.push({ kind: 'info', text: `${d.dueToday} follow-up${d.dueToday !== 1 ? 's' : ''} due today`, sub: 'Check your Follow Ups tab' });
-          if (d.newLeads > 0)  items.push({ kind: 'ok',   text: `${d.newLeads} new lead${d.newLeads !== 1 ? 's' : ''} assigned`, sub: 'Ready to call in My Leads' });
+          if (d.overdue > 0)  items.push({ kind: 'warn', text: `${d.overdue} overdue follow-up${d.overdue !== 1 ? 's' : ''}`, sub: 'Past due — needs immediate action' });
+          if (d.dueToday > 0) items.push({ kind: 'info', text: `${d.dueToday} follow-up${d.dueToday !== 1 ? 's' : ''} due today`, sub: 'Check your Follow Ups tab' });
+          if (d.newLeads > 0) items.push({ kind: 'ok',   text: `${d.newLeads} new lead${d.newLeads !== 1 ? 's' : ''} assigned`, sub: 'Ready to call in My Leads' });
+          // Quote update notifications from admin
+          for (const n of (d.quoteUpdates ?? []) as { type: string; title: string; message: string }[]) {
+            items.push({ kind: n.type === 'quote_declined' ? 'warn' : 'ok', text: n.title, sub: n.message });
+          }
           setNotifs(items);
           setNotifBadge(d.total ?? 0);
         })
@@ -320,7 +324,14 @@ export function TelemarketerShell({ children }: { children: React.ReactNode }) {
           {/* Bell */}
           <div ref={bellRef} className="relative">
             <button
-              onClick={() => setBellOpen(o => !o)}
+              onClick={() => {
+                const opening = !bellOpen;
+                setBellOpen(o => !o);
+                if (opening && notifBadge > 0) {
+                  fetch('/api/telemarketer/notifications', { method: 'PATCH' }).catch(() => {});
+                  setNotifBadge(0);
+                }
+              }}
               aria-label="Notifications"
               className="relative w-9 h-9 rounded-lg flex items-center justify-center transition-colors"
               style={{ color: bellOpen ? 'var(--color-violet)' : 'var(--color-text3)', background: bellOpen ? 'rgba(124,58,237,0.1)' : 'transparent' }}

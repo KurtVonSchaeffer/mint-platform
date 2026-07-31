@@ -12,9 +12,10 @@ type ColMap = { name: string; email: string; company: string; phone: string; mes
 type ParsedRow = Record<string, string>;
 
 interface ImportResult {
-  inserted:   number;
-  duplicates: number;
-  byAgent:    Record<string, number>;
+  inserted:        number;
+  duplicates:      number;
+  duplicateEmails: string[];
+  byAgent:         Record<string, number>;
 }
 
 const FIELD_LABELS: { key: keyof ColMap; label: string; required: boolean }[] = [
@@ -164,10 +165,25 @@ export default function LeadImportPage() {
             {result.inserted} <span className="text-base font-semibold" style={{ color: 'var(--color-text2)' }}>leads imported</span>
           </p>
           {result.duplicates > 0 && (
-            <p className="text-sm" style={{ color: 'var(--color-text3)' }}>
-              <SkipForward size={12} className="inline mr-1 -mt-px" />
-              {result.duplicates} duplicate{result.duplicates > 1 ? 's' : ''} skipped
-            </p>
+            <div>
+              <p className="text-sm" style={{ color: 'var(--color-text3)' }}>
+                <SkipForward size={12} className="inline mr-1 -mt-px" />
+                {result.duplicates} duplicate{result.duplicates > 1 ? 's' : ''} skipped
+              </p>
+              {result.duplicateEmails?.length > 0 && (
+                <details className="mt-2 text-left">
+                  <summary className="text-xs cursor-pointer select-none" style={{ color: 'var(--color-text3)', opacity: 0.7 }}>
+                    Show skipped emails
+                  </summary>
+                  <div className="mt-2 rounded-lg p-3 space-y-1 max-h-40 overflow-y-auto"
+                    style={{ background: 'var(--color-surface2)', border: '1px solid var(--color-border2)' }}>
+                    {result.duplicateEmails.map(email => (
+                      <p key={email} className="text-xs font-mono" style={{ color: 'var(--color-text3)' }}>{email}</p>
+                    ))}
+                  </div>
+                </details>
+              )}
+            </div>
           )}
         </div>
 

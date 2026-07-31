@@ -9,6 +9,10 @@
       "schedule": "0 7 1 * *"
     },
     {
+      "path": "/api/cron/commission-statements",
+      "schedule": "0 8 1 * *"
+    },
+    {
       "path": "/api/cron/follow-up-reminders",
       "schedule": "0 7 * * *"
     },

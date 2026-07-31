@@ -6,6 +6,36 @@ import {
   Plus, Phone, ChevronDown, Loader2, X, Clock,
   MessageSquare, Calendar, FileUp, RefreshCw, Search, Check,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+
+const EASE: [number,number,number,number] = [0.16, 1, 0.3, 1];
+
+function ShimmerRow() {
+  return (
+    <tr style={{ position: 'relative' }}>
+      {[36, 160, 110, 90, 90, 80, 60].map((w, i) => (
+        <td key={i} style={{ padding: '10px 14px' }}>
+          <motion.div
+            style={{
+              height: 12, width: w, borderRadius: 6,
+              background: 'rgba(255,255,255,0.06)',
+              overflow: 'hidden', position: 'relative',
+            }}
+          >
+            <motion.div
+              style={{
+                position: 'absolute', inset: 0,
+                background: 'linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.06) 50%,transparent 100%)',
+              }}
+              animate={{ x: ['-100%', '200%'] }}
+              transition={{ duration: 1.2, repeat: Infinity, ease: 'linear', delay: i * 0.05 }}
+            />
+          </motion.div>
+        </td>
+      ))}
+    </tr>
+  );
+}
 
 type LeadStatus =
   // Current pipeline stages
@@ -23,8 +53,16 @@ interface Lead {
   phone: string;
   email: string;
   dateAdded: string;
+  updatedAt: string;
   status: LeadStatus;
   nextFollowUp: string | null;
+}
+
+const STALE_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+const TERMINAL: LeadStatus[] = ['Won', 'Lost', 'Not Qualified', 'Converted', 'Not Interested'];
+function isStale(lead: Lead) {
+  if (!lead.updatedAt || TERMINAL.includes(lead.status)) return false;
+  return Date.now() - new Date(lead.updatedAt).getTime() > STALE_DAYS_MS;
 }
 
 const STATUS_CFG: Record<LeadStatus, { bg: string; border: string; color: string }> = {
@@ -266,6 +304,71 @@ function CallLogModal({ lead, onClose }: { lead: Lead; onClose: () => void }) {
   );
 }
 
+// ─── DemoModal ────────────────────────────────────────────────────────────────
+
+function DemoModal({ lead, onClose, onBooked }: { lead: Lead; onClose: () => void; onBooked: () => void }) {
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  const defaultDt = tomorrow.toISOString().slice(0, 16);
+  const [dt,    setDt]    = useState(defaultDt);
+  const [notes, setNotes] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    await Promise.all([
+      fetch(`/api/leads/${lead.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tm_status: 'Demo Scheduled' }),
+      }),
+      fetch('/api/telemarketer/follow-ups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: lead.id, follow_up_type: 'Demo Booked', scheduled_at: dt, note: notes || 'Demo scheduled' }),
+      }),
+    ]);
+    setSaving(false);
+    onBooked();
+    onClose();
+  }
+
+  return (
+    <div className="confirm-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="bento-card w-full max-w-sm p-7" style={{ animation: 'scale-in 0.25s cubic-bezier(0.16,1,0.3,1) both' }}>
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="font-bold text-lg" style={{ color: 'var(--color-text)' }}>Book Demo</h3>
+          <button onClick={onClose} style={{ color: 'var(--color-text3)' }}><X size={16} /></button>
+        </div>
+        <p className="text-xs mb-5" style={{ color: 'var(--color-text3)' }}>
+          {lead.clientName} &middot; {lead.company}
+        </p>
+        <form onSubmit={submit} className="space-y-3">
+          <div>
+            <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Demo date &amp; time</label>
+            <input type="datetime-local" required className="field-input" value={dt} onChange={e => setDt(e.target.value)} />
+          </div>
+          <div>
+            <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Notes (optional)</label>
+            <textarea className="field-input resize-none" rows={2} placeholder="What to cover in the demo…" value={notes} onChange={e => setNotes(e.target.value)} />
+          </div>
+          <p className="text-[10px]" style={{ color: 'var(--color-text3)', opacity: 0.7 }}>
+            Lead status will be set to <strong>Demo Scheduled</strong> and a follow-up will be created.
+          </p>
+          <div className="flex gap-2 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-xl text-sm"
+              style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>Cancel</button>
+            <button type="submit" disabled={saving} className="btn-purple btn-shine flex-1 inline-flex items-center justify-center gap-1.5">
+              {saving ? <Loader2 size={13} className="animate-spin" /> : <Calendar size={13} />}
+              {saving ? 'Booking…' : 'Book Demo'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function mapLead(raw: Record<string, string>): Lead {
@@ -278,6 +381,7 @@ function mapLead(raw: Record<string, string>): Lead {
     dateAdded:    raw.created_at ?? raw.dateAdded ?? '',
     status:       (raw.tm_status as LeadStatus) || 'Pending',
     nextFollowUp: raw.next_follow_up ?? null,
+    updatedAt:    raw.updated_at     ?? '',
   };
 }
 
@@ -301,6 +405,9 @@ export default function TelemarketerLeadsPage() {
 
   // Quick call log
   const [callLogLead, setCallLogLead] = useState<Lead | null>(null);
+
+  // Demo booking
+  const [demoLead, setDemoLead] = useState<Lead | null>(null);
 
   // ── Data loading ────────────────────────────────────────────────────────────
 
@@ -423,10 +530,16 @@ export default function TelemarketerLeadsPage() {
     <div className="space-y-6 page-enter">
       {addOpen      && <AddLeadModal onClose={() => setAddOpen(false)} onAdded={load} />}
       {callLogLead  && <CallLogModal lead={callLogLead} onClose={() => setCallLogLead(null)} />}
+      {demoLead     && <DemoModal lead={demoLead} onClose={() => setDemoLead(null)} onBooked={load} />}
 
       {/* Floating bulk action toolbar */}
+      <AnimatePresence>
       {someSelected && (
-        <div
+        <motion.div
+          initial={{ opacity: 0, y: 16, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0,  scale: 1 }}
+          exit={{    opacity: 0, y: 16, scale: 0.96 }}
+          transition={{ duration: 0.28, ease: EASE }}
           className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-3 rounded-2xl"
           style={{
             background: 'var(--color-surface)',
@@ -455,11 +568,15 @@ export default function TelemarketerLeadsPage() {
           >
             <X size={13} />
           </button>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
+      <motion.div
+        className="flex items-start justify-between gap-4 flex-wrap"
+        initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: EASE }}>
         <div>
           <p className="eyebrow mb-1">Sales pipeline</p>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--color-text)', letterSpacing: '-0.025em' }}>My Leads</h1>
@@ -481,10 +598,12 @@ export default function TelemarketerLeadsPage() {
             <Plus size={14} /> Add Lead
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* Status filter strip */}
-      <div className="flex gap-2 flex-wrap">
+      <motion.div className="flex gap-2 flex-wrap"
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, delay: 0.12, ease: EASE }}>
         <button
           onClick={() => setFilterStatus(null)}
           className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
@@ -510,7 +629,7 @@ export default function TelemarketerLeadsPage() {
             </button>
           );
         })}
-      </div>
+      </motion.div>
 
       {/* Search + sort controls */}
       {!loading && leads.length > 0 && (
@@ -578,12 +697,20 @@ export default function TelemarketerLeadsPage() {
         </div>
       )}
 
-      {/* Loading state */}
-      {loading && (
-        <div className="bento-card p-12 flex items-center justify-center">
-          <Loader2 size={22} className="animate-spin" style={{ color: 'var(--color-violet)' }} />
-        </div>
-      )}
+      {/* Loading state — shimmer table skeleton */}
+      <AnimatePresence>
+        {loading && (
+          <motion.div key="leads-shimmer" className="bento-card overflow-hidden p-0"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}>
+            <div className="overflow-x-auto">
+              <table className="data-table">
+                <tbody>{[0,1,2,3,4,5,6].map(i => <ShimmerRow key={i} />)}</tbody>
+              </table>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Empty: no leads at all */}
       {!loading && leads.length === 0 && (
@@ -647,9 +774,12 @@ export default function TelemarketerLeadsPage() {
                 </tr>
               </thead>
               <tbody>
-                {displayed.map(lead => (
-                  <tr
+                {displayed.map((lead, rowIdx) => (
+                  <motion.tr
                     key={lead.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: Math.min(rowIdx * 0.04, 0.6), ease: EASE }}
                     style={selectedIds.has(lead.id) ? { background: 'rgba(124,58,237,0.04)' } : undefined}
                   >
                     <td style={{ paddingLeft: 16 }}>
@@ -670,6 +800,12 @@ export default function TelemarketerLeadsPage() {
                         <div>
                           <p className="text-sm font-semibold group-hover:text-[var(--color-violet)] transition-colors" style={{ color: 'var(--color-text)' }}>{lead.clientName}</p>
                           <p className="text-xs" style={{ color: 'var(--color-text3)' }}>{lead.company}</p>
+                          {isStale(lead) && (
+                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full mt-0.5 inline-block"
+                              style={{ background: 'rgba(251,146,60,0.12)', color: '#FB923C', border: '1px solid rgba(251,146,60,0.2)' }}>
+                              Stale
+                            </span>
+                          )}
                         </div>
                       </Link>
                     </td>
@@ -733,6 +869,14 @@ export default function TelemarketerLeadsPage() {
                         >
                           <Calendar size={10} /> Follow-up
                         </Link>
+                        <button
+                          onClick={() => setDemoLead(lead)}
+                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-all"
+                          style={{ background: 'rgba(52,211,153,0.08)', color: '#34D399', border: '1px solid rgba(52,211,153,0.15)' }}
+                          title="Book demo"
+                        >
+                          <Calendar size={10} /> Demo
+                        </button>
                         <Link href={`/telemarketer/documents?lead=${lead.id}`}
                           className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-all"
                           style={{ background: 'rgba(251,191,36,0.08)', color: '#FBBF24', border: '1px solid rgba(251,191,36,0.15)' }}
@@ -742,7 +886,7 @@ export default function TelemarketerLeadsPage() {
                         </Link>
                       </div>
                     </td>
-                  </tr>
+                  </motion.tr>
                 ))}
               </tbody>
             </table>

@@ -225,7 +225,9 @@ export default function QuotesPage() {
     const until   = todayPlus(30);
     const updated = await patchStatus(q, { status: 'sent', sentDate: todayPlus(0), validUntil: until });
     if (!updated) return;
-    const html = `<p>Dear ${q.contact},</p><p>Please find your AlgoLend pricing proposal <strong>${q.id}</strong> below.</p><p><strong>Once-off implementation fee (paid before go-live):</strong> ${fmtR(q.setupFee)}<br><strong>Monthly platform licence (recurring, billed monthly — not upfront):</strong> ${fmtR(q.monthlyFee)}/mo, includes ${q.quota.toLocaleString()} API checks/month<br><strong>Usage beyond the included quota</strong> is billed pay-as-you-go at our published per-check rates.<br><strong>Valid until:</strong> ${until}</p><p>Reply to this email with any questions.</p><p>— MINT Platforms (Pty) Ltd</p>`;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
+    const trackingPixel = `<img src="${appUrl}/api/quotes/${q.dbId}/view" width="1" height="1" style="display:none" alt="" />`;
+    const html = `<p>Dear ${q.contact},</p><p>Please find your AlgoLend pricing proposal <strong>${q.id}</strong> below.</p><p><strong>Once-off implementation fee (paid before go-live):</strong> ${fmtR(q.setupFee)}<br><strong>Monthly platform licence (recurring, billed monthly — not upfront):</strong> ${fmtR(q.monthlyFee)}/mo, includes ${q.quota.toLocaleString()} API checks/month<br><strong>Usage beyond the included quota</strong> is billed pay-as-you-go at our published per-check rates.<br><strong>Valid until:</strong> ${until}</p><p>Reply to this email with any questions.</p><p>— MINT Platforms (Pty) Ltd</p>${trackingPixel}`;
     fetch('/api/email', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ to: q.email, subject: `AlgoLend proposal ${q.id} — ${q.client}`, html }),
@@ -234,9 +236,9 @@ export default function QuotesPage() {
   }
 
   async function markAccepted(q: Quote) {
-    await patchStatus(q, { status: 'accepted', acceptedAt: new Date().toISOString() });
-    pushToast('success', `${q.id} accepted.`);
-    setSelected(null);
+    const updated = await patchStatus(q, { status: 'accepted', acceptedAt: new Date().toISOString() });
+    pushToast('success', `${q.id} accepted — opening onboarding wizard.`);
+    if (updated) setOnboardQuote(updated);
   }
 
   async function markDeclined(q: Quote) {

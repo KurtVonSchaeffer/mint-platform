@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { supabaseAdmin } from '@/lib/supabase';
+import { sendEmail } from '@/lib/email';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -77,5 +78,27 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Email all super admins so they know a quote is waiting for review
+  const { data: usersRes } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+  const superAdmins = (usersRes?.users ?? []).filter(
+    u => (u.user_metadata?.role as string | undefined) === 'super_admin' && u.email,
+  );
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
+  await Promise.all(superAdmins.map(u =>
+    sendEmail({
+      to:      u.email!,
+      subject: `Quote for review — ${String(body.client ?? 'client')} (${reference})`,
+      html:    `<p style="font-family:sans-serif"><strong>${submittedBy}</strong> submitted a quote that needs your approval.</p>
+                <table style="font-family:sans-serif;border-collapse:collapse;width:100%;max-width:480px">
+                  <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Client</td><td style="padding:6px 12px">${String(body.client ?? '—')}</td></tr>
+                  <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Reference</td><td style="padding:6px 12px">${reference}</td></tr>
+                  <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Setup fee</td><td style="padding:6px 12px">R${Number(body.setupFee ?? 0).toLocaleString('en-ZA')}</td></tr>
+                  <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Monthly fee</td><td style="padding:6px 12px">R${Number(body.monthlyFee ?? 0).toLocaleString('en-ZA')}/mo</td></tr>
+                </table>
+                <p style="font-family:sans-serif;margin-top:20px"><a href="${appUrl}/quotes" style="background:#7C3AED;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:600">Review quote →</a></p>`,
+    }).catch(() => null),
+  ));
+
   return NextResponse.json({ quote: data }, { status: 201 });
 }

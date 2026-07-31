@@ -125,8 +125,9 @@ export async function POST(req: NextRequest) {
   }
 
   return NextResponse.json({
-    inserted:   toInsert.length,
-    duplicates: duplicates.length,
+    inserted:       toInsert.length,
+    duplicates:     duplicates.length,
+    duplicateEmails: duplicates,
     byAgent,
   });
 }

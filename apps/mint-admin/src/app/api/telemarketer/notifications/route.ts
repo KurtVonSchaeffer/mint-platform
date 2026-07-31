@@ -6,7 +6,7 @@ import { supabaseAdmin } from '@/lib/supabase';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+async function getAgentId(): Promise<string | null> {
   const cookieStore = await cookies();
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -14,12 +14,16 @@ export async function GET() {
     { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } },
   );
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+  return user?.id ?? null;
+}
 
-  const agentId = user.id;
+export async function GET() {
+  const agentId = await getAgentId();
+  if (!agentId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+
   const today = new Date().toISOString().split('T')[0];
 
-  const [overdueRes, todayRes, newLeadsRes] = await Promise.all([
+  const [overdueRes, todayRes, newLeadsRes, quoteNotifsRes] = await Promise.all([
     supabaseAdmin
       .from('follow_ups')
       .select('id', { count: 'exact', head: true })
@@ -37,12 +41,34 @@ export async function GET() {
       .select('id', { count: 'exact', head: true })
       .eq('assigned_to', agentId)
       .eq('tm_status', 'New Lead'),
+    supabaseAdmin
+      .from('tm_notifications')
+      .select('id, type, title, message, created_at')
+      .eq('agent_id', agentId)
+      .eq('read', false)
+      .order('created_at', { ascending: false })
+      .limit(10),
   ]);
 
-  const overdue = overdueRes.count ?? 0;
-  const dueToday = todayRes.count ?? 0;
-  const newLeads = newLeadsRes.count ?? 0;
-  const total = overdue + dueToday + newLeads;
+  const overdue      = overdueRes.count  ?? 0;
+  const dueToday     = todayRes.count    ?? 0;
+  const newLeads     = newLeadsRes.count ?? 0;
+  const quoteUpdates = quoteNotifsRes.data ?? [];
+  const total        = overdue + dueToday + newLeads + quoteUpdates.length;
 
-  return NextResponse.json({ total, overdue, dueToday, newLeads });
+  return NextResponse.json({ total, overdue, dueToday, newLeads, quoteUpdates });
+}
+
+/** PATCH — mark all unread tm_notifications as read for this agent */
+export async function PATCH() {
+  const agentId = await getAgentId();
+  if (!agentId) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+
+  await supabaseAdmin
+    .from('tm_notifications')
+    .update({ read: true })
+    .eq('agent_id', agentId)
+    .eq('read', false);
+
+  return NextResponse.json({ ok: true });
 }
