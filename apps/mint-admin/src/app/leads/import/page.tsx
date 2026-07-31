@@ -369,7 +369,7 @@ export default function LeadImportPage() {
             </div>
 
             {/* Validation hint */}
-            {(colMap.name && colMap.email && colMap.company) ? (
+            {(colMap.name && colMap.company && (colMap.email || colMap.phone)) ? (
               <p className="text-xs mt-3 flex items-center gap-1.5" style={{ color: '#34D399' }}>
                 <CheckCircle2 size={11} />
                 <strong>{validRows.length}</strong> valid rows ready to import
@@ -381,7 +381,7 @@ export default function LeadImportPage() {
               </p>
             ) : (
               <p className="text-xs mt-3" style={{ color: '#FBBF24' }}>
-                Map Name, Email and Company to continue
+                Map Name, Company, and at least Phone or Email to continue
               </p>
             )}
           </div>
