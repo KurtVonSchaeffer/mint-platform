@@ -7,12 +7,12 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 interface LeadRow {
-  name:    string;
-  email:   string;
-  company: string;
-  phone?:  string | null;
+  name:     string;
+  email?:   string | null;
+  company:  string;
+  phone?:   string | null;
   message?: string | null;
-  source?: string;
+  source?:  string;
 }
 
 export async function POST(req: NextRequest) {
@@ -23,18 +23,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'leads array required' }, { status: 422 });
   }
 
-  // Validate each row has the minimum required fields
-  const invalid = rows.filter(r => !r.name?.trim() || !r.email?.trim() || !r.company?.trim());
+  // Require name + company + at least one of email or phone
+  const invalid = rows.filter(r => !r.name?.trim() || !r.company?.trim() || (!r.email?.trim() && !r.phone?.trim()));
   if (invalid.length > 0) {
-    return NextResponse.json({ error: `${invalid.length} row(s) missing name, email, or company` }, { status: 422 });
+    return NextResponse.json({ error: `${invalid.length} row(s) missing name/company or both email and phone` }, { status: 422 });
   }
 
-  // Collect all emails + phones for dedup check
-  const emails = rows.map(r => r.email.toLowerCase().trim());
+  // Collect emails + phones for dedup check
+  const emails = rows.filter(r => r.email?.trim()).map(r => r.email!.toLowerCase().trim());
   const phones = rows.filter(r => r.phone?.trim()).map(r => r.phone!.trim());
 
   const [emailCheck, phoneCheck] = await Promise.all([
-    supabaseAdmin.from('leads').select('email').in('email', emails),
+    emails.length > 0
+      ? supabaseAdmin.from('leads').select('email').in('email', emails)
+      : Promise.resolve({ data: [] }),
     phones.length > 0
       ? supabaseAdmin.from('leads').select('phone').in('phone', phones)
       : Promise.resolve({ data: [] }),
@@ -43,19 +45,22 @@ export async function POST(req: NextRequest) {
   const existingEmails = new Set((emailCheck.data ?? []).map((r: { email: string }) => r.email.toLowerCase()));
   const existingPhones = new Set((phoneCheck.data ?? []).map((r: { phone: string }) => r.phone));
 
-  // Build results
-  const toInsert: LeadRow[]     = [];
+  // Build results — dedup by email when present, otherwise by phone
+  const toInsert: LeadRow[] = [];
   const duplicates: string[] = [];
 
   for (const row of rows) {
-    const emailNorm = row.email.toLowerCase().trim();
-    const phoneNorm = row.phone?.trim();
+    const emailNorm = row.email?.trim() ? row.email.toLowerCase().trim() : null;
+    const phoneNorm = row.phone?.trim() || null;
 
-    if (existingEmails.has(emailNorm) || (phoneNorm && existingPhones.has(phoneNorm))) {
-      duplicates.push(row.email);
+    const isDup = (emailNorm && existingEmails.has(emailNorm)) ||
+                  (!emailNorm && phoneNorm && existingPhones.has(phoneNorm));
+
+    if (isDup) {
+      duplicates.push(emailNorm ?? phoneNorm ?? '');
     } else {
       toInsert.push(row);
-      existingEmails.add(emailNorm); // prevent intra-batch dups
+      if (emailNorm) existingEmails.add(emailNorm);
       if (phoneNorm) existingPhones.add(phoneNorm);
     }
   }
@@ -78,7 +83,7 @@ export async function POST(req: NextRequest) {
   // Insert
   const insertPayload = assignments.map(r => ({
     name:        r.name.trim(),
-    email:       r.email.toLowerCase().trim(),
+    email:       r.email?.trim() ? r.email.toLowerCase().trim() : null,
     company:     r.company.trim(),
     phone:       r.phone?.trim() ?? null,
     message:     r.message?.trim() ?? null,

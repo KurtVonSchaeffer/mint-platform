@@ -19,11 +19,11 @@ interface ImportResult {
 }
 
 const FIELD_LABELS: { key: keyof ColMap; label: string; required: boolean }[] = [
-  { key: 'name',    label: 'Full Name',   required: true  },
-  { key: 'email',   label: 'Email',       required: true  },
-  { key: 'company', label: 'Company',     required: true  },
-  { key: 'phone',   label: 'Phone',       required: false },
-  { key: 'message', label: 'Notes / Message', required: false },
+  { key: 'name',    label: 'Full Name / Company',  required: true  },
+  { key: 'email',   label: 'Email',                required: false },
+  { key: 'company', label: 'Company',              required: true  },
+  { key: 'phone',   label: 'Phone',                required: false },
+  { key: 'message', label: 'Notes / Message',      required: false },
 ];
 
 function guessMapping(headers: string[]): ColMap {
@@ -36,9 +36,9 @@ function guessMapping(headers: string[]): ColMap {
     return '';
   }
   return {
-    name:    pick(['name', 'full name', 'contact']),
+    name:    pick(['full name', 'contact name', 'contact', 'name', 'company name', 'company']),
     email:   pick(['email', 'e-mail', 'mail']),
-    company: pick(['company', 'organisation', 'organization', 'business', 'firm']),
+    company: pick(['company name', 'company', 'organisation', 'organization', 'business', 'firm']),
     phone:   pick(['phone', 'mobile', 'cell', 'tel']),
     message: pick(['note', 'message', 'comment', 'description', 'remark']),
   };
@@ -54,9 +54,10 @@ export default function LeadImportPage() {
   const [rows,      setRows]      = useState<ParsedRow[]>([]);
   const [colMap,    setColMap]    = useState<ColMap>({ name: '', email: '', company: '', phone: '', message: '' });
   const [parseErr,  setParseErr]  = useState<string | null>(null);
-  const [importing, setImporting] = useState(false);
-  const [result,    setResult]    = useState<ImportResult | null>(null);
-  const [importErr, setImportErr] = useState<string | null>(null);
+  const [importing,    setImporting]    = useState(false);
+  const [importProgress, setImportProgress] = useState<{ done: number; total: number } | null>(null);
+  const [result,       setResult]       = useState<ImportResult | null>(null);
+  const [importErr,    setImportErr]    = useState<string | null>(null);
 
   function parseFile(file: File) {
     setParseErr(null); setResult(null); setImportErr(null);
@@ -67,8 +68,13 @@ export default function LeadImportPage() {
       try {
         const data = new Uint8Array(e.target!.result as ArrayBuffer);
         const wb   = XLSX.read(data, { type: 'array' });
-        const ws   = wb.Sheets[wb.SheetNames[0]];
-        const json = XLSX.utils.sheet_to_json<ParsedRow>(ws, { defval: '' });
+
+        // Find the first sheet that has at least one data row (skip cover/readme sheets)
+        let json: ParsedRow[] = [];
+        for (const name of wb.SheetNames) {
+          const candidate = XLSX.utils.sheet_to_json<ParsedRow>(wb.Sheets[name], { defval: '' });
+          if (candidate.length > 0) { json = candidate; break; }
+        }
 
         if (json.length === 0) { setParseErr('Spreadsheet appears empty.'); return; }
 
@@ -94,45 +100,65 @@ export default function LeadImportPage() {
     if (file) parseFile(file);
   };
 
+  // Require name + company + at least one of email or phone
   const validRows = rows.filter(r =>
     colMap.name    && r[colMap.name]?.trim()    &&
-    colMap.email   && r[colMap.email]?.trim()   &&
-    colMap.company && r[colMap.company]?.trim(),
+    colMap.company && r[colMap.company]?.trim() &&
+    (
+      (colMap.email && r[colMap.email]?.trim()) ||
+      (colMap.phone && r[colMap.phone]?.trim())
+    ),
   );
+
+  const BATCH = 500;
 
   async function runImport() {
     if (validRows.length === 0) return;
-    setImporting(true); setImportErr(null);
+    setImporting(true); setImportErr(null); setImportProgress({ done: 0, total: validRows.length });
 
     const payload = validRows.map(r => ({
       name:    r[colMap.name]?.trim()    ?? '',
-      email:   r[colMap.email]?.trim()   ?? '',
+      email:   colMap.email   ? r[colMap.email]?.trim()   || null : null,
       company: r[colMap.company]?.trim() ?? '',
-      phone:   colMap.phone    ? r[colMap.phone]?.trim()    || null : null,
-      message: colMap.message  ? r[colMap.message]?.trim()  || null : null,
+      phone:   colMap.phone   ? r[colMap.phone]?.trim()   || null : null,
+      message: colMap.message ? r[colMap.message]?.trim() || null : null,
       source:  'import',
     }));
 
+    const combined: ImportResult = { inserted: 0, duplicates: 0, duplicateEmails: [], byAgent: {} };
+
     try {
-      const res  = await fetch('/api/leads/bulk', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ leads: payload }),
-      });
-      const data = await res.json();
-      if (!res.ok) { setImportErr(data.error ?? 'Import failed'); }
-      else          { setResult(data); }
+      for (let i = 0; i < payload.length; i += BATCH) {
+        const batch = payload.slice(i, i + BATCH);
+        const res   = await fetch('/api/leads/bulk', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ leads: batch }),
+        });
+        const data = await res.json();
+        if (!res.ok) { setImportErr(data.error ?? 'Import failed'); return; }
+
+        combined.inserted       += data.inserted       ?? 0;
+        combined.duplicates     += data.duplicates     ?? 0;
+        combined.duplicateEmails = [...combined.duplicateEmails, ...(data.duplicateEmails ?? [])];
+        for (const [agent, count] of Object.entries(data.byAgent ?? {})) {
+          combined.byAgent[agent] = (combined.byAgent[agent] ?? 0) + (count as number);
+        }
+        setImportProgress({ done: Math.min(i + BATCH, payload.length), total: payload.length });
+      }
+      setResult(combined);
     } catch {
       setImportErr('Network error — import failed');
     } finally {
       setImporting(false);
+      setImportProgress(null);
     }
   }
 
   function reset() {
     setFileName(null); setHeaders([]); setRows([]);
     setColMap({ name: '', email: '', company: '', phone: '', message: '' });
-    setResult(null); setParseErr(null); setImportErr(null);
+    setResult(null); setParseErr(null); setImportErr(null); setImportProgress(null);
     if (inputRef.current) inputRef.current.value = '';
   }
 
@@ -421,12 +447,16 @@ export default function LeadImportPage() {
             </p>
             <button
               onClick={runImport}
-              disabled={importing || validRows.length === 0 || !colMap.name || !colMap.email || !colMap.company}
+              disabled={importing || validRows.length === 0 || !colMap.name || !colMap.company}
               className="btn-purple btn-shine inline-flex items-center gap-2 whitespace-nowrap shrink-0"
               style={{ opacity: importing || validRows.length === 0 ? 0.6 : 1 }}
             >
               {importing
-                ? <><Loader2 size={14} className="animate-spin" /> Importing…</>
+                ? <><Loader2 size={14} className="animate-spin" />
+                    {importProgress
+                      ? `${importProgress.done} / ${importProgress.total}…`
+                      : 'Importing…'}
+                  </>
                 : <><Upload size={14} /> Import {validRows.length} lead{validRows.length !== 1 ? 's' : ''}</>}
             </button>
           </div>
