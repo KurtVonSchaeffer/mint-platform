@@ -51,7 +51,7 @@ interface Lead {
   clientName: string;
   company: string;
   phone: string;
-  email: string;
+  email: string | null;
   dateAdded: string;
   updatedAt: string;
   status: LeadStatus;
@@ -819,13 +819,15 @@ export default function TelemarketerLeadsPage() {
                       </a>
                     </td>
                     <td>
-                      <a href={`mailto:${lead.email}`} className="text-xs transition-colors"
-                        style={{ color: 'var(--color-text3)' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; }}
-                      >
-                        {lead.email}
-                      </a>
+                      {lead.email
+                        ? <a href={`mailto:${lead.email}`} className="text-xs transition-colors"
+                            style={{ color: 'var(--color-text3)' }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)'; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; }}
+                          >
+                            {lead.email}
+                          </a>
+                        : <span className="text-xs" style={{ color: 'var(--color-text3)', opacity: 0.4, fontStyle: 'italic' }}>—</span>}
                     </td>
                     <td>
                       <span className="text-xs" style={{ color: 'var(--color-text3)', fontFamily: 'var(--font-mono)' }}>

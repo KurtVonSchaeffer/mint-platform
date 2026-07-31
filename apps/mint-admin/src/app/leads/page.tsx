@@ -14,7 +14,7 @@ type LeadSource = 'marketing-site' | 'referral' | 'manual';
 interface Lead {
   id:          string;
   name:        string;
-  email:       string;
+  email:       string | null;
   company:     string;
   message:     string | null;
   source:      LeadSource;
@@ -341,7 +341,7 @@ export default function LeadsPage() {
           }}
           initialValues={{
             name:         convertLead.company,
-            contactEmail: convertLead.email,
+            contactEmail: convertLead.email ?? undefined,
             contactName:  convertLead.name,
           }}
         />
@@ -539,7 +539,9 @@ export default function LeadsPage() {
                       <div className="flex items-center gap-4 text-xs mb-3 flex-wrap" style={{ color: 'var(--color-text3)' }}>
                         <span className="inline-flex items-center gap-1.5">
                           <Mail size={11} />
-                          <a href={`mailto:${lead.email}`} className="lead-email-link hover:underline">{lead.email}</a>
+                          {lead.email
+                            ? <a href={`mailto:${lead.email}`} className="lead-email-link hover:underline">{lead.email}</a>
+                            : <span style={{ fontStyle: 'italic', opacity: 0.5 }}>no email</span>}
                         </span>
                         <span className="inline-flex items-center gap-1.5">
                           <Building2 size={11} />
@@ -564,7 +566,7 @@ export default function LeadsPage() {
                       </p>
                       <div className="flex items-center gap-2 flex-wrap justify-end">
                         <AssignDropdown lead={lead} agents={agents} onAssign={assignLead} />
-                        <a
+                        {lead.email && <a
                           href={`mailto:${lead.email}?subject=Re: ${lead.company} — AlgoLend`}
                           className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
                           style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}
@@ -572,7 +574,7 @@ export default function LeadsPage() {
                           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
                         >
                           <Mail size={11} /> Reply
-                        </a>
+                        </a>}
                         {lead.status !== 'won' && lead.status !== 'lost' && (
                           <>
                             <button
