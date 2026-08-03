@@ -69,11 +69,11 @@ export default function LeadImportPage() {
         const data = new Uint8Array(e.target!.result as ArrayBuffer);
         const wb   = XLSX.read(data, { type: 'array' });
 
-        // Find the first sheet that has at least one data row (skip cover/readme sheets)
+        // Pick the sheet with the most rows (cover/readme sheets always have fewer rows than data sheets)
         let json: ParsedRow[] = [];
         for (const name of wb.SheetNames) {
           const candidate = XLSX.utils.sheet_to_json<ParsedRow>(wb.Sheets[name], { defval: '' });
-          if (candidate.length > 0) { json = candidate; break; }
+          if (candidate.length > json.length) json = candidate;
         }
 
         if (json.length === 0) { setParseErr('Spreadsheet appears empty.'); return; }
