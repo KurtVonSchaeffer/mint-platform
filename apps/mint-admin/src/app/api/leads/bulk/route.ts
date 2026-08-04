@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     company:     r.company.trim(),
     phone:       r.phone?.trim() ?? null,
     message:     r.message?.trim() ?? null,
-    source:      r.source ?? 'import',
+    source:      r.source ?? 'manual',
     status:      'new',
     assigned_to: null,
     tm_status:   null,
