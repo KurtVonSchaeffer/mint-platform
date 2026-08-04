@@ -122,7 +122,7 @@ export default function LeadImportPage() {
       company: r[colMap.company]?.trim() ?? '',
       phone:   colMap.phone   ? r[colMap.phone]?.trim()   || null : null,
       message: colMap.message ? r[colMap.message]?.trim() || null : null,
-      source:  'import',
+      source:  'manual',
     }));
 
     const combined: ImportResult = { inserted: 0, duplicates: 0, duplicateEmails: [], byAgent: {} };
