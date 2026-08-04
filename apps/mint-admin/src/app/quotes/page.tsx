@@ -227,7 +227,15 @@ export default function QuotesPage() {
     if (!updated) return;
     const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
     const trackingPixel = `<img src="${appUrl}/api/quotes/${q.dbId}/view" width="1" height="1" style="display:none" alt="" />`;
-    const html = `<p>Dear ${q.contact},</p><p>Please find your AlgoLend pricing proposal <strong>${q.id}</strong> below.</p><p><strong>Once-off implementation fee (paid before go-live):</strong> ${fmtR(q.setupFee)}<br><strong>Monthly platform licence (recurring, billed monthly — not upfront):</strong> ${fmtR(q.monthlyFee)}/mo, includes ${q.quota.toLocaleString()} API checks/month<br><strong>Usage beyond the included quota</strong> is billed pay-as-you-go at our published per-check rates.<br><strong>Valid until:</strong> ${until}</p><p>Reply to this email with any questions.</p><p>— MINT Platforms (Pty) Ltd</p>${trackingPixel}`;
+    // Starter pack (R1,999/mo) → all checks PAYG; Enterprise (R14,999/mo) → 2,000 included
+    const isStarterPack   = q.monthlyFee === 1999;
+    const isEnterprisePack = q.monthlyFee === 14999;
+    const checksLine = isStarterPack
+      ? `All API checks billed pay-as-you-go at our published per-check rates.`
+      : isEnterprisePack
+        ? `Includes 2,000 API checks/month. Additional checks billed pay-as-you-go.`
+        : `Includes up to ${q.quota.toLocaleString()} API checks/month. Additional checks billed pay-as-you-go at our published per-check rates.`;
+    const html = `<p>Dear ${q.contact},</p><p>Please find your AlgoLend pricing proposal <strong>${q.id}</strong> below.</p><p><strong>Once-off implementation fee (paid before go-live):</strong> ${fmtR(q.setupFee)}<br><strong>Monthly platform licence (recurring, billed monthly — not upfront):</strong> ${fmtR(q.monthlyFee)}/mo<br><strong>API checks:</strong> ${checksLine}<br><strong>Valid until:</strong> ${until}</p><p>Reply to this email with any questions.</p><p>— MINT Platforms (Pty) Ltd</p>${trackingPixel}`;
     fetch('/api/email', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ to: q.email, subject: `AlgoLend proposal ${q.id} — ${q.client}`, html }),

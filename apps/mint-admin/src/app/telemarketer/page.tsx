@@ -31,7 +31,7 @@ interface TodayCall {
 
 function fmt(n: number) { return `R ${n.toLocaleString('en-ZA')}`; }
 
-const DAILY_CALL_GOAL = 20;
+const DAILY_CALL_GOAL = 80;
 const MONTHLY_LEAD_GOAL = 8;
 const MONTH = new Date().toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' });
 

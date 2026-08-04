@@ -61,7 +61,17 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         agent_id: agentId,
         type:     'quote_approved',
         title:    'Quote approved',
-        message:  `Your quote for ${clientName} was approved and is being sent to the client.`,
+        message:  `Your quote for ${clientName} was approved — the admin will send it to the client shortly.`,
+        quote_id: id,
+      });
+    }
+
+    if (newStatus === 'sent') {
+      notifs.push({
+        agent_id: agentId,
+        type:     'quote_sent',
+        title:    'Quote sent to client',
+        message:  `Your quote for ${clientName} has been sent. You will be notified when they view or accept it.`,
         quote_id: id,
       });
     }

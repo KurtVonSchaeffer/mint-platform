@@ -4,10 +4,10 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Phone, Mail, Building2, Clock, Calendar, FileUp,
+  Phone, Mail, Building2, Users, Clock, Calendar, FileUp,
   MessageSquare, ChevronLeft, ChevronDown, Plus, CheckCircle2,
   Loader2, RefreshCw, Globe, MapPin, Briefcase, Percent, Video, Save,
-  FileText, Send, Copy, Timer, PhoneOff,
+  FileText, Send, Copy, Timer, PhoneOff, Banknote,
 } from 'lucide-react';
 import { getAgentId } from '@/lib/telemarketer-agent';
 
@@ -476,6 +476,7 @@ export default function LeadDetailPage() {
   // ── Templates ───────────────────────────────────────────────────────────────
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [copiedId,      setCopiedId]      = useState<string | null>(null);
+  const [copiedLeadId,  setCopiedLeadId]  = useState(false);
 
   const loadActivity = useCallback(async () => {
     const [notesRes, callsRes, fuRes, demosRes, proposalsRes] = await Promise.all([
@@ -731,7 +732,20 @@ export default function LeadDetailPage() {
               {lead.name.split(' ').map(w => w[0]).join('').slice(0, 2)}
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--color-text)', letterSpacing: '-0.025em' }}>{lead.name}</h1>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--color-text)', letterSpacing: '-0.025em' }}>{lead.name}</h1>
+                <button
+                  onClick={() => { navigator.clipboard.writeText(id); setCopiedLeadId(true); setTimeout(() => setCopiedLeadId(false), 2000); }}
+                  className="inline-flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.5 rounded-md transition-all"
+                  title="Copy lead ID"
+                  style={{
+                    background: copiedLeadId ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.06)',
+                    color:      copiedLeadId ? '#34D399' : 'var(--color-text3)',
+                    border:     `1px solid ${copiedLeadId ? 'rgba(52,211,153,0.25)' : 'var(--color-border2)'}`,
+                  }}>
+                  {copiedLeadId ? '✓ copied' : `#${id.slice(0, 8)}`}
+                </button>
+              </div>
               <div className="flex items-center gap-3 mt-1 flex-wrap">
                 <span className="flex items-center gap-1.5 text-sm" style={{ color: 'var(--color-text3)' }}>
                   <Building2 size={12} /> {lead.company}
@@ -749,6 +763,29 @@ export default function LeadDetailPage() {
                   <Mail size={12} /> {lead.email}
                 </a>
               </div>
+              {/* Qualification quick-view — only non-empty fields */}
+              {(() => {
+                const items = [
+                  lead.industry          && { icon: Briefcase, label: lead.industry,                                                                    color: '#FBBF24' },
+                  lead.province          && { icon: MapPin,    label: lead.province,                                                                    color: '#60A5FA' },
+                  lead.num_branches      != null && { icon: Building2, label: `${lead.num_branches} branch${lead.num_branches !== 1 ? 'es' : ''}`,      color: '#A78BFA' },
+                  lead.num_employees     != null && { icon: Users,     label: `${lead.num_employees} employee${lead.num_employees !== 1 ? 's' : ''}`,   color: '#A78BFA' },
+                  lead.deal_probability  != null && { icon: Percent,   label: `${lead.deal_probability}% probability`,                                 color: '#34D399' },
+                  lead.estimated_deal_value != null && { icon: Banknote, label: `R ${lead.estimated_deal_value.toLocaleString('en-ZA')}`,               color: '#34D399' },
+                ].filter(Boolean) as { icon: React.ComponentType<{ size?: number }>; label: string; color: string }[];
+                if (items.length === 0) return null;
+                return (
+                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                    {items.map((item, i) => (
+                      <span key={i} className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full"
+                        style={{ background: `${item.color}14`, color: item.color, border: `1px solid ${item.color}28` }}>
+                        <item.icon size={9} />
+                        {item.label}
+                      </span>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">

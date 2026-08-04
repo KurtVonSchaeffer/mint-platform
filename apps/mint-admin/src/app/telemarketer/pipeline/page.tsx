@@ -6,7 +6,8 @@ import {
   Loader2, Phone, Calendar, Building2, Plus, RefreshCw,
   TrendingUp, Trophy, Target, Clock, Sparkles, MessageSquare,
   Star, CalendarClock, CalendarCheck2, FileText, Scale, XCircle,
-  PhoneOutgoing, ArrowRight, ChevronRight,
+  PhoneOutgoing, ArrowRight, ChevronRight, ChevronDown, ChevronsRight,
+  EyeOff,
 } from 'lucide-react';
 import { getAgentId } from '@/lib/telemarketer-agent';
 
@@ -141,11 +142,22 @@ function PipelineFunnel({ leads }: { leads: Lead[] }) {
 }
 
 export default function PipelinePage() {
-  const [leads,    setLeads]    = useState<Lead[]>([]);
-  const [loading,  setLoading]  = useState(true);
-  const [dragging, setDragging] = useState<string | null>(null);
-  const [dragOver, setDragOver] = useState<string | null>(null);
+  const [leads,          setLeads]          = useState<Lead[]>([]);
+  const [loading,        setLoading]        = useState(true);
+  const [dragging,       setDragging]       = useState<string | null>(null);
+  const [dragOver,       setDragOver]       = useState<string | null>(null);
+  const [stagePicker,    setStagePicker]    = useState<string | null>(null);
+  const [hideEmpty,      setHideEmpty]      = useState(true);
   const agentIdRef = useRef<string>('');
+
+  // Close stage picker on outside click
+  useEffect(() => {
+    const close = (e: MouseEvent) => {
+      if (!(e.target as Element).closest('[data-stage-picker]')) setStagePicker(null);
+    };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -200,10 +212,21 @@ export default function PipelinePage() {
             My Pipeline
           </h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--color-text3)' }}>
-            Drag cards between stages to advance leads
+            Click <strong style={{ color: 'var(--color-text2)' }}>Move</strong> on a card to advance it — no dragging needed
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setHideEmpty(h => !h)}
+            className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors cursor-pointer"
+            style={{
+              border: '1px solid var(--color-border2)',
+              color: hideEmpty ? 'var(--color-violet)' : 'var(--color-text2)',
+              background: hideEmpty ? 'rgba(124,58,237,0.08)' : 'transparent',
+            }}
+          >
+            <EyeOff size={13} /> {hideEmpty ? 'Empty hidden' : 'Show empty'}
+          </button>
           <button
             onClick={load}
             className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors cursor-pointer"
@@ -287,7 +310,7 @@ export default function PipelinePage() {
         style={{ minHeight: '64vh' }}
         onDragOver={e => e.preventDefault()}
       >
-        {STAGES.map(stage => {
+        {STAGES.filter(stage => !hideEmpty || getLeadsForStage(stage.id).length > 0).map(stage => {
           const stageLeads = getLeadsForStage(stage.id);
           const isDragTarget = dragOver === stage.id;
           const StageIcon = stage.icon;
@@ -441,6 +464,21 @@ export default function PipelinePage() {
                         </div>
                       </div>
 
+                      {/* Follow-up date */}
+                      {lead.next_follow_up && (
+                        <div
+                          className="inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-md mb-2"
+                          style={{
+                            background: overdueLead ? 'rgba(248,113,113,0.10)' : dueTodayLead ? 'rgba(251,191,36,0.10)' : 'rgba(0,0,0,0.08)',
+                            color: overdueLead ? '#F87171' : dueTodayLead ? '#FBBF24' : 'var(--color-text3)',
+                          }}
+                        >
+                          <Calendar size={8} />
+                          {fmtDate(lead.next_follow_up)}
+                          {overdueLead && <span className="text-[8px] font-black ml-0.5">!</span>}
+                        </div>
+                      )}
+
                       {/* Actions row */}
                       <div className="flex items-center gap-1.5">
                         {lead.phone && (
@@ -464,22 +502,68 @@ export default function PipelinePage() {
                           <ChevronRight size={8} /> View
                         </Link>
 
-                        {/* Follow-up date */}
-                        {lead.next_follow_up && (
+                        {/* Quick-advance: move to next stage in one click */}
+                        {(() => {
+                          const currentIdx = STAGES.findIndex(s => s.id === normalizeStatus(lead.tm_status));
+                          const nextStage  = STAGES[currentIdx + 1];
+                          return nextStage ? (
+                            <button
+                              onClick={e => { e.stopPropagation(); moveToStage(lead.id, nextStage.id); }}
+                              draggable={false}
+                              title={`Advance to: ${nextStage.id}`}
+                              className="ml-auto inline-flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-lg cursor-pointer transition-opacity hover:opacity-80"
+                              style={{ background: `rgba(${nextStage.rgb},0.13)`, color: nextStage.color }}
+                            >
+                              <ChevronsRight size={8} /> {nextStage.id}
+                            </button>
+                          ) : null;
+                        })()}
+                      </div>
+
+                      {/* Stage picker */}
+                      <div className="mt-1.5 relative" data-stage-picker onClick={e => e.stopPropagation()}>
+                        <button
+                          onClick={() => setStagePicker(stagePicker === lead.id ? null : lead.id)}
+                          draggable={false}
+                          className="w-full inline-flex items-center justify-between gap-1 text-[9px] font-semibold px-2 py-1.5 rounded-lg cursor-pointer transition-all"
+                          style={{
+                            background: 'rgba(0,0,0,0.06)',
+                            color: 'var(--color-text3)',
+                            border: '1px solid var(--color-border2)',
+                          }}
+                        >
+                          <span className="flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: stage.color }} />
+                            {normalizeStatus(lead.tm_status)}
+                          </span>
+                          <ChevronDown size={8} style={{ opacity: 0.5, transform: stagePicker === lead.id ? 'rotate(180deg)' : undefined, transition: 'transform 0.15s' }} />
+                        </button>
+
+                        {stagePicker === lead.id && (
                           <div
-                            className="ml-auto inline-flex items-center gap-1 text-[9px] font-semibold px-1.5 py-0.5 rounded-md"
-                            style={{
-                              background: overdueLead
-                                ? 'rgba(248,113,113,0.10)'
-                                : dueTodayLead
-                                  ? 'rgba(251,191,36,0.10)'
-                                  : 'transparent',
-                              color: overdueLead ? '#F87171' : dueTodayLead ? '#FBBF24' : 'var(--color-text3)',
-                            }}
+                            className="absolute top-full mt-1 left-0 right-0 z-50 rounded-xl overflow-y-auto shadow-2xl"
+                            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border2)', maxHeight: 220 }}
                           >
-                            <Calendar size={8} />
-                            {fmtDate(lead.next_follow_up)}
-                            {overdueLead && <span className="text-[8px] font-black">!</span>}
+                            {STAGES.map(s => {
+                              const isCurrent = s.id === normalizeStatus(lead.tm_status);
+                              return (
+                                <button
+                                  key={s.id}
+                                  onClick={() => { moveToStage(lead.id, s.id); setStagePicker(null); }}
+                                  className="w-full flex items-center gap-2 px-3 py-1.5 text-[10px] font-semibold text-left transition-colors"
+                                  style={{
+                                    color: isCurrent ? s.color : 'var(--color-text2)',
+                                    background: isCurrent ? `rgba(${s.rgb},0.08)` : 'transparent',
+                                  }}
+                                  onMouseEnter={e => { if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
+                                  onMouseLeave={e => { if (!isCurrent) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                                >
+                                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: s.color }} />
+                                  {s.id}
+                                  {isCurrent && <span className="ml-auto text-[8px] opacity-50">current</span>}
+                                </button>
+                              );
+                            })}
                           </div>
                         )}
                       </div>

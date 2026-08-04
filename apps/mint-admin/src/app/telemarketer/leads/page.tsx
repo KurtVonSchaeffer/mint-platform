@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import {
   Plus, Phone, ChevronDown, Loader2, X, Clock,
-  MessageSquare, Calendar, FileUp, RefreshCw, Search, Check,
+  MessageSquare, Calendar, FileUp, RefreshCw, Search, Check, Download, PhoneCall,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -97,7 +97,7 @@ const PIPELINE_STATUSES: LeadStatus[] = [
   'Negotiation', 'Won', 'Lost', 'Not Qualified',
 ];
 
-import { SESSION_KEY_AGENT } from '@/components/TelemarketerShell';
+import { getAgentId } from '@/lib/telemarketer-agent';
 
 const ALL_STATUSES = Object.keys(STATUS_CFG) as LeadStatus[];
 
@@ -162,7 +162,7 @@ function AddLeadModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    const agentId = sessionStorage.getItem(SESSION_KEY_AGENT) ?? 'tm-1';
+    const agentId = await getAgentId();
     await fetch('/api/leads', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -247,13 +247,32 @@ function CallLogModal({ lead, onClose }: { lead: Lead; onClose: () => void }) {
   return (
     <div className="confirm-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="bento-card w-full max-w-sm p-7" style={{ animation: 'scale-in 0.25s cubic-bezier(0.16,1,0.3,1) both' }}>
-        <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center justify-between mb-4">
           <h3 className="font-bold text-lg" style={{ color: 'var(--color-text)' }}>Log Call</h3>
           <button onClick={onClose} style={{ color: 'var(--color-text3)' }}><X size={16} /></button>
         </div>
-        <p className="text-xs mb-5" style={{ color: 'var(--color-text3)' }}>
-          {lead.clientName} &middot; {lead.phone}
-        </p>
+
+        {/* Phone number dial block */}
+        <div className="rounded-xl p-4 mb-5 flex items-center justify-between gap-3"
+          style={{ background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.18)' }}>
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: 'rgba(52,211,153,0.6)' }}>
+              {lead.clientName}
+            </p>
+            {lead.phone
+              ? <p className="text-xl font-bold font-mono tracking-wide" style={{ color: '#34D399' }}>{lead.phone}</p>
+              : <p className="text-sm italic" style={{ color: 'var(--color-text3)' }}>No phone on file</p>
+            }
+          </div>
+          {lead.phone && (
+            <a href={`tel:${lead.phone}`}
+              className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-all"
+              style={{ background: 'rgba(52,211,153,0.15)', color: '#34D399', border: '1px solid rgba(52,211,153,0.3)' }}
+              title={`Call ${lead.phone}`}>
+              <PhoneCall size={18} />
+            </a>
+          )}
+        </div>
         <form onSubmit={submit} className="space-y-3">
           <div>
             <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Outcome</label>
@@ -413,7 +432,7 @@ export default function TelemarketerLeadsPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const agentId = sessionStorage.getItem(SESSION_KEY_AGENT) ?? 'tm-1';
+    const agentId = await getAgentId();
     const res = await fetch(`/api/leads?assigned_to=${agentId}`);
     if (res.ok) {
       const { leads: raw } = await res.json();
@@ -423,6 +442,24 @@ export default function TelemarketerLeadsPage() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+
+  function exportCsv() {
+    const esc = (v: string) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const rows = [
+      ['ID', 'Name', 'Company', 'Phone', 'Email', 'TM Status', 'Date Added', 'Next Follow-Up'],
+      ...leads.map(l => [
+        l.id, l.clientName, l.company, l.phone ?? '', l.email ?? '',
+        l.status, l.dateAdded, l.nextFollowUp ?? '',
+      ]),
+    ].map(r => r.map(esc).join(',')).join('\n');
+    const blob = new Blob([rows], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `my-leads-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
   // ── Status update ───────────────────────────────────────────────────────────
 
@@ -593,6 +630,16 @@ export default function TelemarketerLeadsPage() {
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
           >
             <RefreshCw size={13} className={loading ? 'animate-spin' : ''} /> Refresh
+          </button>
+          <button
+            onClick={exportCsv}
+            disabled={leads.length === 0}
+            className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors disabled:opacity-40"
+            style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+          >
+            <Download size={13} /> Export CSV
           </button>
           <button onClick={() => setAddOpen(true)} className="btn-purple btn-shine inline-flex items-center gap-1.5">
             <Plus size={14} /> Add Lead
@@ -810,13 +857,17 @@ export default function TelemarketerLeadsPage() {
                       </Link>
                     </td>
                     <td>
-                      <a href={`tel:${lead.phone}`} className="text-sm flex items-center gap-1.5 transition-colors"
-                        style={{ color: 'var(--color-text2)' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#34D399'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text2)'; }}
-                      >
-                        <Phone size={11} style={{ opacity: 0.6 }} /> {lead.phone}
-                      </a>
+                      {lead.phone
+                        ? <a href={`tel:${lead.phone}`}
+                            className="inline-flex items-center gap-1.5 font-mono font-semibold transition-colors"
+                            style={{ color: '#34D399', fontSize: 12 }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.75'; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
+                          >
+                            <Phone size={11} /> {lead.phone}
+                          </a>
+                        : <span className="text-xs italic" style={{ color: 'var(--color-text3)', opacity: 0.4 }}>—</span>
+                      }
                     </td>
                     <td>
                       {lead.email

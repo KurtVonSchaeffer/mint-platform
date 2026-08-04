@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
-import { Inbox, RefreshCw, Mail, Building2, ChevronDown, Plus, X, Loader2, UserPlus, FileText, UserCheck, Upload } from 'lucide-react';
+import { Inbox, RefreshCw, Mail, Building2, ChevronDown, Plus, X, Loader2, UserPlus, FileText, UserCheck, Upload, Download } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 type LeadStatus = 'new' | 'contacted' | 'qualified' | 'won' | 'lost';
@@ -270,6 +270,25 @@ export default function LeadsPage() {
 
   useEffect(() => { load(); }, [load]);
 
+  function exportCsv() {
+    const agentName = (id: string | null) => agents.find(a => a.id === id)?.name ?? id ?? '';
+    const esc = (v: string) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const rows = [
+      ['ID', 'Name', 'Company', 'Email', 'Source', 'Status', 'TM Status', 'Assigned To', 'Created At'],
+      ...leads.map(l => [
+        l.id, l.name, l.company, l.email ?? '', l.source,
+        l.status, l.tmStatus ?? '', agentName(l.assignedTo), l.createdAt,
+      ]),
+    ].map(r => r.map(esc).join(',')).join('\n');
+    const blob = new Blob([rows], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   useEffect(() => {
     fetch('/api/users?role=telemarketer')
       .then(r => r.json())
@@ -377,6 +396,17 @@ export default function LeadsPage() {
             >
               <Upload size={13} />
               Import
+            </button>
+            <button
+              onClick={exportCsv}
+              disabled={leads.length === 0}
+              className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors cursor-pointer disabled:opacity-40"
+              style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+            >
+              <Download size={13} />
+              Export CSV
             </button>
             <button onClick={() => setAddOpen(true)} className="btn-purple btn-shine inline-flex items-center gap-1.5">
               <Plus size={14} /> Add lead
