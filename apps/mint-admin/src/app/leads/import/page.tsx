@@ -164,7 +164,6 @@ export default function LeadImportPage() {
 
   /* ── Result screen ─────────────────────────────────────── */
   if (result) {
-    const totalAgents = Object.keys(result.byAgent).length;
     return (
       <div className="space-y-6 page-enter max-w-lg">
         <div className="flex items-center gap-3">
@@ -213,32 +212,12 @@ export default function LeadImportPage() {
           )}
         </div>
 
-        {/* Distribution summary */}
         {result.inserted > 0 && (
-          <div className="bento-card p-5 space-y-3">
-            <div className="flex items-center gap-2 mb-1">
-              <Users2 size={13} style={{ color: 'var(--color-violet)' }} />
-              <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text3)' }}>
-                Distributed across {totalAgents} agent{totalAgents !== 1 ? 's' : ''}
-              </p>
-            </div>
-            <div className="space-y-2">
-              {Object.entries(result.byAgent).map(([agentId, count]) => (
-                <div key={agentId} className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold text-white"
-                      style={{ background: 'linear-gradient(135deg,#7C3AED,#5B21B6)' }}>
-                      {agentId.slice(0, 1).toUpperCase()}
-                    </div>
-                    <p className="text-xs font-mono" style={{ color: 'var(--color-text2)' }}>{agentId.slice(0, 8)}…</p>
-                  </div>
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-                    style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)' }}>
-                    {count} lead{count !== 1 ? 's' : ''}
-                  </span>
-                </div>
-              ))}
-            </div>
+          <div className="bento-card p-4 flex items-center gap-3" style={{ borderColor: 'rgba(124,58,237,0.2)', background: 'rgba(124,58,237,0.04)' }}>
+            <Users2 size={14} style={{ color: 'var(--color-violet)', flexShrink: 0 }} />
+            <p className="text-sm" style={{ color: 'var(--color-text2)' }}>
+              Leads are <strong>unassigned</strong> — go to the leads page to assign them to telemarketers.
+            </p>
           </div>
         )}
 
@@ -282,7 +261,7 @@ export default function LeadImportPage() {
             Import leads from Excel
           </h1>
           <p className="text-sm" style={{ color: 'var(--color-text3)' }}>
-            Upload a .xlsx or .csv file — leads are auto-distributed round-robin across your telemarketers.
+            Upload a .xlsx or .csv file — duplicates are skipped automatically; leads are imported unassigned.
           </p>
         </div>
       </div>
@@ -443,7 +422,7 @@ export default function LeadImportPage() {
           {/* Import button */}
           <div className="flex items-center justify-between gap-4">
             <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
-              Leads will be distributed round-robin across all active telemarketers. Each TM will receive an email.
+              Duplicates (matched by email or phone) are skipped automatically.
             </p>
             <button
               onClick={runImport}
