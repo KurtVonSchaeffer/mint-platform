@@ -136,3 +136,10 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   return NextResponse.json({ lead: data });
 }
+
+export async function DELETE(_req: NextRequest, { params }: Params) {
+  const { id } = await params;
+  const { error } = await supabaseAdmin.from('leads').delete().eq('id', id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
+}

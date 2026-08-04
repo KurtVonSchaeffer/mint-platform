@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
-import { Inbox, RefreshCw, Mail, Building2, ChevronDown, Plus, X, Loader2, UserPlus, FileText, UserCheck, Upload, Download } from 'lucide-react';
+import { Inbox, RefreshCw, Mail, Building2, ChevronDown, Plus, X, Loader2, UserPlus, FileText, UserCheck, Upload, Download, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 type LeadStatus = 'new' | 'contacted' | 'qualified' | 'won' | 'lost';
@@ -179,8 +179,65 @@ function AssignDropdown({ lead, agents, onAssign }: {
   );
 }
 
+const TM_STATUSES = [
+  'New Lead', 'Attempted Contact', 'Contacted', 'Interested',
+  'Demo Scheduled', 'Demo Completed', 'Proposal Requested', 'Proposal Sent',
+  'Negotiation', 'Won', 'Lost', 'Not Qualified',
+];
+
+function TmStatusDropdown({ lead, onUpdate }: { lead: Lead; onUpdate: (id: string, status: string) => Promise<void> }) {
+  const [open, setOpen]     = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  async function pick(s: string) {
+    if (s === lead.tmStatus) { setOpen(false); return; }
+    setSaving(true);
+    setOpen(false);
+    await onUpdate(lead.id, s);
+    setSaving(false);
+  }
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        disabled={saving}
+        className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full cursor-pointer transition-all"
+        style={{ background: 'rgba(124,58,237,0.08)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.2)' }}
+      >
+        {saving ? <Loader2 size={8} className="animate-spin" /> : null}
+        {lead.tmStatus}
+        <ChevronDown size={8} />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div
+            className="absolute left-0 top-full mt-1 z-20 rounded-xl overflow-hidden min-w-[180px]"
+            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.25)' }}
+          >
+            {TM_STATUSES.map(s => (
+              <button
+                key={s}
+                onClick={() => pick(s)}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs cursor-pointer transition-colors text-left"
+                style={{ color: s === lead.tmStatus ? 'var(--color-violet)' : 'var(--color-text2)' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: s === lead.tmStatus ? 'var(--color-violet)' : 'var(--color-text3)' }} />
+                {s}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function AddLeadModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
-  const [form, setForm]   = useState({ name: '', email: '', company: '', message: '' });
+  const [form, setForm]   = useState({ name: '', email: '', phone: '', company: '', message: '' });
   const [saving, setSaving] = useState(false);
 
   async function submit(e: React.FormEvent) {
@@ -204,18 +261,24 @@ function AddLeadModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
           <button onClick={onClose} className="cursor-pointer" style={{ color: 'var(--color-text3)' }}><X size={16} /></button>
         </div>
         <form onSubmit={submit} className="space-y-3">
-          {(['name', 'email', 'company'] as const).map(f => (
-            <div key={f}>
-              <label className="block text-[10px] font-medium mb-1.5 capitalize" style={{ color: 'var(--color-text3)' }}>{f}</label>
-              <input
-                type={f === 'email' ? 'email' : 'text'}
-                required
-                className="field-input"
-                value={form[f]}
-                onChange={e => setForm(p => ({ ...p, [f]: e.target.value }))}
-              />
+          <div>
+            <label className="block text-[10px] font-medium mb-1.5 capitalize" style={{ color: 'var(--color-text3)' }}>Name</label>
+            <input type="text" required className="field-input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
+          </div>
+          <div>
+            <label className="block text-[10px] font-medium mb-1.5 capitalize" style={{ color: 'var(--color-text3)' }}>Company</label>
+            <input type="text" required className="field-input" value={form.company} onChange={e => setForm(p => ({ ...p, company: e.target.value }))} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Email</label>
+              <input type="email" className="field-input" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} />
             </div>
-          ))}
+            <div>
+              <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Phone</label>
+              <input type="tel" className="field-input" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} />
+            </div>
+          </div>
           <div>
             <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Message (optional)</label>
             <textarea className="field-input" rows={3} value={form.message} onChange={e => setForm(p => ({ ...p, message: e.target.value }))} />
@@ -243,6 +306,12 @@ export default function LeadsPage() {
   const [toast, setToast]         = useState<{ kind: ToastKind; message: string } | null>(null);
   const [statusFilter, setStatusFilter] = useState<LeadStatus | null>(null);
   const [agentFilter,  setAgentFilter]  = useState<string | null>(null);
+
+  async function deleteLead(id: string) {
+    if (!confirm('Delete this lead? This cannot be undone.')) return;
+    setLeads(prev => prev.filter(l => l.id !== id));
+    await fetch(`/api/leads/${id}`, { method: 'DELETE' });
+  }
 
   function createQuoteFromLead(lead: Lead) {
     sessionStorage.setItem('new_quote_prefill', JSON.stringify({
@@ -314,6 +383,19 @@ export default function LeadsPage() {
     if (!res.ok) {
       setToast({ kind: 'error', message: 'Failed to update status' });
       load(); // revert
+    }
+  }
+
+  async function updateTmStatus(id: string, tmStatus: string) {
+    setLeads(prev => prev.map(l => l.id === id ? { ...l, tmStatus } : l));
+    const res = await fetch(`/api/leads/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tm_status: tmStatus }),
+    });
+    if (!res.ok) {
+      setToast({ kind: 'error', message: 'Failed to update TM status' });
+      load();
     }
   }
 
@@ -547,22 +629,8 @@ export default function LeadsPage() {
                       <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <h3 className="font-semibold truncate" style={{ color: 'var(--color-text)' }}>{lead.name}</h3>
                         <StatusDropdown lead={lead} onUpdate={updateStatus} />
-                        {lead.assignedTo && (() => {
-                          const agent = agents.find(t => t.id === lead.assignedTo);
-                          return agent ? (
-                            <span className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full"
-                              style={{ background: `${agent.color}15`, color: agent.color, border: `1px solid ${agent.color}30` }}>
-                              <span className="w-3 h-3 rounded-full inline-flex items-center justify-center text-[7px] font-bold"
-                                style={{ background: agent.color, color: '#fff' }}>{agent.initials}</span>
-                              {agent.name}
-                            </span>
-                          ) : null;
-                        })()}
                         {lead.tmStatus && (
-                          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full"
-                            style={{ background: 'rgba(124,58,237,0.08)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.2)' }}>
-                            {lead.tmStatus}
-                          </span>
+                          <TmStatusDropdown lead={lead} onUpdate={updateTmStatus} />
                         )}
                       </div>
 
@@ -596,6 +664,16 @@ export default function LeadsPage() {
                       </p>
                       <div className="flex items-center gap-2 flex-wrap justify-end">
                         <AssignDropdown lead={lead} agents={agents} onAssign={assignLead} />
+                        <button
+                          onClick={() => deleteLead(lead.id)}
+                          className="inline-flex items-center justify-center w-7 h-7 rounded-lg transition-colors cursor-pointer"
+                          style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#F87171'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(248,113,113,0.4)'; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border2)'; }}
+                          title="Delete lead"
+                        >
+                          <Trash2 size={11} />
+                        </button>
                         {lead.email && <a
                           href={`mailto:${lead.email}?subject=Re: ${lead.company} — AlgoLend`}
                           className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
