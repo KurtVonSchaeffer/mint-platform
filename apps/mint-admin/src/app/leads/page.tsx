@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
-import { Inbox, RefreshCw, Mail, Building2, ChevronDown, Plus, X, Loader2, UserPlus, FileText, UserCheck, Upload, Download, Trash2 } from 'lucide-react';
+import { Inbox, RefreshCw, Mail, Building2, ChevronDown, Plus, X, Loader2, UserPlus, FileText, UserCheck, Upload, Download, Trash2, Pencil } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 type LeadStatus = 'new' | 'contacted' | 'qualified' | 'won' | 'lost';
@@ -236,6 +236,77 @@ function TmStatusDropdown({ lead, onUpdate }: { lead: Lead; onUpdate: (id: strin
   );
 }
 
+function EditLeadModal({ lead, onClose, onSaved }: { lead: Lead; onClose: () => void; onSaved: (updated: Partial<Lead>) => void }) {
+  const [form, setForm] = useState({
+    name:    lead.name,
+    email:   lead.email ?? '',
+    phone:   (lead as Lead & { phone?: string }).phone ?? '',
+    company: lead.company,
+    message: lead.message ?? '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    const res = await fetch(`/api/leads/${lead.id}`, {
+      method:  'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name:    form.name,
+        email:   form.email || null,
+        phone:   form.phone || null,
+        company: form.company,
+        message: form.message || null,
+      }),
+    });
+    setSaving(false);
+    if (res.ok) {
+      onSaved({ name: form.name, email: form.email || null, company: form.company, message: form.message || null });
+      onClose();
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
+      <div className="w-full max-w-md rounded-2xl p-6" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border2)' }}>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Edit lead</h2>
+          <button onClick={onClose} className="cursor-pointer" style={{ color: 'var(--color-text3)' }}><X size={16} /></button>
+        </div>
+        <form onSubmit={submit} className="space-y-3">
+          <div>
+            <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Name</label>
+            <input type="text" required className="field-input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} />
+          </div>
+          <div>
+            <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Company</label>
+            <input type="text" required className="field-input" value={form.company} onChange={e => setForm(p => ({ ...p, company: e.target.value }))} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Email</label>
+              <input type="email" className="field-input" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} />
+            </div>
+            <div>
+              <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Phone</label>
+              <input type="tel" className="field-input" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Message</label>
+            <textarea className="field-input" rows={3} value={form.message} onChange={e => setForm(p => ({ ...p, message: e.target.value }))} />
+          </div>
+          <button type="submit" disabled={saving} className="w-full py-2.5 rounded-xl text-sm font-semibold text-white cursor-pointer"
+            style={{ background: 'linear-gradient(135deg,var(--color-purple),var(--color-purple2))' }}>
+            {saving ? 'Saving…' : 'Save changes'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function AddLeadModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
   const [form, setForm]   = useState({ name: '', email: '', phone: '', company: '', message: '' });
   const [saving, setSaving] = useState(false);
@@ -302,6 +373,7 @@ export default function LeadsPage() {
   const [agents, setAgents]       = useState<Agent[]>([]);
   const [loading, setLoading]     = useState(true);
   const [addOpen, setAddOpen]     = useState(false);
+  const [editLead, setEditLead]   = useState<Lead | null>(null);
   const [convertLead, setConvertLead] = useState<Lead | null>(null);
   const [toast, setToast]         = useState<{ kind: ToastKind; message: string } | null>(null);
   const [statusFilter, setStatusFilter] = useState<LeadStatus | null>(null);
@@ -311,6 +383,10 @@ export default function LeadsPage() {
     if (!confirm('Delete this lead? This cannot be undone.')) return;
     setLeads(prev => prev.filter(l => l.id !== id));
     await fetch(`/api/leads/${id}`, { method: 'DELETE' });
+  }
+
+  function applyLeadEdit(id: string, patch: Partial<Lead>) {
+    setLeads(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l));
   }
 
   function createQuoteFromLead(lead: Lead) {
@@ -431,6 +507,13 @@ export default function LeadsPage() {
     <Shell>
       {toast && <Toast kind={toast.kind} message={toast.message} onClose={() => setToast(null)} />}
       {addOpen && <AddLeadModal onClose={() => setAddOpen(false)} onAdded={load} />}
+      {editLead && (
+        <EditLeadModal
+          lead={editLead}
+          onClose={() => setEditLead(null)}
+          onSaved={patch => { applyLeadEdit(editLead.id, patch); setEditLead(null); }}
+        />
+      )}
       {convertLead && (
         <OnboardingWizard
           leadId={convertLead.id}
@@ -664,6 +747,16 @@ export default function LeadsPage() {
                       </p>
                       <div className="flex items-center gap-2 flex-wrap justify-end">
                         <AssignDropdown lead={lead} agents={agents} onAssign={assignLead} />
+                        <button
+                          onClick={() => setEditLead(lead)}
+                          className="inline-flex items-center justify-center w-7 h-7 rounded-lg transition-colors cursor-pointer"
+                          style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
+                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)'; (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.4)'; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border2)'; }}
+                          title="Edit lead"
+                        >
+                          <Pencil size={11} />
+                        </button>
                         <button
                           onClick={() => deleteLead(lead.id)}
                           className="inline-flex items-center justify-center w-7 h-7 rounded-lg transition-colors cursor-pointer"

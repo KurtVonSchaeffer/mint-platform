@@ -50,9 +50,20 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     client_stage?: string | null;
     next_follow_up?: string | null;
     commission_amount?: number;
+    name?: string;
+    email?: string | null;
+    phone?: string | null;
+    company?: string;
+    message?: string | null;
   };
 
   const update: Record<string, unknown> = {};
+
+  if (body.name?.trim())    update.name    = body.name.trim();
+  if ('email'   in body)    update.email   = body.email?.trim()   ? body.email.toLowerCase().trim() : null;
+  if ('phone'   in body)    update.phone   = body.phone?.trim()   ?? null;
+  if (body.company?.trim()) update.company = body.company.trim();
+  if ('message' in body)    update.message = body.message?.trim() ?? null;
 
   if (body.status !== undefined) {
     if (!VALID_STATUSES.includes(body.status as string)) {
