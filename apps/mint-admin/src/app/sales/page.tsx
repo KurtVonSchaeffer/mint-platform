@@ -344,8 +344,8 @@ export default function SalesDashboardPage() {
                                   <span className="font-mono font-bold text-sm" style={{ color }}>{agent.callsToday}</span>
                                   <span className="font-mono text-[9px]" style={{ color: 'var(--color-text3)' }}>/ 80</span>
                                 </div>
-                                <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-surface2)', width: 64 }}>
-                                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
+                                <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 4, width: 72, height: 4, overflow: 'hidden' }}>
+                                  <div style={{ width: `${Math.max(pct, pct > 0 ? 4 : 0)}%`, height: '100%', borderRadius: 4, background: color }} />
                                 </div>
                               </div>
                             );
