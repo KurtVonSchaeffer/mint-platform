@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Phone, Mail, Building2, Users, Clock, Calendar, FileUp,
   MessageSquare, ChevronLeft, ChevronDown, Plus, CheckCircle2,
   Loader2, RefreshCw, Globe, MapPin, Briefcase, Percent, Video, Save,
-  FileText, Send, Copy, Timer, PhoneOff, Banknote,
+  FileText, Send, Copy, Timer, PhoneOff, Banknote, Pencil,
 } from 'lucide-react';
 import { getAgentId } from '@/lib/telemarketer-agent';
 
@@ -56,7 +57,7 @@ interface FollowUp   { id: string; follow_up_type: string; scheduled_at: string;
 interface Demo       { id: string; demo_date: string; demo_time: string | null; platform: string | null; presenter: string | null; meeting_link: string | null; status: string; notes: string | null }
 interface Proposal   { id: string; title: string; amount_cents: number | null; status: string; notes: string | null; sent_at: string | null; expires_at: string | null; created_at: string }
 interface LeadData {
-  id: string; name: string; company: string; phone: string | null; email: string; tm_status: string | null;
+  id: string; ref_id: string | null; name: string; company: string; phone: string | null; email: string; tm_status: string | null;
   // Qualification fields
   trading_name?: string | null; contact_person?: string | null; position?: string | null; website?: string | null;
   industry?: string | null; province?: string | null; existing_platform?: string | null;
@@ -404,6 +405,82 @@ function CreateProposalModal({ leadId, agentId, onClose, onSaved }: {
   );
 }
 
+function EditLeadModal({ lead, onClose, onSaved }: {
+  lead: LeadData;
+  onClose: () => void;
+  onSaved: (updated: Partial<LeadData>) => void;
+}) {
+  const [form, setForm] = useState({
+    name:    lead.name,
+    company: lead.company,
+    email:   lead.email ?? '',
+    phone:   lead.phone ?? '',
+  });
+  const [saving, setSaving] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    const res = await fetch(`/api/leads/${lead.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name:    form.name.trim()    || undefined,
+        company: form.company.trim() || undefined,
+        email:   form.email.trim()   || null,
+        phone:   form.phone.trim()   || null,
+      }),
+    });
+    setSaving(false);
+    if (res.ok) {
+      onSaved({
+        name:    form.name.trim(),
+        company: form.company.trim(),
+        email:   form.email.trim() || lead.email,
+        phone:   form.phone.trim() || null,
+      });
+      onClose();
+    }
+  }
+
+  return (
+    <div className="confirm-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="bento-card w-full max-w-md p-6" style={{ animation: 'scale-in 0.25s cubic-bezier(0.16,1,0.3,1) both' }}>
+        <h3 className="font-bold text-lg mb-4" style={{ color: 'var(--color-text)' }}>Edit Lead</h3>
+        <form onSubmit={submit} className="space-y-3">
+          <div>
+            <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Name *</label>
+            <input required className="field-input" value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Full name" />
+          </div>
+          <div>
+            <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Company *</label>
+            <input required className="field-input" value={form.company} onChange={e => setForm(p => ({ ...p, company: e.target.value }))} placeholder="Company name" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Email</label>
+              <input type="email" className="field-input" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} placeholder="email@example.com" />
+            </div>
+            <div>
+              <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Phone</label>
+              <input type="tel" className="field-input" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} placeholder="+27..." />
+            </div>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-xl text-sm"
+              style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>Cancel</button>
+            <button type="submit" disabled={saving || !form.name.trim() || !form.company.trim()}
+              className="btn-purple btn-shine flex-1 inline-flex items-center justify-center gap-1.5">
+              {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+              {saving ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ── Message Templates ─────────────────────────────────────────────────────────
 const ALGOLEND_TEMPLATES = {
   whatsapp: [
@@ -455,11 +532,14 @@ export default function LeadDetailPage() {
   const [loading,    setLoading]    = useState(true);
   const [status,     setStatus]     = useState<LeadStatus>('New Lead');
   const [statusOpen, setStatusOpen] = useState(false);
+  const [statusTop,  setStatusTop]  = useState(0);
+  const statusBtnRef = useRef<HTMLButtonElement>(null);
   const [logCallOpen,   setLogCallOpen]   = useState(false);
   const [addNoteOpen,   setAddNoteOpen]   = useState(false);
   const [scheduleOpen,  setScheduleOpen]  = useState(false);
   const [bookDemoOpen,    setBookDemoOpen]    = useState(false);
   const [proposalOpen,    setProposalOpen]    = useState(false);
+  const [editOpen,        setEditOpen]        = useState(false);
   // Qualification form
   const [qualOpen,   setQualOpen]   = useState(false);
   const [qualForm,   setQualForm]   = useState<QualForm>(EMPTY_QUAL);
@@ -716,6 +796,7 @@ export default function LeadDetailPage() {
       {scheduleOpen && <ScheduleModal leadId={id} agentId={agentId} onClose={() => setScheduleOpen(false)} onSaved={loadActivity} />}
       {bookDemoOpen   && <BookDemoModal      leadId={id} agentId={agentId} onClose={() => setBookDemoOpen(false)}   onSaved={loadActivity} />}
       {proposalOpen   && <CreateProposalModal leadId={id} agentId={agentId} onClose={() => setProposalOpen(false)}   onSaved={loadActivity} />}
+      {editOpen       && <EditLeadModal lead={lead} onClose={() => setEditOpen(false)} onSaved={updated => setLead(l => l ? { ...l, ...updated } : l)} />}
 
       {/* Back + header */}
       <div>
@@ -743,7 +824,7 @@ export default function LeadDetailPage() {
                     color:      copiedLeadId ? '#34D399' : 'var(--color-text3)',
                     border:     `1px solid ${copiedLeadId ? 'rgba(52,211,153,0.25)' : 'var(--color-border2)'}`,
                   }}>
-                  {copiedLeadId ? '✓ copied' : `#${id.slice(0, 8)}`}
+                  {copiedLeadId ? '✓ copied' : (lead?.ref_id ?? `#${id.slice(0, 8)}`)}
                 </button>
               </div>
               <div className="flex items-center gap-3 mt-1 flex-wrap">
@@ -790,16 +871,23 @@ export default function LeadDetailPage() {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             <div className="relative">
-              <button onClick={() => setStatusOpen(o => !o)}
+              <button ref={statusBtnRef}
+                onClick={() => {
+                  if (statusBtnRef.current) {
+                    const r = statusBtnRef.current.getBoundingClientRect();
+                    setStatusTop(r.bottom + 4);
+                  }
+                  setStatusOpen(o => !o);
+                }}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
                 style={{ background: 'rgba(96,165,250,0.1)', color: '#60A5FA', border: '1px solid rgba(96,165,250,0.2)' }}>
                 {status} <ChevronDown size={10} />
               </button>
-              {statusOpen && (
+              {statusOpen && createPortal(
                 <>
-                  <div className="fixed inset-0 z-10" onClick={() => setStatusOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 z-20 rounded-xl overflow-hidden min-w-[200px]"
-                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)' }}>
+                  <div className="fixed inset-0 z-[9998]" onClick={() => setStatusOpen(false)} />
+                  <div className="fixed z-[9999] rounded-xl overflow-hidden min-w-[200px]"
+                    style={{ top: statusTop, right: 8, background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)' }}>
                     {PIPELINE_STATUSES.map(s => (
                       <button key={s} onClick={() => changeStatus(s)}
                         className="w-full text-left px-3 py-2 text-xs transition-colors"
@@ -810,7 +898,8 @@ export default function LeadDetailPage() {
                       </button>
                     ))}
                   </div>
-                </>
+                </>,
+                document.body
               )}
             </div>
             {!callActive ? (
@@ -844,6 +933,11 @@ export default function LeadDetailPage() {
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
               style={{ background: 'rgba(124,58,237,0.08)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.15)' }}>
               <MessageSquare size={12} /> Add Note
+            </button>
+            <button onClick={() => setEditOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+              style={{ background: 'rgba(251,191,36,0.08)', color: '#FBBF24', border: '1px solid rgba(251,191,36,0.15)' }}>
+              <Pencil size={12} /> Edit Lead
             </button>
           </div>
         </div>
@@ -883,7 +977,7 @@ export default function LeadDetailPage() {
       </div>
 
       {/* ── Qualification ─────────────────────────────────────────── */}
-      <div className="bento-card overflow-hidden">
+      {false && <div className="bento-card overflow-hidden">
         <button
           className="w-full flex items-center justify-between p-5 transition-colors"
           style={{ cursor: 'pointer' }}
@@ -1035,7 +1129,7 @@ export default function LeadDetailPage() {
             </button>
           </div>
         )}
-      </div>
+      </div>}
 
       {/* ── Action Toolbar ──────────────────────────────────────────────── */}
       <div className="bento-card p-3">

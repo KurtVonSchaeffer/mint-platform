@@ -72,7 +72,7 @@ export default function LeadImportPage() {
         // Pick the sheet with the most rows (cover/readme sheets always have fewer rows than data sheets)
         let json: ParsedRow[] = [];
         for (const name of wb.SheetNames) {
-          const candidate = XLSX.utils.sheet_to_json<ParsedRow>(wb.Sheets[name], { defval: '' });
+          const candidate = XLSX.utils.sheet_to_json<ParsedRow>(wb.Sheets[name], { defval: '', raw: false });
           if (candidate.length > json.length) json = candidate;
         }
 

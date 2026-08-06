@@ -79,7 +79,7 @@ export function TelemarketerShell({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    fetch('/api/users?role=telemarketer')
+    fetch('/api/telemarketer/agents')
       .then(r => r.json())
       .then(d => {
         const list: Agent[] = (d.users ?? []).map((u: { id: string; name: string }, i: number) => ({
@@ -600,7 +600,7 @@ export function TelemarketerShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* ── Main content ──────────────────────────────────────── */}
-      <main id="main" className="flex-1 lg:pl-64 min-h-screen relative z-10 pt-14 lg:pt-14">
+      <main id="main" className="flex-1 lg:pl-64 min-h-screen relative pt-14 lg:pt-14">
         <div className="relative max-w-screen-xl mx-auto px-6 lg:px-10 py-8 lg:py-10">
           {children}
         </div>

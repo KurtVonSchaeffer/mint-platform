@@ -16,7 +16,8 @@ export async function GET(req: NextRequest) {
   let query = supabaseAdmin
     .from('leads')
     .select('*')
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(10000);
 
   if (mine) {
     // Derive the caller's own user ID from their session cookie
@@ -45,8 +46,8 @@ export async function POST(req: NextRequest) {
   const { name, email, company, message, source = 'manual', status = 'new', phone } = body;
   let { assigned_to } = body;
 
-  if (!name || !email || !company) {
-    return NextResponse.json({ error: 'name, email, company required' }, { status: 422 });
+  if (!name || !company) {
+    return NextResponse.json({ error: 'name and company are required' }, { status: 422 });
   }
 
   // Auto-assign if no TM specified

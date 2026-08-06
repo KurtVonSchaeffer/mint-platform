@@ -48,6 +48,7 @@ type LeadStatus =
 
 interface Lead {
   id: string;
+  refId: string | null;
   clientName: string;
   company: string;
   phone: string;
@@ -116,11 +117,23 @@ const CALL_OUTCOMES = ['Answered', 'Voicemail', 'No Answer', 'Callback', 'Not In
 
 function StatusBadge({ status, onChange }: { status: LeadStatus; onChange: (s: LeadStatus) => void }) {
   const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
   const cfg = STATUS_CFG[status];
+
+  function handleOpen() {
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 4, left: r.left });
+    }
+    setOpen(o => !o);
+  }
+
   return (
     <div className="relative">
       <button
-        onClick={() => setOpen(o => !o)}
+        ref={btnRef}
+        onClick={handleOpen}
         className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wide transition-all"
         style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color }}
       >
@@ -128,9 +141,9 @@ function StatusBadge({ status, onChange }: { status: LeadStatus; onChange: (s: L
       </button>
       {open && (
         <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute left-0 top-full mt-1 z-20 rounded-xl overflow-hidden min-w-[180px]"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)' }}>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="fixed z-50 rounded-xl overflow-hidden min-w-[180px]"
+            style={{ top: pos.top, left: pos.left, background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)' }}>
             {PIPELINE_STATUSES.map(s => {
               const c = STATUS_CFG[s];
               return (
@@ -393,6 +406,7 @@ function DemoModal({ lead, onClose, onBooked }: { lead: Lead; onClose: () => voi
 function mapLead(raw: Record<string, string>): Lead {
   return {
     id:           raw.id,
+    refId:        raw.ref_id        ?? null,
     clientName:   raw.name,
     company:      raw.company   ?? '',
     phone:        raw.phone     ?? '',
@@ -484,6 +498,7 @@ export default function TelemarketerLeadsPage() {
     const q = search.trim().toLowerCase();
     if (q) {
       result = result.filter(l =>
+        (l.refId?.toLowerCase().includes(q) ?? false) ||
         l.clientName.toLowerCase().includes(q) ||
         l.company.toLowerCase().includes(q) ||
         l.phone.toLowerCase().includes(q)
