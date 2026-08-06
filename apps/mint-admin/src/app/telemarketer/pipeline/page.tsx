@@ -468,11 +468,17 @@ export default function PipelinePage() {
                         </div>
                         {/* Score badge */}
                         <div
-                          className="shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-[9px] font-black mt-0.5"
-                          style={{ background: `${sColor}18`, color: sColor }}
-                          title={`Lead score: ${score}`}
+                          className="shrink-0 flex flex-col items-center justify-center rounded-lg px-1.5 py-1 mt-0.5 cursor-help"
+                          style={{ background: `${sColor}18`, color: sColor, minWidth: 36 }}
+                          title={
+                            score >= 90 ? `Lead score: ${score}/100 — Hot 🔥 Close this now` :
+                            score >= 70 ? `Lead score: ${score}/100 — Warm, keep momentum` :
+                            score >= 40 ? `Lead score: ${score}/100 — Lukewarm, needs attention` :
+                                          `Lead score: ${score}/100 — Cold, re-engage ASAP`
+                          }
                         >
-                          {score}
+                          <span className="text-[10px] font-black leading-none">{score}</span>
+                          <span className="text-[8px] font-semibold leading-none opacity-70 mt-0.5">score</span>
                         </div>
                       </div>
 
