@@ -648,7 +648,7 @@ export function newLeadNotificationEmail(info: {
     name:    string;
     company: string;
     phone:   string | null;
-    email:   string;
+    email:   string | null;
     message: string | null;
   };
   portalUrl: string;
