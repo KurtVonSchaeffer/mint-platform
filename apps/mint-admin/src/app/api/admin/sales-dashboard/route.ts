@@ -51,12 +51,13 @@ export async function GET() {
   const PIPELINE_STAGES = [
     'New Lead', 'Attempted Contact', 'Contacted', 'Interested',
     'Demo Scheduled', 'Demo Completed', 'Proposal Requested', 'Proposal Sent',
-    'Negotiation', 'Won', 'Lost', 'Other', 'Not Qualified',
+    'Negotiation', 'Won', 'Lost', 'Other',
   ];
   const LEGACY_MAP: Record<string, string> = {
     Pending: 'New Lead', 'Call Again': 'Contacted', 'Call Back': 'Contacted',
     Unreachable: 'Attempted Contact', 'Demo Booked': 'Demo Scheduled',
     Quoted: 'Proposal Sent', Converted: 'Won', 'Not Interested': 'Lost',
+    'Not Qualified': 'Other',
   };
   function normalizeStage(s: string | null) {
     if (!s) return 'New Lead';

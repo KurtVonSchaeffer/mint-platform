@@ -67,12 +67,13 @@ export async function GET(req: NextRequest) {
   const STAGES = [
     'New Lead', 'Attempted Contact', 'Contacted', 'Interested',
     'Demo Scheduled', 'Demo Completed', 'Proposal Requested', 'Proposal Sent',
-    'Negotiation', 'Won', 'Lost', 'Other', 'Not Qualified',
+    'Negotiation', 'Won', 'Lost', 'Other',
     'Pending', 'Call Again', 'Call Back', 'Unreachable', 'Demo Booked', 'Quoted', 'Converted', 'Not Interested',
   ];
+  const NORMALIZE: Record<string, string> = { 'Not Qualified': 'Other' };
 
   const pipelineByStage = STAGES.reduce<Record<string, { count: number; value: number }>>((acc, s) => {
-    const stageLeads = leads.filter(l => l.tm_status === s);
+    const stageLeads = leads.filter(l => (NORMALIZE[l.tm_status ?? ''] ?? l.tm_status) === s);
     if (stageLeads.length > 0) {
       acc[s] = {
         count: stageLeads.length,
