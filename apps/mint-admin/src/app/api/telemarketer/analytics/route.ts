@@ -23,13 +23,32 @@ export async function GET(req: NextRequest) {
 
   const [todayISO, weekISO, monthISO] = [startOf('day'), startOf('week'), startOf('month')];
 
-  const [callsRes, notesRes, fuRes, demosRes, proposalsRes, leadsRes] = await Promise.all([
+  async function fetchAllAgentLeads() {
+    const size = 1000;
+    let page = 0;
+    const all: Record<string, unknown>[] = [];
+    while (true) {
+      const from = page * size;
+      const { data } = await supabaseAdmin
+        .from('leads')
+        .select('tm_status,estimated_deal_value,expected_close_date,deal_probability')
+        .eq('assigned_to', agentId)
+        .range(from, from + size - 1);
+      if (!data || data.length === 0) break;
+      all.push(...data);
+      if (data.length < size) break;
+      page++;
+    }
+    return all;
+  }
+
+  const [callsRes, notesRes, fuRes, demosRes, proposalsRes, leads] = await Promise.all([
     supabaseAdmin.from('call_logs').select('outcome,called_at').eq('agent_id', agentId),
     supabaseAdmin.from('lead_notes').select('created_at').eq('agent_id', agentId),
     supabaseAdmin.from('follow_ups').select('completed,scheduled_at,created_at').eq('agent_id', agentId),
     supabaseAdmin.from('demos').select('status,demo_date').eq('agent_id', agentId),
     supabaseAdmin.from('proposals').select('status,amount_cents,created_at').eq('agent_id', agentId),
-    supabaseAdmin.from('leads').select('tm_status,estimated_deal_value,expected_close_date,deal_probability').eq('assigned_to', agentId),
+    fetchAllAgentLeads(),
   ]);
 
   const calls     = callsRes.data     ?? [];
@@ -37,7 +56,6 @@ export async function GET(req: NextRequest) {
   const followUps = fuRes.data        ?? [];
   const demos     = demosRes.data     ?? [];
   const proposals = proposalsRes.data ?? [];
-  const leads     = leadsRes.data     ?? [];
 
   // ── Activity counts ──────────────────────────────────────────────────
   const callsToday = calls.filter(c => c.called_at >= todayISO).length;

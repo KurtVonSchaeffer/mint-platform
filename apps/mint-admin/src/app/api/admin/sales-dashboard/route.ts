@@ -23,27 +23,36 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const [usersRes, leadsRes, callsRes, commissionsRes] = await Promise.all([
+  // Paginate leads — PostgREST caps at 1000 rows per request regardless of .limit()
+  async function fetchAllLeads() {
+    const size = 1000;
+    let page = 0;
+    const all: Record<string, unknown>[] = [];
+    while (true) {
+      const from = page * size;
+      const { data } = await supabaseAdmin
+        .from('leads')
+        .select('id, assigned_to, tm_status, estimated_deal_value, deal_probability, expected_close_date, created_at')
+        .range(from, from + size - 1);
+      if (!data || data.length === 0) break;
+      all.push(...data);
+      if (data.length < size) break;
+      page++;
+    }
+    return all;
+  }
+
+  const [usersRes, allLeads, callsRes, commissionsRes] = await Promise.all([
     supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
-
-    supabaseAdmin
-      .from('leads')
-      .select('id, assigned_to, tm_status, estimated_deal_value, deal_probability, expected_close_date, created_at')
-      .limit(10000),
-
-    supabaseAdmin
-      .from('call_logs')
-      .select('agent_id, called_at'),
-
-    supabaseAdmin
-      .from('commissions')
-      .select('agent_id, commission_amount, status'),
+    fetchAllLeads(),
+    supabaseAdmin.from('call_logs').select('agent_id, called_at'),
+    supabaseAdmin.from('commissions').select('agent_id, commission_amount, status'),
   ]);
 
   const telemarketers = (usersRes.data?.users ?? [])
     .filter(u => (u.user_metadata?.role as string | undefined) === 'telemarketer');
 
-  const leads = leadsRes.data ?? [];
+  const leads = allLeads;
   const calls = callsRes.data ?? [];
   const commissions = commissionsRes.data ?? [];
 
