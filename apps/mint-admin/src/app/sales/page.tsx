@@ -335,8 +335,21 @@ export default function SalesDashboardPage() {
                         </td>
                         <td className="px-4 py-3 font-mono" style={{ color: 'var(--color-text2)' }}>{agent.leadsTotal}</td>
                         <td className="px-4 py-3">
-                          <span className="font-mono font-semibold" style={{ color: 'var(--color-text)' }}>{agent.callsToday}</span>
-                          <span className="font-mono text-[10px] ml-1" style={{ color: 'var(--color-text3)' }}>/ {agent.totalCalls}</span>
+                          {(() => {
+                            const pct = Math.min(agent.callsToday / 80 * 100, 100);
+                            const color = agent.callsToday >= 80 ? '#10B981' : agent.callsToday >= 50 ? '#FBBF24' : '#F87171';
+                            return (
+                              <div className="flex flex-col gap-1 min-w-[72px]">
+                                <div className="flex items-baseline gap-1">
+                                  <span className="font-mono font-bold text-sm" style={{ color }}>{agent.callsToday}</span>
+                                  <span className="font-mono text-[9px]" style={{ color: 'var(--color-text3)' }}>/ 80</span>
+                                </div>
+                                <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--color-surface2)', width: 64 }}>
+                                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
+                                </div>
+                              </div>
+                            );
+                          })()}
                         </td>
                         <td className="px-4 py-3 font-mono" style={{ color: 'var(--color-text2)' }}>{agent.demosScheduled}</td>
                         <td className="px-4 py-3 font-mono" style={{ color: 'var(--color-text2)' }}>{agent.proposalsSent}</td>
