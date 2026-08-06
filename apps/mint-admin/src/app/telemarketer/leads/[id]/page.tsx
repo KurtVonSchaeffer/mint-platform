@@ -8,9 +8,10 @@ import {
   Phone, Mail, Building2, Users, Clock, Calendar, FileUp,
   MessageSquare, ChevronLeft, ChevronDown, Plus, CheckCircle2,
   Loader2, RefreshCw, Globe, MapPin, Briefcase, Percent, Video, Save,
-  FileText, Send, Copy, Timer, PhoneOff, Banknote, Pencil,
+  FileText, Send, Copy, Timer, PhoneOff, Banknote, Pencil, MicOff, Mic,
 } from 'lucide-react';
 import { getAgentId } from '@/lib/telemarketer-agent';
+import { useTwilioDevice } from '@/hooks/useTwilioDevice';
 
 type LeadStatus =
   | 'New Lead' | 'Attempted Contact' | 'Contacted' | 'Interested'
@@ -548,12 +549,9 @@ export default function LeadDetailPage() {
   const [qualSaving, setQualSaving] = useState(false);
   const [qualSaved,  setQualSaved]  = useState(false);
 
-  // ── Call timer ──────────────────────────────────────────────────────────────
-  const [callActive,   setCallActive]   = useState(false);
-  const [callElapsed,  setCallElapsed]  = useState(0);      // seconds
-  const [callDuration, setCallDuration] = useState('');     // formatted, passed to modal
-  const callStartRef     = useRef<number>(0);
-  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // ── Twilio ──────────────────────────────────────────────────────────────────
+  const twilio = useTwilioDevice();
+  const callActive = twilio.callState === 'active' || twilio.callState === 'ringing' || twilio.callState === 'connecting';
 
   // ── Templates ───────────────────────────────────────────────────────────────
   const [templatesOpen, setTemplatesOpen] = useState(false);
@@ -739,11 +737,6 @@ export default function LeadDetailPage() {
     init();
   }, [id, loadActivity]);
 
-  // Cleanup timer on unmount
-  useEffect(() => {
-    return () => { if (timerIntervalRef.current) clearInterval(timerIntervalRef.current); };
-  }, []);
-
   async function changeStatus(s: LeadStatus) {
     setStatus(s);
     setStatusOpen(false);
@@ -771,24 +764,10 @@ export default function LeadDetailPage() {
     return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
-  function startCall() {
-    callStartRef.current = Date.now();
-    setCallElapsed(0);
-    setCallActive(true);
-    timerIntervalRef.current = setInterval(() => {
-      setCallElapsed(Math.floor((Date.now() - callStartRef.current) / 1000));
-    }, 500);
-  }
-
-  function endCall() {
-    if (timerIntervalRef.current) { clearInterval(timerIntervalRef.current); timerIntervalRef.current = null; }
-    const secs = Math.floor((Date.now() - callStartRef.current) / 1000);
-    const m    = Math.floor(secs / 60);
-    const s    = secs % 60;
-    setCallDuration(`${m}:${s.toString().padStart(2, '0')}`);
-    setCallActive(false);
-    setCallElapsed(0);
-    setLogCallOpen(true);
+  async function startTwilioCall() {
+    if (!lead?.phone) return;
+    const identity = agentId.slice(0, 8); // stable short identity for Twilio
+    await twilio.makeCall(lead.phone, id, agentId, identity);
   }
 
   function copyTemplate(id: string, text: string) {
@@ -930,28 +909,34 @@ export default function LeadDetailPage() {
                 document.body
               )}
             </div>
+            {twilio.error && (
+              <span className="text-xs px-2 py-1 rounded-lg" style={{ background: 'rgba(248,113,113,0.1)', color: '#F87171' }}>
+                {twilio.error}
+              </span>
+            )}
             {!callActive ? (
-              <>
-                {lead.phone && (
-                  <a href={`tel:${lead.phone}`} onClick={startCall}
-                    className="btn-purple btn-shine inline-flex items-center gap-1.5 !text-xs !py-1.5 !px-3">
-                    <Phone size={12} /> Call Now
-                  </a>
-                )}
-                <button onClick={startCall}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-                  style={{ background: 'rgba(52,211,153,0.08)', color: '#34D399', border: '1px solid rgba(52,211,153,0.15)' }}>
-                  <Timer size={12} /> Start Call
+              lead.phone ? (
+                <button onClick={startTwilioCall}
+                  disabled={twilio.callState === 'connecting'}
+                  className="btn-purple btn-shine inline-flex items-center gap-1.5 !text-xs !py-1.5 !px-3 disabled:opacity-50 disabled:cursor-not-allowed">
+                  <Phone size={12} />
+                  {twilio.callState === 'connecting' ? 'Connecting...' : 'Call Now'}
                 </button>
-              </>
+              ) : null
             ) : (
               <>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold font-mono tabular-nums"
                   style={{ background: 'rgba(248,113,113,0.08)', color: '#F87171', border: '1px solid rgba(248,113,113,0.2)', minWidth: 80 }}>
-                  <Timer size={12} className="animate-pulse" />
-                  {fmtElapsed(callElapsed)}
+                  <Timer size={12} className={twilio.callState === 'active' ? 'animate-pulse' : ''} />
+                  {twilio.callState === 'ringing' ? 'Ringing...' : fmtElapsed(twilio.elapsed)}
                 </span>
-                <button onClick={endCall}
+                <button onClick={twilio.toggleMute}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                  style={{ background: twilio.isMuted ? 'rgba(251,191,36,0.1)' : 'rgba(107,114,128,0.08)', color: twilio.isMuted ? '#FBBF24' : 'var(--color-text3)', border: `1px solid ${twilio.isMuted ? 'rgba(251,191,36,0.2)' : 'rgba(107,114,128,0.15)'}` }}>
+                  {twilio.isMuted ? <MicOff size={12} /> : <Mic size={12} />}
+                  {twilio.isMuted ? 'Unmute' : 'Mute'}
+                </button>
+                <button onClick={twilio.hangUp}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
                   style={{ background: 'rgba(248,113,113,0.1)', color: '#F87171', border: '1px solid rgba(248,113,113,0.2)' }}>
                   <PhoneOff size={12} /> End Call
