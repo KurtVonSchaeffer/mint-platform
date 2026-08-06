@@ -7,7 +7,7 @@ import {
   TrendingUp, Trophy, Target, Clock, Sparkles, MessageSquare,
   Star, CalendarClock, CalendarCheck2, FileText, Scale, XCircle,
   PhoneOutgoing, ArrowRight, ChevronRight, ChevronDown, ChevronsRight,
-  EyeOff,
+  EyeOff, MoreHorizontal,
 } from 'lucide-react';
 import { getAgentId } from '@/lib/telemarketer-agent';
 
@@ -33,6 +33,7 @@ const STAGES = [
   { id: 'Negotiation',       color: '#34D399', rgb: '52,211,153',  icon: Scale,           tip: 'Working out the details'           },
   { id: 'Won',               color: '#10B981', rgb: '16,185,129',  icon: Trophy,          tip: 'Deal closed — commission incoming' },
   { id: 'Lost',              color: '#F87171', rgb: '248,113,113', icon: XCircle,         tip: 'Mark as lost and move on'          },
+  { id: 'Other',             color: '#6B7280', rgb: '107,114,128', icon: MoreHorizontal,  tip: 'Other — does not fit any stage'    },
 ];
 
 const LEGACY_MAP: Record<string, string> = {
@@ -44,6 +45,7 @@ const LEGACY_MAP: Record<string, string> = {
   Quoted:           'Proposal Sent',
   Converted:        'Won',
   'Not Interested': 'Lost',
+  'Not Qualified':  'Other',
 };
 
 function normalizeStatus(status: string | null): string {
@@ -521,7 +523,7 @@ export default function PipelinePage() {
                       </div>
 
                       {/* Stage picker */}
-                      <div className="mt-1.5 relative" data-stage-picker onClick={e => e.stopPropagation()}>
+                      <div className="mt-1.5 relative" data-stage-picker draggable={false} onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
                         <button
                           onClick={() => setStagePicker(stagePicker === lead.id ? null : lead.id)}
                           draggable={false}
@@ -543,13 +545,16 @@ export default function PipelinePage() {
                           <div
                             className="absolute top-full mt-1 left-0 right-0 z-50 rounded-xl overflow-y-auto shadow-2xl"
                             style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border2)', maxHeight: 220 }}
+                            draggable={false}
                           >
                             {STAGES.map(s => {
                               const isCurrent = s.id === normalizeStatus(lead.tm_status);
                               return (
                                 <button
                                   key={s.id}
-                                  onClick={() => { moveToStage(lead.id, s.id); setStagePicker(null); }}
+                                  draggable={false}
+                                  onMouseDown={e => e.stopPropagation()}
+                                  onClick={e => { e.stopPropagation(); moveToStage(lead.id, s.id); setStagePicker(null); }}
                                   className="w-full flex items-center gap-2 px-3 py-1.5 text-[10px] font-semibold text-left transition-colors"
                                   style={{
                                     color: isCurrent ? s.color : 'var(--color-text2)',
