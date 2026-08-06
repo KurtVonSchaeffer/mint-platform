@@ -177,7 +177,7 @@ function SectionBlock({ title, items, section, color, icon: Icon, onComplete }: 
       {items.length === 0 ? (
         <div className="bento-card p-6 text-center flex items-center justify-center gap-2">
           <CheckCircle2 size={16} style={{ color: '#34D399' }} />
-          <p className="text-sm" style={{ color: 'var(--color-text3)' }}>All clear — nothing here.</p>
+          <p className="text-sm" style={{ color: 'var(--color-text3)' }}>All clear. Nothing here.</p>
         </div>
       ) : (
         <div className="space-y-3">

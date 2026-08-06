@@ -123,7 +123,7 @@ function buildStatementHTML(stmt: MonthlyStatement, agentName: string): string {
         </span>
       </td>
       <td style="padding:10px 14px;border-bottom:1px solid #e2e8f0;color:#64748b;font-size:11px">
-        ${e.paidAt ? new Date(e.paidAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+        ${e.paidAt ? new Date(e.paidAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
       </td>
     </tr>`).join('');
 
@@ -134,7 +134,7 @@ function buildStatementHTML(stmt: MonthlyStatement, agentName: string): string {
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Commission Statement — ${stmt.label}</title>
+<title>Commission Statement: ${stmt.label}</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
@@ -546,7 +546,7 @@ function buildStatementHTML(stmt: MonthlyStatement, agentName: string): string {
     <div class="section-rule"></div>
   </div>
   <div style="margin:0 40px 6px;padding:10px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px 8px 0 0;font-size:11px;color:#92400e">
-    These commissions are not yet earned — they will be confirmed once the client pays their first month.
+    These commissions are not yet earned. They will be confirmed once the client pays their first month.
   </div>
   <div class="table-wrap" style="border-radius:0 0 8px 8px">
     <table>
@@ -780,7 +780,7 @@ function StatementCard({ stmt, agentName }: { stmt: MonthlyStatement; agentName:
                   </td>
                   <td>
                     <span className="text-xs font-mono" style={{ color: 'var(--color-text3)' }}>
-                      {entry.paidAt ? new Date(entry.paidAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}
+                      {entry.paidAt ? new Date(entry.paidAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
                     </span>
                   </td>
                   <td>
@@ -793,7 +793,7 @@ function StatementCard({ stmt, agentName }: { stmt: MonthlyStatement; agentName:
                   <tr>
                     <td colSpan={5} style={{ padding: '8px 14px', background: 'rgba(217,119,6,0.06)', borderTop: '1px solid rgba(217,119,6,0.2)' }}>
                       <p className="text-[10px] font-bold uppercase tracking-wider" style={{ color: '#D97706' }}>
-                        Awaiting client payment — not yet earned
+                        Awaiting client payment. Not yet earned.
                       </p>
                     </td>
                   </tr>
@@ -822,7 +822,7 @@ function StatementCard({ stmt, agentName }: { stmt: MonthlyStatement; agentName:
                           {new Date(entry.createdAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </span>
                       </td>
-                      <td><span className="text-xs font-mono" style={{ color: 'var(--color-text3)' }}>—</span></td>
+                      <td></td>
                       <td>
                         <span className="text-sm font-bold font-mono" style={{ color: '#D97706' }}>{fmt(entry.commissionAmount)}</span>
                       </td>
@@ -906,7 +906,7 @@ export default function StatementsPage() {
         <div>
           <p className="eyebrow mb-1">Earnings history</p>
           <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--color-text)', letterSpacing: '-0.025em' }}>Statements</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--color-text3)' }}>Monthly commission statements — click to expand &amp; download</p>
+          <p className="text-sm mt-1" style={{ color: 'var(--color-text3)' }}>Monthly commission statements. Click to expand and download.</p>
         </div>
         <button onClick={load}
           className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors"

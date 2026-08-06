@@ -41,7 +41,7 @@ function fromRow(row: any): TmQuote {
 
 const STATUS_STYLE: Record<QuoteStatus, { bg: string; border: string; color: string; label: string }> = {
   pending_approval: { bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)',  color: '#FBBF24',            label: 'Awaiting Approval'       },
-  draft:            { bg: 'rgba(96,165,250,0.1)',   border: 'rgba(96,165,250,0.2)',   color: '#60A5FA',            label: 'Approved — Ready to Send' },
+  draft:            { bg: 'rgba(96,165,250,0.1)',   border: 'rgba(96,165,250,0.2)',   color: '#60A5FA',            label: 'Approved: Ready to Send' },
   sent:             { bg: 'rgba(167,139,250,0.1)',  border: 'rgba(167,139,250,0.2)',  color: '#A78BFA',            label: 'Sent to Client'          },
   viewed:           { bg: 'rgba(251,191,36,0.1)',   border: 'rgba(251,191,36,0.25)',  color: '#FBBF24',            label: 'Viewed by Client'        },
   accepted:         { bg: 'rgba(52,211,153,0.1)',   border: 'rgba(52,211,153,0.25)',  color: '#34D399',            label: 'Accepted'                },
@@ -184,7 +184,7 @@ export default function TelemarketerQuotesPage() {
       if (!res.ok) throw new Error(data.error ?? 'Failed to submit');
       setQuotes(prev => [fromRow(data.quote), ...prev]);
       resetForm();
-      setToast('Quote submitted — Keri-Leigh will review and approve before it\'s sent.');
+      setToast('Quote submitted. Keri-Leigh will review and approve before it\'s sent.');
     } catch (e) {
       setToast((e as Error).message);
     } finally {
@@ -664,7 +664,7 @@ export default function TelemarketerQuotesPage() {
                   </div>
                   <p className="text-[11px] mt-3" style={{ color: 'var(--color-text3)' }}>
                     {activePack
-                      ? `${activePack.label} pack — API checks billed per use on top. Admin can adjust before sending.`
+                      ? `${activePack.label} pack. API checks billed per use on top. Admin can adjust before sending.`
                       : 'Admin can adjust pricing before sending to the lender client.'}
                   </p>
                 </div>

@@ -498,7 +498,7 @@ const ALGOLEND_TEMPLATES = {
     },
     {
       id:    'wa-closing',
-      label: 'Closing — Ready to Apply',
+      label: 'Closing: Ready to Apply',
       text:  (name: string) =>
         `Hi ${name}, just following up on our recent conversation. We're ready to move your onboarding forward — the process is straightforward and our team will guide you every step of the way. Shall we proceed?`,
     },
@@ -610,7 +610,7 @@ export default function LeadDetailPage() {
         icon: <Phone size={14} />,
         iconBg: spoke ? 'rgba(52,211,153,0.14)' : 'rgba(248,113,113,0.14)',
         iconColor: spoke ? '#34D399' : '#F87171',
-        title: `Call — ${c.outcome}`,
+        title: `Call: ${c.outcome}`,
         body: c.notes ?? undefined,
         sub: c.duration ? `Duration: ${c.duration}` : undefined,
         badge: { label: c.outcome, bg: spoke ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)', color: spoke ? '#34D399' : '#F87171' },
@@ -623,7 +623,7 @@ export default function LeadDetailPage() {
         timestamp: fmtD(f.scheduled_at),
         icon: <Calendar size={14} />,
         iconBg: 'rgba(96,165,250,0.14)', iconColor: '#60A5FA',
-        title: `Follow-Up — ${f.follow_up_type}`,
+        title: `Follow-Up: ${f.follow_up_type}`,
         body: f.note ?? undefined,
         badge: f.completed
           ? { label: 'Done', bg: 'rgba(52,211,153,0.1)', color: '#34D399' }
@@ -638,7 +638,7 @@ export default function LeadDetailPage() {
         timestamp: fmtD(d.demo_date) + demoTime,
         icon: <Video size={14} />,
         iconBg: 'rgba(244,114,182,0.14)', iconColor: '#F472B6',
-        title: `Demo${d.platform ? ` — ${d.platform}` : ''}`,
+        title: `Demo${d.platform ? `: ${d.platform}` : ''}`,
         body: d.notes ?? undefined,
         sub: d.presenter ? `Presenter: ${d.presenter}` : undefined,
         badge: {

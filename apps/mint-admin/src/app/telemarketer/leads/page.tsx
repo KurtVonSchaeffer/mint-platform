@@ -911,7 +911,7 @@ export default function TelemarketerLeadsPage() {
                           >
                             <Phone size={11} /> {lead.phone}
                           </a>
-                        : <span className="text-xs italic" style={{ color: 'var(--color-text3)', opacity: 0.4 }}>—</span>
+                        : null
                       }
                     </td>
                     <td>
@@ -923,7 +923,7 @@ export default function TelemarketerLeadsPage() {
                           >
                             {lead.email}
                           </a>
-                        : <span className="text-xs" style={{ color: 'var(--color-text3)', opacity: 0.4, fontStyle: 'italic' }}>—</span>}
+                        : null}
                     </td>
                     <td>
                       <span className="text-xs" style={{ color: 'var(--color-text3)', fontFamily: 'var(--font-mono)' }}>
@@ -940,7 +940,7 @@ export default function TelemarketerLeadsPage() {
                           {new Date(lead.nextFollowUp).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}
                         </span>
                       ) : (
-                        <span className="text-xs" style={{ color: 'var(--color-text3)', opacity: 0.4 }}>&mdash;</span>
+                        null
                       )}
                     </td>
                     <td>

@@ -202,7 +202,7 @@ export default function TelemarketerHomePage() {
               <p className="text-sm mt-1.5" style={{ color: 'var(--color-text3)' }}>
                 {loading ? 'Loading your workspace…' :
                  s.activity.callsToday >= DAILY_CALL_GOAL
-                   ? 'Daily call goal reached — keep the momentum!'
+                   ? 'Daily call goal reached. Keep the momentum!'
                    : `${DAILY_CALL_GOAL - s.activity.callsToday} more calls to hit your daily target`}
               </p>
             </div>
@@ -244,12 +244,12 @@ export default function TelemarketerHomePage() {
           <div className="flex items-center gap-2 w-full">
             <div className="flex-1 text-center rounded-lg px-2 py-1.5"
               style={{ background: 'rgba(251,191,36,0.07)', border: '1px solid rgba(251,191,36,0.16)' }}>
-              <p className="text-sm font-bold" style={{ color: '#FBBF24', fontFamily: 'var(--font-mono)' }}>{loading ? '—' : s.activity.followUpsDue}</p>
+              <p className="text-sm font-bold" style={{ color: '#FBBF24', fontFamily: 'var(--font-mono)' }}>{loading ? '' : s.activity.followUpsDue}</p>
               <p className="text-[9px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: 'rgba(251,191,36,0.55)' }}>Due today</p>
             </div>
             <div className="flex-1 text-center rounded-lg px-2 py-1.5"
               style={{ background: 'rgba(248,113,113,0.07)', border: '1px solid rgba(248,113,113,0.16)' }}>
-              <p className="text-sm font-bold" style={{ color: '#F87171', fontFamily: 'var(--font-mono)' }}>{loading ? '—' : s.activity.overdue}</p>
+              <p className="text-sm font-bold" style={{ color: '#F87171', fontFamily: 'var(--font-mono)' }}>{loading ? '' : s.activity.overdue}</p>
               <p className="text-[9px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: 'rgba(248,113,113,0.55)' }}>Overdue</p>
             </div>
           </div>
@@ -500,7 +500,7 @@ export default function TelemarketerHomePage() {
 
             <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
               {goalPct >= 100
-                ? 'Outstanding work — you have smashed your monthly conversion target!'
+                ? 'Outstanding work. You have smashed your monthly conversion target!'
                 : `${goalRemaining} more conversion${goalRemaining !== 1 ? 's' : ''} to hit your target for ${MONTH.split(' ')[0]}`}
             </p>
           </div>
@@ -578,7 +578,7 @@ export default function TelemarketerHomePage() {
                         {/* Name + company */}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold truncate" style={{ color: 'var(--color-text)' }}>
-                            {call.leads?.name ?? '—'}
+                            {call.leads?.name ?? ''}
                           </p>
                           <p className="text-xs truncate" style={{ color: 'var(--color-text3)' }}>
                             {call.leads?.company}

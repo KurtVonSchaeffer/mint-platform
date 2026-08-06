@@ -98,7 +98,7 @@ export default function MyClientsPage() {
               </div>
             </div>
             <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--color-text3)' }}>{label}</p>
-            <p className="text-2xl font-bold" style={{ color, fontFamily: 'var(--font-mono)' }}>{loading ? '—' : value}</p>
+            <p className="text-2xl font-bold" style={{ color, fontFamily: 'var(--font-mono)' }}>{loading ? '' : value}</p>
           </button>
         ))}
       </div>

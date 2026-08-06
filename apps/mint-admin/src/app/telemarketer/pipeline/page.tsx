@@ -31,9 +31,9 @@ const STAGES = [
   { id: 'Demo Completed',    color: '#F472B6', rgb: '244,114,182', icon: CalendarCheck2,  tip: 'Demo done, following up'           },
   { id: 'Proposal Sent',     color: '#818CF8', rgb: '129,140,248', icon: FileText,        tip: 'Proposal delivered'                },
   { id: 'Negotiation',       color: '#34D399', rgb: '52,211,153',  icon: Scale,           tip: 'Working out the details'           },
-  { id: 'Won',               color: '#10B981', rgb: '16,185,129',  icon: Trophy,          tip: 'Deal closed — commission incoming' },
+  { id: 'Won',               color: '#10B981', rgb: '16,185,129',  icon: Trophy,          tip: 'Deal closed. Commission incoming.' },
   { id: 'Lost',              color: '#F87171', rgb: '248,113,113', icon: XCircle,         tip: 'Mark as lost and move on'          },
-  { id: 'Other',             color: '#6B7280', rgb: '107,114,128', icon: MoreHorizontal,  tip: 'Other — does not fit any stage'    },
+  { id: 'Other',             color: '#6B7280', rgb: '107,114,128', icon: MoreHorizontal,  tip: 'Does not fit any other stage'      },
 ];
 
 const LEGACY_MAP: Record<string, string> = {
@@ -224,7 +224,7 @@ export default function PipelinePage() {
             My Pipeline
           </h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--color-text3)' }}>
-            Click <strong style={{ color: 'var(--color-text2)' }}>Move</strong> on a card to advance it — no dragging needed
+            Click <strong style={{ color: 'var(--color-text2)' }}>Move</strong> on a card to advance it. No dragging needed.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -471,10 +471,10 @@ export default function PipelinePage() {
                           className="shrink-0 flex flex-col items-center justify-center rounded-lg px-1.5 py-1 mt-0.5 cursor-help"
                           style={{ background: `${sColor}18`, color: sColor, minWidth: 36 }}
                           title={
-                            score >= 90 ? `Lead score: ${score}/100 — Hot 🔥 Close this now` :
-                            score >= 70 ? `Lead score: ${score}/100 — Warm, keep momentum` :
-                            score >= 40 ? `Lead score: ${score}/100 — Lukewarm, needs attention` :
-                                          `Lead score: ${score}/100 — Cold, re-engage ASAP`
+                            score >= 90 ? `Lead score: ${score}/100. Hot. Close this now.` :
+                            score >= 70 ? `Lead score: ${score}/100. Warm. Keep the momentum.` :
+                            score >= 40 ? `Lead score: ${score}/100. Lukewarm. Needs attention.` :
+                                          `Lead score: ${score}/100. Cold. Re-engage ASAP.`
                           }
                         >
                           <span className="text-[10px] font-black leading-none">{score}</span>

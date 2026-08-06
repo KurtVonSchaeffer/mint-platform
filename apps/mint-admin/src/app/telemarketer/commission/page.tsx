@@ -42,12 +42,12 @@ function mapCommission(c: ApiCommission): CommissionRow {
     id: c.id,
     client: c.client_name,
     company: c.leads?.company ?? '',
-    clientStatus: c.leads?.client_stage ?? '—',
+    clientStatus: c.leads?.client_stage ?? '',
     payrollDate: c.payroll_date,
     commissionAmount: c.commission_amount,
     paymentMonth: payrollDate
       ? payrollDate.toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' })
-      : '—',
+      : '',
     status: (c.status as CommissionStatus) ?? 'Pending Collection',
   };
 }
@@ -109,7 +109,7 @@ export default function CommissionPage() {
         <div>
           <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>When does commission become payable?</p>
           <p className="text-xs mt-0.5 leading-relaxed" style={{ color: 'var(--color-text3)' }}>
-            Commission is only paid once <strong className="font-semibold" style={{ color: '#34D399' }}>Compliance is Approved</strong> AND <strong className="font-semibold" style={{ color: '#34D399' }}>the First Deduction is Successful</strong> — not when the client signs. Once both conditions are met, your commission moves to Payroll Ready and is included in your end-of-month payroll.
+            Commission is only paid once <strong className="font-semibold" style={{ color: '#34D399' }}>Compliance is Approved</strong> AND <strong className="font-semibold" style={{ color: '#34D399' }}>the First Deduction is Successful</strong>. Not when the client signs. Once both conditions are met, your commission moves to Payroll Ready and is included in your end-of-month payroll.
           </p>
         </div>
       </div>
@@ -140,7 +140,7 @@ export default function CommissionPage() {
             </div>
             <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--color-text3)' }}>{card.label}</p>
             <p className="text-xl font-bold tracking-tight" style={{ color: loading ? 'var(--color-text3)' : 'var(--color-text)', fontFamily: 'var(--font-mono)' }}>
-              {loading ? '—' : card.value}
+              {loading ? '' : card.value}
             </p>
             <p className="text-xs mt-1" style={{ color: card.color }}>{card.sub}</p>
           </button>
@@ -230,7 +230,7 @@ export default function CommissionPage() {
                               color: row.clientStatus === 'Client Live' ? '#10B981' : 'var(--color-text3)',
                               border: `1px solid ${row.clientStatus === 'Client Live' ? 'rgba(16,185,129,0.2)' : 'var(--color-border2)'}`,
                             }}>
-                            {row.clientStatus || '—'}
+                            {row.clientStatus || ''}
                           </span>
                         </td>
                         <td>

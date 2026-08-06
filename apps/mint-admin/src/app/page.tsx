@@ -299,7 +299,7 @@ export default function DashboardPage() {
 
   const attentionItems = [
     ...suspended.map(c => ({ label: `${c.name} suspended`, color: '#F87171', rgb: '248,113,113', href: `/clients/${c.id}` })),
-    ...noMrr.map(c => ({ label: `${c.name} — no MRR`, color: '#FBBF24', rgb: '251,191,36', href: `/clients/${c.id}` })),
+    ...noMrr.map(c => ({ label: `${c.name} (no MRR)`, color: '#FBBF24', rgb: '251,191,36', href: `/clients/${c.id}` })),
   ];
 
   const PERF = [
@@ -405,7 +405,7 @@ export default function DashboardPage() {
                 style={{ color: 'var(--color-text)', fontFamily: 'var(--font-mono)', fontSize: 'clamp(2.2rem, 4vw, 3.5rem)' }}>
                 {loading
                   ? <span className="inline-block h-10 w-44 rounded-xl animate-pulse" style={{ background: 'rgba(124,58,237,0.15)' }} />
-                  : totalARR === 0 ? '—' : fmtK(totalARR)}
+                  : totalARR === 0 ? '' : fmtK(totalARR)}
               </p>
 
               {!loading && totalARR > 0 && (
@@ -433,7 +433,7 @@ export default function DashboardPage() {
                 <div>
                   <p className="text-[10px] font-medium mb-1" style={{ color: 'rgba(167,139,250,0.6)' }}>MRR</p>
                   <p className="text-2xl font-bold font-mono" style={{ color: 'var(--color-violet)' }}>
-                    {loading ? '—' : fmtK(totalMRR)}
+                    {loading ? '' : fmtK(totalMRR)}
                   </p>
                 </div>
                 {activeClients > 1 && (
@@ -660,7 +660,7 @@ export default function DashboardPage() {
                         {c.status}
                       </span>
                     </td>
-                    <td>{c.mrr > 0 ? <span className="font-semibold font-mono" style={{ color: 'var(--color-text)' }}>{fmt(c.mrr)}</span> : <span style={{ color: 'var(--color-text3)' }}>—</span>}</td>
+                    <td>{c.mrr > 0 ? <span className="font-semibold font-mono" style={{ color: 'var(--color-text)' }}>{fmt(c.mrr)}</span> : null}</td>
                     <td>
                       <a href={`https://${c.slug}.algolend.co.za`} target="_blank" rel="noreferrer"
                         className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition-all hover:-translate-y-px"
