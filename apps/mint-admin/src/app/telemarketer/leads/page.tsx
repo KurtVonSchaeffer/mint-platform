@@ -119,7 +119,8 @@ function StatusBadge({ status, onChange }: { status: LeadStatus; onChange: (s: L
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const btnRef = useRef<HTMLButtonElement>(null);
-  const cfg = STATUS_CFG[status];
+  const dropRef = useRef<HTMLDivElement>(null);
+  const cfg = STATUS_CFG[status] ?? STATUS_CFG['New Lead'];
 
   function handleOpen() {
     if (btnRef.current) {
@@ -128,6 +129,20 @@ function StatusBadge({ status, onChange }: { status: LeadStatus; onChange: (s: L
     }
     setOpen(o => !o);
   }
+
+  useEffect(() => {
+    if (!open) return;
+    function onDown(e: MouseEvent) {
+      if (
+        !btnRef.current?.contains(e.target as Node) &&
+        !dropRef.current?.contains(e.target as Node)
+      ) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
 
   return (
     <div className="relative">
@@ -140,27 +155,27 @@ function StatusBadge({ status, onChange }: { status: LeadStatus; onChange: (s: L
         {status} <ChevronDown size={8} />
       </button>
       {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="fixed z-50 rounded-xl overflow-hidden min-w-[180px]"
-            style={{ top: pos.top, left: pos.left, background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)' }}>
-            {PIPELINE_STATUSES.map(s => {
-              const c = STATUS_CFG[s];
-              return (
-                <button key={s}
-                  onClick={() => { onChange(s); setOpen(false); }}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors"
-                  style={{ color: s === status ? c.color : 'var(--color-text2)' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                >
-                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: c.color }} />
-                  {s}
-                </button>
-              );
-            })}
-          </div>
-        </>
+        <div
+          ref={dropRef}
+          className="fixed rounded-xl overflow-hidden min-w-[180px]"
+          style={{ top: pos.top, left: pos.left, zIndex: 9999, background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)' }}
+        >
+          {PIPELINE_STATUSES.map(s => {
+            const c = STATUS_CFG[s];
+            return (
+              <button key={s}
+                onMouseDown={e => { e.preventDefault(); onChange(s); setOpen(false); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors"
+                style={{ color: s === status ? c.color : 'var(--color-text2)' }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+              >
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: c.color }} />
+                {s}
+              </button>
+            );
+          })}
+        </div>
       )}
     </div>
   );
