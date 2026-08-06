@@ -752,6 +752,17 @@ export default function LeadDetailPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tm_status: s }),
     });
+    const autoOutcome =
+      s === 'Contacted'         ? 'Spoke'     :
+      s === 'Attempted Contact' ? 'No Answer' : null;
+    if (autoOutcome && agentId) {
+      await fetch('/api/telemarketer/call-logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: id, agent_id: agentId, outcome: autoOutcome }),
+      });
+      loadActivity();
+    }
   }
 
   function fmtElapsed(secs: number) {

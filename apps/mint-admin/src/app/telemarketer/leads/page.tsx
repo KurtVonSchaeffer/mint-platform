@@ -499,6 +499,19 @@ export default function TelemarketerLeadsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tm_status: status }),
     });
+    const autoOutcome =
+      status === 'Contacted'         ? 'Spoke'     :
+      status === 'Attempted Contact' ? 'No Answer' : null;
+    if (autoOutcome) {
+      const agentId = await getAgentId();
+      if (agentId) {
+        fetch('/api/telemarketer/call-logs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ lead_id: id, agent_id: agentId, outcome: autoOutcome }),
+        });
+      }
+    }
   }
 
   // ── Filtered + sorted view ──────────────────────────────────────────────────

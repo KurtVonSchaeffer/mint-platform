@@ -183,6 +183,16 @@ export default function PipelinePage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tm_status: newStage }),
     });
+    const autoOutcome =
+      newStage === 'Contacted'         ? 'Spoke'     :
+      newStage === 'Attempted Contact' ? 'No Answer' : null;
+    if (autoOutcome && agentIdRef.current) {
+      fetch('/api/telemarketer/call-logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: leadId, agent_id: agentIdRef.current, outcome: autoOutcome }),
+      });
+    }
   }
 
   function getLeadsForStage(stageId: string) {
