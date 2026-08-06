@@ -15,14 +15,14 @@ import { getAgentId } from '@/lib/telemarketer-agent';
 type LeadStatus =
   | 'New Lead' | 'Attempted Contact' | 'Contacted' | 'Interested'
   | 'Demo Scheduled' | 'Demo Completed' | 'Proposal Requested' | 'Proposal Sent'
-  | 'Negotiation' | 'Won' | 'Lost' | 'Not Qualified'
+  | 'Negotiation' | 'Won' | 'Lost' | 'Other'
   // Legacy values
   | 'Pending' | 'Call Again' | 'Call Back' | 'Unreachable' | 'Demo Booked' | 'Quoted' | 'Converted';
 
 const PIPELINE_STATUSES: LeadStatus[] = [
   'New Lead', 'Attempted Contact', 'Contacted', 'Interested',
   'Demo Scheduled', 'Demo Completed', 'Proposal Requested', 'Proposal Sent',
-  'Negotiation', 'Won', 'Lost', 'Not Qualified',
+  'Negotiation', 'Won', 'Lost', 'Other',
 ];
 
 const TIMELINE_STEPS = [
@@ -48,7 +48,7 @@ const STATUS_TO_STEP: Record<string, number> = {
   'Won':                5,
   'Converted':          5,
   'Lost':               5,
-  'Not Qualified':      5,
+  'Other':              5,
 };
 
 interface LeadNote   { id: string; content: string; agent_id: string; created_at: string }

@@ -62,7 +62,7 @@ const TM_STATUS_COLORS: Record<string, string> = {
   'New Lead': '#8B90B4', 'Attempted Contact': '#9CA3AF', 'Contacted': '#60A5FA',
   'Interested': '#A78BFA', 'Demo Scheduled': '#34D399', 'Demo Completed': '#10B981',
   'Proposal Requested': '#FBBF24', 'Proposal Sent': '#FB923C', 'Negotiation': '#F472B6',
-  'Won': '#34D399', 'Lost': '#F87171', 'Not Qualified': '#6B7280',
+  'Won': '#34D399', 'Lost': '#F87171', 'Other': '#6B7280', 'Not Qualified': '#6B7280',
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

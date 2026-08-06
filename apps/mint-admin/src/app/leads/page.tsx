@@ -7,7 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
-import { Inbox, RefreshCw, Mail, Building2, ChevronDown, ChevronLeft, ChevronRight, Plus, X, Loader2, UserPlus, FileText, UserCheck, Upload, Download, Trash2, Pencil, Calendar, Search } from 'lucide-react';
+import { Inbox, RefreshCw, Mail, Building2, ChevronDown, ChevronLeft, ChevronRight, Plus, X, Loader2, UserPlus, FileText, UserCheck, Upload, Download, Trash2, Pencil, Calendar, Search, Filter } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 type LeadStatus = 'new' | 'contacted' | 'qualified' | 'won' | 'lost' | 'other';
@@ -245,12 +245,22 @@ function AssignDropdown({ lead, agents, onAssign }: {
 const TM_STATUSES = [
   'New Lead', 'Attempted Contact', 'Contacted', 'Interested',
   'Demo Scheduled', 'Demo Completed', 'Proposal Requested', 'Proposal Sent',
-  'Negotiation', 'Won', 'Lost', 'Not Qualified',
+  'Negotiation', 'Won', 'Lost', 'Other',
 ];
 
 function TmStatusDropdown({ lead, onUpdate }: { lead: Lead; onUpdate: (id: string, status: string) => Promise<void> }) {
   const [open, setOpen]     = useState(false);
   const [saving, setSaving] = useState(false);
+  const [pos, setPos]       = useState({ top: 0, left: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  function toggle() {
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({ top: r.bottom + 4, left: r.left });
+    }
+    setOpen(o => !o);
+  }
 
   async function pick(s: string) {
     if (s === lead.tmStatus) { setOpen(false); return; }
@@ -263,7 +273,8 @@ function TmStatusDropdown({ lead, onUpdate }: { lead: Lead; onUpdate: (id: strin
   return (
     <div className="relative">
       <button
-        onClick={() => setOpen(o => !o)}
+        ref={btnRef}
+        onClick={toggle}
         disabled={saving}
         className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full cursor-pointer transition-all"
         style={{ background: 'rgba(124,58,237,0.08)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.2)' }}
@@ -274,10 +285,10 @@ function TmStatusDropdown({ lead, onUpdate }: { lead: Lead; onUpdate: (id: strin
       </button>
       {open && (
         <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
           <div
-            className="absolute left-0 top-full mt-1 z-20 rounded-xl overflow-hidden min-w-[180px]"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.25)' }}
+            className="fixed z-40 rounded-xl overflow-y-auto min-w-[180px]"
+            style={{ top: pos.top, left: pos.left, maxHeight: 280, background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)' }}
           >
             {TM_STATUSES.map(s => (
               <button
@@ -459,6 +470,7 @@ export default function LeadsPage() {
   const [page,         setPage]         = useState(1);
   const [searchQuery,  setSearchQuery]  = useState('');
   const [dateOpen,     setDateOpen]     = useState(false);
+  const [sortDir,      setSortDir]      = useState<'desc' | 'asc'>('desc');
   const [flashedIds,   setFlashedIds]   = useState<Set<string>>(new Set());
   const flashTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const dateBtnRef = useRef<HTMLButtonElement>(null);
@@ -505,6 +517,7 @@ export default function LeadsPage() {
         assignedTo: l.assigned_to ?? l.assignedTo ?? null,
         tmStatus:   l.tm_status   ?? null,
       })));
+      setPage(1);
     }
     setLoading(false);
   }, []);
@@ -632,7 +645,16 @@ export default function LeadsPage() {
 
   const filteredLeads = leads
     .slice()
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .sort((a, b) => {
+      const ta = new Date(a.createdAt).getTime();
+      const tb = new Date(b.createdAt).getTime();
+      const timeDiff = sortDir === 'desc' ? tb - ta : ta - tb;
+      if (timeDiff !== 0) return timeDiff;
+      // tiebreak by ref sequence number so bulk-imported leads are in consistent order
+      const aNum = parseInt((a.refId ?? '').replace(/\D/g, '') || '0', 10);
+      const bNum = parseInt((b.refId ?? '').replace(/\D/g, '') || '0', 10);
+      return sortDir === 'desc' ? bNum - aNum : aNum - bNum;
+    })
     .filter(l => {
       if (!searchQuery) return true;
       const q = searchQuery.toLowerCase();
@@ -672,7 +694,7 @@ export default function LeadsPage() {
   return (
     <Shell>
       {toast && <Toast kind={toast.kind} message={toast.message} onClose={() => setToast(null)} />}
-      {addOpen && <AddLeadModal onClose={() => setAddOpen(false)} onAdded={load} />}
+      {addOpen && <AddLeadModal onClose={() => setAddOpen(false)} onAdded={() => { load(); setToast({ kind: 'success', message: 'Lead added' }); }} />}
       {editLead && (
         <EditLeadModal
           lead={editLead}
@@ -867,56 +889,56 @@ export default function LeadsPage() {
               <X size={9} /> Clear date
             </button>
           )}
-          {dateOpen && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setDateOpen(false)} />
-              <div className="fixed z-50 rounded-2xl p-4 w-56"
-                style={{ top: datePos.top, left: datePos.left, background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 16px 48px rgba(0,0,0,0.4)' }}>
-                <p className="text-[9px] font-bold uppercase tracking-widest mb-2.5" style={{ color: 'var(--color-text3)' }}>Quick select</p>
-                <div className="flex flex-col gap-0.5 mb-3">
-                  {([['today', 'Today'], ['7d', 'Last 7 days'], ['30d', 'Last 30 days']] as const).map(([preset, label]) => (
-                    <button
-                      key={preset}
-                      onClick={() => { setDatePreset(p => p === preset ? null : preset); setDateFrom(''); setDateTo(''); setDateOpen(false); }}
-                      className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer"
-                      style={datePreset === preset
-                        ? { background: 'rgba(124,58,237,0.12)', color: 'var(--color-violet)' }
-                        : { color: 'var(--color-text2)' }}
-                      onMouseEnter={e => { if (datePreset !== preset) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
-                      onMouseLeave={e => { if (datePreset !== preset) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full shrink-0"
-                        style={{ background: datePreset === preset ? 'var(--color-violet)' : 'var(--color-text3)' }} />
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                <div className="pt-3" style={{ borderTop: '1px solid var(--color-border2)' }}>
-                  <p className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--color-text3)' }}>Custom range</p>
-                  <div className="flex flex-col gap-1.5">
-                    <input type="date" value={dateFrom}
-                      onChange={e => { setDateFrom(e.target.value); setDatePreset('custom'); }}
-                      className="field-input text-xs"
-                      placeholder="From" />
-                    <input type="date" value={dateTo}
-                      onChange={e => { setDateTo(e.target.value); setDatePreset('custom'); }}
-                      className="field-input text-xs"
-                      placeholder="To" />
-                  </div>
-                  {datePreset === 'custom' && (dateFrom || dateTo) && (
-                    <button
-                      onClick={() => setDateOpen(false)}
-                      className="mt-2 w-full py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
-                      style={{ background: 'rgba(124,58,237,0.12)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.3)' }}
-                    >
-                      Apply range
-                    </button>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
         </div>
+        {dateOpen && (
+          <>
+            <div className="fixed inset-0 z-40" onMouseDown={() => setDateOpen(false)} />
+            <div className="fixed z-50 rounded-2xl p-4 w-56"
+              style={{ top: datePos.top, left: datePos.left, background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 16px 48px rgba(0,0,0,0.4)' }}>
+              <p className="text-[9px] font-bold uppercase tracking-widest mb-2.5" style={{ color: 'var(--color-text3)' }}>Quick select</p>
+              <div className="flex flex-col gap-0.5 mb-3">
+                {([['today', 'Today'], ['7d', 'Last 7 days'], ['30d', 'Last 30 days']] as const).map(([preset, label]) => (
+                  <button
+                    key={preset}
+                    onClick={() => { setDatePreset(p => p === preset ? null : preset); setDateFrom(''); setDateTo(''); setDateOpen(false); }}
+                    className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                    style={datePreset === preset
+                      ? { background: 'rgba(124,58,237,0.12)', color: 'var(--color-violet)' }
+                      : { color: 'var(--color-text2)' }}
+                    onMouseEnter={e => { if (datePreset !== preset) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.04)'; }}
+                    onMouseLeave={e => { if (datePreset !== preset) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0"
+                      style={{ background: datePreset === preset ? 'var(--color-violet)' : 'var(--color-text3)' }} />
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <div className="pt-3" style={{ borderTop: '1px solid var(--color-border2)' }}>
+                <p className="text-[9px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--color-text3)' }}>Custom range</p>
+                <div className="flex flex-col gap-1.5">
+                  <input type="date" value={dateFrom}
+                    onChange={e => { setDateFrom(e.target.value); setDatePreset('custom'); }}
+                    className="field-input text-xs"
+                    placeholder="From" />
+                  <input type="date" value={dateTo}
+                    onChange={e => { setDateTo(e.target.value); setDatePreset('custom'); }}
+                    className="field-input text-xs"
+                    placeholder="To" />
+                </div>
+                {datePreset === 'custom' && (dateFrom || dateTo) && (
+                  <button
+                    onClick={() => setDateOpen(false)}
+                    className="mt-2 w-full py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+                    style={{ background: 'rgba(124,58,237,0.12)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.3)' }}
+                  >
+                    Apply range
+                  </button>
+                )}
+              </div>
+            </div>
+          </>
+        )}
 
         {/* List */}
         {loading ? (
@@ -941,9 +963,17 @@ export default function LeadsPage() {
                     const parts: string[] = [];
                     if (statusFilter) parts.push(STATUS_CONFIG[statusFilter].label);
                     if (agentFilter) parts.push(agents.find(a => a.id === agentFilter)?.name.split(' ')[0] ?? '');
-                    return parts.length ? ` · ${parts.join(' · ')}` : ' · newest first';
+                    return parts.length ? ` · ${parts.join(' · ')}` : '';
                   })()}
                 </span>
+                <button
+                  onClick={() => { setSortDir(d => d === 'desc' ? 'asc' : 'desc'); setPage(1); }}
+                  className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full transition-colors cursor-pointer"
+                  style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
+                  title="Toggle sort order"
+                >
+                  {sortDir === 'desc' ? '↓ Newest' : '↑ Oldest'}
+                </button>
                 {statusFilter && (
                   <button
                     onClick={() => setStatusFilter(null)}
@@ -970,6 +1000,22 @@ export default function LeadsPage() {
               </div>
               <span className="text-[10px] font-mono" style={{ color: 'var(--color-green)' }}>● LIVE</span>
             </div>
+            {filteredLeads.length === 0 && (
+              <div className="p-12 text-center">
+                <div className="w-12 h-12 mx-auto mb-4 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(124,58,237,0.08)', color: 'var(--color-violet)' }}>
+                  <Filter size={18} />
+                </div>
+                <h3 className="text-sm font-semibold mb-1" style={{ color: 'var(--color-text)' }}>No leads match these filters</h3>
+                <p className="text-xs mb-4" style={{ color: 'var(--color-text3)' }}>Try clearing the date filter or selecting a different status.</p>
+                <button
+                  onClick={() => { setStatusFilter(null); setAgentFilter(null); setDatePreset(null); setDateFrom(''); setDateTo(''); setSearchQuery(''); }}
+                  className="text-xs font-semibold px-3 py-1.5 rounded-xl cursor-pointer transition-colors"
+                  style={{ background: 'rgba(124,58,237,0.1)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.25)' }}
+                >
+                  Clear all filters
+                </button>
+              </div>
+            )}
             <div>
               {pagedLeads.map((lead, idx) => (
                 <article

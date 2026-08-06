@@ -6,7 +6,7 @@
 import { supabaseAdmin } from '@/lib/supabase';
 import { sendEmail, newLeadNotificationEmail } from '@/lib/email';
 
-const TERMINAL_STATUSES = ['Won', 'Lost', 'Not Qualified', 'Not Interested', 'Converted'];
+const TERMINAL_STATUSES = ['Won', 'Lost', 'Other', 'Not Qualified', 'Not Interested', 'Converted'];
 const PORTAL_URL        = process.env.NEXT_PUBLIC_APP_URL ?? 'https://admin.mintplatforms.co.za';
 
 export async function pickNextAgent(): Promise<string | null> {

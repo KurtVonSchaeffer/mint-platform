@@ -41,7 +41,7 @@ type LeadStatus =
   // Current pipeline stages
   | 'New Lead' | 'Attempted Contact' | 'Contacted' | 'Interested'
   | 'Demo Scheduled' | 'Demo Completed' | 'Proposal Requested' | 'Proposal Sent'
-  | 'Negotiation' | 'Won' | 'Lost' | 'Not Qualified'
+  | 'Negotiation' | 'Won' | 'Lost' | 'Other'
   // Legacy statuses (still in DB — displayed but not offered in dropdown)
   | 'Pending' | 'Call Again' | 'Call Back' | 'Unreachable'
   | 'Demo Booked' | 'Quoted' | 'Converted' | 'Not Interested';
@@ -60,7 +60,7 @@ interface Lead {
 }
 
 const STALE_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-const TERMINAL: LeadStatus[] = ['Won', 'Lost', 'Not Qualified', 'Converted', 'Not Interested'];
+const TERMINAL: LeadStatus[] = ['Won', 'Lost', 'Other', 'Converted', 'Not Interested'];
 function isStale(lead: Lead) {
   if (!lead.updatedAt || TERMINAL.includes(lead.status)) return false;
   return Date.now() - new Date(lead.updatedAt).getTime() > STALE_DAYS_MS;
@@ -79,7 +79,7 @@ const STATUS_CFG: Record<LeadStatus, { bg: string; border: string; color: string
   'Negotiation':        { bg: 'rgba(244,114,182,0.1)', border: 'rgba(244,114,182,0.2)', color: '#F472B6' },
   'Won':                { bg: 'rgba(52,211,153,0.15)', border: 'rgba(52,211,153,0.35)', color: '#34D399' },
   'Lost':               { bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.2)', color: '#F87171' },
-  'Not Qualified':      { bg: 'rgba(107,114,128,0.08)',border: 'rgba(107,114,128,0.15)',color: '#6B7280' },
+  'Other':              { bg: 'rgba(107,114,128,0.08)',border: 'rgba(107,114,128,0.15)',color: '#6B7280' },
   // Legacy — still in DB, shown if present
   'Pending':        { bg: 'rgba(139,144,180,0.1)', border: 'rgba(139,144,180,0.2)', color: '#8B90B4' },
   'Call Again':     { bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.2)',  color: '#60A5FA' },
@@ -95,7 +95,7 @@ const STATUS_CFG: Record<LeadStatus, { bg: string; border: string; color: string
 const PIPELINE_STATUSES: LeadStatus[] = [
   'New Lead', 'Attempted Contact', 'Contacted', 'Interested',
   'Demo Scheduled', 'Demo Completed', 'Proposal Requested', 'Proposal Sent',
-  'Negotiation', 'Won', 'Lost', 'Not Qualified',
+  'Negotiation', 'Won', 'Lost', 'Other',
 ];
 
 import { getAgentId } from '@/lib/telemarketer-agent';
@@ -929,13 +929,6 @@ export default function TelemarketerLeadsPage() {
                           title="View detail"
                         >
                           <MessageSquare size={10} /> Notes
-                        </Link>
-                        <Link href={`/telemarketer/leads/${lead.id}`}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold transition-all"
-                          style={{ background: 'rgba(96,165,250,0.08)', color: '#60A5FA', border: '1px solid rgba(96,165,250,0.15)' }}
-                          title="Schedule follow-up"
-                        >
-                          <Calendar size={10} /> Follow-up
                         </Link>
                         <button
                           onClick={() => setDemoLead(lead)}

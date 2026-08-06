@@ -59,6 +59,7 @@ const STAGE_COLORS: Record<string, string> = {
   'Negotiation':        '#34D399',
   'Won':                '#10B981',
   'Lost':               '#F87171',
+  'Other':              '#6B7280',
   'Not Qualified':      '#6B7280',
 };
 

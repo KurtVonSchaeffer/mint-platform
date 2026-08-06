@@ -43,7 +43,9 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { name, email, company, message, source = 'manual', status = 'new', phone } = body;
+  const { name, company, message, source = 'manual', status = 'new' } = body;
+  const email = (body.email as string | undefined) || null;
+  const phone = (body.phone as string | undefined) || null;
   let { assigned_to } = body;
 
   if (!name || !company) {
@@ -56,7 +58,7 @@ export async function POST(req: NextRequest) {
   const { data, error } = await supabaseAdmin
     .from('leads')
     .insert({
-      name, email, company, message, source, status, phone: phone ?? null,
+      name, email, company, message: message || null, source, status, phone,
       assigned_to:  assigned_to ?? null,
       tm_status:    assigned_to ? 'New Lead' : null,
     })

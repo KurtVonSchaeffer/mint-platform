@@ -50,7 +50,7 @@ export async function GET() {
   const PIPELINE_STAGES = [
     'New Lead', 'Attempted Contact', 'Contacted', 'Interested',
     'Demo Scheduled', 'Demo Completed', 'Proposal Requested', 'Proposal Sent',
-    'Negotiation', 'Won', 'Lost', 'Not Qualified',
+    'Negotiation', 'Won', 'Lost', 'Other', 'Not Qualified',
   ];
   const LEGACY_MAP: Record<string, string> = {
     Pending: 'New Lead', 'Call Again': 'Contacted', 'Call Back': 'Contacted',
@@ -73,11 +73,11 @@ export async function GET() {
   });
 
   const totalPipeline = leads
-    .filter(l => !['Won', 'Lost', 'Not Qualified'].includes(normalizeStage(l.tm_status)))
+    .filter(l => !['Won', 'Lost', 'Other', 'Not Qualified'].includes(normalizeStage(l.tm_status)))
     .reduce((s, l) => s + (Number(l.estimated_deal_value) || 0), 0);
 
   const weightedPipeline = leads
-    .filter(l => !['Won', 'Lost', 'Not Qualified'].includes(normalizeStage(l.tm_status)))
+    .filter(l => !['Won', 'Lost', 'Other', 'Not Qualified'].includes(normalizeStage(l.tm_status)))
     .reduce((s, l) => s + (Number(l.estimated_deal_value) || 0) * ((Number(l.deal_probability) || 0) / 100), 0);
 
   // Per-agent aggregation
@@ -101,7 +101,7 @@ export async function GET() {
     const totalCalls = agentCalls.length;
     const convRate = agentLeads.length > 0 ? Math.round((won / agentLeads.length) * 100) : 0;
     const pipelineValue = agentLeads
-      .filter(l => !['Won', 'Lost', 'Not Qualified'].includes(normalizeStage(l.tm_status)))
+      .filter(l => !['Won', 'Lost', 'Other', 'Not Qualified'].includes(normalizeStage(l.tm_status)))
       .reduce((s, l) => s + (Number(l.estimated_deal_value) || 0), 0);
 
     const commPending = agentComms

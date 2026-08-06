@@ -8,7 +8,7 @@ export const maxDuration = 60;
 
 const PORTAL_URL      = process.env.NEXT_PUBLIC_APP_URL ?? 'https://admin.mintplatforms.co.za';
 const STALE_DAYS      = 14;
-const TERMINAL        = ['Won', 'Lost', 'Not Qualified', 'Not Interested', 'Converted'];
+const TERMINAL        = ['Won', 'Lost', 'Other', 'Not Qualified', 'Not Interested', 'Converted'];
 
 function isCronSecret(req: NextRequest): boolean {
   const secret = process.env.CRON_SECRET;

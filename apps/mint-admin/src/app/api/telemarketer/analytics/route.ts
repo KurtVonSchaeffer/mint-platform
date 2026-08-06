@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
   const STAGES = [
     'New Lead', 'Attempted Contact', 'Contacted', 'Interested',
     'Demo Scheduled', 'Demo Completed', 'Proposal Requested', 'Proposal Sent',
-    'Negotiation', 'Won', 'Lost', 'Not Qualified',
+    'Negotiation', 'Won', 'Lost', 'Other', 'Not Qualified',
     'Pending', 'Call Again', 'Call Back', 'Unreachable', 'Demo Booked', 'Quoted', 'Converted', 'Not Interested',
   ];
 
@@ -85,7 +85,7 @@ export async function GET(req: NextRequest) {
   const wonLeads  = leads.filter(l => l.tm_status === 'Won' || l.tm_status === 'Converted');
   const wonValue  = wonLeads.reduce((s, l) => s + (l.estimated_deal_value ?? 0), 0);
   const pipeValue = leads
-    .filter(l => !['Won', 'Converted', 'Lost', 'Not Qualified', 'Not Interested'].includes(l.tm_status ?? ''))
+    .filter(l => !['Won', 'Converted', 'Lost', 'Other', 'Not Qualified', 'Not Interested'].includes(l.tm_status ?? ''))
     .reduce((s, l) => s + ((l.estimated_deal_value ?? 0) * ((l.deal_probability ?? 50) / 100)), 0);
 
   // ── Weekly call chart (last 7 days) ──────────────────────────────────
