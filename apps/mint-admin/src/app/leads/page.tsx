@@ -604,8 +604,19 @@ export default function LeadsPage() {
     }
   }
 
+  const TM_TO_STATUS: Record<string, LeadStatus> = {
+    'New Lead': 'new', 'Attempted Contact': 'new', 'Pending': 'new', 'Call Again': 'new', 'Call Back': 'new', 'Unreachable': 'new',
+    'Contacted': 'contacted',
+    'Interested': 'qualified', 'Demo Scheduled': 'qualified', 'Demo Completed': 'qualified', 'Demo Booked': 'qualified',
+    'Proposal Requested': 'qualified', 'Proposal Sent': 'qualified', 'Quoted': 'qualified', 'Negotiation': 'qualified',
+    'Won': 'won', 'Converted': 'won',
+    'Lost': 'lost', 'Not Interested': 'lost', 'Not Qualified': 'lost',
+    'Other': 'other',
+  };
+
   async function updateTmStatus(id: string, tmStatus: string) {
-    setLeads(prev => prev.map(l => l.id === id ? { ...l, tmStatus } : l));
+    const mappedStatus = TM_TO_STATUS[tmStatus];
+    setLeads(prev => prev.map(l => l.id === id ? { ...l, tmStatus, ...(mappedStatus ? { status: mappedStatus } : {}) } : l));
     const res = await fetch(`/api/leads/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },

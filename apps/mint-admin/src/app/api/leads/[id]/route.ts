@@ -5,7 +5,32 @@ import { sendEmail, demoBookingEmail } from '@/lib/email';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-const VALID_STATUSES = ['new', 'contacted', 'qualified', 'won', 'lost'];
+const VALID_STATUSES = ['new', 'contacted', 'qualified', 'won', 'lost', 'other'];
+
+// Auto-sync: when TM moves a lead, mirror it to the admin status field
+const TM_TO_STATUS: Record<string, string> = {
+  'New Lead':           'new',
+  'Attempted Contact':  'new',
+  'Pending':            'new',
+  'Call Again':         'new',
+  'Call Back':          'new',
+  'Unreachable':        'new',
+  'Contacted':          'contacted',
+  'Interested':         'qualified',
+  'Demo Scheduled':     'qualified',
+  'Demo Completed':     'qualified',
+  'Demo Booked':        'qualified',
+  'Proposal Requested': 'qualified',
+  'Proposal Sent':      'qualified',
+  'Quoted':             'qualified',
+  'Negotiation':        'qualified',
+  'Won':                'won',
+  'Converted':          'won',
+  'Lost':               'lost',
+  'Not Interested':     'lost',
+  'Not Qualified':      'lost',
+  'Other':              'other',
+};
 
 const VALID_TM_STATUSES = [
   // Legacy (kept for backward compat)
@@ -77,6 +102,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       return NextResponse.json({ error: `tm_status must be one of: ${VALID_TM_STATUSES.join(', ')}` }, { status: 422 });
     }
     update.tm_status = body.tm_status;
+    // Auto-sync admin status from TM status (unless admin is also setting status explicitly)
+    if (body.tm_status && body.status === undefined) {
+      const mapped = TM_TO_STATUS[body.tm_status as string];
+      if (mapped) update.status = mapped;
+    }
   }
 
   if ('assigned_to'   in body) update.assigned_to   = body.assigned_to   ?? null;
