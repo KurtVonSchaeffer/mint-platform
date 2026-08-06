@@ -298,7 +298,7 @@ export default function SalesDashboardPage() {
                 <table className="w-full text-xs">
                   <thead>
                     <tr style={{ background: 'var(--color-surface2)', borderBottom: '1px solid var(--color-border2)' }}>
-                      {['#', 'Agent', 'Leads', 'Calls', 'Demos', 'Proposals', 'Won', 'Conv %', 'Pipeline', 'Commission'].map(h => (
+                      {['#', 'Agent', 'Leads', 'Calls Today', 'Demos', 'Proposals', 'Won', 'Conv %', 'Pipeline', 'Commission'].map(h => (
                         <th key={h} className="px-4 py-2.5 text-left font-semibold whitespace-nowrap"
                           style={{ color: 'var(--color-text3)', fontSize: 10, letterSpacing: '0.05em' }}>
                           {h}
@@ -334,7 +334,10 @@ export default function SalesDashboardPage() {
                           </div>
                         </td>
                         <td className="px-4 py-3 font-mono" style={{ color: 'var(--color-text2)' }}>{agent.leadsTotal}</td>
-                        <td className="px-4 py-3 font-mono" style={{ color: 'var(--color-text2)' }}>{agent.totalCalls}</td>
+                        <td className="px-4 py-3">
+                          <span className="font-mono font-semibold" style={{ color: 'var(--color-text)' }}>{agent.callsToday}</span>
+                          <span className="font-mono text-[10px] ml-1" style={{ color: 'var(--color-text3)' }}>/ {agent.totalCalls}</span>
+                        </td>
                         <td className="px-4 py-3 font-mono" style={{ color: 'var(--color-text2)' }}>{agent.demosScheduled}</td>
                         <td className="px-4 py-3 font-mono" style={{ color: 'var(--color-text2)' }}>{agent.proposalsSent}</td>
                         <td className="px-4 py-3">
