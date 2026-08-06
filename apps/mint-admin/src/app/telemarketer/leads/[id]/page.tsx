@@ -533,7 +533,9 @@ export default function LeadDetailPage() {
   const [status,     setStatus]     = useState<LeadStatus>('New Lead');
   const [statusOpen, setStatusOpen] = useState(false);
   const [statusTop,  setStatusTop]  = useState(0);
+  const [statusLeft, setStatusLeft] = useState(0);
   const statusBtnRef = useRef<HTMLButtonElement>(null);
+  const statusDropRef = useRef<HTMLDivElement>(null);
   const [logCallOpen,   setLogCallOpen]   = useState(false);
   const [addNoteOpen,   setAddNoteOpen]   = useState(false);
   const [scheduleOpen,  setScheduleOpen]  = useState(false);
@@ -557,6 +559,20 @@ export default function LeadDetailPage() {
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [copiedId,      setCopiedId]      = useState<string | null>(null);
   const [copiedLeadId,  setCopiedLeadId]  = useState(false);
+
+  useEffect(() => {
+    if (!statusOpen) return;
+    function onDown(e: MouseEvent) {
+      if (
+        !statusBtnRef.current?.contains(e.target as Node) &&
+        !statusDropRef.current?.contains(e.target as Node)
+      ) {
+        setStatusOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [statusOpen]);
 
   const loadActivity = useCallback(async () => {
     const [notesRes, callsRes, fuRes, demosRes, proposalsRes] = await Promise.all([
@@ -876,6 +892,9 @@ export default function LeadDetailPage() {
                   if (statusBtnRef.current) {
                     const r = statusBtnRef.current.getBoundingClientRect();
                     setStatusTop(r.bottom + 4);
+                    const dropW = 200;
+                    const left = Math.min(r.left, window.innerWidth - dropW - 8);
+                    setStatusLeft(Math.max(8, left));
                   }
                   setStatusOpen(o => !o);
                 }}
@@ -884,28 +903,27 @@ export default function LeadDetailPage() {
                 {status} <ChevronDown size={10} />
               </button>
               {statusOpen && createPortal(
-                <>
-                  <div className="fixed inset-0 z-[9998]" onClick={() => setStatusOpen(false)} />
-                  <div className="fixed z-[9999] rounded-xl overflow-hidden min-w-[200px]"
-                    style={{ top: statusTop, right: 8, background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)' }}>
-                    {PIPELINE_STATUSES.map(s => (
-                      <button key={s} onClick={() => changeStatus(s)}
-                        className="w-full text-left px-3 py-2 text-xs transition-colors"
-                        style={{ color: s === status ? 'var(--color-violet)' : 'var(--color-text2)' }}
-                        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
-                        {s}
-                      </button>
-                    ))}
-                  </div>
-                </>,
+                <div ref={statusDropRef} className="fixed z-[9999] rounded-xl overflow-hidden min-w-[200px]"
+                  style={{ top: statusTop, left: statusLeft, background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)' }}>
+                  {PIPELINE_STATUSES.map(s => (
+                    <button key={s}
+                      onMouseDown={e => { e.preventDefault(); changeStatus(s); setStatusOpen(false); }}
+                      className="w-full text-left px-3 py-2 text-xs transition-colors"
+                      style={{ color: s === status ? 'var(--color-violet)' : 'var(--color-text2)' }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
+                      {s}
+                    </button>
+                  ))}
+                </div>,
                 document.body
               )}
             </div>
             {!callActive ? (
               <>
                 {lead.phone && (
-                  <a href={`tel:${lead.phone}`} className="btn-purple btn-shine inline-flex items-center gap-1.5 !text-xs !py-1.5 !px-3">
+                  <a href={`tel:${lead.phone}`} onClick={startCall}
+                    className="btn-purple btn-shine inline-flex items-center gap-1.5 !text-xs !py-1.5 !px-3">
                     <Phone size={12} /> Call Now
                   </a>
                 )}
