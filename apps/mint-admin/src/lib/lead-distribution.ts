@@ -49,7 +49,7 @@ export async function notifyAgentNewLead(opts: {
   leadName: string;
   company:  string;
   phone:    string | null;
-  email:    string;
+  email:    string | null;
   message:  string | null;
 }) {
   const { data: { user } } = await supabaseAdmin.auth.admin.getUserById(opts.agentId);
