@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import {
   Plus, Phone, ChevronDown, Loader2, X, Clock,
@@ -154,7 +155,7 @@ function StatusBadge({ status, onChange }: { status: LeadStatus; onChange: (s: L
       >
         {status} <ChevronDown size={8} />
       </button>
-      {open && (
+      {open && createPortal(
         <div
           ref={dropRef}
           className="fixed rounded-xl overflow-hidden min-w-[180px]"
@@ -175,7 +176,8 @@ function StatusBadge({ status, onChange }: { status: LeadStatus; onChange: (s: L
               </button>
             );
           })}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
