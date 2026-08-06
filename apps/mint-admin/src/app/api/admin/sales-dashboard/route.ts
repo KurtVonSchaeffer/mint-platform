@@ -28,7 +28,8 @@ export async function GET() {
 
     supabaseAdmin
       .from('leads')
-      .select('id, assigned_to, tm_status, estimated_deal_value, deal_probability, expected_close_date, created_at'),
+      .select('id, assigned_to, tm_status, estimated_deal_value, deal_probability, expected_close_date, created_at')
+      .limit(10000),
 
     supabaseAdmin
       .from('call_logs')
