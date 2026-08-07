@@ -74,7 +74,7 @@ export async function GET() {
   }
 
   const funnel = PIPELINE_STAGES.map(stage => {
-    const stageLeads = leads.filter(l => normalizeStage(l.tm_status) === stage);
+    const stageLeads = leads.filter(l => normalizeStage(l.tm_status as string | null) === stage);
     const totalValue = stageLeads.reduce((sum, l) => sum + (Number(l.estimated_deal_value) || 0), 0);
     const weightedValue = stageLeads.reduce((sum, l) => {
       const prob = Number(l.deal_probability) || 0;
@@ -84,11 +84,11 @@ export async function GET() {
   });
 
   const totalPipeline = leads
-    .filter(l => !['Won', 'Lost', 'Other', 'Not Qualified'].includes(normalizeStage(l.tm_status)))
+    .filter(l => !['Won', 'Lost', 'Other', 'Not Qualified'].includes(normalizeStage(l.tm_status as string | null)))
     .reduce((s, l) => s + (Number(l.estimated_deal_value) || 0), 0);
 
   const weightedPipeline = leads
-    .filter(l => !['Won', 'Lost', 'Other', 'Not Qualified'].includes(normalizeStage(l.tm_status)))
+    .filter(l => !['Won', 'Lost', 'Other', 'Not Qualified'].includes(normalizeStage(l.tm_status as string | null)))
     .reduce((s, l) => s + (Number(l.estimated_deal_value) || 0) * ((Number(l.deal_probability) || 0) / 100), 0);
 
   // Per-agent aggregation
@@ -101,18 +101,18 @@ export async function GET() {
     const agentCalls = calls.filter(c => c.agent_id === u.id);
     const agentComms = commissions.filter(c => c.agent_id === u.id);
 
-    const won = agentLeads.filter(l => normalizeStage(l.tm_status) === 'Won').length;
+    const won = agentLeads.filter(l => normalizeStage(l.tm_status as string | null) === 'Won').length;
     const demosScheduled = agentLeads.filter(l =>
-      ['Demo Scheduled', 'Demo Completed'].includes(normalizeStage(l.tm_status))
+      ['Demo Scheduled', 'Demo Completed'].includes(normalizeStage(l.tm_status as string | null))
     ).length;
     const proposalsSent = agentLeads.filter(l =>
-      ['Proposal Sent', 'Negotiation'].includes(normalizeStage(l.tm_status))
+      ['Proposal Sent', 'Negotiation'].includes(normalizeStage(l.tm_status as string | null))
     ).length;
     const callsToday = agentCalls.filter(c => c.called_at?.startsWith(today)).length;
     const totalCalls = agentCalls.length;
     const convRate = agentLeads.length > 0 ? Math.round((won / agentLeads.length) * 100) : 0;
     const pipelineValue = agentLeads
-      .filter(l => !['Won', 'Lost', 'Other', 'Not Qualified'].includes(normalizeStage(l.tm_status)))
+      .filter(l => !['Won', 'Lost', 'Other', 'Not Qualified'].includes(normalizeStage(l.tm_status as string | null)))
       .reduce((s, l) => s + (Number(l.estimated_deal_value) || 0), 0);
 
     const commPending = agentComms
@@ -146,8 +146,8 @@ export async function GET() {
     agents,
     summary: {
       totalLeads:      leads.length,
-      totalWon:        leads.filter(l => normalizeStage(l.tm_status) === 'Won').length,
-      totalLost:       leads.filter(l => normalizeStage(l.tm_status) === 'Lost').length,
+      totalWon:        leads.filter(l => normalizeStage(l.tm_status as string | null) === 'Won').length,
+      totalLost:       leads.filter(l => normalizeStage(l.tm_status as string | null) === 'Lost').length,
       totalPipeline,
       weightedPipeline,
       activeTelemarketers: telemarketers.length,

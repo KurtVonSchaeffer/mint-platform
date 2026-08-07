@@ -4,6 +4,8 @@ import { supabaseAdmin } from '@/lib/supabase';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+type Lead = { tm_status: string | null; estimated_deal_value: number | null; deal_probability: number | null; expected_close_date: string | null };
+
 function startOf(unit: 'day' | 'week' | 'month') {
   const d = new Date();
   if (unit === 'day')   { d.setHours(0, 0, 0, 0); return d.toISOString(); }
@@ -26,7 +28,7 @@ export async function GET(req: NextRequest) {
   async function fetchAllAgentLeads() {
     const size = 1000;
     let page = 0;
-    const all: Record<string, unknown>[] = [];
+    const all: Lead[] = [];
     while (true) {
       const from = page * size;
       const { data } = await supabaseAdmin

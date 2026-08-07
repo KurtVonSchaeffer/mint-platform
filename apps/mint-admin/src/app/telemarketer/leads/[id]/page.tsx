@@ -540,7 +540,8 @@ export default function LeadDetailPage() {
   const [logCallOpen,   setLogCallOpen]   = useState(false);
   const [addNoteOpen,   setAddNoteOpen]   = useState(false);
   const [scheduleOpen,  setScheduleOpen]  = useState(false);
-  const [bookDemoOpen,    setBookDemoOpen]    = useState(false);
+  const [bookDemoOpen,  setBookDemoOpen]  = useState(false);
+  const [callDuration,  setCallDuration]  = useState('');
   const [proposalOpen,    setProposalOpen]    = useState(false);
   const [editOpen,        setEditOpen]        = useState(false);
   // Qualification form
