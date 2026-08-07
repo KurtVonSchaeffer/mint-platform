@@ -10,6 +10,7 @@ import {
   ToggleLeft, Activity, ShieldCheck, ArrowDownToLine, Users2, SlidersHorizontal,
   LogOut, Sun, Moon, Menu, X, Bell, Plus, UserPlus, ChevronDown, ChevronRight,
   Loader2, CheckCircle2, AlertTriangle, AlertCircle, Settings, Search, TrendingUp, ClipboardCheck,
+  BarChart3, DollarSign,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { CommandPalette } from '@/components/CommandPalette';
@@ -24,7 +25,7 @@ type NavSection = { section: string };
 // Routes each role can access. super_admin gets everything.
 const ROLE_ROUTES: Record<string, string[]> = {
   super_admin:   ['*'],
-  admin:         ['/', '/clients', '/leads', '/sales', '/applications', '/pricing', '/quotes', '/invoices', '/billing', '/marketplace', '/features', '/usage', '/compliance', '/migration', '/payroll', '/approvals'],
+  admin:         ['/', '/clients', '/leads', '/sales', '/applications', '/pricing', '/quotes', '/invoices', '/billing', '/marketplace', '/features', '/usage', '/compliance', '/migration', '/payroll', '/approvals', '/telemarketer/team', '/telemarketer/commission'],
   finance:       ['/', '/pricing', '/quotes', '/invoices', '/billing', '/payroll'],
   support:       ['/', '/clients', '/leads', '/applications'],
   manager:       ['/telemarketer', '/payroll', '/approvals'],
@@ -76,6 +77,9 @@ const nav: (NavItem | NavGroup | NavSection)[] = [
       { label: 'Portfolio Credit', href: '/marketplace/portfolio-credit', icon: PiggyBank },
     ],
   },
+  { section: 'Telemarketers' },
+  { label: 'Team Performance',  href: '/telemarketer/team',        icon: BarChart3   },
+  { label: 'Commission Centre', href: '/telemarketer/commission',  icon: DollarSign  },
   { section: 'Platform' },
   { label: 'Features',   href: '/features',  icon: ToggleLeft      },
   { label: 'API Usage',  href: '/usage',      icon: Activity        },
@@ -692,8 +696,18 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 py-3 px-2.5 space-y-0.5 overflow-y-auto relative">
-          {nav.filter(entry => {
-            if ('section' in entry) return true;
+          {nav.filter((entry, idx) => {
+            if ('section' in entry) {
+              // Only show section header if at least one following item (before next section) is accessible
+              const rest = nav.slice(idx + 1);
+              const nextSectionIdx = rest.findIndex(e => 'section' in e);
+              const sectionItems = nextSectionIdx === -1 ? rest : rest.slice(0, nextSectionIdx);
+              return sectionItems.some(e => {
+                if ('group' in e) return e.items.some(i => canAccess(i.href, userRole));
+                if ('section' in e) return false;
+                return canAccess(e.href, userRole);
+              });
+            }
             if ('group' in entry) return entry.items.some(i => canAccess(i.href, userRole));
             return canAccess(entry.href, userRole);
           }).map((entry, i) => {
