@@ -10,7 +10,7 @@ import { OnboardingWizard } from '@/components/OnboardingWizard';
 import { Inbox, RefreshCw, Mail, Building2, ChevronDown, ChevronLeft, ChevronRight, Plus, X, Loader2, UserPlus, FileText, UserCheck, Upload, Download, Trash2, Pencil, Calendar, Search, Filter } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
-type LeadStatus = 'new' | 'contacted' | 'qualified' | 'won' | 'lost' | 'other';
+type LeadStatus = 'new' | 'attempted' | 'contacted' | 'qualified' | 'won' | 'lost' | 'other';
 type LeadSource = 'marketing-site' | 'referral' | 'manual';
 
 interface Lead {
@@ -91,12 +91,13 @@ const AGENT_COLORS = ['#A78BFA', '#34D399', '#60A5FA', '#FB923C', '#F472B6', '#F
 type Agent = { id: string; name: string; initials: string; color: string };
 
 const STATUS_CONFIG: Record<LeadStatus, { label: string; bg: string; border: string; color: string }> = {
-  new:       { label: 'New',       bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)',  color: 'var(--color-amber)'  },
-  contacted: { label: 'Contacted', bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.25)',  color: 'var(--color-sky)'    },
-  qualified: { label: 'Qualified', bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.3)',   color: 'var(--color-violet)' },
-  won:       { label: 'Won',       bg: 'rgba(52,211,153,0.1)',  border: 'rgba(52,211,153,0.25)',  color: 'var(--color-green)'  },
-  lost:      { label: 'Lost',      bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', color: 'var(--color-red)'    },
-  other:     { label: 'Other',     bg: 'rgba(156,163,175,0.1)', border: 'rgba(156,163,175,0.25)', color: '#9CA3AF'             },
+  new:       { label: 'New',              bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)',  color: 'var(--color-amber)'  },
+  attempted: { label: 'Attempted',        bg: 'rgba(251,146,60,0.1)',  border: 'rgba(251,146,60,0.25)',  color: '#FB923C'             },
+  contacted: { label: 'Contacted',        bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.25)',  color: 'var(--color-sky)'    },
+  qualified: { label: 'Qualified',        bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.3)',   color: 'var(--color-violet)' },
+  won:       { label: 'Won',              bg: 'rgba(52,211,153,0.1)',  border: 'rgba(52,211,153,0.25)',  color: 'var(--color-green)'  },
+  lost:      { label: 'Lost',             bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', color: 'var(--color-red)'    },
+  other:     { label: 'Other',            bg: 'rgba(156,163,175,0.1)', border: 'rgba(156,163,175,0.25)', color: '#9CA3AF'             },
 };
 
 const SOURCE_LABELS: Record<LeadSource, string> = {
@@ -647,8 +648,16 @@ export default function LeadsPage() {
     setToast({ kind: 'success', message: agent ? `Assigned to ${agent.name}` : 'Lead unassigned' });
   }
 
+  // Derive display status from tmStatus so "Attempted Contact" leads show in their own bucket
+  // without requiring a DB enum migration (they're stored as 'new' in the DB).
+  function getEffectiveStatus(l: Lead): LeadStatus {
+    if (l.status === 'new' && l.tmStatus === 'Attempted Contact') return 'attempted';
+    return l.status;
+  }
+
   const byStatus = leads.reduce<Record<string, number>>((acc, l) => {
-    acc[l.status] = (acc[l.status] ?? 0) + 1;
+    const s = getEffectiveStatus(l);
+    acc[s] = (acc[s] ?? 0) + 1;
     return acc;
   }, {});
 
@@ -675,7 +684,7 @@ export default function LeadsPage() {
              l.company.toLowerCase().includes(q) ||
              (l.email?.toLowerCase().includes(q) ?? false);
     })
-    .filter(l => !statusFilter || l.status === statusFilter)
+    .filter(l => !statusFilter || getEffectiveStatus(l) === statusFilter)
     .filter(l => !agentFilter  || l.assignedTo === agentFilter)
     .filter(l => {
       if (!datePreset) return true;
@@ -796,7 +805,7 @@ export default function LeadsPage() {
         </div>
 
         {/* KPI strip — click to filter */}
-        <div className="grid grid-cols-5 gap-3">
+        <div className="grid grid-cols-4 gap-3">
           {(Object.entries(STATUS_CONFIG) as [LeadStatus, typeof STATUS_CONFIG[LeadStatus]][]).map(([k, cfg]) => {
             const isActive = statusFilter === k;
             return (
