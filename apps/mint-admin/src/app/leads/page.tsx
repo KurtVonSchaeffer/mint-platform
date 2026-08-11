@@ -10,7 +10,7 @@ import { OnboardingWizard } from '@/components/OnboardingWizard';
 import { Inbox, RefreshCw, Mail, Building2, ChevronDown, ChevronLeft, ChevronRight, Plus, X, Loader2, UserPlus, FileText, UserCheck, Upload, Download, Trash2, Pencil, Calendar, Search, Filter } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
-type LeadStatus = 'new' | 'attempted' | 'contacted' | 'qualified' | 'won' | 'lost' | 'other';
+type LeadStatus = 'new' | 'attempted' | 'call_again' | 'contacted' | 'qualified' | 'won' | 'lost' | 'not_interested' | 'other';
 type LeadSource = 'marketing-site' | 'referral' | 'manual';
 
 interface Lead {
@@ -91,13 +91,15 @@ const AGENT_COLORS = ['#A78BFA', '#34D399', '#60A5FA', '#FB923C', '#F472B6', '#F
 type Agent = { id: string; name: string; initials: string; color: string };
 
 const STATUS_CONFIG: Record<LeadStatus, { label: string; bg: string; border: string; color: string }> = {
-  new:       { label: 'New',              bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)',  color: 'var(--color-amber)'  },
-  attempted: { label: 'Attempted',        bg: 'rgba(251,146,60,0.1)',  border: 'rgba(251,146,60,0.25)',  color: '#FB923C'             },
-  contacted: { label: 'Contacted',        bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.25)',  color: 'var(--color-sky)'    },
-  qualified: { label: 'Qualified',        bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.3)',   color: 'var(--color-violet)' },
-  won:       { label: 'Won',              bg: 'rgba(52,211,153,0.1)',  border: 'rgba(52,211,153,0.25)',  color: 'var(--color-green)'  },
-  lost:      { label: 'Lost',             bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', color: 'var(--color-red)'    },
-  other:     { label: 'Other',            bg: 'rgba(156,163,175,0.1)', border: 'rgba(156,163,175,0.25)', color: '#9CA3AF'             },
+  new:            { label: 'New',            bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)',  color: 'var(--color-amber)'  },
+  attempted:      { label: 'Attempted',      bg: 'rgba(251,146,60,0.1)',  border: 'rgba(251,146,60,0.25)',  color: '#FB923C'             },
+  call_again:     { label: 'Call Again',     bg: 'rgba(6,182,212,0.1)',   border: 'rgba(6,182,212,0.25)',   color: '#06B6D4'             },
+  contacted:      { label: 'Contacted',      bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.25)',  color: 'var(--color-sky)'    },
+  qualified:      { label: 'Qualified',      bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.3)',   color: 'var(--color-violet)' },
+  won:            { label: 'Won',            bg: 'rgba(52,211,153,0.1)',  border: 'rgba(52,211,153,0.25)',  color: 'var(--color-green)'  },
+  lost:           { label: 'Lost',           bg: 'rgba(248,113,113,0.1)', border: 'rgba(248,113,113,0.25)', color: 'var(--color-red)'    },
+  not_interested: { label: 'Not Interested', bg: 'rgba(251,113,133,0.1)', border: 'rgba(251,113,133,0.25)', color: '#FB7185'             },
+  other:          { label: 'Other',          bg: 'rgba(156,163,175,0.1)', border: 'rgba(156,163,175,0.25)', color: '#9CA3AF'             },
 };
 
 const SOURCE_LABELS: Record<LeadSource, string> = {
@@ -648,10 +650,16 @@ export default function LeadsPage() {
     setToast({ kind: 'success', message: agent ? `Assigned to ${agent.name}` : 'Lead unassigned' });
   }
 
-  // Derive display status from tmStatus so "Attempted Contact" leads show in their own bucket
-  // without requiring a DB enum migration (they're stored as 'new' in the DB).
+  // Derive display status from tmStatus — splits coarse DB buckets into granular admin cards.
+  // DB stores 'new' for attempted/call-again leads and 'lost' for not-interested leads;
+  // tmStatus carries the true granular intent without needing a DB enum migration.
   function getEffectiveStatus(l: Lead): LeadStatus {
-    if (l.status === 'new' && l.tmStatus === 'Attempted Contact') return 'attempted';
+    const tm = l.tmStatus ?? '';
+    if (l.status === 'new') {
+      if (['Attempted Contact', 'Unreachable'].includes(tm)) return 'attempted';
+      if (['Call Again', 'Call Back', 'Pending'].includes(tm))  return 'call_again';
+    }
+    if (l.status === 'lost' && tm === 'Not Interested') return 'not_interested';
     return l.status;
   }
 
@@ -685,7 +693,7 @@ export default function LeadsPage() {
              (l.email?.toLowerCase().includes(q) ?? false);
     })
     .filter(l => !statusFilter || getEffectiveStatus(l) === statusFilter)
-    .filter(l => !agentFilter  || l.assignedTo === agentFilter)
+    .filter(l => !agentFilter  || (agentFilter === 'unassigned' ? !l.assignedTo : l.assignedTo === agentFilter))
     .filter(l => {
       if (!datePreset) return true;
       const created = new Date(l.createdAt);
@@ -805,7 +813,7 @@ export default function LeadsPage() {
         </div>
 
         {/* KPI strip — click to filter */}
-        <div className="grid grid-cols-4 gap-3">
+        <div className="grid grid-cols-5 gap-3">
           {(Object.entries(STATUS_CONFIG) as [LeadStatus, typeof STATUS_CONFIG[LeadStatus]][]).map(([k, cfg]) => {
             const isActive = statusFilter === k;
             return (
@@ -842,6 +850,27 @@ export default function LeadsPage() {
         {agents.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[10px] font-bold uppercase tracking-wider shrink-0" style={{ color: 'var(--color-text3)' }}>Agent</span>
+            {/* Unassigned chip */}
+            {(() => {
+              const unassignedCount = leads.filter(l => !l.assignedTo).length;
+              const isActive = agentFilter === 'unassigned';
+              return (
+                <button
+                  onClick={() => setAgentFilter(prev => prev === 'unassigned' ? null : 'unassigned')}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all"
+                  style={isActive
+                    ? { background: 'rgba(156,163,175,0.15)', border: '1px solid rgba(156,163,175,0.4)', color: '#9CA3AF', transform: 'translateY(-1px)' }
+                    : { border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
+                >
+                  <span className="w-4 h-4 rounded-full inline-flex items-center justify-center text-[8px] font-bold shrink-0"
+                    style={{ background: '#9CA3AF', color: '#fff' }}>
+                    ?
+                  </span>
+                  Unassigned
+                  <span className="text-[10px] opacity-60">{unassignedCount}</span>
+                </button>
+              );
+            })()}
             {agents.map(agent => {
               const isActive = agentFilter === agent.id;
               const agentLeadCount = leads.filter(l => l.assignedTo === agent.id).length;
@@ -982,7 +1011,7 @@ export default function LeadsPage() {
                   {(() => {
                     const parts: string[] = [];
                     if (statusFilter) parts.push(STATUS_CONFIG[statusFilter].label);
-                    if (agentFilter) parts.push(agents.find(a => a.id === agentFilter)?.name.split(' ')[0] ?? '');
+                    if (agentFilter) parts.push(agentFilter === 'unassigned' ? 'Unassigned' : (agents.find(a => a.id === agentFilter)?.name.split(' ')[0] ?? ''));
                     return parts.length ? ` · ${parts.join(' · ')}` : '';
                   })()}
                 </span>
@@ -1005,6 +1034,16 @@ export default function LeadsPage() {
                   </button>
                 )}
                 {agentFilter && (() => {
+                  if (agentFilter === 'unassigned') return (
+                    <button
+                      onClick={() => setAgentFilter(null)}
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full transition-colors"
+                      style={{ background: 'rgba(156,163,175,0.12)', color: '#9CA3AF', border: '1px solid rgba(156,163,175,0.3)' }}
+                      title="Clear agent filter"
+                    >
+                      ✕ Unassigned
+                    </button>
+                  );
                   const agent = agents.find(a => a.id === agentFilter);
                   return agent ? (
                     <button
