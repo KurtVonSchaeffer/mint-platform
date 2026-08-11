@@ -112,7 +112,11 @@ const SORT_LABELS: Record<SortOption, string> = {
   followup: 'Follow-up Date',
 };
 
-const CALL_OUTCOMES = ['Answered', 'Voicemail', 'No Answer', 'Callback', 'Not Interested'] as const;
+const CALL_OUTCOMES = [
+  { label: 'Spoke',          value: 'Spoke',          color: '#34D399', bg: 'rgba(52,211,153,0.12)',  border: 'rgba(52,211,153,0.3)'  },
+  { label: 'No Answer',      value: 'No Answer',      color: '#FB923C', bg: 'rgba(251,146,60,0.12)', border: 'rgba(251,146,60,0.3)'  },
+  { label: 'Not Interested', value: 'Not Interested', color: '#FB7185', bg: 'rgba(251,113,133,0.12)', border: 'rgba(251,113,133,0.3)' },
+] as const;
 
 // ─── StatusBadge ─────────────────────────────────────────────────────────────
 
@@ -252,47 +256,43 @@ function AddLeadModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
 // ─── CallLogModal ─────────────────────────────────────────────────────────────
 
 function CallLogModal({ lead, onClose }: { lead: Lead; onClose: () => void }) {
-  const [outcome, setOutcome] = useState<string>('Answered');
-  const [duration, setDuration] = useState('');
-  const [notes, setNotes] = useState('');
+  const [notes,  setNotes]  = useState('');
   const [saving, setSaving] = useState(false);
+  const [err,    setErr]    = useState('');
 
-  async function submit(e: React.FormEvent) {
-    e.preventDefault();
+  async function log(outcomeValue: string) {
     setSaving(true);
-    await fetch('/api/telemarketer/call-logs', {
+    setErr('');
+    const aid = await getAgentId();
+    if (!aid) { setErr('Could not resolve your agent ID — please refresh.'); setSaving(false); return; }
+    const res = await fetch('/api/telemarketer/call-logs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        lead_id:  lead.id,
-        outcome,
-        duration: duration !== '' ? Number(duration) : null,
-        notes,
-      }),
+      body: JSON.stringify({ lead_id: lead.id, agent_id: aid, outcome: outcomeValue, notes: notes.trim() || null }),
     });
     setSaving(false);
+    if (!res.ok) { setErr('Failed to save — try again.'); return; }
     onClose();
   }
 
   return (
     <div className="confirm-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="bento-card w-full max-w-sm p-7" style={{ animation: 'scale-in 0.25s cubic-bezier(0.16,1,0.3,1) both' }}>
+      <div className="bento-card w-full max-w-sm p-6" style={{ animation: 'scale-in 0.25s cubic-bezier(0.16,1,0.3,1) both' }}>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-lg" style={{ color: 'var(--color-text)' }}>Log Call</h3>
+          <h3 className="font-bold text-base" style={{ color: 'var(--color-text)' }}>Log Call</h3>
           <button onClick={onClose} style={{ color: 'var(--color-text3)' }}><X size={16} /></button>
         </div>
 
-        {/* Phone number dial block */}
+        {/* Phone block */}
         <div className="rounded-xl p-4 mb-5 flex items-center justify-between gap-3"
           style={{ background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.18)' }}>
           <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: 'rgba(52,211,153,0.6)' }}>
+            <p className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: 'rgba(52,211,153,0.55)' }}>
               {lead.clientName}
             </p>
             {lead.phone
               ? <p className="text-xl font-bold font-mono tracking-wide" style={{ color: '#34D399' }}>{lead.phone}</p>
-              : <p className="text-sm italic" style={{ color: 'var(--color-text3)' }}>No phone on file</p>
-            }
+              : <p className="text-sm italic" style={{ color: 'var(--color-text3)' }}>No phone on file</p>}
           </div>
           {lead.phone && (
             <a href={`tel:${lead.phone}`}
@@ -303,51 +303,35 @@ function CallLogModal({ lead, onClose }: { lead: Lead; onClose: () => void }) {
             </a>
           )}
         </div>
-        <form onSubmit={submit} className="space-y-3">
-          <div>
-            <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Outcome</label>
-            <select
-              required
-              className="field-input"
-              value={outcome}
-              onChange={e => setOutcome(e.target.value)}
+
+        {/* Optional notes */}
+        <textarea
+          className="field-input resize-none w-full mb-4"
+          rows={2}
+          placeholder="Notes (optional) — what was discussed…"
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+        />
+
+        {/* One-tap outcome buttons */}
+        <p className="text-[10px] font-bold uppercase tracking-wider mb-2.5" style={{ color: 'var(--color-text3)' }}>
+          How did it go?
+        </p>
+        <div className="grid grid-cols-3 gap-2">
+          {CALL_OUTCOMES.map(o => (
+            <button
+              key={o.value}
+              disabled={saving}
+              onClick={() => log(o.value)}
+              className="py-3 px-2 rounded-xl text-xs font-bold text-center transition-all disabled:opacity-50"
+              style={{ background: o.bg, color: o.color, border: `1px solid ${o.border}` }}
             >
-              {CALL_OUTCOMES.map(o => (
-                <option key={o} value={o}>{o}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Duration (minutes)</label>
-            <input
-              type="number"
-              min="0"
-              step="1"
-              className="field-input"
-              placeholder="e.g. 5"
-              value={duration}
-              onChange={e => setDuration(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Notes</label>
-            <textarea
-              className="field-input resize-none"
-              rows={3}
-              placeholder="What was discussed…"
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-            />
-          </div>
-          <div className="flex gap-2 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 py-2 rounded-xl text-sm"
-              style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>Cancel</button>
-            <button type="submit" disabled={saving} className="btn-purple btn-shine flex-1 inline-flex items-center justify-center gap-1.5">
-              {saving ? <Loader2 size={13} className="animate-spin" /> : <Phone size={13} />}
-              {saving ? 'Saving…' : 'Save Log'}
+              {saving ? <Loader2 size={12} className="animate-spin mx-auto" /> : o.label}
             </button>
-          </div>
-        </form>
+          ))}
+        </div>
+
+        {err && <p className="text-xs mt-3 text-center" style={{ color: 'var(--color-red)' }}>{err}</p>}
       </div>
     </div>
   );
