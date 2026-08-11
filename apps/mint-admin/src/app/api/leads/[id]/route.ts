@@ -38,7 +38,7 @@ const VALID_TM_STATUSES = [
   // Current pipeline stages
   'New Lead', 'Attempted Contact', 'Contacted', 'Interested',
   'Demo Scheduled', 'Demo Completed', 'Proposal Requested', 'Proposal Sent',
-  'Negotiation', 'Won', 'Lost', 'Other', 'Not Qualified',
+  'Negotiation', 'Won', 'Lost', 'Not Interested', 'Other', 'Not Qualified',
 ];
 
 type Params = { params: Promise<{ id: string }> };

@@ -67,12 +67,12 @@ export async function GET() {
   const PIPELINE_STAGES = [
     'New Lead', 'Attempted Contact', 'Contacted', 'Interested',
     'Demo Scheduled', 'Demo Completed', 'Proposal Requested', 'Proposal Sent',
-    'Negotiation', 'Won', 'Lost', 'Other',
+    'Negotiation', 'Won', 'Lost', 'Not Interested', 'Other',
   ];
   const LEGACY_MAP: Record<string, string> = {
     Pending: 'New Lead', 'Call Again': 'Contacted', 'Call Back': 'Contacted',
     Unreachable: 'Attempted Contact', 'Demo Booked': 'Demo Scheduled',
-    Quoted: 'Proposal Sent', Converted: 'Won', 'Not Interested': 'Lost',
+    Quoted: 'Proposal Sent', Converted: 'Won',
     'Not Qualified': 'Other',
   };
   function normalizeStage(s: string | null) {
@@ -91,11 +91,11 @@ export async function GET() {
   });
 
   const totalPipeline = leads
-    .filter(l => !['Won', 'Lost', 'Other', 'Not Qualified'].includes(normalizeStage(l.tm_status as string | null)))
+    .filter(l => !['Won', 'Lost', 'Not Interested', 'Other', 'Not Qualified'].includes(normalizeStage(l.tm_status as string | null)))
     .reduce((s, l) => s + (Number(l.estimated_deal_value) || 0), 0);
 
   const weightedPipeline = leads
-    .filter(l => !['Won', 'Lost', 'Other', 'Not Qualified'].includes(normalizeStage(l.tm_status as string | null)))
+    .filter(l => !['Won', 'Lost', 'Not Interested', 'Other', 'Not Qualified'].includes(normalizeStage(l.tm_status as string | null)))
     .reduce((s, l) => s + (Number(l.estimated_deal_value) || 0) * ((Number(l.deal_probability) || 0) / 100), 0);
 
   // Per-agent aggregation (calls dataset is already filtered to today by the DB query above)
@@ -118,7 +118,7 @@ export async function GET() {
     const totalCalls = agentCalls.length; // month-to-date
     const convRate = agentLeads.length > 0 ? Math.round((won / agentLeads.length) * 100) : 0;
     const pipelineValue = agentLeads
-      .filter(l => !['Won', 'Lost', 'Other', 'Not Qualified'].includes(normalizeStage(l.tm_status as string | null)))
+      .filter(l => !['Won', 'Lost', 'Not Interested', 'Other', 'Not Qualified'].includes(normalizeStage(l.tm_status as string | null)))
       .reduce((s, l) => s + (Number(l.estimated_deal_value) || 0), 0);
 
     const commPending = agentComms

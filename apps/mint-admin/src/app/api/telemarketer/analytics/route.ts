@@ -93,8 +93,8 @@ export async function GET(req: NextRequest) {
   const STAGES = [
     'New Lead', 'Attempted Contact', 'Contacted', 'Interested',
     'Demo Scheduled', 'Demo Completed', 'Proposal Requested', 'Proposal Sent',
-    'Negotiation', 'Won', 'Lost', 'Other',
-    'Pending', 'Call Again', 'Call Back', 'Unreachable', 'Demo Booked', 'Quoted', 'Converted', 'Not Interested',
+    'Negotiation', 'Won', 'Lost', 'Not Interested', 'Other',
+    'Pending', 'Call Again', 'Call Back', 'Unreachable', 'Demo Booked', 'Quoted', 'Converted',
   ];
   const NORMALIZE: Record<string, string> = { 'Not Qualified': 'Other' };
 

@@ -96,7 +96,7 @@ const STATUS_CFG: Record<LeadStatus, { bg: string; border: string; color: string
 const PIPELINE_STATUSES: LeadStatus[] = [
   'New Lead', 'Attempted Contact', 'Contacted', 'Interested',
   'Demo Scheduled', 'Demo Completed', 'Proposal Requested', 'Proposal Sent',
-  'Negotiation', 'Won', 'Lost', 'Other',
+  'Negotiation', 'Won', 'Lost', 'Not Interested', 'Other',
 ];
 
 import { getAgentId } from '@/lib/telemarketer-agent';
@@ -502,9 +502,10 @@ export default function TelemarketerLeadsPage() {
       body: JSON.stringify({ tm_status: status }),
     });
     const autoOutcome =
-      status === 'Contacted'         ? 'Spoke'     :
-      status === 'Attempted Contact' ? 'No Answer' :
-      status === 'Other'             ? 'No Answer' : null;
+      status === 'Contacted'         ? 'Spoke'          :
+      status === 'Attempted Contact' ? 'No Answer'      :
+      status === 'Not Interested'    ? 'Not Interested' :
+      status === 'Other'             ? 'No Answer'      : null;
     if (autoOutcome) {
       // Resolve agent ID once — already loaded when the page mounted
       const aid = await getAgentId();
@@ -694,100 +695,97 @@ export default function TelemarketerLeadsPage() {
         </div>
       </motion.div>
 
-      {/* Status filter strip */}
-      <motion.div className="flex gap-2 flex-wrap"
+      {/* Filter strip + sort — same row */}
+      <motion.div className="flex items-center gap-2"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.12, ease: EASE }}>
-        <button
-          onClick={() => setFilterStatus(null)}
-          className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-          style={filterStatus === null
-            ? { background: 'rgba(124,58,237,0.15)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.3)' }
-            : { background: 'var(--color-surface2)', color: 'var(--color-text3)', border: '1px solid var(--color-border2)' }}
-        >
-          All ({leads.length})
-        </button>
-        {ALL_STATUSES.map(s => {
-          const cfg = STATUS_CFG[s];
-          const count = counts[s] ?? 0;
-          if (count === 0) return null;
-          return (
-            <button key={s}
-              onClick={() => setFilterStatus(prev => prev === s ? null : s)}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-              style={filterStatus === s
-                ? { background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }
-                : { background: 'var(--color-surface2)', color: 'var(--color-text3)', border: '1px solid var(--color-border2)' }}
-            >
-              {s} ({count})
-            </button>
-          );
-        })}
+        {/* Scrollable pill row */}
+        <div className="flex gap-2 flex-1 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
+          <button
+            onClick={() => setFilterStatus(null)}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0"
+            style={filterStatus === null
+              ? { background: 'rgba(124,58,237,0.15)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.3)' }
+              : { background: 'var(--color-surface2)', color: 'var(--color-text3)', border: '1px solid var(--color-border2)' }}
+          >
+            All ({leads.length})
+          </button>
+          {ALL_STATUSES.map(s => {
+            const cfg = STATUS_CFG[s];
+            const count = counts[s] ?? 0;
+            if (count === 0) return null;
+            return (
+              <button key={s}
+                onClick={() => setFilterStatus(prev => prev === s ? null : s)}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0"
+                style={filterStatus === s
+                  ? { background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }
+                  : { background: 'var(--color-surface2)', color: 'var(--color-text3)', border: '1px solid var(--color-border2)' }}
+              >
+                {s} ({count})
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Sort dropdown — anchored to the right */}
+        <div className="relative shrink-0">
+          <button
+            onClick={() => setSortOpen(o => !o)}
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
+            style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)', background: 'var(--color-surface2)' }}
+          >
+            {SORT_LABELS[sortBy]}
+            <ChevronDown size={11} />
+          </button>
+          {sortOpen && (
+            <>
+              <div className="fixed inset-0 z-10" onClick={() => setSortOpen(false)} />
+              <div
+                className="absolute right-0 top-full mt-1 z-20 rounded-xl overflow-hidden min-w-[160px]"
+                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)' }}
+              >
+                {(Object.entries(SORT_LABELS) as [SortOption, string][]).map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => { setSortBy(key); setSortOpen(false); }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors"
+                    style={{ color: sortBy === key ? 'var(--color-violet)' : 'var(--color-text2)' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: sortBy === key ? 'var(--color-violet)' : 'transparent' }} />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       </motion.div>
 
-      {/* Search + sort controls */}
+      {/* Search bar */}
       {!loading && leads.length > 0 && (
-        <div className="flex items-center gap-3 flex-wrap">
-          {/* Search */}
-          <div className="relative flex-1 min-w-[220px]">
-            <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--color-text3)' }} />
-            <input
-              type="text"
-              placeholder="Search by name, company, or phone…"
-              className="field-input"
-              style={{ paddingLeft: 32 }}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-            {search && (
-              <button
-                onClick={() => setSearch('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
-                style={{ color: 'var(--color-text3)' }}
-                title="Clear search"
-              >
-                <X size={12} />
-              </button>
-            )}
-          </div>
-
-          {/* Sort dropdown */}
-          <div className="relative">
+        <div className="relative">
+          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--color-text3)' }} />
+          <input
+            type="text"
+            placeholder="Search by name, company, or phone…"
+            className="field-input w-full"
+            style={{ paddingLeft: 32 }}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+          {search && (
             <button
-              onClick={() => setSortOpen(o => !o)}
-              className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors whitespace-nowrap"
-              style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)', background: 'var(--color-surface2)' }}
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+              style={{ color: 'var(--color-text3)' }}
+              title="Clear search"
             >
-              <span className="text-xs">{SORT_LABELS[sortBy]}</span>
-              <ChevronDown size={13} />
+              <X size={12} />
             </button>
-            {sortOpen && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setSortOpen(false)} />
-                <div
-                  className="absolute right-0 top-full mt-1 z-20 rounded-xl overflow-hidden min-w-[160px]"
-                  style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)' }}
-                >
-                  {(Object.entries(SORT_LABELS) as [SortOption, string][]).map(([key, label]) => (
-                    <button
-                      key={key}
-                      onClick={() => { setSortBy(key); setSortOpen(false); }}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors"
-                      style={{ color: sortBy === key ? 'var(--color-violet)' : 'var(--color-text2)' }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                    >
-                      <span
-                        className="w-1.5 h-1.5 rounded-full shrink-0"
-                        style={{ background: sortBy === key ? 'var(--color-violet)' : 'transparent' }}
-                      />
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+          )}
         </div>
       )}
 

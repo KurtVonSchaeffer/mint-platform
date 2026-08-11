@@ -16,14 +16,14 @@ import { useTwilioDevice } from '@/hooks/useTwilioDevice';
 type LeadStatus =
   | 'New Lead' | 'Attempted Contact' | 'Contacted' | 'Interested'
   | 'Demo Scheduled' | 'Demo Completed' | 'Proposal Requested' | 'Proposal Sent'
-  | 'Negotiation' | 'Won' | 'Lost' | 'Other'
+  | 'Negotiation' | 'Won' | 'Lost' | 'Not Interested' | 'Other'
   // Legacy values
   | 'Pending' | 'Call Again' | 'Call Back' | 'Unreachable' | 'Demo Booked' | 'Quoted' | 'Converted';
 
 const PIPELINE_STATUSES: LeadStatus[] = [
   'New Lead', 'Attempted Contact', 'Contacted', 'Interested',
   'Demo Scheduled', 'Demo Completed', 'Proposal Requested', 'Proposal Sent',
-  'Negotiation', 'Won', 'Lost', 'Other',
+  'Negotiation', 'Won', 'Lost', 'Not Interested', 'Other',
 ];
 
 const TIMELINE_STEPS = [
@@ -747,9 +747,10 @@ export default function LeadDetailPage() {
       body: JSON.stringify({ tm_status: s }),
     });
     const autoOutcome =
-      s === 'Contacted'         ? 'Spoke'     :
-      s === 'Attempted Contact' ? 'No Answer' :
-      s === 'Other'             ? 'No Answer' : null;
+      s === 'Contacted'         ? 'Spoke'          :
+      s === 'Attempted Contact' ? 'No Answer'      :
+      s === 'Not Interested'    ? 'Not Interested' :
+      s === 'Other'             ? 'No Answer'      : null;
     if (autoOutcome && agentId) {
       await fetch('/api/telemarketer/call-logs', {
         method: 'POST',

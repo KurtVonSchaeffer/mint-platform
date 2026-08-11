@@ -33,6 +33,7 @@ const STAGES = [
   { id: 'Negotiation',       color: '#34D399', rgb: '52,211,153',  icon: Scale,           tip: 'Working out the details'           },
   { id: 'Won',               color: '#10B981', rgb: '16,185,129',  icon: Trophy,          tip: 'Deal closed. Commission incoming.' },
   { id: 'Lost',              color: '#F87171', rgb: '248,113,113', icon: XCircle,         tip: 'Mark as lost and move on'          },
+  { id: 'Not Interested',    color: '#FB7185', rgb: '251,113,133', icon: EyeOff,          tip: 'Lead declined — not a fit'         },
   { id: 'Other',             color: '#6B7280', rgb: '107,114,128', icon: MoreHorizontal,  tip: 'Does not fit any other stage'      },
 ];
 
@@ -43,9 +44,8 @@ const LEGACY_MAP: Record<string, string> = {
   Unreachable:      'Attempted Contact',
   'Demo Booked':    'Demo Scheduled',
   Quoted:           'Proposal Sent',
-  Converted:        'Won',
-  'Not Interested': 'Lost',
-  'Not Qualified':  'Other',
+  Converted:       'Won',
+  'Not Qualified': 'Other',
 };
 
 function normalizeStatus(status: string | null): string {
@@ -75,7 +75,7 @@ function initials(name: string) {
 const STAGE_SCORES: Record<string, number> = {
   'New Lead': 10, 'Attempted Contact': 20, 'Contacted': 35, 'Interested': 50,
   'Demo Scheduled': 65, 'Demo Completed': 72, 'Proposal Sent': 80,
-  'Negotiation': 90, 'Won': 100, 'Lost': 5,
+  'Negotiation': 90, 'Won': 100, 'Lost': 5, 'Not Interested': 5,
 };
 
 function leadScore(lead: Lead): number {
@@ -184,9 +184,10 @@ export default function PipelinePage() {
       body: JSON.stringify({ tm_status: newStage }),
     });
     const autoOutcome =
-      newStage === 'Contacted'         ? 'Spoke'     :
-      newStage === 'Attempted Contact' ? 'No Answer' :
-      newStage === 'Other'             ? 'No Answer' : null;
+      newStage === 'Contacted'         ? 'Spoke'          :
+      newStage === 'Attempted Contact' ? 'No Answer'      :
+      newStage === 'Not Interested'    ? 'Not Interested' :
+      newStage === 'Other'             ? 'No Answer'      : null;
     if (autoOutcome && agentIdRef.current) {
       fetch('/api/telemarketer/call-logs', {
         method: 'POST',
