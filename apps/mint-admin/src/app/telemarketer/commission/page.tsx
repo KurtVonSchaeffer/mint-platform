@@ -80,7 +80,7 @@ export default function CommissionPage() {
 
   const filtered          = statusFilter ? rows.filter(r => r.status === statusFilter) : rows;
   const pendingCollection = rows.filter(r => r.status === 'Pending Collection').reduce((s, r) => s + r.commissionAmount, 0);
-  const commissionEarned  = rows.filter(r => r.status === 'Payroll Ready' || r.status === 'Paid').reduce((s, r) => s + r.commissionAmount, 0);
+  const commissionEarned  = rows.filter(r => ['Pending Payroll', 'Payroll Ready', 'Paid'].includes(r.status)).reduce((s, r) => s + r.commissionAmount, 0);
   const expectedPayroll   = rows.filter(r => r.status === 'Payroll Ready').reduce((s, r) => s + r.commissionAmount, 0);
   const totalPaid         = rows.filter(r => r.status === 'Paid').reduce((s, r) => s + r.commissionAmount, 0);
 

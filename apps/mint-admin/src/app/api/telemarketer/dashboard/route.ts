@@ -40,7 +40,7 @@ export async function GET(req: NextRequest) {
     .filter(c => c.status === 'Pending Collection')
     .reduce((s, c) => s + Number(c.commission_amount), 0);
   const earnedCommission = commissions
-    .filter(c => ['Payroll Ready', 'Paid'].includes(c.status))
+    .filter(c => ['Pending Payroll', 'Payroll Ready', 'Paid'].includes(c.status))
     .reduce((s, c) => s + Number(c.commission_amount), 0);
   const expectedPayroll = commissions
     .filter(c => c.status === 'Payroll Ready')
