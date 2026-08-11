@@ -8,11 +8,15 @@ export async function GET(req: NextRequest) {
   const agentId = req.nextUrl.searchParams.get('agent_id');
   if (!agentId) return NextResponse.json({ error: 'agent_id required' }, { status: 422 });
 
-  const today = new Date().toISOString().split('T')[0];
+  // SAST = UTC+2 — align "today" with the agent's calendar day
+  const SA_OFFSET_MS = 2 * 60 * 60 * 1000;
+  const nowSA = new Date(Date.now() + SA_OFFSET_MS);
+  const todayStartUTC = new Date(Date.UTC(nowSA.getUTCFullYear(), nowSA.getUTCMonth(), nowSA.getUTCDate()) - SA_OFFSET_MS);
+  const today = new Date(todayStartUTC.getTime() + SA_OFFSET_MS).toISOString().slice(0, 10); // YYYY-MM-DD in SAST
 
   const [leadsRes, callsRes, followUpsRes, clientsRes, commissionsRes] = await Promise.all([
     supabaseAdmin.from('leads').select('id, tm_status, created_at').eq('assigned_to', agentId),
-    supabaseAdmin.from('call_logs').select('id, called_at').eq('agent_id', agentId).gte('called_at', `${today}T00:00:00`),
+    supabaseAdmin.from('call_logs').select('id, called_at').eq('agent_id', agentId).gte('called_at', todayStartUTC.toISOString()),
     supabaseAdmin.from('follow_ups').select('id, scheduled_at, completed').eq('agent_id', agentId).eq('completed', false),
     supabaseAdmin.from('leads').select('id, client_stage, created_at').eq('assigned_to', agentId).in('tm_status', ['Converted', 'Won']),
     supabaseAdmin.from('commissions').select('commission_amount, status').eq('agent_id', agentId),

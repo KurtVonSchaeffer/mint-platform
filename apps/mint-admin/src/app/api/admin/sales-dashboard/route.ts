@@ -42,10 +42,17 @@ export async function GET() {
     return all;
   }
 
+  // SAST = UTC+2 — compute before queries so filters use the correct day/month boundary
+  const SA_OFFSET_MS = 2 * 60 * 60 * 1000;
+  const nowSA = new Date(Date.now() + SA_OFFSET_MS);
+  const todayStartUTC = new Date(Date.UTC(nowSA.getUTCFullYear(), nowSA.getUTCMonth(), nowSA.getUTCDate()) - SA_OFFSET_MS);
+  const monthStartUTC = new Date(Date.UTC(nowSA.getUTCFullYear(), nowSA.getUTCMonth(), 1) - SA_OFFSET_MS);
+
   const [usersRes, allLeads, callsRes, commissionsRes] = await Promise.all([
     supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
     fetchAllLeads(),
-    supabaseAdmin.from('call_logs').select('agent_id, called_at'),
+    // Filter to current month — avoids PostgREST 1000-row cap; totalCalls = month-to-date
+    supabaseAdmin.from('call_logs').select('agent_id, called_at').gte('called_at', monthStartUTC.toISOString()),
     supabaseAdmin.from('commissions').select('agent_id, commission_amount, status'),
   ]);
 
@@ -91,8 +98,7 @@ export async function GET() {
     .filter(l => !['Won', 'Lost', 'Other', 'Not Qualified'].includes(normalizeStage(l.tm_status as string | null)))
     .reduce((s, l) => s + (Number(l.estimated_deal_value) || 0) * ((Number(l.deal_probability) || 0) / 100), 0);
 
-  // Per-agent aggregation
-  const today = new Date().toISOString().split('T')[0];
+  // Per-agent aggregation (calls dataset is already filtered to today by the DB query above)
   const COLORS = ['#A78BFA', '#34D399', '#60A5FA', '#FB923C', '#F472B6', '#FBBF24'];
 
   const agents = telemarketers.map((u, i) => {
@@ -108,8 +114,8 @@ export async function GET() {
     const proposalsSent = agentLeads.filter(l =>
       ['Proposal Sent', 'Negotiation'].includes(normalizeStage(l.tm_status as string | null))
     ).length;
-    const callsToday = agentCalls.filter(c => c.called_at?.startsWith(today)).length;
-    const totalCalls = agentCalls.length;
+    const callsToday = agentCalls.filter(c => c.called_at >= todayStartUTC.toISOString()).length;
+    const totalCalls = agentCalls.length; // month-to-date
     const convRate = agentLeads.length > 0 ? Math.round((won / agentLeads.length) * 100) : 0;
     const pipelineValue = agentLeads
       .filter(l => !['Won', 'Lost', 'Other', 'Not Qualified'].includes(normalizeStage(l.tm_status as string | null)))

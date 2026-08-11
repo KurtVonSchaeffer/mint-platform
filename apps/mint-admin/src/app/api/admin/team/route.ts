@@ -23,12 +23,15 @@ export async function GET() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const now        = new Date();
-  const today      = now.toISOString().split('T')[0];
-  const weekStart  = new Date(now);
-  weekStart.setDate(now.getDate() - ((now.getDay() + 6) % 7)); // Monday
-  weekStart.setHours(0, 0, 0, 0);
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  // SAST = UTC+2 — align "today", "week", "month" with the agent's calendar day
+  const SA_OFFSET_MS = 2 * 60 * 60 * 1000;
+  const nowSA = new Date(Date.now() + SA_OFFSET_MS);
+  const todayStartUTC = new Date(Date.UTC(nowSA.getUTCFullYear(), nowSA.getUTCMonth(), nowSA.getUTCDate()) - SA_OFFSET_MS);
+  const today = new Date(todayStartUTC.getTime() + SA_OFFSET_MS).toISOString().slice(0, 10); // YYYY-MM-DD SAST
+  const dow = nowSA.getUTCDay();
+  const diffToMon = dow === 0 ? -6 : 1 - dow;
+  const weekStart = new Date(Date.UTC(nowSA.getUTCFullYear(), nowSA.getUTCMonth(), nowSA.getUTCDate() + diffToMon) - SA_OFFSET_MS);
+  const monthStart = new Date(Date.UTC(nowSA.getUTCFullYear(), nowSA.getUTCMonth(), 1) - SA_OFFSET_MS);
 
   const [usersRes, leadsRes, commissionsRes, callsRes, followUpsRes, recentCallsRes] = await Promise.all([
     supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
@@ -96,7 +99,7 @@ export async function GET() {
     if (!acc[id]) acc[id] = { today: 0, week: 0, month: 0, lastCalledAt: null };
     acc[id].month++;
     if (c.called_at >= weekStart.toISOString()) acc[id].week++;
-    if (c.called_at.startsWith(today)) acc[id].today++;
+    if (c.called_at >= todayStartUTC.toISOString()) acc[id].today++;
     if (!acc[id].lastCalledAt || c.called_at > acc[id].lastCalledAt!) acc[id].lastCalledAt = c.called_at;
     return acc;
   }, {});

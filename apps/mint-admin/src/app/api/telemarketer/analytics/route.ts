@@ -6,16 +6,21 @@ export const dynamic = 'force-dynamic';
 
 type Lead = { tm_status: string | null; estimated_deal_value: number | null; deal_probability: number | null; expected_close_date: string | null };
 
+// SAST = UTC+2. Compute period boundaries in SA local time so "today" matches the agent's calendar day.
+const SA_OFFSET_MS = 2 * 60 * 60 * 1000;
+
 function startOf(unit: 'day' | 'week' | 'month') {
-  const d = new Date();
-  if (unit === 'day')   { d.setHours(0, 0, 0, 0); return d.toISOString(); }
-  if (unit === 'month') { d.setDate(1); d.setHours(0, 0, 0, 0); return d.toISOString(); }
+  const nowSA = new Date(Date.now() + SA_OFFSET_MS); // UTC clock shifted so getUTC* returns SAST values
+  if (unit === 'day') {
+    return new Date(Date.UTC(nowSA.getUTCFullYear(), nowSA.getUTCMonth(), nowSA.getUTCDate()) - SA_OFFSET_MS).toISOString();
+  }
+  if (unit === 'month') {
+    return new Date(Date.UTC(nowSA.getUTCFullYear(), nowSA.getUTCMonth(), 1) - SA_OFFSET_MS).toISOString();
+  }
   // week: Monday
-  const day = d.getDay();
-  const diff = (day === 0 ? -6 : 1 - day);
-  d.setDate(d.getDate() + diff);
-  d.setHours(0, 0, 0, 0);
-  return d.toISOString();
+  const dow = nowSA.getUTCDay();
+  const diffToMon = dow === 0 ? -6 : 1 - dow;
+  return new Date(Date.UTC(nowSA.getUTCFullYear(), nowSA.getUTCMonth(), nowSA.getUTCDate() + diffToMon) - SA_OFFSET_MS).toISOString();
 }
 
 export async function GET(req: NextRequest) {
@@ -45,7 +50,8 @@ export async function GET(req: NextRequest) {
   }
 
   const [callsRes, notesRes, fuRes, demosRes, proposalsRes, leads] = await Promise.all([
-    supabaseAdmin.from('call_logs').select('outcome,called_at').eq('agent_id', agentId),
+    // Filter to current month only — avoids PostgREST 1000-row cap on agents with large call history
+    supabaseAdmin.from('call_logs').select('outcome,called_at').eq('agent_id', agentId).gte('called_at', monthISO),
     supabaseAdmin.from('lead_notes').select('created_at').eq('agent_id', agentId),
     supabaseAdmin.from('follow_ups').select('completed,scheduled_at,created_at').eq('agent_id', agentId),
     supabaseAdmin.from('demos').select('status,demo_date').eq('agent_id', agentId),
@@ -109,16 +115,21 @@ export async function GET(req: NextRequest) {
     .filter(l => !['Won', 'Converted', 'Lost', 'Other', 'Not Qualified', 'Not Interested'].includes(l.tm_status ?? ''))
     .reduce((s, l) => s + ((l.estimated_deal_value ?? 0) * ((l.deal_probability ?? 50) / 100)), 0);
 
-  // ── Weekly call chart (last 7 days) ──────────────────────────────────
+  // ── Weekly call chart (last 7 days, SAST day boundaries) ────────────
   const weekChart = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    const dayStr = d.toISOString().slice(0, 10);
+    const daySA = new Date(Date.now() + SA_OFFSET_MS);
+    daySA.setUTCDate(daySA.getUTCDate() - (6 - i));
+    const dayStartUTC = new Date(Date.UTC(daySA.getUTCFullYear(), daySA.getUTCMonth(), daySA.getUTCDate()) - SA_OFFSET_MS);
+    const dayEndUTC   = new Date(dayStartUTC.getTime() + 24 * 60 * 60 * 1000);
+    const start = dayStartUTC.toISOString();
+    const end   = dayEndUTC.toISOString();
+    const label = new Intl.DateTimeFormat('en-ZA', { weekday: 'short', timeZone: 'Africa/Johannesburg' }).format(dayStartUTC);
+    const date  = new Date(dayStartUTC.getTime() + SA_OFFSET_MS).toISOString().slice(0, 10);
     return {
-      day:   d.toLocaleDateString('en-ZA', { weekday: 'short' }),
-      date:  dayStr,
-      calls: calls.filter(c => c.called_at?.slice(0, 10) === dayStr).length,
-      spoke: calls.filter(c => c.called_at?.slice(0, 10) === dayStr && c.outcome === 'Spoke').length,
+      day:   label,
+      date,
+      calls: calls.filter(c => c.called_at >= start && c.called_at < end).length,
+      spoke: calls.filter(c => c.called_at >= start && c.called_at < end && c.outcome === 'Spoke').length,
     };
   });
 
