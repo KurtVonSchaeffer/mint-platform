@@ -9,18 +9,13 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
-  const mine      = searchParams.get('mine') === 'true';
+  const mine       = searchParams.get('mine') === 'true';
   const assignedTo = searchParams.get('assigned_to');
-  const tmStatus  = searchParams.get('tm_status');
+  const tmStatus   = searchParams.get('tm_status');
 
-  let query = supabaseAdmin
-    .from('leads')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(10000);
-
+  // Resolve caller identity for the 'mine' filter
+  let ownerId: string | null = null;
   if (mine) {
-    // Derive the caller's own user ID from their session cookie
     const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,16 +24,33 @@ export async function GET(req: NextRequest) {
     );
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
-    query = query.eq('assigned_to', user.id);
-  } else if (assignedTo) {
-    query = query.eq('assigned_to', assignedTo);
+    ownerId = user.id;
   }
 
-  if (tmStatus) query = query.eq('tm_status', tmStatus);
+  // Paginate to bypass PostgREST's 1000-row server cap
+  const PAGE = 1000;
+  let page = 0;
+  const all: Record<string, unknown>[] = [];
+  while (true) {
+    let q = supabaseAdmin
+      .from('leads')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .range(page * PAGE, page * PAGE + PAGE - 1);
 
-  const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ leads: data });
+    if (ownerId)    q = q.eq('assigned_to', ownerId);
+    else if (assignedTo) q = q.eq('assigned_to', assignedTo);
+    if (tmStatus)   q = q.eq('tm_status', tmStatus);
+
+    const { data, error } = await q;
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!data || data.length === 0) break;
+    all.push(...data);
+    if (data.length < PAGE) break;
+    page++;
+  }
+
+  return NextResponse.json({ leads: all });
 }
 
 export async function POST(req: NextRequest) {

@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   const today = new Date(todayStartUTC.getTime() + SA_OFFSET_MS).toISOString().slice(0, 10); // YYYY-MM-DD in SAST
 
   const [leadsRes, callsRes, followUpsRes, clientsRes, commissionsRes] = await Promise.all([
-    supabaseAdmin.from('leads').select('id, tm_status, created_at').eq('assigned_to', agentId),
+    supabaseAdmin.from('leads').select('id, tm_status, created_at').eq('assigned_to', agentId).limit(5000),
     supabaseAdmin.from('call_logs').select('id, called_at').eq('agent_id', agentId).gte('called_at', todayStartUTC.toISOString()),
     supabaseAdmin.from('follow_ups').select('id, scheduled_at, completed').eq('agent_id', agentId).eq('completed', false),
     supabaseAdmin.from('leads').select('id, client_stage, created_at').eq('assigned_to', agentId).in('tm_status', ['Converted', 'Won']),
