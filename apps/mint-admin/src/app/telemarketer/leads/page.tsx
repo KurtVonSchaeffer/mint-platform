@@ -503,14 +503,16 @@ export default function TelemarketerLeadsPage() {
     });
     const autoOutcome =
       status === 'Contacted'         ? 'Spoke'     :
-      status === 'Attempted Contact' ? 'No Answer' : null;
+      status === 'Attempted Contact' ? 'No Answer' :
+      status === 'Other'             ? 'No Answer' : null;
     if (autoOutcome) {
-      const agentId = await getAgentId();
-      if (agentId) {
+      // Resolve agent ID once — already loaded when the page mounted
+      const aid = await getAgentId();
+      if (aid) {
         fetch('/api/telemarketer/call-logs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ lead_id: id, agent_id: agentId, outcome: autoOutcome }),
+          body: JSON.stringify({ lead_id: id, agent_id: aid, outcome: autoOutcome }),
         });
       }
     }

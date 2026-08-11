@@ -748,7 +748,8 @@ export default function LeadDetailPage() {
     });
     const autoOutcome =
       s === 'Contacted'         ? 'Spoke'     :
-      s === 'Attempted Contact' ? 'No Answer' : null;
+      s === 'Attempted Contact' ? 'No Answer' :
+      s === 'Other'             ? 'No Answer' : null;
     if (autoOutcome && agentId) {
       await fetch('/api/telemarketer/call-logs', {
         method: 'POST',

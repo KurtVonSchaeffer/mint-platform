@@ -185,7 +185,8 @@ export default function PipelinePage() {
     });
     const autoOutcome =
       newStage === 'Contacted'         ? 'Spoke'     :
-      newStage === 'Attempted Contact' ? 'No Answer' : null;
+      newStage === 'Attempted Contact' ? 'No Answer' :
+      newStage === 'Other'             ? 'No Answer' : null;
     if (autoOutcome && agentIdRef.current) {
       fetch('/api/telemarketer/call-logs', {
         method: 'POST',
