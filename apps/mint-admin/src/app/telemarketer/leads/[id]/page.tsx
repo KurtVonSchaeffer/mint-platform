@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   Phone, Mail, Building2, Users, Clock, Calendar, FileUp,
-  MessageSquare, ChevronLeft, ChevronDown, Plus, CheckCircle2,
+  MessageSquare, ChevronLeft, ChevronDown, Plus, CheckCircle2, XCircle,
   Loader2, RefreshCw, Globe, MapPin, Briefcase, Percent, Video, Save,
   FileText, Send, Copy, Timer, PhoneOff, Banknote, Pencil, MicOff, Mic,
 } from 'lucide-react';
@@ -173,8 +173,14 @@ function LogCallModal({ leadId, agentId, onClose, onSaved, initialDuration }: {
 function AddNoteModal({ leadId, agentId, onClose, onSaved }: {
   leadId: string; agentId: string; onClose: () => void; onSaved: () => void;
 }) {
-  const [content, setContent] = useState('');
-  const [saving, setSaving]   = useState(false);
+  const [content, setContent]     = useState('');
+  const [saving, setSaving]       = useState(false);
+  const [withFollowUp, setWithFollowUp] = useState(false);
+  const [fuDate, setFuDate]       = useState(() => {
+    const d = new Date(Date.now() + 3 * 86400000);
+    d.setUTCHours(7, 0, 0, 0); // 07:00 UTC = 09:00 SAST
+    return new Date(d.getTime() + 2 * 60 * 60 * 1000).toISOString().slice(0, 16);
+  });
 
   async function submit() {
     if (!content.trim()) return;
@@ -184,6 +190,14 @@ function AddNoteModal({ leadId, agentId, onClose, onSaved }: {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ lead_id: leadId, agent_id: agentId, content }),
     });
+    if (withFollowUp && fuDate) {
+      const scheduled_at = fuDate.length === 16 ? `${fuDate}:00+02:00` : fuDate;
+      await fetch('/api/telemarketer/follow-ups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: leadId, agent_id: agentId, follow_up_type: 'Call Back', scheduled_at, note: content }),
+      });
+    }
     setSaving(false);
     onSaved();
     onClose();
@@ -194,11 +208,39 @@ function AddNoteModal({ leadId, agentId, onClose, onSaved }: {
       <div className="bento-card w-full max-w-md p-6" style={{ animation: 'scale-in 0.25s cubic-bezier(0.16,1,0.3,1) both' }}>
         <h3 className="font-bold text-lg mb-4" style={{ color: 'var(--color-text)' }}>Add Note</h3>
         <textarea className="field-input w-full" rows={5} value={content} onChange={e => setContent(e.target.value)} placeholder="Add your interaction note here…" />
-        <div className="flex gap-2 mt-3">
+
+        {/* Follow-up toggle */}
+        <button
+          onClick={() => setWithFollowUp(v => !v)}
+          className="flex items-center gap-2.5 mt-4 w-full text-left"
+        >
+          <div className="w-4 h-4 rounded flex items-center justify-center shrink-0 transition-all"
+            style={{
+              background: withFollowUp ? 'var(--color-violet)' : 'transparent',
+              border: `1.5px solid ${withFollowUp ? 'var(--color-violet)' : 'var(--color-border2)'}`,
+            }}>
+            {withFollowUp && <svg width="9" height="7" viewBox="0 0 9 7" fill="none"><path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+          </div>
+          <span className="text-sm" style={{ color: withFollowUp ? 'var(--color-text)' : 'var(--color-text3)' }}>
+            Schedule a follow-up
+          </span>
+        </button>
+
+        {withFollowUp && (
+          <input
+            type="datetime-local"
+            className="field-input w-full mt-3"
+            value={fuDate}
+            onChange={e => setFuDate(e.target.value)}
+          />
+        )}
+
+        <div className="flex gap-2 mt-4">
           <button onClick={onClose} className="flex-1 py-2 rounded-xl text-sm" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>Cancel</button>
-          <button onClick={submit} disabled={saving || !content.trim()} className="btn-purple btn-shine flex-1 inline-flex items-center justify-center gap-1.5">
+          <button onClick={submit} disabled={saving || !content.trim() || (withFollowUp && !fuDate)}
+            className="btn-purple btn-shine flex-1 inline-flex items-center justify-center gap-1.5">
             {saving ? <Loader2 size={13} className="animate-spin" /> : <MessageSquare size={13} />}
-            {saving ? 'Saving…' : 'Add Note'}
+            {saving ? 'Saving…' : withFollowUp ? 'Save & Schedule' : 'Add Note'}
           </button>
         </div>
       </div>
@@ -215,10 +257,14 @@ function ScheduleModal({ leadId, agentId, onClose, onSaved }: {
   async function submit() {
     if (!form.scheduled_at) return;
     setSaving(true);
+    // Append SAST offset so DB stores a proper timestamptz
+    const scheduled_at = form.scheduled_at.length === 16
+      ? `${form.scheduled_at}:00+02:00`
+      : form.scheduled_at;
     await fetch('/api/telemarketer/follow-ups', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ lead_id: leadId, agent_id: agentId, ...form }),
+      body: JSON.stringify({ lead_id: leadId, agent_id: agentId, ...form, scheduled_at }),
     });
     setSaving(false);
     onSaved();
@@ -237,8 +283,8 @@ function ScheduleModal({ leadId, agentId, onClose, onSaved }: {
             </select>
           </div>
           <div>
-            <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Date</label>
-            <input type="date" className="field-input" value={form.scheduled_at} onChange={e => setForm(p => ({ ...p, scheduled_at: e.target.value }))} />
+            <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Date & Time</label>
+            <input type="datetime-local" className="field-input" min={new Date(Date.now() - 60000).toISOString().slice(0, 16)} value={form.scheduled_at} onChange={e => setForm(p => ({ ...p, scheduled_at: e.target.value }))} />
           </div>
           <div>
             <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Note</label>
@@ -619,7 +665,7 @@ export default function LeadDetailPage() {
     for (const f of followUps) {
       events.push({
         id: `fu-${f.id}`, sortDate: new Date(f.scheduled_at),
-        timestamp: fmtD(f.scheduled_at),
+        timestamp: f.scheduled_at?.length > 10 ? fmtDT(f.scheduled_at) : fmtD(f.scheduled_at),
         icon: <Calendar size={14} />,
         iconBg: 'rgba(96,165,250,0.14)', iconColor: '#60A5FA',
         title: `Follow-Up: ${f.follow_up_type}`,
@@ -741,6 +787,7 @@ export default function LeadDetailPage() {
   async function changeStatus(s: LeadStatus) {
     setStatus(s);
     setStatusOpen(false);
+    if (s === 'Call Back') setScheduleOpen(true);
     await fetch(`/api/leads/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
@@ -779,7 +826,19 @@ export default function LeadDetailPage() {
     setTimeout(() => setCopiedId(null), 2000);
   }
 
-  const currentStep = STATUS_TO_STEP[status] ?? 0;
+  const isNegativeOutcome = status === 'Lost' || status === 'Not Interested';
+
+  // For negative outcomes, derive the actual highest stage reached from activity data
+  // rather than using STATUS_TO_STEP['Lost'] = 5 which falsely marks all stages green
+  const currentStep = isNegativeOutcome
+    ? (() => {
+        if (proposals.length > 0) return 4;
+        if (demos.length > 0)     return 3;
+        if (callLogs.some(c => c.outcome === 'Spoke' || c.outcome === 'Interested')) return 1;
+        if (callLogs.length > 0)  return 1;
+        return 0;
+      })()
+    : (STATUS_TO_STEP[status] ?? 0);
 
   if (loading) {
     return (
@@ -965,27 +1024,56 @@ export default function LeadDetailPage() {
         <h2 className="text-sm font-bold mb-6" style={{ color: 'var(--color-text)' }}>Lead Timeline</h2>
         <div className="flex items-center gap-0 overflow-x-auto pb-2">
           {TIMELINE_STEPS.map((step, i) => {
-            const done    = i <= currentStep;
-            const current = i === currentStep;
+            const isWonStep    = i === TIMELINE_STEPS.length - 1;
+            const blockedWon   = isWonStep && isNegativeOutcome;
+            // For negative outcomes: the step at currentStep is the "stopped here" marker
+            const stoppedHere  = isNegativeOutcome && i === currentStep;
+            const active       = !isNegativeOutcome && !blockedWon && i === currentStep;
+            const done         = !blockedWon && !stoppedHere && !active && i < currentStep;
+            const connectorFilled = i < currentStep && !isNegativeOutcome
+              ? true
+              : i < currentStep && isNegativeOutcome
+              ? true  // steps before stopped are filled
+              : false;
+
             return (
               <div key={step} className="flex items-center shrink-0">
                 <div className="flex flex-col items-center gap-2 min-w-[100px]">
                   <div className="w-8 h-8 rounded-full flex items-center justify-center transition-all"
                     style={{
-                      background: done ? (current ? 'var(--color-purple)' : 'rgba(52,211,153,0.15)') : 'var(--color-surface2)',
-                      color: done ? (current ? 'white' : '#34D399') : 'var(--color-text3)',
-                      boxShadow: current ? '0 0 20px rgba(124,58,237,0.4)' : 'none',
+                      background: blockedWon  ? 'rgba(107,114,128,0.12)'
+                               : stoppedHere ? 'rgba(248,113,113,0.12)'
+                               : active      ? 'var(--color-purple)'
+                               : done        ? 'rgba(52,211,153,0.15)'
+                               : 'var(--color-surface2)',
+                      color: blockedWon  ? 'var(--color-text3)'
+                           : stoppedHere ? '#F87171'
+                           : active      ? 'white'
+                           : done        ? '#34D399'
+                           : 'var(--color-text3)',
+                      boxShadow: active ? '0 0 20px rgba(124,58,237,0.4)' : 'none',
                     }}>
-                    {done && !current ? <CheckCircle2 size={16} /> : <span className="text-[11px] font-bold">{i + 1}</span>}
+                    {blockedWon || stoppedHere ? <XCircle size={16} />
+                    : done                     ? <CheckCircle2 size={16} />
+                    : <span className="text-[11px] font-bold">{i + 1}</span>}
                   </div>
                   <p className="text-[10px] text-center leading-tight font-medium"
-                    style={{ color: done ? (current ? 'var(--color-violet)' : '#34D399') : 'var(--color-text3)' }}>
+                    style={{ color: blockedWon  ? 'var(--color-text3)'
+                                  : stoppedHere ? '#F87171'
+                                  : active      ? 'var(--color-violet)'
+                                  : done        ? '#34D399'
+                                  : 'var(--color-text3)' }}>
                     {step}
+                    {stoppedHere && (
+                      <span className="block text-[9px] font-bold mt-0.5 uppercase tracking-wide opacity-80">
+                        {status === 'Lost' ? 'Lost' : 'Not interested'}
+                      </span>
+                    )}
                   </p>
                 </div>
                 {i < TIMELINE_STEPS.length - 1 && (
                   <div className="h-0.5 w-8 mx-1 shrink-0 mt-[-18px]"
-                    style={{ background: i < currentStep ? 'rgba(52,211,153,0.4)' : 'var(--color-surface2)' }} />
+                    style={{ background: connectorFilled ? 'rgba(52,211,153,0.4)' : 'var(--color-surface2)' }} />
                 )}
               </div>
             );

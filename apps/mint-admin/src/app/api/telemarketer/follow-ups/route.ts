@@ -47,9 +47,14 @@ export async function PATCH(req: NextRequest) {
   const id = req.nextUrl.searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 422 });
 
+  const body = await req.json().catch(() => ({}));
+  const update: Record<string, unknown> = body.scheduled_at
+    ? { scheduled_at: body.scheduled_at }
+    : { completed: true };
+
   const { data, error } = await supabaseAdmin
     .from('follow_ups')
-    .update({ completed: true })
+    .update(update)
     .eq('id', id)
     .select()
     .single();

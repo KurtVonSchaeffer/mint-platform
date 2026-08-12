@@ -118,7 +118,7 @@ export default function CommissionPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { label: 'Commission Pending',   value: fmt(pendingCollection), sub: 'Awaiting deduction',  color: '#FBBF24', rgb: '251,191,36',  icon: Clock,        filter: 'Pending Collection' as CommissionStatus },
-          { label: 'Commission Earned',    value: fmt(commissionEarned),  sub: 'Collected & payable', color: '#34D399', rgb: '52,211,153',  icon: CheckCircle2, filter: 'Payroll Ready' as CommissionStatus },
+          { label: 'Commission Earned',    value: fmt(commissionEarned),  sub: 'Collected & payable', color: '#34D399', rgb: '52,211,153',  icon: CheckCircle2, filter: null as unknown as CommissionStatus },
           { label: 'Expected Payroll',     value: fmt(expectedPayroll),   sub: 'Payroll ready now',   color: '#A78BFA', rgb: '167,139,250', icon: Banknote,     filter: null as unknown as CommissionStatus },
           { label: 'Total Paid (All Time)', value: fmt(totalPaid),        sub: 'Historical earnings', color: '#10B981', rgb: '16,185,129',  icon: DollarSign,   filter: 'Paid' as CommissionStatus },
         ].map(card => (

@@ -72,6 +72,7 @@ export function TelemarketerShell({ children }: { children: React.ReactNode }) {
   const [viewingAsId,  setViewingAsId]  = useState<string>('');
   const [agents,       setAgents]       = useState<Agent[]>([]);
   const [quickStats,   setQuickStats]   = useState<{ calls: number; leads: number; live: number } | null>(null);
+  const [agentId,      setAgentId]      = useState<string>('');
 
   useEffect(() => {
     const saved = typeof window !== 'undefined' ? sessionStorage.getItem(SESSION_KEY_AGENT) : null;
@@ -125,6 +126,7 @@ export function TelemarketerShell({ children }: { children: React.ReactNode }) {
       const agentId = role === 'telemarketer'
         ? user.id
         : (typeof window !== 'undefined' ? sessionStorage.getItem(SESSION_KEY_AGENT) : null) ?? '';
+      setAgentId(agentId);
       if (agentId) {
         fetch(`/api/telemarketer/dashboard?agent_id=${agentId}`)
           .then(r => r.ok ? r.json() : null)
@@ -162,6 +164,96 @@ export function TelemarketerShell({ children }: { children: React.ReactNode }) {
     document.addEventListener('mousedown', handle);
     return () => document.removeEventListener('mousedown', handle);
   }, []);
+
+  // In-app due-alert toasts
+  type DueAlert = { key: string; leadId: string; client: string; type: string; minsAway: number };
+  const [dueAlerts, setDueAlerts] = useState<DueAlert[]>([]);
+
+  function playChime() {
+    try {
+      const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.setValueAtTime(660, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.7);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.7);
+    } catch { /* audio not available */ }
+  }
+
+  // Browser + in-app notification reminders — double warning: 15 min + 5 min
+  const notifiedIdsRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!agentId || typeof window === 'undefined' || !('Notification' in window)) return;
+
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    type FuItem = { id: string; lead_id: string; follow_up_type: string; scheduled_at: string; completed: boolean; leads?: { name: string } };
+
+    function fire(fu: FuItem, key: string, minsAway: number) {
+      if (notifiedIdsRef.current.has(key)) return;
+      notifiedIdsRef.current.add(key);
+      playChime();
+
+      const client = fu.leads?.name ?? 'Client';
+      const label  = minsAway <= 0 ? 'Due now!' : `In ${minsAway} min`;
+
+      // In-app toast
+      const alertKey = `${key}-${Date.now()}`;
+      setDueAlerts(prev => [...prev, { key: alertKey, leadId: fu.lead_id, client, type: fu.follow_up_type, minsAway }]);
+      setTimeout(() => setDueAlerts(prev => prev.filter(a => a.key !== alertKey)), 10_000);
+
+      // OS notification
+      if (Notification.permission === 'granted') {
+        const notif = new Notification(`Follow-up ${label}`, {
+          body: `${client} — ${fu.follow_up_type}`,
+          icon: '/algolend-logo-dark.png',
+          tag: key,
+        });
+        notif.onclick = () => { window.focus(); router.push(`/telemarketer/leads/${fu.lead_id}`); notif.close(); };
+      }
+    }
+
+    function checkReminders() {
+      fetch(`/api/telemarketer/follow-ups?agent_id=${agentId}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(d => {
+          if (!d) return;
+          const now = Date.now();
+          for (const fu of (d.follow_ups ?? []) as FuItem[]) {
+            if (fu.completed) continue;
+            // Skip old date-only entries stored as midnight SAST (T22:00:00+00:00)
+            const inSAST = new Date(new Date(fu.scheduled_at).getTime() + 2 * 60 * 60 * 1000);
+            if (inSAST.getUTCHours() === 0 && inSAST.getUTCMinutes() === 0) continue;
+
+            const due  = new Date(fu.scheduled_at).getTime();
+            const diff = due - now;
+            const mins = Math.ceil(diff / 60000);
+
+            // 15-min warning: 5 < diff ≤ 15 min
+            if (diff > 5 * 60 * 1000 && diff <= 15 * 60 * 1000) {
+              fire(fu, `${fu.id}-15`, mins);
+            }
+            // 5-min / due / recently overdue warning: diff ≤ 5 min and within last 60 min
+            if (diff <= 5 * 60 * 1000 && diff >= -60 * 60 * 1000) {
+              fire(fu, `${fu.id}-5`, Math.max(0, mins));
+            }
+          }
+        })
+        .catch(() => {/* non-blocking */});
+    }
+
+    checkReminders();
+    const interval = setInterval(checkReminders, 60_000);
+    return () => clearInterval(interval);
+  }, [agentId, router]);
 
   async function signOut() {
     await fetch('/api/auth/signout', { method: 'POST' });
@@ -605,6 +697,46 @@ export function TelemarketerShell({ children }: { children: React.ReactNode }) {
           {children}
         </div>
       </main>
+
+      {/* ── Due follow-up toast stack ──────────────────────────── */}
+      {dueAlerts.length > 0 && (
+        <div className="fixed bottom-5 right-5 z-[200] flex flex-col gap-2.5" style={{ maxWidth: 320 }}>
+          {dueAlerts.map(alert => (
+            <div key={alert.key}
+              className="flex items-start gap-3 rounded-2xl p-3.5"
+              style={{
+                background: 'var(--color-surface)',
+                border: '1px solid rgba(251,191,36,0.35)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.35), 0 0 0 1px rgba(251,191,36,0.1)',
+                animation: 'scale-in 0.3s cubic-bezier(0.16,1,0.3,1) both',
+              }}>
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: 'rgba(251,191,36,0.12)' }}>
+                <Bell size={16} style={{ color: '#FBBF24' }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold leading-tight" style={{ color: 'var(--color-text)' }}>
+                  {alert.minsAway <= 0 ? 'Follow-up due now!' : `Follow-up in ${alert.minsAway} min`}
+                </p>
+                <p className="text-[11px] mt-0.5 truncate" style={{ color: 'var(--color-text3)' }}>
+                  {alert.client} — {alert.type}
+                </p>
+                <button
+                  onClick={() => { router.push(`/telemarketer/leads/${alert.leadId}`); setDueAlerts(a => a.filter(x => x.key !== alert.key)); }}
+                  className="text-[11px] font-semibold mt-1.5 transition-opacity hover:opacity-70"
+                  style={{ color: 'var(--color-violet)' }}>
+                  Go to lead →
+                </button>
+              </div>
+              <button
+                onClick={() => setDueAlerts(a => a.filter(x => x.key !== alert.key))}
+                className="text-[var(--color-text3)] hover:text-[var(--color-text)] transition-colors mt-0.5 shrink-0">
+                <X size={13} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -33,13 +33,46 @@ export async function GET() {
   const weekStart = new Date(Date.UTC(nowSA.getUTCFullYear(), nowSA.getUTCMonth(), nowSA.getUTCDate() + diffToMon) - SA_OFFSET_MS);
   const monthStart = new Date(Date.UTC(nowSA.getUTCFullYear(), nowSA.getUTCMonth(), 1) - SA_OFFSET_MS);
 
-  const [usersRes, leadsRes, commissionsRes, callsRes, followUpsRes, recentCallsRes] = await Promise.all([
+  async function fetchAllLeads() {
+    const PAGE = 1000;
+    let page = 0;
+    const all: { assigned_to: string; tm_status: string | null; created_at: string }[] = [];
+    while (true) {
+      const { data } = await supabaseAdmin
+        .from('leads')
+        .select('assigned_to, tm_status, created_at')
+        .not('assigned_to', 'is', null)
+        .range(page * PAGE, page * PAGE + PAGE - 1);
+      if (!data || data.length === 0) break;
+      all.push(...data);
+      if (data.length < PAGE) break;
+      page++;
+    }
+    return all;
+  }
+
+  async function fetchAllCallLogs() {
+    const PAGE = 1000;
+    let page = 0;
+    const all: { agent_id: string; called_at: string }[] = [];
+    while (true) {
+      const { data } = await supabaseAdmin
+        .from('call_logs')
+        .select('agent_id, called_at')
+        .neq('outcome', 'Other')
+        .range(page * PAGE, page * PAGE + PAGE - 1);
+      if (!data || data.length === 0) break;
+      all.push(...data);
+      if (data.length < PAGE) break;
+      page++;
+    }
+    return all;
+  }
+
+  const [usersRes, allLeads, commissionsRes, callsRes, allCallLogs, followUpsRes, recentCallsRes] = await Promise.all([
     supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
 
-    supabaseAdmin
-      .from('leads')
-      .select('assigned_to, tm_status, created_at')
-      .not('assigned_to', 'is', null),
+    fetchAllLeads(),
 
     supabaseAdmin
       .from('commissions')
@@ -48,11 +81,14 @@ export async function GET() {
     supabaseAdmin
       .from('call_logs')
       .select('agent_id, called_at, outcome, duration')
+      .neq('outcome', 'Other')
       .gte('called_at', monthStart.toISOString()),
+
+    fetchAllCallLogs(),
 
     supabaseAdmin
       .from('follow_ups')
-      .select('agent_id, due_date, completed')
+      .select('agent_id, scheduled_at, completed')
       .eq('completed', false),
 
     supabaseAdmin
@@ -65,10 +101,19 @@ export async function GET() {
   const telemarketers = (usersRes.data?.users ?? [])
     .filter(u => (u.user_metadata?.role as string | undefined) === 'telemarketer');
 
-  const leads       = leadsRes.data ?? [];
+  const leads       = allLeads;
   const commissions = commissionsRes.data ?? [];
   const calls       = callsRes.data ?? [];
   const followUps   = followUpsRes.data ?? [];
+
+  const allTimeCallsByAgent = allCallLogs.reduce<Record<string, { count: number; lastCalledAt: string | null }>>((acc, c) => {
+    if (!acc[c.agent_id]) acc[c.agent_id] = { count: 0, lastCalledAt: null };
+    acc[c.agent_id].count++;
+    if (!acc[c.agent_id].lastCalledAt || c.called_at > acc[c.agent_id].lastCalledAt!) {
+      acc[c.agent_id].lastCalledAt = c.called_at;
+    }
+    return acc;
+  }, {});
 
   type LeadBucket = { total: number; converted: number; newLead: number; wonThisMonth: number };
   const leadsByAgent = leads.reduce<Record<string, LeadBucket>>((acc, l) => {
@@ -108,8 +153,12 @@ export async function GET() {
   const fuByAgent = followUps.reduce<Record<string, FuBucket>>((acc, f) => {
     const id = f.agent_id as string;
     if (!acc[id]) acc[id] = { overdue: 0, dueToday: 0 };
-    if (f.due_date < today) acc[id].overdue++;
-    else if (f.due_date === today) acc[id].dueToday++;
+    // Convert stored UTC timestamptz to SAST date before comparing
+    const fuDate = f.scheduled_at
+      ? new Date(new Date(f.scheduled_at as string).getTime() + SA_OFFSET_MS).toISOString().slice(0, 10)
+      : '';
+    if (fuDate < today) acc[id].overdue++;
+    else if (fuDate === today) acc[id].dueToday++;
     return acc;
   }, {});
 
@@ -134,7 +183,8 @@ export async function GET() {
       callsToday:        clb.today,
       callsThisWeek:     clb.week,
       callsThisMonth:    clb.month,
-      lastCalledAt:      clb.lastCalledAt,
+      callsAllTime:      allTimeCallsByAgent[u.id]?.count ?? 0,
+      lastCalledAt:      allTimeCallsByAgent[u.id]?.lastCalledAt ?? null,
       overdueFollowUps:  fub.overdue,
       dueTodayFollowUps: fub.dueToday,
       commissionPending: cb.pending,

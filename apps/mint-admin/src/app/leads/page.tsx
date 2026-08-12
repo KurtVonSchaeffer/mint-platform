@@ -20,6 +20,7 @@ interface Lead {
   email:       string | null;
   company:     string;
   message:     string | null;
+  latestNote:  string | null;
   source:      LeadSource;
   status:      LeadStatus;
   assignedTo:  string | null;
@@ -108,10 +109,24 @@ const SOURCE_LABELS: Record<LeadSource, string> = {
   manual:           'manual entry',
 };
 
+// Statuses that are valid DB enum values (can be written to the leads table)
+const DB_VALID_STATUSES: LeadStatus[] = ['new', 'contacted', 'qualified', 'won', 'lost', 'other'];
+
+// Derive a granular display status from the TM status when the DB stores a coarse bucket
+function getEffectiveStatus(l: Lead): LeadStatus {
+  const tm = l.tmStatus ?? '';
+  if (l.status === 'new') {
+    if (['Attempted Contact', 'Unreachable'].includes(tm)) return 'attempted';
+    if (['Call Again', 'Call Back', 'Pending'].includes(tm)) return 'call_again';
+  }
+  if (l.status === 'lost' && tm === 'Not Interested') return 'not_interested';
+  return l.status;
+}
+
 function StatusDropdown({ lead, onUpdate }: { lead: Lead; onUpdate: (id: string, status: LeadStatus) => Promise<void> }) {
   const [open, setOpen]     = useState(false);
   const [saving, setSaving] = useState(false);
-  const cfg = STATUS_CONFIG[lead.status];
+  const cfg = STATUS_CONFIG[getEffectiveStatus(lead)];
 
   async function pick(s: LeadStatus) {
     if (s === lead.status) { setOpen(false); return; }
@@ -140,7 +155,7 @@ function StatusDropdown({ lead, onUpdate }: { lead: Lead; onUpdate: (id: string,
             className="absolute left-0 top-full mt-1 z-20 rounded-xl overflow-hidden min-w-[140px]"
             style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.25)' }}
           >
-            {(Object.entries(STATUS_CONFIG) as [LeadStatus, typeof STATUS_CONFIG[LeadStatus]][]).map(([s, c]) => (
+            {(Object.entries(STATUS_CONFIG) as [LeadStatus, typeof STATUS_CONFIG[LeadStatus]][]).filter(([s]) => DB_VALID_STATUSES.includes(s)).map(([s, c]) => (
               <button
                 key={s}
                 onClick={() => pick(s)}
@@ -246,9 +261,9 @@ function AssignDropdown({ lead, agents, onAssign }: {
 }
 
 const TM_STATUSES = [
-  'New Lead', 'Attempted Contact', 'Contacted', 'Interested',
+  'New Lead', 'Attempted Contact', 'Call Back', 'Contacted', 'Interested',
   'Demo Scheduled', 'Demo Completed', 'Proposal Requested', 'Proposal Sent',
-  'Negotiation', 'Won', 'Lost', 'Other',
+  'Negotiation', 'Won', 'Lost', 'Not Interested', 'Other',
 ];
 
 function TmStatusDropdown({ lead, onUpdate }: { lead: Lead; onUpdate: (id: string, status: string) => Promise<void> }) {
@@ -260,7 +275,13 @@ function TmStatusDropdown({ lead, onUpdate }: { lead: Lead; onUpdate: (id: strin
   function toggle() {
     if (btnRef.current) {
       const r = btnRef.current.getBoundingClientRect();
-      setPos({ top: r.bottom + 4, left: r.left });
+      const estimatedH = TM_STATUSES.length * 33 + 8;
+      const spaceBelow = window.innerHeight - r.bottom - 8;
+      const top = spaceBelow < estimatedH && r.top > estimatedH
+        ? r.top - estimatedH - 4
+        : r.bottom + 4;
+      const left = Math.min(r.left, window.innerWidth - 188);
+      setPos({ top, left });
     }
     setOpen(o => !o);
   }
@@ -519,6 +540,7 @@ export default function LeadsPage() {
         createdAt:  l.created_at  ?? l.createdAt,
         assignedTo: l.assigned_to ?? l.assignedTo ?? null,
         tmStatus:   l.tm_status   ?? null,
+        latestNote: l.latest_note ?? null,
       })));
       setPage(1);
     }
@@ -648,19 +670,6 @@ export default function LeadsPage() {
     }
     const agent = agents.find(t => t.id === agentId);
     setToast({ kind: 'success', message: agent ? `Assigned to ${agent.name}` : 'Lead unassigned' });
-  }
-
-  // Derive display status from tmStatus — splits coarse DB buckets into granular admin cards.
-  // DB stores 'new' for attempted/call-again leads and 'lost' for not-interested leads;
-  // tmStatus carries the true granular intent without needing a DB enum migration.
-  function getEffectiveStatus(l: Lead): LeadStatus {
-    const tm = l.tmStatus ?? '';
-    if (l.status === 'new') {
-      if (['Attempted Contact', 'Unreachable'].includes(tm)) return 'attempted';
-      if (['Call Again', 'Call Back', 'Pending'].includes(tm))  return 'call_again';
-    }
-    if (l.status === 'lost' && tm === 'Not Interested') return 'not_interested';
-    return l.status;
   }
 
   const byStatus = leads.reduce<Record<string, number>>((acc, l) => {
@@ -1112,7 +1121,13 @@ export default function LeadsPage() {
                         <span>via {SOURCE_LABELS[lead.source] ?? lead.source}</span>
                       </div>
 
-                      {lead.message ? (
+                      {lead.latestNote ? (
+                        <p className="text-sm leading-relaxed rounded-xl px-3 py-2 max-w-2xl flex items-start gap-2"
+                          style={{ color: 'var(--color-text2)', background: 'rgba(167,139,250,0.05)', border: '1px solid rgba(167,139,250,0.15)' }}>
+                          <span className="text-[9px] font-bold uppercase tracking-widest mt-0.5 shrink-0" style={{ color: '#A78BFA' }}>Note</span>
+                          <span className="truncate">{lead.latestNote}</span>
+                        </p>
+                      ) : lead.message ? (
                         <p className="text-sm leading-relaxed rounded-xl px-3 py-2 max-w-2xl"
                           style={{ color: 'var(--color-text2)', background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border2)' }}>
                           &ldquo;{lead.message}&rdquo;

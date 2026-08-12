@@ -2,8 +2,26 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { Phone, Calendar, Clock, AlertCircle, CheckCircle2, RefreshCw, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Phone, Calendar, Clock, AlertCircle, CheckCircle2, RefreshCw, Loader2, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { getAgentId } from '@/lib/telemarketer-agent';
+
+function hasRealTime(iso: string): boolean {
+  const inSAST = new Date(new Date(iso).getTime() + 2 * 60 * 60 * 1000);
+  return !(inSAST.getUTCHours() === 0 && inSAST.getUTCMinutes() === 0);
+}
+
+function timeUntil(iso: string): { label: string; urgent: boolean } | null {
+  if (!hasRealTime(iso)) return null;
+  const diff = new Date(iso).getTime() - Date.now();
+  const absMins = Math.round(Math.abs(diff) / 60000);
+  if (diff > 0) {
+    if (absMins < 60) return { label: `In ${absMins} min`, urgent: absMins <= 15 };
+    return { label: `In ${Math.round(absMins / 60)} hr`, urgent: false };
+  } else {
+    if (absMins < 60) return { label: `${absMins} min ago`, urgent: true };
+    return { label: `${Math.round(absMins / 60)} hr ago`, urgent: true };
+  }
+}
 
 interface FollowUp {
   id: string;
@@ -13,7 +31,8 @@ interface FollowUp {
   phone: string;
   status: string;
   statusColor: string;
-  nextFollowUp: string;
+  nextFollowUp: string;   // SAST date YYYY-MM-DD, used for bucketing/calendar
+  scheduledAt: string;    // full ISO string, used for time display
   note: string;
   overdue?: boolean;
 }
@@ -46,9 +65,15 @@ function mapFollowUp(f: ApiFollowUp): FollowUp {
     phone:        f.leads?.phone ?? '',
     status:       f.follow_up_type,
     statusColor:  TYPE_COLOR[f.follow_up_type] ?? '#9CA3AF',
-    nextFollowUp: f.scheduled_at,
+    nextFollowUp: toSASTDate(f.scheduled_at),
+    scheduledAt:  f.scheduled_at,
     note:         f.note ?? '',
   };
+}
+
+function toSASTDate(iso: string): string {
+  // Shift UTC timestamp to SAST (+02:00) before extracting date
+  return new Date(new Date(iso).getTime() + 2 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
 // --- Week helpers ---
@@ -72,20 +97,65 @@ function toYMD(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-// ── List-view components (unchanged) ────────────────────────────────────────
+// ── Reschedule modal ─────────────────────────────────────────────────────────
 
-function FollowUpCard({ fu, section, onComplete }: {
+function RescheduleModal({ fu, onClose, onRescheduled }: {
+  fu: FollowUp;
+  onClose: () => void;
+  onRescheduled: (id: string, newIso: string) => void;
+}) {
+  const current = fu.scheduledAt.length === 16 ? fu.scheduledAt : new Date(new Date(fu.scheduledAt).getTime() + 2 * 60 * 60 * 1000).toISOString().slice(0, 16);
+  const [value, setValue] = useState(current);
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    if (!value) return;
+    setSaving(true);
+    const scheduled_at = `${value}:00+02:00`;
+    await fetch(`/api/telemarketer/follow-ups?id=${fu.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ scheduled_at }),
+    });
+    onRescheduled(fu.id, scheduled_at);
+    onClose();
+  }
+
+  return (
+    <div className="confirm-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="bento-card w-full max-w-sm p-6" style={{ animation: 'scale-in 0.25s cubic-bezier(0.16,1,0.3,1) both' }}>
+        <h3 className="font-bold text-base mb-1" style={{ color: 'var(--color-text)' }}>Reschedule Follow-Up</h3>
+        <p className="text-xs mb-4" style={{ color: 'var(--color-text3)' }}>{fu.client} — {fu.status}</p>
+        <input type="datetime-local" className="field-input w-full mb-4" value={value} onChange={e => setValue(e.target.value)} />
+        <div className="flex gap-2">
+          <button onClick={onClose} className="flex-1 py-2 rounded-xl text-sm" style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>Cancel</button>
+          <button onClick={save} disabled={saving || !value}
+            className="btn-purple btn-shine flex-1 inline-flex items-center justify-center gap-1.5">
+            {saving ? <Loader2 size={12} className="animate-spin" /> : <Clock size={12} />}
+            {saving ? 'Saving…' : 'Reschedule'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── List-view components ──────────────────────────────────────────────────────
+
+function FollowUpCard({ fu, section, onComplete, onReschedule }: {
   fu: FollowUp;
   section: 'today' | 'overdue' | 'upcoming';
   onComplete: (id: string) => void;
+  onReschedule: (fu: FollowUp) => void;
 }) {
   const [completing, setCompleting] = useState(false);
   const borderColor = section === 'overdue' ? '#F87171' : section === 'today' ? '#FBBF24' : 'var(--color-border2)';
   const bgColor     = section === 'overdue' ? 'rgba(248,113,113,0.04)' : section === 'today' ? 'rgba(251,191,36,0.04)' : 'transparent';
+  const countdown   = timeUntil(fu.scheduledAt);
 
   async function handleComplete() {
     setCompleting(true);
-    await fetch(`/api/telemarketer/follow-ups?id=${fu.id}`, { method: 'PATCH' });
+    await fetch(`/api/telemarketer/follow-ups?id=${fu.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
     onComplete(fu.id);
   }
 
@@ -119,12 +189,22 @@ function FollowUpCard({ fu, section, onComplete }: {
                   <AlertCircle size={9} /> OVERDUE
                 </span>
               )}
+              {countdown && (
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-1"
+                  style={{
+                    background: countdown.urgent ? 'rgba(251,191,36,0.12)' : 'rgba(167,139,250,0.10)',
+                    color: countdown.urgent ? '#FBBF24' : '#A78BFA',
+                    border: `1px solid ${countdown.urgent ? 'rgba(251,191,36,0.25)' : 'rgba(167,139,250,0.20)'}`,
+                  }}>
+                  <Clock size={9} /> {countdown.label}
+                </span>
+              )}
             </div>
             <p className="text-xs mt-0.5" style={{ color: 'var(--color-text3)' }}>{fu.company}</p>
             {fu.note && (
               <p className="text-xs mt-1 flex items-center gap-1" style={{ color: 'var(--color-text3)' }}>
                 <Clock size={10} />
-                {new Date(fu.nextFollowUp + 'T00:00:00').toLocaleDateString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short' })}
+                {new Date(fu.scheduledAt).toLocaleString('en-ZA', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
                 {' · '}{fu.note}
               </p>
             )}
@@ -144,6 +224,11 @@ function FollowUpCard({ fu, section, onComplete }: {
             style={{ background: 'rgba(96,165,250,0.08)', color: '#60A5FA', border: '1px solid rgba(96,165,250,0.15)' }}>
             <Calendar size={11} /> Log Call
           </Link>
+          <button onClick={() => onReschedule(fu)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+            style={{ background: 'rgba(167,139,250,0.08)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.15)' }}>
+            <Pencil size={11} /> Reschedule
+          </button>
           <button onClick={handleComplete} disabled={completing}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
             style={{ background: 'rgba(52,211,153,0.08)', color: '#34D399', border: '1px solid rgba(52,211,153,0.15)', opacity: completing ? 0.5 : 1 }}>
@@ -155,13 +240,14 @@ function FollowUpCard({ fu, section, onComplete }: {
   );
 }
 
-function SectionBlock({ title, items, section, color, icon: Icon, onComplete }: {
+function SectionBlock({ title, items, section, color, icon: Icon, onComplete, onReschedule }: {
   title: string;
   items: FollowUp[];
   section: 'today' | 'overdue' | 'upcoming';
   color: string;
   icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>;
   onComplete: (id: string) => void;
+  onReschedule: (fu: FollowUp) => void;
 }) {
   return (
     <div>
@@ -182,7 +268,7 @@ function SectionBlock({ title, items, section, color, icon: Icon, onComplete }: 
       ) : (
         <div className="space-y-3">
           {items.map(fu => (
-            <FollowUpCard key={fu.id} fu={fu} section={section} onComplete={onComplete} />
+            <FollowUpCard key={fu.id} fu={fu} section={section} onComplete={onComplete} onReschedule={onReschedule} />
           ))}
         </div>
       )}
@@ -384,6 +470,7 @@ export default function FollowUpsPage() {
   const [loading,   setLoading]   = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('list');
   const [weekOffset, setWeekOffset] = useState(0);
+  const [rescheduleTarget, setRescheduleTarget] = useState<FollowUp | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -406,7 +493,15 @@ export default function FollowUpsPage() {
     setFollowUps(prev => prev.filter(f => f.id !== id));
   }
 
-  const today    = new Date().toISOString().split('T')[0];
+  function handleRescheduled(id: string, newIso: string) {
+    setFollowUps(prev => prev.map(f =>
+      f.id === id
+        ? { ...f, scheduledAt: newIso, nextFollowUp: toSASTDate(newIso) }
+        : f
+    ));
+  }
+
+  const today    = toSASTDate(new Date().toISOString());
   const dueToday = followUps.filter(f => f.nextFollowUp === today).map(f => ({ ...f, overdue: false }));
   const overdue  = followUps.filter(f => f.nextFollowUp < today).map(f => ({ ...f, overdue: true as const }));
   const upcoming = followUps.filter(f => f.nextFollowUp > today).map(f => ({ ...f, overdue: false }));
@@ -474,9 +569,9 @@ export default function FollowUpsPage() {
             ))}
           </div>
 
-          <SectionBlock title="Due Today" items={dueToday} section="today"   color="#FBBF24" icon={Clock}        onComplete={handleComplete} />
-          <SectionBlock title="Overdue"   items={overdue}   section="overdue" color="#F87171" icon={AlertCircle}  onComplete={handleComplete} />
-          <SectionBlock title="Upcoming"  items={upcoming}  section="upcoming" color="#60A5FA" icon={Calendar}    onComplete={handleComplete} />
+          <SectionBlock title="Due Today" items={dueToday} section="today"    color="#FBBF24" icon={Clock}       onComplete={handleComplete} onReschedule={setRescheduleTarget} />
+          <SectionBlock title="Overdue"   items={overdue}   section="overdue"  color="#F87171" icon={AlertCircle} onComplete={handleComplete} onReschedule={setRescheduleTarget} />
+          <SectionBlock title="Upcoming"  items={upcoming}  section="upcoming" color="#60A5FA" icon={Calendar}    onComplete={handleComplete} onReschedule={setRescheduleTarget} />
         </>
       )}
 
@@ -486,6 +581,14 @@ export default function FollowUpsPage() {
           weekOffset={weekOffset}
           setWeekOffset={setWeekOffset}
           onComplete={handleComplete}
+        />
+      )}
+
+      {rescheduleTarget && (
+        <RescheduleModal
+          fu={rescheduleTarget}
+          onClose={() => setRescheduleTarget(null)}
+          onRescheduled={handleRescheduled}
         />
       )}
     </div>

@@ -113,9 +113,10 @@ const SORT_LABELS: Record<SortOption, string> = {
 };
 
 const CALL_OUTCOMES = [
-  { label: 'Spoke',          value: 'Spoke',          color: '#34D399', bg: 'rgba(52,211,153,0.12)',  border: 'rgba(52,211,153,0.3)'  },
-  { label: 'No Answer',      value: 'No Answer',      color: '#FB923C', bg: 'rgba(251,146,60,0.12)', border: 'rgba(251,146,60,0.3)'  },
-  { label: 'Not Interested', value: 'Not Interested', color: '#FB7185', bg: 'rgba(251,113,133,0.12)', border: 'rgba(251,113,133,0.3)' },
+  { label: 'Spoke',           value: 'Spoke',              color: '#34D399', bg: 'rgba(52,211,153,0.12)',  border: 'rgba(52,211,153,0.3)'  },
+  { label: 'No Answer',       value: 'No Answer',          color: '#FB923C', bg: 'rgba(251,146,60,0.12)', border: 'rgba(251,146,60,0.3)'  },
+  { label: 'Call Back Later', value: 'Called Back Later',  color: '#06B6D4', bg: 'rgba(6,182,212,0.12)',  border: 'rgba(6,182,212,0.3)'   },
+  { label: 'Not Interested',  value: 'Not Interested',     color: '#FB7185', bg: 'rgba(251,113,133,0.12)', border: 'rgba(251,113,133,0.3)' },
 ] as const;
 
 // ─── StatusBadge ─────────────────────────────────────────────────────────────
@@ -130,7 +131,13 @@ function StatusBadge({ status, onChange }: { status: LeadStatus; onChange: (s: L
   function handleOpen() {
     if (btnRef.current) {
       const r = btnRef.current.getBoundingClientRect();
-      setPos({ top: r.bottom + 4, left: r.left });
+      const estimatedH = PIPELINE_STATUSES.length * 33 + 8;
+      const spaceBelow = window.innerHeight - r.bottom - 8;
+      const top = spaceBelow < estimatedH && r.top > estimatedH
+        ? r.top - estimatedH - 4
+        : r.bottom + 4;
+      const left = Math.min(r.left, window.innerWidth - 188);
+      setPos({ top, left });
     }
     setOpen(o => !o);
   }
@@ -918,14 +925,25 @@ export default function TelemarketerLeadsPage() {
                       <StatusBadge status={lead.status} onChange={s => updateStatus(lead.id, s)} />
                     </td>
                     <td>
-                      {lead.nextFollowUp ? (
-                        <span className="text-xs flex items-center gap-1" style={{ color: 'var(--color-text3)', fontFamily: 'var(--font-mono)' }}>
-                          <Clock size={10} />
-                          {new Date(lead.nextFollowUp).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })}
-                        </span>
-                      ) : (
-                        null
-                      )}
+                      {lead.nextFollowUp ? (() => {
+                        const d = new Date(lead.nextFollowUp);
+                        const SA_MS = 2 * 60 * 60 * 1000;
+                        const dSA = new Date(d.getTime() + SA_MS);
+                        const todayStr = new Date(Date.now() + SA_MS).toISOString().slice(0, 10);
+                        const fupStr = dSA.toISOString().slice(0, 10);
+                        const hasTime = !(dSA.getUTCHours() === 0 && dSA.getUTCMinutes() === 0);
+                        const isToday = fupStr === todayStr;
+                        const isOverdue = fupStr < todayStr;
+                        const isTomorrow = fupStr === new Date(Date.now() + SA_MS + 86400000).toISOString().slice(0, 10);
+                        const color = isOverdue ? '#F87171' : isToday ? '#FBBF24' : 'var(--color-text3)';
+                        const label = isOverdue ? 'Overdue' : isToday ? 'Today' : isTomorrow ? 'Tomorrow' : d.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' });
+                        return (
+                          <span className="text-xs flex items-center gap-1" style={{ color, fontFamily: 'var(--font-mono)' }}>
+                            <Clock size={10} />
+                            {label}{hasTime ? ` ${dSA.toISOString().slice(11, 16)}` : ''}
+                          </span>
+                        );
+                      })() : null}
                     </td>
                     <td>
                       <div className="flex items-center gap-1.5">

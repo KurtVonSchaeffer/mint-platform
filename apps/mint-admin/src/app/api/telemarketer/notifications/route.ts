@@ -29,13 +29,14 @@ export async function GET() {
       .select('id', { count: 'exact', head: true })
       .eq('agent_id', agentId)
       .eq('completed', false)
-      .lt('due_date', today),
+      .lt('scheduled_at', today),
     supabaseAdmin
       .from('follow_ups')
       .select('id', { count: 'exact', head: true })
       .eq('agent_id', agentId)
       .eq('completed', false)
-      .eq('due_date', today),
+      .gte('scheduled_at', today)
+      .lt('scheduled_at', today + 'T23:59:59'),
     supabaseAdmin
       .from('leads')
       .select('id', { count: 'exact', head: true })

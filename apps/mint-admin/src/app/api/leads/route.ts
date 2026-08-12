@@ -50,7 +50,19 @@ export async function GET(req: NextRequest) {
     page++;
   }
 
-  return NextResponse.json({ leads: all });
+  // Fetch latest note per lead in a single query (ordered desc, dedupe in JS)
+  const { data: notesData } = await supabaseAdmin
+    .from('lead_notes')
+    .select('lead_id, content, created_at')
+    .order('created_at', { ascending: false });
+
+  const latestNote: Record<string, string> = {};
+  for (const n of notesData ?? []) {
+    const lid = n.lead_id as string;
+    if (!latestNote[lid]) latestNote[lid] = n.content as string;
+  }
+
+  return NextResponse.json({ leads: all.map(l => ({ ...l, latest_note: latestNote[l.id as string] ?? null })) });
 }
 
 export async function POST(req: NextRequest) {

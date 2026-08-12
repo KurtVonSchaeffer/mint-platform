@@ -42,5 +42,19 @@ export async function POST(req: NextRequest) {
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Auto-advance tm_status based on outcome so KPI buckets stay accurate
+  const tmStatusUpdate: string | null =
+    outcome === 'Called Back Later' ? 'Call Back'         :
+    outcome === 'Not Interested'    ? 'Not Interested'    :
+    outcome === 'No Answer'         ? 'Attempted Contact' : null;
+
+  if (tmStatusUpdate) {
+    await supabaseAdmin
+      .from('leads')
+      .update({ tm_status: tmStatusUpdate })
+      .eq('id', lead_id);
+  }
+
   return NextResponse.json({ call_log: data }, { status: 201 });
 }

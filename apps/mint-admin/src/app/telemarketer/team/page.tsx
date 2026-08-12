@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useId } from 'react';
+import { useState, useEffect, useCallback, useId, useRef } from 'react';
 import Link from 'next/link';
 import {
   Users2, DollarSign, TrendingUp, Phone, AlertTriangle,
@@ -9,6 +9,28 @@ import {
   ArrowUp, ArrowDown, ArrowRight,
 } from 'lucide-react';
 import { Sparkline } from '@/components/Sparkline';
+
+// Count-up animation — eases from 0 to target when value first becomes non-zero
+function AnimatedNumber({ value, formatter }: { value: number; formatter?: (n: number) => string }) {
+  const [display, setDisplay] = useState(0);
+  const rafRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    const duration = 700;
+    const start = performance.now();
+    const from = 0;
+    const to = value;
+    function tick(now: number) {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      setDisplay(Math.round(from + (to - from) * eased));
+      if (t < 1) rafRef.current = requestAnimationFrame(tick);
+    }
+    rafRef.current = requestAnimationFrame(tick);
+    return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [value]);
+  return <>{formatter ? formatter(display) : display.toLocaleString()}</>;
+}
 
 interface Agent {
   id: string;
@@ -23,6 +45,7 @@ interface Agent {
   callsToday: number;
   callsThisWeek: number;
   callsThisMonth: number;
+  callsAllTime: number;
   lastCalledAt: string | null;
   overdueFollowUps: number;
   dueTodayFollowUps: number;
@@ -134,13 +157,14 @@ export default function TeamPage() {
   });
 
   const totals = {
-    callsToday:  agents.reduce((s, a) => s + a.callsToday, 0),
-    callsMonth:  agents.reduce((s, a) => s + a.callsThisMonth, 0),
-    wonMonth:    agents.reduce((s, a) => s + a.wonThisMonth, 0),
-    overdue:     agents.reduce((s, a) => s + a.overdueFollowUps, 0),
-    pending:     agents.reduce((s, a) => s + a.commissionPending, 0),
-    ready:       agents.reduce((s, a) => s + a.commissionReady, 0),
-    paid:        agents.reduce((s, a) => s + a.commissionPaid, 0),
+    callsToday:   agents.reduce((s, a) => s + a.callsToday, 0),
+    callsMonth:   agents.reduce((s, a) => s + a.callsThisMonth, 0),
+    callsAllTime: agents.reduce((s, a) => s + a.callsAllTime, 0),
+    wonMonth:     agents.reduce((s, a) => s + a.wonThisMonth, 0),
+    overdue:      agents.reduce((s, a) => s + a.overdueFollowUps, 0),
+    pending:      agents.reduce((s, a) => s + a.commissionPending, 0),
+    ready:        agents.reduce((s, a) => s + a.commissionReady, 0),
+    paid:         agents.reduce((s, a) => s + a.commissionPaid, 0),
   };
 
   const SORT_OPTIONS: { key: SortKey; label: string }[] = [
@@ -153,6 +177,23 @@ export default function TeamPage() {
 
   return (
     <div className="space-y-6 page-enter">
+      <style>{`
+        @keyframes tm-ping {
+          75%, 100% { transform: scale(2.2); opacity: 0; }
+        }
+        @keyframes tm-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.55; }
+        }
+        @keyframes tm-icon-glow {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(var(--glow), 0); }
+          50%       { box-shadow: 0 0 10px 2px rgba(var(--glow), 0.35); }
+        }
+        @keyframes tm-shimmer {
+          0%   { background-position: -200% center; }
+          100% { background-position:  200% center; }
+        }
+      `}</style>
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -187,24 +228,31 @@ export default function TeamPage() {
 
       {/* Team totals strip — dot-grid + color wash from Progress Metric Card */}
       {!loading && agents.length > 0 && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           {[
-            { label: 'Team Calls Today',   value: totals.callsToday, color: '#60A5FA', rgb: '96,165,250',  icon: PhoneCall,    suffix: ' calls',   spark: agents.map(a => a.callsToday) },
-            { label: 'Calls This Month',   value: totals.callsMonth, color: '#A78BFA', rgb: '167,139,250', icon: Phone,        suffix: ' total',   spark: agents.map(a => a.callsThisMonth) },
-            { label: 'Won This Month',     value: totals.wonMonth,   color: '#34D399', rgb: '52,211,153',  icon: Target,       suffix: ' clients', spark: agents.map(a => a.wonThisMonth) },
-            { label: 'Overdue Follow-ups', value: totals.overdue,    color: totals.overdue > 0 ? '#F87171' : '#34D399', rgb: totals.overdue > 0 ? '248,113,113' : '52,211,153', icon: AlertTriangle, suffix: ' overdue', spark: agents.map(a => a.overdueFollowUps) },
+            { label: 'Team Calls Today',   value: totals.callsToday,   color: '#60A5FA', rgb: '96,165,250',  icon: PhoneCall,    suffix: ' calls',   spark: agents.map(a => a.callsToday) },
+            { label: 'Calls This Month',   value: totals.callsMonth,   color: '#A78BFA', rgb: '167,139,250', icon: Phone,        suffix: ' total',   spark: agents.map(a => a.callsThisMonth) },
+            { label: 'All Calls To Date',  value: totals.callsAllTime, color: '#38BDF8', rgb: '56,189,248',  icon: Activity,     suffix: ' total',   spark: agents.map(a => a.callsAllTime) },
+            { label: 'Won This Month',     value: totals.wonMonth,     color: '#34D399', rgb: '52,211,153',  icon: Target,       suffix: ' clients', spark: agents.map(a => a.wonThisMonth) },
+            { label: 'Overdue Follow-ups', value: totals.overdue,      color: totals.overdue > 0 ? '#F87171' : '#34D399', rgb: totals.overdue > 0 ? '248,113,113' : '52,211,153', icon: AlertTriangle, suffix: ' overdue', spark: agents.map(a => a.overdueFollowUps) },
           ].map(k => (
             <DotGridCard key={k.label} color={k.color} rgb={k.rgb}>
               <div className="flex items-start justify-between mb-3">
                 <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                  style={{ background: `rgba(${k.rgb},0.12)`, color: k.color }}>
+                  style={{
+                    background: `rgba(${k.rgb},0.15)`,
+                    color: k.color,
+                    ['--glow' as string]: k.rgb,
+                    animation: 'tm-icon-glow 3s ease-in-out infinite',
+                  }}>
                   <k.icon size={13} />
                 </div>
                 <Sparkline data={k.spark.length >= 2 ? k.spark : [0, k.value]} color={k.color} width={56} height={28} />
               </div>
               <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: 'var(--color-text3)' }}>{k.label}</p>
               <p className="text-lg font-bold font-mono" style={{ color: 'var(--color-text)' }}>
-                {k.value}<span className="text-xs font-normal ml-1" style={{ color: 'var(--color-text3)' }}>{k.suffix}</span>
+                <AnimatedNumber value={k.value} />
+                <span className="text-xs font-normal ml-1" style={{ color: 'var(--color-text3)' }}>{k.suffix}</span>
               </p>
             </DotGridCard>
           ))}
@@ -266,7 +314,13 @@ export default function TeamPage() {
 
         return (
           <div key={agent.id} className="bento-card overflow-hidden p-0"
-            style={{ animation: `fade-up 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 50}ms both` }}>
+            style={{
+              animation: `fade-up 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 50}ms both`,
+              boxShadow: activeToday
+                ? '0 0 0 1px rgba(52,211,153,0.2), 0 4px 24px rgba(52,211,153,0.08)'
+                : undefined,
+              transition: 'box-shadow 0.3s ease',
+            }}>
 
             {/* Agent header */}
             <div className="flex items-center gap-4 p-5" style={{ borderBottom: '1px solid var(--color-border2)' }}>
@@ -275,8 +329,12 @@ export default function TeamPage() {
                   style={{ background: grad }}>
                   {agent.initials}
                 </div>
-                {/* Live / idle indicator */}
-                <div className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[var(--color-surface)]`}
+                {/* Ping ring for active agents */}
+                {activeToday && (
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full"
+                    style={{ background: '#34D399', opacity: 0.6, animation: 'tm-ping 1.8s cubic-bezier(0,0,0.2,1) infinite' }} />
+                )}
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[var(--color-surface)]"
                   style={{ background: activeToday ? '#34D399' : '#6B7280' }}
                   title={activeToday ? 'Called today' : 'No calls today'} />
               </div>
@@ -286,7 +344,11 @@ export default function TeamPage() {
                   <p className="font-bold" style={{ color: 'var(--color-text)' }}>{agent.name}</p>
                   {agent.overdueFollowUps > 0 && (
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                      style={{ background: 'rgba(248,113,113,0.12)', color: '#F87171' }}>
+                      style={{
+                        background: 'rgba(248,113,113,0.12)',
+                        color: '#F87171',
+                        animation: 'tm-pulse 2.4s ease-in-out infinite',
+                      }}>
                       {agent.overdueFollowUps} overdue
                     </span>
                   )}
@@ -345,7 +407,7 @@ export default function TeamPage() {
               {[
                 { label: 'Calls Today',    value: agent.callsToday,      color: agent.callsToday > 0 ? '#60A5FA' : 'var(--color-text3)', icon: PhoneCall },
                 { label: 'Calls / Week',   value: agent.callsThisWeek,   color: '#A78BFA', icon: Phone    },
-                { label: 'Calls / Month',  value: agent.callsThisMonth,  color: '#A78BFA', icon: Activity },
+                { label: 'All Calls',      value: agent.callsAllTime,    color: '#38BDF8', icon: Activity },
                 { label: 'Total Leads',    value: agent.leadsTotal,      color: 'var(--color-text2)', icon: Users2 },
                 { label: 'New Leads',      value: agent.leadsNewLead,    color: agent.leadsNewLead > 0 ? '#FBBF24' : 'var(--color-text3)', icon: Target },
                 { label: 'Won This Month', value: agent.wonThisMonth,    color: agent.wonThisMonth > 0 ? '#34D399' : 'var(--color-text3)', icon: CheckCircle2 },
