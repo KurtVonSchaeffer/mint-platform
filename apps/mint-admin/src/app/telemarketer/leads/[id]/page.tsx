@@ -604,6 +604,8 @@ export default function LeadDetailPage() {
   const [templatesOpen, setTemplatesOpen] = useState(false);
   const [copiedId,      setCopiedId]      = useState<string | null>(null);
   const [copiedLeadId,  setCopiedLeadId]  = useState(false);
+  const [smsSending,    setSmsSending]    = useState<string | null>(null);
+  const [smsResult,     setSmsResult]     = useState<{ id: string; ok: boolean } | null>(null);
 
   useEffect(() => {
     if (!statusOpen) return;
@@ -824,6 +826,33 @@ export default function LeadDetailPage() {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  }
+
+  async function sendSms(templateId: string, text: string) {
+    if (!lead?.phone) return;
+    setSmsSending(templateId);
+    setSmsResult(null);
+    try {
+      const res = await fetch('/api/telemarketer/sms/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: lead.phone, body: text }),
+      });
+      setSmsResult({ id: templateId, ok: res.ok });
+    } catch {
+      setSmsResult({ id: templateId, ok: false });
+    } finally {
+      setSmsSending(null);
+      setTimeout(() => setSmsResult(null), 3000);
+    }
+  }
+
+  function waLink(text: string): string {
+    if (!lead?.phone) return '#';
+    let phone = lead.phone.replace(/\s+/g, '');
+    if (phone.startsWith('+')) phone = phone.slice(1);
+    else if (phone.startsWith('0')) phone = `27${phone.slice(1)}`;
+    return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
   }
 
   const isNegativeOutcome = status === 'Lost' || status === 'Not Interested';
@@ -1314,23 +1343,51 @@ export default function LeadDetailPage() {
               </p>
               <div className="space-y-2">
                 {ALGOLEND_TEMPLATES.whatsapp.map(tpl => {
-                  const body = tpl.text(lead.name);
-                  const copied = copiedId === tpl.id;
+                  const body    = tpl.text(lead.name);
+                  const copied  = copiedId === tpl.id;
+                  const sending = smsSending === tpl.id;
+                  const result  = smsResult?.id === tpl.id ? smsResult : null;
                   return (
-                    <div key={tpl.id} className="rounded-xl p-3.5 relative"
+                    <div key={tpl.id} className="rounded-xl p-3.5"
                       style={{ background: 'var(--color-surface2)', border: '1px solid var(--color-border2)' }}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[10px] font-bold mb-1.5" style={{ color: 'var(--color-text2)' }}>{tpl.label}</p>
-                          <p className="text-[11px] leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--color-text3)' }}>{body}</p>
-                        </div>
+                      <p className="text-[10px] font-bold mb-1.5" style={{ color: 'var(--color-text2)' }}>{tpl.label}</p>
+                      <p className="text-[11px] leading-relaxed whitespace-pre-wrap mb-3" style={{ color: 'var(--color-text3)' }}>{body}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {/* WhatsApp deep-link */}
+                        {lead.phone && (
+                          <a
+                            href={waLink(body)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all hover:-translate-y-px"
+                            style={{ background: 'rgba(37,211,102,0.1)', color: '#25D366', border: '1px solid rgba(37,211,102,0.25)' }}
+                          >
+                            <MessageSquare size={10} />
+                            Open in WhatsApp
+                          </a>
+                        )}
+                        {/* SMS via Twilio */}
+                        {lead.phone && (
+                          <button
+                            onClick={() => sendSms(tpl.id, body)}
+                            disabled={sending}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all disabled:opacity-50"
+                            style={result
+                              ? { background: result.ok ? 'rgba(52,211,153,0.12)' : 'rgba(248,113,113,0.12)', color: result.ok ? '#34D399' : '#F87171', border: `1px solid ${result.ok ? 'rgba(52,211,153,0.25)' : 'rgba(248,113,113,0.25)'}` }
+                              : { background: 'rgba(96,165,250,0.08)', color: '#60A5FA', border: '1px solid rgba(96,165,250,0.15)' }}
+                          >
+                            {sending ? <Loader2 size={10} className="animate-spin" /> : <Send size={10} />}
+                            {sending ? 'Sending…' : result ? (result.ok ? 'SMS sent!' : 'Failed') : 'Send SMS'}
+                          </button>
+                        )}
+                        {/* Copy fallback */}
                         <button
                           onClick={() => copyTemplate(tpl.id, body)}
-                          className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all"
                           style={copied
                             ? { background: 'rgba(52,211,153,0.12)', color: '#34D399', border: '1px solid rgba(52,211,153,0.25)' }
-                            : { background: 'rgba(96,165,250,0.08)', color: '#60A5FA', border: '1px solid rgba(96,165,250,0.15)' }
-                          }>
+                            : { background: 'rgba(255,255,255,0.04)', color: 'var(--color-text3)', border: '1px solid var(--color-border2)' }}
+                        >
                           <Copy size={10} />
                           {copied ? 'Copied!' : 'Copy'}
                         </button>

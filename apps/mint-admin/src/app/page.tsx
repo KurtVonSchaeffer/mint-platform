@@ -9,10 +9,19 @@ import {
   Power, ExternalLink, Activity, CheckCircle2, AlertCircle,
   ChevronRight, Globe, FileText, UserPlus, Clock, Wifi, WifiOff,
   RefreshCw, ArrowUpRight, ArrowDownRight, CircleDot, ToggleLeft,
+  MousePointerClick, Share2, PenLine,
 } from 'lucide-react';
 
 type Tier   = 'core' | 'growth' | 'enterprise';
 type Status = 'active' | 'trial' | 'suspended' | 'churned';
+
+interface SourceStat {
+  source: string;
+  label: string;
+  count: number;
+  won: number;
+  convRate: number;
+}
 
 interface ClientRow {
   id: string; name: string; slug: string;
@@ -243,10 +252,130 @@ function HealthDot({ ok }: { ok: boolean }) {
   );
 }
 
+// ── Source Analytics card ─────────────────────────────────────────────
+const SOURCE_META: Record<string, { icon: typeof MousePointerClick; color: string; rgb: string }> = {
+  'marketing-site': { icon: MousePointerClick, color: '#A78BFA', rgb: '167,139,250' },
+  referral:         { icon: Share2,            color: '#34D399', rgb: '52,211,153'  },
+  manual:           { icon: PenLine,           color: '#60A5FA', rgb: '96,165,250'  },
+};
+const SOURCE_ORDER = ['marketing-site', 'referral', 'manual'];
+
+function SourceAnalytics({ sources, total, loading }: { sources: SourceStat[]; total: number; loading: boolean }) {
+  const [hovered, setHovered] = useState<string | null>(null);
+
+  const maxCount = sources.length > 0 ? Math.max(...sources.map(s => s.count)) : 1;
+
+  // Ensure all three known sources appear, even if 0 leads
+  const rows = SOURCE_ORDER.map(src => {
+    const found = sources.find(s => s.source === src);
+    return found ?? { source: src, label: src === 'marketing-site' ? 'algolend.co.za' : src === 'referral' ? 'Referral' : 'Manual Entry', count: 0, won: 0, convRate: 0 };
+  });
+
+  return (
+    <div className="bento-card p-5">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--color-text2)' }}>Lead Sources</h2>
+          {!loading && total > 0 && (
+            <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-text3)' }}>
+              {total.toLocaleString('en-ZA')} total lead{total !== 1 ? 's' : ''}
+            </p>
+          )}
+        </div>
+        <Link href="/leads" className="text-[10px] font-semibold" style={{ color: 'var(--color-violet)', fontFamily: 'var(--font-mono)' }}>
+          View all leads →
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {rows.map((s, i) => {
+          const meta  = SOURCE_META[s.source] ?? { icon: Activity, color: '#A78BFA', rgb: '167,139,250' };
+          const Icon  = meta.icon;
+          const barW  = maxCount > 0 ? Math.max((s.count / maxCount) * 100, s.count > 0 ? 4 : 0) : 0;
+          const isHov = hovered === s.source;
+
+          return (
+            <Link
+              key={s.source}
+              href={`/leads?source=${s.source}`}
+              className="block rounded-xl p-4 transition-all duration-200 cursor-pointer"
+              style={{
+                background: isHov ? `rgba(${meta.rgb},0.07)` : 'var(--color-surface2)',
+                border: `1px solid ${isHov ? `rgba(${meta.rgb},0.25)` : 'var(--color-border2)'}`,
+                animation: `fade-up 0.45s cubic-bezier(0.16,1,0.3,1) ${i * 80}ms both`,
+                transform: isHov ? 'translateY(-2px)' : 'translateY(0)',
+                boxShadow: isHov ? `0 6px 24px -4px rgba(${meta.rgb},0.2)` : 'none',
+              }}
+              onMouseEnter={() => setHovered(s.source)}
+              onMouseLeave={() => setHovered(null)}
+            >
+              {/* Icon + label row */}
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: `rgba(${meta.rgb},0.12)`, color: meta.color }}>
+                  <Icon size={13} />
+                </div>
+                <span className="text-xs font-semibold truncate" style={{ color: 'var(--color-text2)' }}>{s.label}</span>
+              </div>
+
+              {/* Volume bar */}
+              <div className="mb-3">
+                {loading ? (
+                  <div className="h-1.5 rounded-full animate-pulse" style={{ background: 'var(--color-surface3)', width: '60%' }} />
+                ) : (
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{
+                        width: `${barW}%`,
+                        background: `linear-gradient(90deg, rgba(${meta.rgb},0.5), ${meta.color})`,
+                        boxShadow: barW > 0 ? `0 0 8px rgba(${meta.rgb},0.4)` : 'none',
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Stats row */}
+              <div className="flex items-end justify-between gap-2">
+                {loading ? (
+                  <div className="h-7 w-10 rounded animate-pulse" style={{ background: 'var(--color-surface3)' }} />
+                ) : (
+                  <p className="text-2xl font-bold font-mono leading-none" style={{ color: 'var(--color-text)', letterSpacing: '-0.02em' }}>
+                    {s.count.toLocaleString('en-ZA')}
+                  </p>
+                )}
+                <div className="text-right">
+                  {loading ? (
+                    <div className="h-3.5 w-14 rounded animate-pulse" style={{ background: 'var(--color-surface3)' }} />
+                  ) : (
+                    <>
+                      <p className="text-[10px] font-semibold font-mono" style={{ color: meta.color }}>
+                        {s.convRate}% conv.
+                      </p>
+                      {s.won > 0 && (
+                        <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text3)' }}>
+                          {s.won} won
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Page ──────────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const [clients,     setClients]     = useState<ClientRow[]>([]);
   const [activity,    setActivity]    = useState<{ icon: typeof Users; color: string; rgb: string; text: string; time: string }[]>([]);
+  const [sources,     setSources]     = useState<SourceStat[]>([]);
+  const [sourceTotal, setSourceTotal] = useState(0);
   const [health,      setHealth]      = useState<HealthCheck[]>([]);
   const [loading,     setLoading]     = useState(true);
   const [toast,       setToast]       = useState<{ kind: ToastKind; message: string } | null>(null);
@@ -272,6 +401,9 @@ export default function DashboardPage() {
           })));
       }).catch(() => {}),
       fetch('/api/health').then(r => r.json()).then(({ checks }) => { if (Array.isArray(checks)) setHealth(checks); }).catch(() => {}),
+      fetch('/api/admin/source-analytics').then(r => r.json()).then(({ sources: s, total }) => {
+        if (Array.isArray(s)) { setSources(s); setSourceTotal(Number(total ?? 0)); }
+      }).catch(() => {}),
     ]).finally(() => setLoading(false));
   }, []);
 
@@ -506,6 +638,9 @@ export default function DashboardPage() {
             </Link>
           ))}
         </div>
+
+        {/* ── Source Analytics ─────────────────────────────────────────── */}
+        <SourceAnalytics sources={sources} total={sourceTotal} loading={loading} />
 
         {/* ── Activity + System health ──────────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">

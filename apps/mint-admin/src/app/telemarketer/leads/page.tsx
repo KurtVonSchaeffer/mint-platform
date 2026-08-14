@@ -60,12 +60,7 @@ interface Lead {
   nextFollowUp: string | null;
 }
 
-const STALE_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 const TERMINAL: LeadStatus[] = ['Won', 'Lost', 'Other', 'Converted', 'Not Interested'];
-function isStale(lead: Lead) {
-  if (!lead.updatedAt || TERMINAL.includes(lead.status)) return false;
-  return Date.now() - new Date(lead.updatedAt).getTime() > STALE_DAYS_MS;
-}
 
 const STATUS_CFG: Record<LeadStatus, { bg: string; border: string; color: string }> = {
   // Pipeline stages
@@ -103,14 +98,55 @@ import { getAgentId } from '@/lib/telemarketer-agent';
 
 const ALL_STATUSES = Object.keys(STATUS_CFG) as LeadStatus[];
 
-type SortOption = 'newest' | 'oldest' | 'name' | 'followup';
+type SortOption = 'priority' | 'newest' | 'oldest' | 'name' | 'followup';
 
 const SORT_LABELS: Record<SortOption, string> = {
-  newest:  'Newest First',
-  oldest:  'Oldest First',
-  name:    'Name A→Z',
+  priority: '⚡ Priority',
+  newest:   'Newest First',
+  oldest:   'Oldest First',
+  name:     'Name A→Z',
   followup: 'Follow-up Date',
 };
+
+// Priority score — higher = call first. Factors: status urgency, overdue follow-up,
+// recency of last activity, staleness penalty for very cold leads.
+function priorityScore(l: Lead): number {
+  if (TERMINAL.includes(l.status)) return -1;
+
+  const STATUS_SCORE: Partial<Record<LeadStatus, number>> = {
+    'New Lead':           60,
+    'Interested':         55,
+    'Call Back':          50,
+    'Call Again':         45,
+    'Pending':            45,
+    'Attempted Contact':  35,
+    'Contacted':          25,
+    'Demo Scheduled':     20,
+    'Demo Completed':     18,
+    'Proposal Requested': 15,
+    'Proposal Sent':      15,
+    'Negotiation':        12,
+    'Quoted':             12,
+    'Unreachable':        5,
+  };
+  let score = STATUS_SCORE[l.status] ?? 10;
+
+  // Overdue follow-up = commit to this lead right now
+  if (l.nextFollowUp) {
+    const daysDue = Math.floor((Date.now() - new Date(l.nextFollowUp).getTime()) / 86400000);
+    if (daysDue > 0)    score += 30;  // overdue
+    else if (daysDue === 0) score += 20; // due today
+  }
+
+  // Staleness penalty — very stale leads move down slightly
+  if (l.updatedAt) {
+    const staleDays = Math.floor((Date.now() - new Date(l.updatedAt).getTime()) / 86400000);
+    if (staleDays >= 30) score -= 15;
+    else if (staleDays >= 14) score -= 5;
+  }
+
+  return score;
+}
 
 const CALL_OUTCOMES = [
   { label: 'Spoke',           value: 'Spoke',              color: '#34D399', bg: 'rgba(52,211,153,0.12)',  border: 'rgba(52,211,153,0.3)'  },
@@ -436,7 +472,7 @@ export default function TelemarketerLeadsPage() {
 
   // Search + sort
   const [search,   setSearch]   = useState('');
-  const [sortBy,   setSortBy]   = useState<SortOption>('newest');
+  const [sortBy,   setSortBy]   = useState<SortOption>('priority');
   const [sortOpen, setSortOpen] = useState(false);
 
   // Bulk selection
@@ -532,6 +568,8 @@ export default function TelemarketerLeadsPage() {
     // 3. Sort
     return [...result].sort((a, b) => {
       switch (sortBy) {
+        case 'priority':
+          return priorityScore(b) - priorityScore(a);
         case 'oldest':
           return new Date(a.dateAdded).getTime() - new Date(b.dateAdded).getTime();
         case 'name':
@@ -883,12 +921,38 @@ export default function TelemarketerLeadsPage() {
                         <div>
                           <p className="text-sm font-semibold group-hover:text-[var(--color-violet)] transition-colors" style={{ color: 'var(--color-text)' }}>{lead.clientName}</p>
                           <p className="text-xs" style={{ color: 'var(--color-text3)' }}>{lead.company}</p>
-                          {isStale(lead) && (
-                            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full mt-0.5 inline-block"
-                              style={{ background: 'rgba(251,146,60,0.12)', color: '#FB923C', border: '1px solid rgba(251,146,60,0.2)' }}>
-                              Stale
-                            </span>
-                          )}
+                          {(() => {
+                            const score = priorityScore(lead);
+                            if (score >= 70) return (
+                              <span className="relative inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full mt-0.5"
+                                style={{ background: 'rgba(251,146,60,0.15)', color: '#FB923C', border: '1px solid rgba(251,146,60,0.35)' }}>
+                                <span className="absolute inset-0 rounded-full animate-ping opacity-25" style={{ background: '#FB923C' }} aria-hidden />
+                                ⚡ Hot
+                              </span>
+                            );
+                            return null;
+                          })()}
+                          {(() => {
+                            if (!lead.updatedAt || TERMINAL.includes(lead.status)) return null;
+                            const staleDays = Math.floor((Date.now() - new Date(lead.updatedAt).getTime()) / 86400000);
+                            if (staleDays < 7) return null;
+                            const tier = staleDays >= 21
+                              ? { bg: 'rgba(248,113,113,0.15)', border: 'rgba(248,113,113,0.45)', color: '#F87171', label: `${staleDays}d critical`, pulse: true }
+                              : staleDays >= 14
+                              ? { bg: 'rgba(249,115,22,0.12)',  border: 'rgba(249,115,22,0.35)',  color: '#FB923C', label: `${staleDays}d stale`,    pulse: false }
+                              : { bg: 'rgba(251,191,36,0.10)',  border: 'rgba(251,191,36,0.30)',  color: '#FBBF24', label: `${staleDays}d`,           pulse: false };
+                            return (
+                              <span className="relative inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full mt-0.5"
+                                style={{ background: tier.bg, color: tier.color, border: `1px solid ${tier.border}` }}>
+                                {tier.pulse && (
+                                  <span className="absolute inset-0 rounded-full animate-ping opacity-30"
+                                    style={{ background: tier.color }} aria-hidden />
+                                )}
+                                <Clock size={9} />
+                                {tier.label}
+                              </span>
+                            );
+                          })()}
                         </div>
                       </Link>
                     </td>

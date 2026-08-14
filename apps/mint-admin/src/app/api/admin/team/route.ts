@@ -69,7 +69,7 @@ export async function GET() {
     return all;
   }
 
-  const [usersRes, allLeads, commissionsRes, callsRes, allCallLogs, followUpsRes, recentCallsRes] = await Promise.all([
+  const [usersRes, allLeads, commissionsRes, callsRes, allCallLogs, followUpsRes, recentCallsRes, latestNotesRes] = await Promise.all([
     supabaseAdmin.auth.admin.listUsers({ perPage: 1000 }),
 
     fetchAllLeads(),
@@ -96,6 +96,12 @@ export async function GET() {
       .select('id, agent_id, outcome, duration, notes, called_at, lead_id, leads(name, company)')
       .order('called_at', { ascending: false })
       .limit(40),
+
+    supabaseAdmin
+      .from('lead_notes')
+      .select('agent_id, created_at')
+      .order('created_at', { ascending: false })
+      .limit(5000),
   ]);
 
   const telemarketers = (usersRes.data?.users ?? [])
@@ -114,6 +120,13 @@ export async function GET() {
     }
     return acc;
   }, {});
+
+  // Latest note timestamp per agent (notes already ordered desc, so first match wins)
+  const lastNoteByAgent: Record<string, string> = {};
+  for (const n of latestNotesRes.data ?? []) {
+    const id = n.agent_id as string;
+    if (!lastNoteByAgent[id]) lastNoteByAgent[id] = n.created_at as string;
+  }
 
   type LeadBucket = { total: number; converted: number; newLead: number; wonThisMonth: number };
   const leadsByAgent = leads.reduce<Record<string, LeadBucket>>((acc, l) => {
@@ -170,6 +183,10 @@ export async function GET() {
     const cb   = commByAgent[u.id]   ?? { pending: 0, ready: 0, paid: 0 };
     const clb  = callsByAgent[u.id]  ?? { today: 0, week: 0, month: 0, lastCalledAt: null };
     const fub  = fuByAgent[u.id]     ?? { overdue: 0, dueToday: 0 };
+    const lastCallAt = allTimeCallsByAgent[u.id]?.lastCalledAt ?? null;
+    const lastNoteAt = lastNoteByAgent[u.id] ?? null;
+    const candidates = [lastCallAt, lastNoteAt].filter(Boolean) as string[];
+    const lastActionAt = candidates.length ? [...candidates].sort().at(-1)! : null;
     return {
       id:       u.id,
       name,
@@ -184,7 +201,8 @@ export async function GET() {
       callsThisWeek:     clb.week,
       callsThisMonth:    clb.month,
       callsAllTime:      allTimeCallsByAgent[u.id]?.count ?? 0,
-      lastCalledAt:      allTimeCallsByAgent[u.id]?.lastCalledAt ?? null,
+      lastCalledAt:      lastCallAt,
+      lastActionAt,
       overdueFollowUps:  fub.overdue,
       dueTodayFollowUps: fub.dueToday,
       commissionPending: cb.pending,

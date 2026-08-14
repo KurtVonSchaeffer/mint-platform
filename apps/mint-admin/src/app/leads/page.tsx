@@ -7,7 +7,7 @@ import { createClient } from '@supabase/supabase-js';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
-import { Inbox, RefreshCw, Mail, Building2, ChevronDown, ChevronLeft, ChevronRight, Plus, X, Loader2, UserPlus, FileText, UserCheck, Upload, Download, Trash2, Pencil, Calendar, Search, Filter } from 'lucide-react';
+import { Inbox, RefreshCw, Mail, Building2, ChevronDown, ChevronLeft, ChevronRight, Plus, X, Loader2, UserPlus, FileText, UserCheck, Upload, Download, Trash2, Pencil, Calendar, Search, Filter, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 type LeadStatus = 'new' | 'attempted' | 'call_again' | 'call_back' | 'contacted' | 'qualified' | 'won' | 'lost' | 'not_interested' | 'other';
@@ -18,6 +18,7 @@ interface Lead {
   refId:       string | null;
   name:        string;
   email:       string | null;
+  phone:       string | null;
   company:     string;
   message:     string | null;
   latestNote:  string | null;
@@ -407,10 +408,24 @@ function EditLeadModal({ lead, onClose, onSaved }: { lead: Lead; onClose: () => 
   );
 }
 
-function AddLeadModal({ onClose, onAdded }: { onClose: () => void; onAdded: () => void }) {
+function AddLeadModal({ onClose, onAdded, existingLeads }: { onClose: () => void; onAdded: () => void; existingLeads: Lead[] }) {
   const [form, setForm]   = useState({ name: '', email: '', phone: '', company: '', message: '' });
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState<string | null>(null);
+
+  const dupLead = (() => {
+    const phone = form.phone.replace(/[\s\-()]/g, '');
+    const email = form.email.toLowerCase().trim();
+    if (!phone && !email) return null;
+    return existingLeads.find(l => {
+      if (phone && l.phone) {
+        const lp = l.phone.replace(/[\s\-()]/g, '');
+        if (lp && lp === phone) return true;
+      }
+      if (email && l.email?.toLowerCase() === email) return true;
+      return false;
+    }) ?? null;
+  })();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -457,6 +472,15 @@ function AddLeadModal({ onClose, onAdded }: { onClose: () => void; onAdded: () =
               <input type="tel" className="field-input" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} />
             </div>
           </div>
+          {dupLead && (
+            <div className="flex items-start gap-2 px-3 py-2.5 rounded-xl text-xs"
+              style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.3)', color: '#FBBF24' }}>
+              <span className="shrink-0 mt-0.5">⚠</span>
+              <span>
+                Possible duplicate: <strong>{dupLead.name}</strong> ({dupLead.company}) already has this {dupLead.email?.toLowerCase() === form.email.toLowerCase().trim() ? 'email' : 'phone'}. You can still add this lead.
+              </span>
+            </div>
+          )}
           <div>
             <label className="block text-[10px] font-medium mb-1.5" style={{ color: 'var(--color-text3)' }}>Message (optional)</label>
             <textarea className="field-input" rows={3} value={form.message} onChange={e => setForm(p => ({ ...p, message: e.target.value }))} />
@@ -498,6 +522,9 @@ export default function LeadsPage() {
   const [dateOpen,     setDateOpen]     = useState(false);
   const [sortDir,      setSortDir]      = useState<'desc' | 'asc'>('desc');
   const [flashedIds,   setFlashedIds]   = useState<Set<string>>(new Set());
+  const [selectedIds,  setSelectedIds]  = useState<Set<string>>(new Set());
+  const [staleFilter,  setStaleFilter]  = useState(false);
+  const [bulkAssigning, setBulkAssigning] = useState(false);
   const flashTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const dateBtnRef = useRef<HTMLButtonElement>(null);
   const [datePos,      setDatePos]      = useState({ top: 0, left: 0 });
@@ -543,6 +570,7 @@ export default function LeadsPage() {
         assignedTo: l.assigned_to ?? l.assignedTo ?? null,
         tmStatus:   l.tm_status   ?? null,
         latestNote: l.latest_note ?? null,
+        phone:      l.phone       ?? null,
       })));
       setPage(1);
     }
@@ -581,8 +609,11 @@ export default function LeadsPage() {
     };
   }, [load, flashLead]);
 
-  // Reset to page 1 whenever any filter changes
-  useEffect(() => { setPage(1); }, [statusFilter, agentFilter, datePreset, dateFrom, dateTo, searchQuery]);
+  // Reset to page 1 and clear selection whenever any filter changes
+  useEffect(() => {
+    setPage(1);
+    setSelectedIds(new Set());
+  }, [statusFilter, agentFilter, datePreset, dateFrom, dateTo, searchQuery, staleFilter]);
 
   function exportCsv() {
     const agentName = (id: string | null) => agents.find(a => a.id === id)?.name ?? id ?? '';
@@ -674,6 +705,23 @@ export default function LeadsPage() {
     setToast({ kind: 'success', message: agent ? `Assigned to ${agent.name}` : 'Lead unassigned' });
   }
 
+  async function bulkAssign(agentId: string) {
+    setBulkAssigning(true);
+    const ids = [...selectedIds];
+    await Promise.all(ids.map(id => fetch(`/api/leads/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ assigned_to: agentId, tm_status: 'New Lead' }),
+    })));
+    setLeads(prev => prev.map(l =>
+      selectedIds.has(l.id) ? { ...l, assignedTo: agentId, tmStatus: 'New Lead' } : l,
+    ));
+    const agent = agents.find(a => a.id === agentId);
+    setToast({ kind: 'success', message: `${ids.length} lead${ids.length > 1 ? 's' : ''} assigned to ${agent?.name ?? 'agent'}` });
+    setSelectedIds(new Set());
+    setBulkAssigning(false);
+  }
+
   const byStatus = leads.reduce<Record<string, number>>((acc, l) => {
     const s = getEffectiveStatus(l);
     acc[s] = (acc[s] ?? 0) + 1;
@@ -682,9 +730,15 @@ export default function LeadsPage() {
 
   const PAGE_SIZE = 20;
 
+  const STALE_STATUSES: LeadStatus[] = ['new', 'attempted', 'call_again', 'call_back'];
+
   const filteredLeads = leads
     .slice()
     .sort((a, b) => {
+      if (staleFilter) {
+        // Oldest first when stale filter is on
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      }
       const ta = new Date(a.createdAt).getTime();
       const tb = new Date(b.createdAt).getTime();
       const timeDiff = sortDir === 'desc' ? tb - ta : ta - tb;
@@ -705,6 +759,11 @@ export default function LeadsPage() {
     })
     .filter(l => !statusFilter || getEffectiveStatus(l) === statusFilter)
     .filter(l => !agentFilter  || (agentFilter === 'unassigned' ? !l.assignedTo : l.assignedTo === agentFilter))
+    .filter(l => {
+      if (!staleFilter) return true;
+      const ageDays = Math.floor((Date.now() - new Date(l.createdAt).getTime()) / 86400000);
+      return ageDays >= 7 && STALE_STATUSES.includes(getEffectiveStatus(l));
+    })
     .filter(l => {
       if (!datePreset) return true;
       const created = new Date(l.createdAt);
@@ -733,7 +792,7 @@ export default function LeadsPage() {
   return (
     <Shell>
       {toast && <Toast kind={toast.kind} message={toast.message} onClose={() => setToast(null)} />}
-      {addOpen && <AddLeadModal onClose={() => setAddOpen(false)} onAdded={() => { load(); setToast({ kind: 'success', message: 'Lead added' }); }} />}
+      {addOpen && <AddLeadModal onClose={() => setAddOpen(false)} onAdded={() => { load(); setToast({ kind: 'success', message: 'Lead added' }); }} existingLeads={leads} />}
       {editLead && (
         <EditLeadModal
           lead={editLead}
@@ -912,6 +971,24 @@ export default function LeadsPage() {
                 ✕ all
               </button>
             )}
+            <button
+              onClick={() => setStaleFilter(f => !f)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all"
+              style={staleFilter
+                ? { background: 'rgba(248,113,113,0.15)', border: '1px solid rgba(248,113,113,0.4)', color: '#F87171', transform: 'translateY(-1px)' }
+                : { border: '1px solid var(--color-border2)', color: 'var(--color-text3)' }}
+              title="Show leads with no contact in 7+ days"
+            >
+              <Clock size={10} /> Stale 7d+
+              {staleFilter && (
+                <span className="text-[10px] opacity-70">
+                  {leads.filter(l => {
+                    const ageDays = Math.floor((Date.now() - new Date(l.createdAt).getTime()) / 86400000);
+                    return ageDays >= 7 && ['new', 'attempted', 'call_again', 'call_back'].includes(getEffectiveStatus(l));
+                  }).length}
+                </span>
+              )}
+            </button>
           </div>
         )}
 
@@ -1017,6 +1094,32 @@ export default function LeadsPage() {
           <div className="bento-card overflow-hidden p-0">
             <div className="px-6 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--color-border2)' }}>
               <div className="flex items-center gap-2 flex-wrap">
+                {/* Select all on page */}
+                {pagedLeads.length > 0 && (
+                  <button
+                    onClick={() => {
+                      const pageIds = pagedLeads.map(l => l.id);
+                      const allSelected = pageIds.every(id => selectedIds.has(id));
+                      setSelectedIds(prev => {
+                        const next = new Set(prev);
+                        if (allSelected) pageIds.forEach(id => next.delete(id));
+                        else pageIds.forEach(id => next.add(id));
+                        return next;
+                      });
+                    }}
+                    className="w-4 h-4 rounded flex items-center justify-center shrink-0 transition-all cursor-pointer"
+                    style={pagedLeads.every(l => selectedIds.has(l.id))
+                      ? { background: 'var(--color-violet)', border: '1.5px solid var(--color-violet)' }
+                      : { border: '1.5px solid var(--color-border2)', background: 'transparent' }}
+                    title="Select / deselect all on this page"
+                  >
+                    {pagedLeads.every(l => selectedIds.has(l.id)) && (
+                      <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+                        <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    )}
+                  </button>
+                )}
                 <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-text3)' }}>
                   {filteredLeads.length} {filteredLeads.length === 1 ? 'lead' : 'leads'}
                   {(() => {
@@ -1090,10 +1193,33 @@ export default function LeadsPage() {
               {pagedLeads.map((lead, idx) => (
                 <article
                   key={lead.id}
-                  className={`lead-card lead-list-item p-6${flashedIds.has(lead.id) ? ' lead-rt-flash' : ''}`}
-                  style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', animationDelay: `${Math.min(idx * 35, 280)}ms` }}
+                  className={`lead-card lead-list-item p-6${flashedIds.has(lead.id) ? ' lead-rt-flash' : ''}${selectedIds.has(lead.id) ? ' lead-selected' : ''}`}
+                  style={{
+                    borderBottom: '1px solid rgba(255,255,255,0.03)',
+                    animationDelay: `${Math.min(idx * 35, 280)}ms`,
+                    ...(selectedIds.has(lead.id) ? { background: 'rgba(124,58,237,0.05)', borderLeft: '2px solid rgba(124,58,237,0.4)' } : {}),
+                  }}
                 >
-                  <div className="grid grid-cols-[1fr_auto] gap-6 items-start">
+                  <div className="grid grid-cols-[auto_1fr_auto] gap-4 items-start">
+                    {/* Checkbox */}
+                    <button
+                      onClick={() => setSelectedIds(prev => {
+                        const next = new Set(prev);
+                        if (next.has(lead.id)) next.delete(lead.id); else next.add(lead.id);
+                        return next;
+                      })}
+                      className="mt-0.5 w-4 h-4 rounded flex items-center justify-center shrink-0 transition-all cursor-pointer"
+                      style={selectedIds.has(lead.id)
+                        ? { background: 'var(--color-violet)', border: '1.5px solid var(--color-violet)' }
+                        : { border: '1.5px solid var(--color-border2)', background: 'transparent' }}
+                      title={selectedIds.has(lead.id) ? 'Deselect' : 'Select'}
+                    >
+                      {selectedIds.has(lead.id) && (
+                        <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+                          <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </button>
                     <div className="min-w-0">
                       <div className="flex items-center gap-3 mb-2 flex-wrap">
                         <Link href={`/leads/${lead.id}`} className="font-semibold truncate hover:underline decoration-dotted underline-offset-2 transition-colors"
@@ -1110,18 +1236,26 @@ export default function LeadsPage() {
                         {(() => {
                           const ageDays = Math.floor((Date.now() - new Date(lead.createdAt).getTime()) / 86400000);
                           const effectiveStatus = getEffectiveStatus(lead);
-                          if (ageDays >= 3 && ['new', 'attempted', 'call_again', 'call_back'].includes(effectiveStatus)) {
-                            return (
-                              <span
-                                className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
-                                style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.3)', color: '#F87171' }}
-                                title={`No contact in ${ageDays} days`}
-                              >
-                                ⚠ {ageDays}d stale
-                              </span>
-                            );
-                          }
-                          return null;
+                          if (ageDays < 3 || !['new', 'attempted', 'call_again', 'call_back'].includes(effectiveStatus)) return null;
+                          const tier = ageDays >= 14
+                            ? { bg: 'rgba(248,113,113,0.15)', border: 'rgba(248,113,113,0.45)', color: '#F87171', label: `${ageDays}d critical`, pulse: true }
+                            : ageDays >= 7
+                            ? { bg: 'rgba(249,115,22,0.12)',  border: 'rgba(249,115,22,0.35)',  color: '#FB923C', label: `${ageDays}d stale`,    pulse: false }
+                            : { bg: 'rgba(251,191,36,0.10)',  border: 'rgba(251,191,36,0.30)',  color: '#FBBF24', label: `${ageDays}d`,           pulse: false };
+                          return (
+                            <span
+                              className="relative inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                              style={{ background: tier.bg, border: `1px solid ${tier.border}`, color: tier.color }}
+                              title={`No contact in ${ageDays} day${ageDays !== 1 ? 's' : ''}`}
+                            >
+                              {tier.pulse && (
+                                <span className="absolute inset-0 rounded-full animate-ping opacity-30"
+                                  style={{ background: tier.color }} aria-hidden />
+                              )}
+                              <Clock size={9} />
+                              {tier.label}
+                            </span>
+                          );
                         })()}
                       </div>
 
@@ -1266,6 +1400,54 @@ export default function LeadsPage() {
           </div>
         )}
       </div>
+
+      {/* Floating bulk-assign bar */}
+      {selectedIds.size > 0 && (
+        <div
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl"
+          style={{
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border2)',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+            animation: 'scale-in 0.2s cubic-bezier(0.16,1,0.3,1) both',
+          }}
+        >
+          <span className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
+            {selectedIds.size} lead{selectedIds.size > 1 ? 's' : ''} selected
+          </span>
+          <div style={{ width: 1, height: 20, background: 'var(--color-border2)' }} />
+          <div className="flex items-center gap-2">
+            <span className="text-xs" style={{ color: 'var(--color-text3)' }}>Assign to:</span>
+            {agents.map(agent => (
+              <button
+                key={agent.id}
+                disabled={bulkAssigning}
+                onClick={() => bulkAssign(agent.id)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+                style={{ background: `${agent.color}18`, border: `1px solid ${agent.color}40`, color: agent.color }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = `${agent.color}30`; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = `${agent.color}18`; }}
+              >
+                <span className="w-4 h-4 rounded-full inline-flex items-center justify-center text-[8px] font-bold shrink-0" style={{ background: agent.color, color: '#fff' }}>
+                  {agent.initials}
+                </span>
+                {agent.name.split(' ')[0]}
+              </button>
+            ))}
+          </div>
+          <div style={{ width: 1, height: 20, background: 'var(--color-border2)' }} />
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="text-xs cursor-pointer transition-colors"
+            style={{ color: 'var(--color-text3)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; }}
+          >
+            ✕ Clear
+          </button>
+          {bulkAssigning && <Loader2 size={14} className="animate-spin" style={{ color: 'var(--color-violet)' }} />}
+        </div>
+      )}
     </Shell>
   );
 }

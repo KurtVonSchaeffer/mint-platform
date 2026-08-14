@@ -47,12 +47,15 @@ interface Agent {
   callsThisMonth: number;
   callsAllTime: number;
   lastCalledAt: string | null;
+  lastActionAt: string | null;
   overdueFollowUps: number;
   dueTodayFollowUps: number;
   commissionPending: number;
   commissionReady: number;
   commissionPaid: number;
 }
+
+const ACTIVE_NOW_MS = 15 * 60 * 1000;
 
 interface RecentCall {
   id: string;
@@ -118,14 +121,14 @@ function timeAgo(iso: string) {
   return `${Math.floor(h / 24)}d ago`;
 }
 
-type SortKey = 'calls_today' | 'calls_week' | 'converted' | 'overdue' | 'name';
+type SortKey = 'calls_today' | 'calls_week' | 'converted' | 'overdue' | 'name' | 'active_now';
 
 export default function TeamPage() {
   const [agents,         setAgents]         = useState<Agent[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentCall[]>([]);
   const [loading,        setLoading]        = useState(true);
   const [error,          setError]          = useState<string | null>(null);
-  const [sortBy,         setSortBy]         = useState<SortKey>('calls_today');
+  const [sortBy,         setSortBy]         = useState<SortKey>('active_now');
   const [agentNames,     setAgentNames]     = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
@@ -149,6 +152,11 @@ export default function TeamPage() {
   useEffect(() => { load(); }, [load]);
 
   const sorted = [...agents].sort((a, b) => {
+    if (sortBy === 'active_now') {
+      const aMs = a.lastActionAt ? Date.now() - new Date(a.lastActionAt).getTime() : Infinity;
+      const bMs = b.lastActionAt ? Date.now() - new Date(b.lastActionAt).getTime() : Infinity;
+      return aMs - bMs;
+    }
     if (sortBy === 'calls_today')  return b.callsToday - a.callsToday;
     if (sortBy === 'calls_week')   return b.callsThisWeek - a.callsThisWeek;
     if (sortBy === 'converted')    return b.wonThisMonth - a.wonThisMonth;
@@ -168,6 +176,7 @@ export default function TeamPage() {
   };
 
   const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+    { key: 'active_now',  label: 'Active Now' },
     { key: 'calls_today', label: 'Calls Today' },
     { key: 'calls_week',  label: 'Calls This Week' },
     { key: 'converted',   label: 'Won This Month' },
@@ -309,6 +318,7 @@ export default function TeamPage() {
       {!loading && sorted.map((agent, i) => {
         const grad           = GRAD[i % GRAD.length];
         const conversionRate = agent.leadsTotal > 0 ? Math.round((agent.leadsConverted / agent.leadsTotal) * 100) : 0;
+        const isActiveNow    = agent.lastActionAt ? Date.now() - new Date(agent.lastActionAt).getTime() < ACTIVE_NOW_MS : false;
         const activeToday    = agent.callsToday > 0;
         const goalPct        = Math.min(Math.round((agent.wonThisMonth / 8) * 100), 100);
 
@@ -316,9 +326,11 @@ export default function TeamPage() {
           <div key={agent.id} className="bento-card overflow-hidden p-0"
             style={{
               animation: `fade-up 0.4s cubic-bezier(0.16,1,0.3,1) ${i * 50}ms both`,
-              boxShadow: activeToday
-                ? '0 0 0 1px rgba(52,211,153,0.2), 0 4px 24px rgba(52,211,153,0.08)'
-                : undefined,
+              boxShadow: isActiveNow
+                ? '0 0 0 1px rgba(52,211,153,0.35), 0 4px 24px rgba(52,211,153,0.12)'
+                : activeToday
+                  ? '0 0 0 1px rgba(52,211,153,0.15), 0 4px 16px rgba(52,211,153,0.06)'
+                  : undefined,
               transition: 'box-shadow 0.3s ease',
             }}>
 
@@ -329,19 +341,25 @@ export default function TeamPage() {
                   style={{ background: grad }}>
                   {agent.initials}
                 </div>
-                {/* Ping ring for active agents */}
-                {activeToday && (
+                {/* Ping ring — only for truly active-now agents */}
+                {isActiveNow && (
                   <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full"
                     style={{ background: '#34D399', opacity: 0.6, animation: 'tm-ping 1.8s cubic-bezier(0,0,0.2,1) infinite' }} />
                 )}
                 <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[var(--color-surface)]"
-                  style={{ background: activeToday ? '#34D399' : '#6B7280' }}
-                  title={activeToday ? 'Called today' : 'No calls today'} />
+                  style={{ background: isActiveNow ? '#34D399' : activeToday ? '#60A5FA' : '#6B7280' }}
+                  title={isActiveNow ? 'Active now (last 15 min)' : activeToday ? 'Active today' : 'No activity today'} />
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="font-bold" style={{ color: 'var(--color-text)' }}>{agent.name}</p>
+                  {isActiveNow && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                      style={{ background: 'rgba(52,211,153,0.12)', color: '#34D399', border: '1px solid rgba(52,211,153,0.25)', animation: 'tm-pulse 2.4s ease-in-out infinite' }}>
+                      ● Active now
+                    </span>
+                  )}
                   {agent.overdueFollowUps > 0 && (
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
                       style={{
@@ -354,9 +372,9 @@ export default function TeamPage() {
                   )}
                 </div>
                 <p className="text-xs truncate" style={{ color: 'var(--color-text3)' }}>{agent.email}</p>
-                {agent.lastCalledAt && (
-                  <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text3)' }}>
-                    Last call: {timeAgo(agent.lastCalledAt)}
+                {agent.lastActionAt && (
+                  <p className="text-[10px] mt-0.5" style={{ color: isActiveNow ? '#34D399' : 'var(--color-text3)' }}>
+                    {isActiveNow ? 'Working now' : `Last active: ${timeAgo(agent.lastActionAt)}`}
                   </p>
                 )}
               </div>
