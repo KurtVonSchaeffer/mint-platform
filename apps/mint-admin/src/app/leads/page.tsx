@@ -10,7 +10,7 @@ import { OnboardingWizard } from '@/components/OnboardingWizard';
 import { Inbox, RefreshCw, Mail, Building2, ChevronDown, ChevronLeft, ChevronRight, Plus, X, Loader2, UserPlus, FileText, UserCheck, Upload, Download, Trash2, Pencil, Calendar, Search, Filter } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
-type LeadStatus = 'new' | 'attempted' | 'call_again' | 'contacted' | 'qualified' | 'won' | 'lost' | 'not_interested' | 'other';
+type LeadStatus = 'new' | 'attempted' | 'call_again' | 'call_back' | 'contacted' | 'qualified' | 'won' | 'lost' | 'not_interested' | 'other';
 type LeadSource = 'marketing-site' | 'referral' | 'manual';
 
 interface Lead {
@@ -95,6 +95,7 @@ const STATUS_CONFIG: Record<LeadStatus, { label: string; bg: string; border: str
   new:            { label: 'New',            bg: 'rgba(251,191,36,0.1)',  border: 'rgba(251,191,36,0.25)',  color: 'var(--color-amber)'  },
   attempted:      { label: 'Attempted',      bg: 'rgba(251,146,60,0.1)',  border: 'rgba(251,146,60,0.25)',  color: '#FB923C'             },
   call_again:     { label: 'Call Again',     bg: 'rgba(6,182,212,0.1)',   border: 'rgba(6,182,212,0.25)',   color: '#06B6D4'             },
+  call_back:      { label: 'Call Back',      bg: 'rgba(139,92,246,0.1)',  border: 'rgba(139,92,246,0.25)',  color: '#8B5CF6'             },
   contacted:      { label: 'Contacted',      bg: 'rgba(96,165,250,0.1)',  border: 'rgba(96,165,250,0.25)',  color: 'var(--color-sky)'    },
   qualified:      { label: 'Qualified',      bg: 'rgba(124,58,237,0.12)', border: 'rgba(124,58,237,0.3)',   color: 'var(--color-violet)' },
   won:            { label: 'Won',            bg: 'rgba(52,211,153,0.1)',  border: 'rgba(52,211,153,0.25)',  color: 'var(--color-green)'  },
@@ -117,7 +118,8 @@ function getEffectiveStatus(l: Lead): LeadStatus {
   const tm = l.tmStatus ?? '';
   if (l.status === 'new') {
     if (['Attempted Contact', 'Unreachable'].includes(tm)) return 'attempted';
-    if (['Call Again', 'Call Back', 'Pending'].includes(tm)) return 'call_again';
+    if (['Call Again', 'Pending'].includes(tm)) return 'call_again';
+    if (tm === 'Call Back') return 'call_back';
   }
   if (l.status === 'lost' && tm === 'Not Interested') return 'not_interested';
   return l.status;
