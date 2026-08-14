@@ -1107,6 +1107,22 @@ export default function LeadsPage() {
                         {lead.tmStatus && (
                           <TmStatusDropdown lead={lead} onUpdate={updateTmStatus} />
                         )}
+                        {(() => {
+                          const ageDays = Math.floor((Date.now() - new Date(lead.createdAt).getTime()) / 86400000);
+                          const effectiveStatus = getEffectiveStatus(lead);
+                          if (ageDays >= 3 && ['new', 'attempted', 'call_again', 'call_back'].includes(effectiveStatus)) {
+                            return (
+                              <span
+                                className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                                style={{ background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.3)', color: '#F87171' }}
+                                title={`No contact in ${ageDays} days`}
+                              >
+                                ⚠ {ageDays}d stale
+                              </span>
+                            );
+                          }
+                          return null;
+                        })()}
                       </div>
 
                       <div className="flex items-center gap-4 text-xs mb-3 flex-wrap" style={{ color: 'var(--color-text3)' }}>
