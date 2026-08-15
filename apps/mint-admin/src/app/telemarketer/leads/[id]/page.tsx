@@ -605,6 +605,8 @@ export default function LeadDetailPage() {
   const [copiedId,      setCopiedId]      = useState<string | null>(null);
   const [copiedLeadId,  setCopiedLeadId]  = useState(false);
   const [smsSending,    setSmsSending]    = useState<string | null>(null);
+  const [waSending,     setWaSending]     = useState<string | null>(null);
+  const [waResult,      setWaResult]      = useState<{ id: string; ok: boolean } | null>(null);
   const [smsResult,     setSmsResult]     = useState<{ id: string; ok: boolean } | null>(null);
 
   useEffect(() => {
@@ -844,6 +846,25 @@ export default function LeadDetailPage() {
     } finally {
       setSmsSending(null);
       setTimeout(() => setSmsResult(null), 3000);
+    }
+  }
+
+  async function sendWhatsApp(templateId: string, text: string) {
+    if (!lead?.phone) return;
+    setWaSending(templateId);
+    setWaResult(null);
+    try {
+      const res = await fetch('/api/telemarketer/whatsapp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: lead.phone, body: text }),
+      });
+      setWaResult({ id: templateId, ok: res.ok });
+    } catch {
+      setWaResult({ id: templateId, ok: false });
+    } finally {
+      setWaSending(null);
+      setTimeout(() => setWaResult(null), 3000);
     }
   }
 
@@ -1345,25 +1366,41 @@ export default function LeadDetailPage() {
                 {ALGOLEND_TEMPLATES.whatsapp.map(tpl => {
                   const body    = tpl.text(lead.name);
                   const copied  = copiedId === tpl.id;
-                  const sending = smsSending === tpl.id;
-                  const result  = smsResult?.id === tpl.id ? smsResult : null;
+                  const sending   = smsSending === tpl.id;
+                  const result    = smsResult?.id === tpl.id ? smsResult : null;
+                  const waSend    = waSending === tpl.id;
+                  const waRes     = waResult?.id === tpl.id ? waResult : null;
                   return (
                     <div key={tpl.id} className="rounded-xl p-3.5"
                       style={{ background: 'var(--color-surface2)', border: '1px solid var(--color-border2)' }}>
                       <p className="text-[10px] font-bold mb-1.5" style={{ color: 'var(--color-text2)' }}>{tpl.label}</p>
                       <p className="text-[11px] leading-relaxed whitespace-pre-wrap mb-3" style={{ color: 'var(--color-text3)' }}>{body}</p>
                       <div className="flex items-center gap-2 flex-wrap">
-                        {/* WhatsApp deep-link */}
+                        {/* Send WhatsApp via Twilio */}
+                        {lead.phone && (
+                          <button
+                            onClick={() => sendWhatsApp(tpl.id, body)}
+                            disabled={waSend}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all disabled:opacity-50"
+                            style={waRes
+                              ? { background: waRes.ok ? 'rgba(52,211,153,0.12)' : 'rgba(248,113,113,0.12)', color: waRes.ok ? '#34D399' : '#F87171', border: `1px solid ${waRes.ok ? 'rgba(52,211,153,0.25)' : 'rgba(248,113,113,0.25)'}` }
+                              : { background: 'rgba(37,211,102,0.1)', color: '#25D366', border: '1px solid rgba(37,211,102,0.25)' }}
+                          >
+                            {waSend ? <Loader2 size={10} className="animate-spin" /> : <MessageSquare size={10} />}
+                            {waSend ? 'Sending…' : waRes ? (waRes.ok ? 'Sent!' : 'Failed') : 'Send WhatsApp'}
+                          </button>
+                        )}
+                        {/* WhatsApp deep-link fallback */}
                         {lead.phone && (
                           <a
                             href={waLink(body)}
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-semibold transition-all hover:-translate-y-px"
-                            style={{ background: 'rgba(37,211,102,0.1)', color: '#25D366', border: '1px solid rgba(37,211,102,0.25)' }}
+                            style={{ background: 'rgba(255,255,255,0.04)', color: 'var(--color-text3)', border: '1px solid var(--color-border2)' }}
                           >
                             <MessageSquare size={10} />
-                            Open in WhatsApp
+                            Open App
                           </a>
                         )}
                         {/* SMS via Twilio */}
