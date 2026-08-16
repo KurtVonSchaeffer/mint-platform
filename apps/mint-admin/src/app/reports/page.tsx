@@ -83,95 +83,102 @@ function ScreenFunnelBar({ stages }: { stages: FunnelStage[] }) {
   );
 }
 
-// ─── PDF SVG chart helpers ────────────────────────────────────────────────────
+// ─── PDF chart helpers (div-based for reliable html2canvas rendering) ─────────
+
+function PdfHBar({ label, count, maxCount, pct: pctVal, color }: {
+  label: string; count: number; maxCount: number; pct: number; color: string;
+}) {
+  const wPct = maxCount > 0 ? Math.max((count / maxCount) * 100, count > 0 ? 2 : 0) : 0;
+  return (
+    <div style={{marginBottom:11}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5}}>
+        <span style={{fontSize:11,color:'#374151',fontWeight:500,flex:1,paddingRight:8}}>{label}</span>
+        <span style={{fontSize:12,color:'#111827',fontWeight:800,minWidth:36,textAlign:'right'}}>{count}</span>
+        <span style={{fontSize:10,color:'#9CA3AF',minWidth:34,textAlign:'right',paddingLeft:4}}>{pctVal}%</span>
+      </div>
+      <div style={{background:'#E5E7EB',borderRadius:6,height:12,overflow:'hidden'}}>
+        <div style={{background:color,height:12,width:`${wPct}%`,borderRadius:6,minWidth: count > 0 ? 6 : 0}}/>
+      </div>
+    </div>
+  );
+}
 
 function PdfFunnelBars({ stages, maxOverride }: { stages: FunnelStage[]; maxOverride?: number }) {
   const max = maxOverride ?? Math.max(...stages.map(s => s.count), 1);
-  const LW = 130, BW = 260, H = stages.length * 30;
   return (
-    <svg width={LW+BW+60} height={H} style={{display:'block'}}>
-      {stages.map((s, i) => {
-        const w = Math.round((s.count / max) * BW);
-        const y = i * 30;
-        return (
-          <g key={s.key}>
-            <text x={0} y={y+17} fontSize={11} fill="#334155" fontWeight="500">{s.label}</text>
-            <rect x={LW} y={y+6} width={BW} height={15} rx={4} fill="#F1F5F9"/>
-            {w > 0 && <rect x={LW} y={y+6} width={w} height={15} rx={4} fill={C[i%C.length]}/>}
-            <text x={LW+w+7} y={y+17} fontSize={11} fill="#0F172A" fontWeight="700">{s.count}</text>
-            <text x={LW+BW+36} y={y+17} fontSize={10} fill="#94A3B8">{s.pct}%</text>
-          </g>
-        );
-      })}
-    </svg>
+    <div>
+      {stages.map((s, i) => (
+        <PdfHBar key={s.key} label={s.label} count={s.count} maxCount={max} pct={s.pct} color={C[i%C.length]}/>
+      ))}
+    </div>
   );
 }
 
 function PdfGroupedBars({ thisStages, lastStages }: { thisStages: FunnelStage[]; lastStages: FunnelStage[] }) {
-  const allVals = [...thisStages.map(s => s.count), ...lastStages.map(s => s.count)];
-  const maxVal = Math.max(...allVals, 1);
-  const W = 960, H = 130;
-  const n = thisStages.length;
-  const gw = W / n;
-  const bw = gw * 0.28;
-
+  const maxVal = Math.max(...thisStages.map(s=>s.count), ...lastStages.map(s=>s.count), 1);
   return (
-    <svg width={W} height={H+56} style={{display:'block'}}>
-      {/* Grid lines */}
-      {[0.25,0.5,0.75,1].map(f => (
-        <line key={f} x1={0} y1={H - f*H} x2={W} y2={H - f*H}
-          stroke="#F1F5F9" strokeWidth={1}/>
-      ))}
-
+    <div>
+      <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:14}}>
+        <div style={{display:'flex',alignItems:'center',gap:6}}>
+          <div style={{width:12,height:12,borderRadius:3,background:'#7C3AED'}}/>
+          <span style={{fontSize:11,color:'#374151',fontWeight:600}}>This month</span>
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:6}}>
+          <div style={{width:12,height:12,borderRadius:3,background:'#D1D5DB'}}/>
+          <span style={{fontSize:11,color:'#9CA3AF'}}>Last month</span>
+        </div>
+      </div>
       {thisStages.map((s, i) => {
         const last = lastStages.find(l => l.key === s.key);
-        const th = s.count > 0 ? Math.max(Math.round((s.count / maxVal) * H), 2) : 0;
-        const lh = last && last.count > 0 ? Math.max(Math.round((last.count / maxVal) * H), 2) : 0;
-        const gx = i * gw + gw * 0.08;
-        const color = C[i % C.length];
-
+        const color = C[i%C.length];
+        const thisW = maxVal > 0 ? Math.max((s.count/maxVal)*100, s.count>0?1:0) : 0;
+        const lastW = last && maxVal > 0 ? Math.max((last.count/maxVal)*100, last.count>0?1:0) : 0;
+        const d = last && last.count > 0 ? Math.round((s.count - last.count)/last.count*100) : null;
+        const dColor = d === null ? '#9CA3AF' : d > 0 ? '#10B981' : d < 0 ? '#EF4444' : '#9CA3AF';
         return (
-          <g key={s.key}>
-            {/* This month bar */}
-            {th > 0 && <rect x={gx} y={H-th} width={bw} height={th} rx={3} fill={color}/>}
-            <text x={gx+bw/2} y={H-th-5} fontSize={10} textAnchor="middle" fill={color} fontWeight="700">{s.count}</text>
-
-            {/* Last month bar */}
-            {lh > 0 && <rect x={gx+bw+4} y={H-lh} width={bw} height={lh} rx={3} fill={color} opacity={0.22}/>}
-            {last && last.count > 0 &&
-              <text x={gx+bw+4+bw/2} y={H-lh-5} fontSize={10} textAnchor="middle" fill="#94A3B8">{last.count}</text>}
-
-            {/* Stage label */}
-            <text x={gx+bw+2} y={H+14} fontSize={9} textAnchor="middle" fill="#64748B" fontWeight="500">
-              {s.label.split('/')[0].trim()}
-            </text>
-          </g>
+          <div key={s.key} style={{marginBottom:14}}>
+            <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
+              <span style={{fontSize:11,color:'#374151',fontWeight:600}}>{s.label}</span>
+              <span style={{fontSize:11,fontWeight:700,color:dColor}}>
+                {d !== null ? `${d>0?'+':''}${d}%` : '—'}
+              </span>
+            </div>
+            {/* This month */}
+            <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
+              <div style={{width:80,fontSize:10,color:'#6B7280',textAlign:'right',flexShrink:0}}>{s.count}</div>
+              <div style={{flex:1,background:'#F3F4F6',borderRadius:4,height:10,overflow:'hidden'}}>
+                <div style={{background:color,height:10,width:`${thisW}%`,borderRadius:4,minWidth:s.count>0?4:0}}/>
+              </div>
+            </div>
+            {/* Last month */}
+            <div style={{display:'flex',alignItems:'center',gap:8}}>
+              <div style={{width:80,fontSize:10,color:'#9CA3AF',textAlign:'right',flexShrink:0}}>{last?.count ?? 0}</div>
+              <div style={{flex:1,background:'#F3F4F6',borderRadius:4,height:10,overflow:'hidden'}}>
+                <div style={{background:'#D1D5DB',height:10,width:`${lastW}%`,borderRadius:4,minWidth:last?.count&&last.count>0?4:0}}/>
+              </div>
+            </div>
+          </div>
         );
       })}
-
-      {/* Legend */}
-      <rect x={W-160} y={H+32} width={11} height={11} rx={2} fill="#7C3AED"/>
-      <text x={W-145} y={H+42} fontSize={10} fill="#334155" fontWeight="600">This month</text>
-      <rect x={W-70} y={H+32} width={11} height={11} rx={2} fill="#7C3AED" opacity={0.22}/>
-      <text x={W-55} y={H+42} fontSize={10} fill="#94A3B8">Last month</text>
-    </svg>
+    </div>
   );
 }
 
-function PdfBarList({ items, color }: { items:{label:string;count:number}[]; color?:boolean }) {
+function PdfBarList({ items, useColors }: { items:{label:string;count:number}[]; useColors?: boolean }) {
   const max = items[0]?.count ?? 1;
   return (
     <div>
       {items.map((item, i) => {
-        const w = Math.round((item.count / max) * 100);
+        const w = Math.max(item.count > 0 ? (item.count/max)*100 : 0, item.count > 0 ? 2 : 0);
+        const color = useColors ? C[i%C.length] : '#7C3AED';
         return (
           <div key={item.label} style={{marginBottom:10}}>
             <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
-              <span style={{fontSize:11,color:'#334155',fontWeight:500}}>{item.label}</span>
-              <span style={{fontSize:11,color:'#0F172A',fontWeight:700}}>{item.count}</span>
+              <span style={{fontSize:11,color:'#374151',fontWeight:500}}>{item.label}</span>
+              <span style={{fontSize:12,color:'#111827',fontWeight:700}}>{item.count}</span>
             </div>
-            <div style={{background:'#F1F5F9',borderRadius:4,height:10,overflow:'hidden'}}>
-              <div style={{background: color ? C[i%C.length] : '#7C3AED', height:10, width:`${w}%`, borderRadius:4}}/>
+            <div style={{background:'#E5E7EB',borderRadius:5,height:10,overflow:'hidden'}}>
+              <div style={{background:color,height:10,width:`${w}%`,borderRadius:5,minWidth:item.count>0?4:0}}/>
             </div>
           </div>
         );
@@ -182,121 +189,144 @@ function PdfBarList({ items, color }: { items:{label:string;count:number}[]; col
 
 // ─── PDF render zone (captured by html2canvas) ────────────────────────────────
 
+const FONT = '-apple-system,Segoe UI,Arial,sans-serif';
+
 function PdfZone({ data, innerRef }: { data: ReportData; innerRef: React.RefObject<HTMLDivElement | null> }) {
   const generated = new Date().toLocaleDateString('en-ZA', { day:'numeric', month:'long', year:'numeric' });
-  const s = (v: string | number): React.CSSProperties => ({ fontFamily:'-apple-system,Segoe UI,Arial,sans-serif' } as React.CSSProperties);
+  const sharedMax  = Math.max(...data.thisMonth.funnel.map(s=>s.count), ...data.lastMonth.funnel.map(s=>s.count), 1);
 
   const card: React.CSSProperties = {
-    background:'#F8FAFC', border:'1px solid #E2E8F0', borderRadius:12,
-    padding:'16px 18px', pageBreakInside:'avoid',
+    background:'#ffffff',
+    border:'1.5px solid #E5E7EB',
+    borderRadius:14,
+    padding:'18px 20px',
+    boxShadow:'0 1px 4px rgba(0,0,0,0.06)',
   };
 
-  const kpiTile = (label: string, val: string, curr: number, prev: number, accent: string) => {
-    const d = prev > 0 ? Math.round((curr - prev) / prev * 100) : null;
-    const dColor = d === null ? '#94A3B8' : d > 0 ? '#10B981' : d < 0 ? '#EF4444' : '#94A3B8';
-    return (
-      <div key={label} style={{...card, borderTop:`3px solid ${accent}`, flex:1}}>
-        <div style={{fontSize:10,textTransform:'uppercase',letterSpacing:'0.08em',color:'#64748B',fontWeight:600,marginBottom:8}}>{label}</div>
-        <div style={{fontSize:28,fontWeight:800,color:'#0F172A',lineHeight:1}}>{val}</div>
-        <div style={{fontSize:11,marginTop:7,fontWeight:600,color:dColor,minHeight:16}}>
-          {d !== null ? `${d>0?'▲':'▼'} ${Math.abs(d)}% vs last month` : ''}
-        </div>
-      </div>
-    );
-  };
+  const sectionLabel = (text: string): React.CSSProperties => ({
+    fontSize:11, fontWeight:700, textTransform:'uppercase' as const,
+    letterSpacing:'0.08em', color:'#6B7280', marginBottom:12,
+    fontFamily: FONT,
+  });
+
+  const kpis = [
+    { label:'Total Leads',  val:String(data.thisMonth.kpis.leadsTotal), curr:data.thisMonth.kpis.leadsTotal, prev:data.lastMonth.kpis.leadsTotal, accent:'#7C3AED', bg:'#F5F3FF', text:'#5B21B6' },
+    { label:'Calls Made',   val:String(data.thisMonth.kpis.callsTotal), curr:data.thisMonth.kpis.callsTotal, prev:data.lastMonth.kpis.callsTotal, accent:'#2563EB', bg:'#EFF6FF', text:'#1D4ED8' },
+    { label:'Won',          val:String(data.thisMonth.kpis.won),        curr:data.thisMonth.kpis.won,        prev:data.lastMonth.kpis.won,        accent:'#059669', bg:'#ECFDF5', text:'#065F46' },
+    { label:'Conv Rate',    val:`${data.thisMonth.kpis.convRate}%`,     curr:data.thisMonth.kpis.convRate,   prev:data.lastMonth.kpis.convRate,   accent:'#D97706', bg:'#FFFBEB', text:'#92400E' },
+  ];
 
   return (
     <div
       ref={innerRef}
       style={{
         position:'absolute', left:'-9999px', top:0,
-        width:1120, background:'#ffffff',
-        fontFamily:'-apple-system,Segoe UI,Arial,sans-serif',
-        padding:'36px 44px 36px',
+        width:1120, background:'#F9FAFB',
+        fontFamily: FONT,
+        padding:'32px 40px 40px',
         boxSizing:'border-box',
       }}
     >
       {/* ── Header ── */}
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end',
-        marginBottom:22, paddingBottom:18, borderBottom:'3px solid #7C3AED'}}>
-        <div>
-          <div style={{fontSize:26,fontWeight:800,color:'#7C3AED',letterSpacing:'-0.5px',lineHeight:1}}>AlgoLend</div>
-          <div style={{fontSize:10,fontWeight:600,textTransform:'uppercase',letterSpacing:'0.12em',color:'#94A3B8',marginTop:4}}>Admin Console</div>
+      <div style={{background:'#ffffff',borderRadius:16,padding:'22px 28px',marginBottom:20,
+        border:'1.5px solid #E5E7EB',boxShadow:'0 1px 4px rgba(0,0,0,0.06)',
+        display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+        <div style={{display:'flex',alignItems:'center',gap:16}}>
+          <div style={{width:44,height:44,borderRadius:12,background:'#7C3AED',
+            display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+            <div style={{width:20,height:20,border:'2.5px solid white',borderRadius:3,
+              borderBottom:'none',transform:'rotate(-10deg)'}}/>
+          </div>
+          <div>
+            <div style={{fontSize:22,fontWeight:800,color:'#111827',letterSpacing:'-0.5px',lineHeight:1}}>AlgoLend</div>
+            <div style={{fontSize:10,fontWeight:600,textTransform:'uppercase',letterSpacing:'0.1em',color:'#9CA3AF',marginTop:3}}>Admin Console</div>
+          </div>
         </div>
         <div style={{textAlign:'right'}}>
-          <div style={{fontSize:18,fontWeight:700,color:'#0F172A'}}>Weekly Performance Report</div>
-          <div style={{fontSize:12,color:'#64748B',marginTop:4}}>
-            {data.thisMonth.label} <span style={{color:'#CBD5E1'}}>vs</span> {data.lastMonth.label}
+          <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',color:'#7C3AED',marginBottom:4}}>Weekly Performance Report</div>
+          <div style={{fontSize:20,fontWeight:800,color:'#111827',lineHeight:1.2}}>{data.thisMonth.label}</div>
+          <div style={{fontSize:12,color:'#6B7280',marginTop:5}}>
+            vs {data.lastMonth.label} &nbsp;·&nbsp; {generated} &nbsp;·&nbsp; Confidential
           </div>
-          <div style={{fontSize:10,color:'#94A3B8',marginTop:2}}>Generated {generated} · Confidential</div>
         </div>
       </div>
 
       {/* ── KPIs ── */}
-      <div style={{display:'flex',gap:14,marginBottom:20}}>
-        {kpiTile('Total Leads', String(data.thisMonth.kpis.leadsTotal), data.thisMonth.kpis.leadsTotal, data.lastMonth.kpis.leadsTotal, '#7C3AED')}
-        {kpiTile('Calls Made', String(data.thisMonth.kpis.callsTotal), data.thisMonth.kpis.callsTotal, data.lastMonth.kpis.callsTotal, '#3B82F6')}
-        {kpiTile('Won', String(data.thisMonth.kpis.won), data.thisMonth.kpis.won, data.lastMonth.kpis.won, '#10B981')}
-        {kpiTile('Conv Rate', `${data.thisMonth.kpis.convRate}%`, data.thisMonth.kpis.convRate, data.lastMonth.kpis.convRate, '#F59E0B')}
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:20}}>
+        {kpis.map(k => {
+          const d = k.prev > 0 ? Math.round((k.curr - k.prev)/k.prev*100) : null;
+          const dColor = d === null ? '#9CA3AF' : d > 0 ? '#059669' : d < 0 ? '#DC2626' : '#9CA3AF';
+          const arrow  = d === null ? '' : d > 0 ? '▲' : d < 0 ? '▼' : '→';
+          return (
+            <div key={k.label} style={{background:k.bg,borderRadius:14,padding:'20px 22px',
+              border:`1.5px solid ${k.accent}22`}}>
+              <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',
+                color:k.text,marginBottom:10,fontFamily:FONT}}>{k.label}</div>
+              <div style={{fontSize:34,fontWeight:900,color:k.text,lineHeight:1,letterSpacing:'-1px',fontFamily:FONT}}>{k.val}</div>
+              <div style={{marginTop:10,fontSize:11,color:dColor,fontWeight:700,fontFamily:FONT}}>
+                {d !== null
+                  ? <>{arrow} {Math.abs(d)}% <span style={{color:'#9CA3AF',fontWeight:400}}>vs last month</span></>
+                  : <span style={{color:'#9CA3AF'}}>No prior data</span>}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* ── Pipeline side-by-side ── */}
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:20}}>
-        <div style={card}>
-          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14}}>
-            <div style={{fontSize:13,fontWeight:700,color:'#0F172A'}}>Pipeline</div>
-            <span style={{fontSize:10,fontWeight:600,color:'#7C3AED',background:'rgba(124,58,237,0.08)',
-              padding:'2px 10px',borderRadius:20,border:'1px solid rgba(124,58,237,0.2)'}}>
-              {data.thisMonth.label}
-            </span>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:20}}>
+        {[
+          { period: data.thisMonth, color:'#7C3AED', badgeBg:'#F5F3FF', badgeText:'#5B21B6', border:'#DDD6FE' },
+          { period: data.lastMonth, color:'#2563EB', badgeBg:'#EFF6FF', badgeText:'#1D4ED8', border:'#BFDBFE' },
+        ].map(({ period, color, badgeBg, badgeText, border }) => (
+          <div key={period.label} style={card}>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
+              <span style={{fontSize:13,fontWeight:700,color:'#111827',fontFamily:FONT}}>Pipeline</span>
+              <span style={{fontSize:10,fontWeight:700,color:badgeText,background:badgeBg,
+                padding:'3px 10px',borderRadius:20,border:`1px solid ${border}`,fontFamily:FONT}}>
+                {period.label}
+              </span>
+            </div>
+            <PdfFunnelBars stages={period.funnel} maxOverride={sharedMax}/>
           </div>
-          <PdfFunnelBars stages={data.thisMonth.funnel}
-            maxOverride={Math.max(...data.thisMonth.funnel.map(s=>s.count), ...data.lastMonth.funnel.map(s=>s.count), 1)}/>
-        </div>
-        <div style={card}>
-          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:14}}>
-            <div style={{fontSize:13,fontWeight:700,color:'#0F172A'}}>Pipeline</div>
-            <span style={{fontSize:10,fontWeight:600,color:'#3B82F6',background:'rgba(59,130,246,0.08)',
-              padding:'2px 10px',borderRadius:20,border:'1px solid rgba(59,130,246,0.2)'}}>
-              {data.lastMonth.label}
-            </span>
-          </div>
-          <PdfFunnelBars stages={data.lastMonth.funnel}
-            maxOverride={Math.max(...data.thisMonth.funnel.map(s=>s.count), ...data.lastMonth.funnel.map(s=>s.count), 1)}/>
-        </div>
+        ))}
       </div>
 
-      {/* ── MoM grouped bar chart ── */}
+      {/* ── MoM comparison ── */}
       <div style={{...card, marginBottom:20}}>
-        <div style={{fontSize:13,fontWeight:700,color:'#0F172A',marginBottom:14}}>Month-over-Month Comparison</div>
+        <div style={sectionLabel('Month-over-Month Comparison')}>Month-over-Month Comparison</div>
         <PdfGroupedBars thisStages={data.thisMonth.funnel} lastStages={data.lastMonth.funnel}/>
       </div>
 
       {/* ── Team table ── */}
       <div style={{...card, marginBottom:20}}>
-        <div style={{fontSize:13,fontWeight:700,color:'#0F172A',marginBottom:14}}>
-          Team Performance — {data.thisMonth.label}
-        </div>
-        <table style={{width:'100%',borderCollapse:'collapse'}}>
+        <div style={sectionLabel(`Team Performance — ${data.thisMonth.label}`)}>Team Performance — {data.thisMonth.label}</div>
+        <table style={{width:'100%',borderCollapse:'collapse',fontFamily:FONT}}>
           <thead>
-            <tr>
-              {['Agent','Calls Made','Leads Assigned','Won','Conv Rate'].map(h => (
-                <th key={h} style={{fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',
-                  color:'#64748B',fontWeight:600,padding:'0 16px 10px 0',textAlign:'left',
-                  borderBottom:'2px solid #E2E8F0'}}>{h}</th>
+            <tr style={{background:'#F9FAFB'}}>
+              {[
+                {h:'Agent',color:'#374151'},
+                {h:'Calls Made',color:'#1D4ED8'},
+                {h:'Leads Assigned',color:'#374151'},
+                {h:'Won',color:'#065F46'},
+                {h:'Conv Rate',color:'#5B21B6'},
+              ].map(col => (
+                <th key={col.h} style={{fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',
+                  color:col.color,fontWeight:700,padding:'9px 14px 9px 0',textAlign:'left',
+                  borderBottom:'2px solid #E5E7EB',fontFamily:FONT}}>{col.h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
             {data.agents.length === 0
-              ? <tr><td colSpan={5} style={{textAlign:'center',color:'#94A3B8',padding:20,fontSize:12}}>No agents found</td></tr>
+              ? <tr><td colSpan={5} style={{textAlign:'center',color:'#9CA3AF',padding:'20px 0',fontSize:12,fontFamily:FONT}}>No agents found</td></tr>
               : data.agents.map((a, i) => (
-                <tr key={a.id}>
-                  <td style={{padding:'10px 16px 10px 0',borderBottom: i<data.agents.length-1?'1px solid #F1F5F9':'none',fontWeight:600,color:'#0F172A',fontSize:12}}>{a.name}</td>
-                  <td style={{padding:'10px 16px 10px 0',borderBottom: i<data.agents.length-1?'1px solid #F1F5F9':'none',fontWeight:700,color:'#3B82F6',fontSize:12}}>{a.callsThisMonth}</td>
-                  <td style={{padding:'10px 16px 10px 0',borderBottom: i<data.agents.length-1?'1px solid #F1F5F9':'none',color:'#334155',fontSize:12}}>{a.leadsAssigned}</td>
-                  <td style={{padding:'10px 16px 10px 0',borderBottom: i<data.agents.length-1?'1px solid #F1F5F9':'none',fontWeight:700,color:'#10B981',fontSize:12}}>{a.won}</td>
-                  <td style={{padding:'10px 16px 10px 0',borderBottom: i<data.agents.length-1?'1px solid #F1F5F9':'none',fontWeight:600,color:a.convRate>0?'#7C3AED':'#94A3B8',fontSize:12}}>{a.convRate}%</td>
+                <tr key={a.id} style={{background: i%2===1 ? '#F9FAFB' : '#ffffff'}}>
+                  <td style={{padding:'11px 14px 11px 0',fontWeight:700,color:'#111827',fontSize:13,fontFamily:FONT,borderBottom:'1px solid #F3F4F6'}}>{a.name}</td>
+                  <td style={{padding:'11px 14px 11px 0',fontWeight:800,color:'#1D4ED8',fontSize:15,fontFamily:FONT,borderBottom:'1px solid #F3F4F6'}}>{a.callsThisMonth}</td>
+                  <td style={{padding:'11px 14px 11px 0',color:'#374151',fontSize:13,fontFamily:FONT,borderBottom:'1px solid #F3F4F6'}}>{a.leadsAssigned}</td>
+                  <td style={{padding:'11px 14px 11px 0',fontWeight:800,color:'#059669',fontSize:15,fontFamily:FONT,borderBottom:'1px solid #F3F4F6'}}>{a.won}</td>
+                  <td style={{padding:'11px 14px 11px 0',fontWeight:700,color:a.convRate>0?'#5B21B6':'#9CA3AF',fontSize:13,fontFamily:FONT,borderBottom:'1px solid #F3F4F6'}}>{a.convRate}%</td>
                 </tr>
               ))
             }
@@ -305,25 +335,29 @@ function PdfZone({ data, innerRef }: { data: ReportData; innerRef: React.RefObje
       </div>
 
       {/* ── Sources + Outcomes ── */}
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16,marginBottom:24}}>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:20}}>
         <div style={card}>
-          <div style={{fontSize:13,fontWeight:700,color:'#0F172A',marginBottom:14}}>Lead Sources</div>
+          <div style={sectionLabel('Lead Sources')}>Lead Sources</div>
           {data.thisMonth.sources.length === 0
-            ? <p style={{color:'#94A3B8',fontSize:12}}>No data</p>
-            : <PdfBarList color items={data.thisMonth.sources.map(s=>({label:s.label,count:s.count}))}/>}
+            ? <p style={{color:'#9CA3AF',fontSize:12,fontFamily:FONT}}>No data</p>
+            : <PdfBarList useColors items={data.thisMonth.sources.map(s=>({label:s.label,count:s.count}))}/>}
         </div>
         <div style={card}>
-          <div style={{fontSize:13,fontWeight:700,color:'#0F172A',marginBottom:14}}>Call Outcomes</div>
+          <div style={sectionLabel('Call Outcomes')}>Call Outcomes</div>
           {data.thisMonth.callOutcomes.length === 0
-            ? <p style={{color:'#94A3B8',fontSize:12}}>No calls this month</p>
+            ? <p style={{color:'#9CA3AF',fontSize:12,fontFamily:FONT}}>No calls this month</p>
             : <PdfBarList items={data.thisMonth.callOutcomes.map(o=>({label:o.outcome,count:o.count}))}/>}
         </div>
       </div>
 
       {/* ── Footer ── */}
-      <div style={{borderTop:'1px solid #E2E8F0',paddingTop:10,display:'flex',justifyContent:'space-between'}}>
-        <span style={{fontSize:10,color:'#94A3B8'}}>AlgoLend · algolend.co.za · Internal use only</span>
-        <span style={{fontSize:10,color:'#94A3B8'}}>{generated}</span>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',
+        paddingTop:16,borderTop:'1.5px solid #E5E7EB'}}>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <div style={{width:6,height:6,borderRadius:'50%',background:'#7C3AED'}}/>
+          <span style={{fontSize:11,color:'#9CA3AF',fontFamily:FONT}}>AlgoLend · algolend.co.za · Internal use only</span>
+        </div>
+        <span style={{fontSize:11,color:'#9CA3AF',fontFamily:FONT}}>{generated}</span>
       </div>
     </div>
   );
