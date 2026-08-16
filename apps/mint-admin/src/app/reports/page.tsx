@@ -85,76 +85,83 @@ function ScreenFunnelBar({ stages }: { stages: FunnelStage[] }) {
 
 // ─── PDF chart helpers (div-based for reliable html2canvas rendering) ─────────
 
-function PdfHBar({ label, count, maxCount, pct: pctVal, color }: {
-  label: string; count: number; maxCount: number; pct: number; color: string;
+// Square-root scale so skewed data (e.g. 7700 vs 42) still renders visible bars.
+// Returns a pixel width for a 380px track.
+const TRACK = 380;
+function sqrtW(count: number, max: number): number {
+  if (max === 0 || count === 0) return 0;
+  return Math.max(Math.round((Math.sqrt(count) / Math.sqrt(max)) * TRACK), 8);
+}
+
+function PdfHBar({ label, count, sqrtMax, pct: pctVal, color }: {
+  label: string; count: number; sqrtMax: number; pct: number; color: string;
 }) {
-  const wPct = maxCount > 0 ? Math.max((count / maxCount) * 100, count > 0 ? 2 : 0) : 0;
+  const w = sqrtW(count, sqrtMax);
   return (
-    <div style={{marginBottom:11}}>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:5}}>
+    <div style={{marginBottom:10}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:4}}>
         <span style={{fontSize:11,color:'#374151',fontWeight:500,flex:1,paddingRight:8}}>{label}</span>
-        <span style={{fontSize:12,color:'#111827',fontWeight:800,minWidth:36,textAlign:'right'}}>{count}</span>
+        <span style={{fontSize:12,color:'#111827',fontWeight:800,minWidth:40,textAlign:'right'}}>{count.toLocaleString()}</span>
         <span style={{fontSize:10,color:'#9CA3AF',minWidth:34,textAlign:'right',paddingLeft:4}}>{pctVal}%</span>
       </div>
-      <div style={{background:'#E5E7EB',borderRadius:6,height:12,overflow:'hidden'}}>
-        <div style={{background:color,height:12,width:`${wPct}%`,borderRadius:6,minWidth: count > 0 ? 6 : 0}}/>
+      <div style={{background:'#E5E7EB',borderRadius:6,height:13,width:TRACK,position:'relative',overflow:'hidden'}}>
+        {w > 0 && <div style={{background:color,height:13,width:w,borderRadius:6}}/>}
       </div>
     </div>
   );
 }
 
-function PdfFunnelBars({ stages, maxOverride }: { stages: FunnelStage[]; maxOverride?: number }) {
-  const max = maxOverride ?? Math.max(...stages.map(s => s.count), 1);
+function PdfFunnelBars({ stages }: { stages: FunnelStage[] }) {
+  const max = Math.max(...stages.map(s => s.count), 1);
   return (
     <div>
       {stages.map((s, i) => (
-        <PdfHBar key={s.key} label={s.label} count={s.count} maxCount={max} pct={s.pct} color={C[i%C.length]}/>
+        <PdfHBar key={s.key} label={s.label} count={s.count} sqrtMax={max} pct={s.pct} color={C[i%C.length]}/>
       ))}
     </div>
   );
 }
 
 function PdfGroupedBars({ thisStages, lastStages }: { thisStages: FunnelStage[]; lastStages: FunnelStage[] }) {
-  const maxVal = Math.max(...thisStages.map(s=>s.count), ...lastStages.map(s=>s.count), 1);
+  const max = Math.max(...thisStages.map(s=>s.count), ...lastStages.map(s=>s.count), 1);
   return (
     <div>
-      <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:14}}>
+      <div style={{display:'flex',alignItems:'center',gap:16,marginBottom:12}}>
         <div style={{display:'flex',alignItems:'center',gap:6}}>
           <div style={{width:12,height:12,borderRadius:3,background:'#7C3AED'}}/>
-          <span style={{fontSize:11,color:'#374151',fontWeight:600}}>This month</span>
+          <span style={{fontSize:11,color:'#374151',fontWeight:600,fontFamily:FONT}}>This month</span>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:6}}>
           <div style={{width:12,height:12,borderRadius:3,background:'#D1D5DB'}}/>
-          <span style={{fontSize:11,color:'#9CA3AF'}}>Last month</span>
+          <span style={{fontSize:11,color:'#9CA3AF',fontFamily:FONT}}>Last month</span>
         </div>
+        <span style={{fontSize:10,color:'#9CA3AF',fontFamily:FONT,marginLeft:'auto'}}>√ scale — bars show relative size</span>
       </div>
       {thisStages.map((s, i) => {
         const last = lastStages.find(l => l.key === s.key);
         const color = C[i%C.length];
-        const thisW = maxVal > 0 ? Math.max((s.count/maxVal)*100, s.count>0?1:0) : 0;
-        const lastW = last && maxVal > 0 ? Math.max((last.count/maxVal)*100, last.count>0?1:0) : 0;
+        const tw = sqrtW(s.count, max);
+        const lw = last ? sqrtW(last.count, max) : 0;
         const d = last && last.count > 0 ? Math.round((s.count - last.count)/last.count*100) : null;
-        const dColor = d === null ? '#9CA3AF' : d > 0 ? '#10B981' : d < 0 ? '#EF4444' : '#9CA3AF';
+        const dColor = d === null ? '#9CA3AF' : d > 0 ? '#059669' : d < 0 ? '#DC2626' : '#9CA3AF';
         return (
-          <div key={s.key} style={{marginBottom:14}}>
+          <div key={s.key} style={{marginBottom:12}}>
             <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
-              <span style={{fontSize:11,color:'#374151',fontWeight:600}}>{s.label}</span>
-              <span style={{fontSize:11,fontWeight:700,color:dColor}}>
+              <span style={{fontSize:11,color:'#374151',fontWeight:600,fontFamily:FONT}}>{s.label}</span>
+              <span style={{fontSize:11,fontWeight:700,color:dColor,fontFamily:FONT}}>
                 {d !== null ? `${d>0?'+':''}${d}%` : '—'}
               </span>
             </div>
-            {/* This month */}
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:3}}>
-              <div style={{width:80,fontSize:10,color:'#6B7280',textAlign:'right',flexShrink:0}}>{s.count}</div>
-              <div style={{flex:1,background:'#F3F4F6',borderRadius:4,height:10,overflow:'hidden'}}>
-                <div style={{background:color,height:10,width:`${thisW}%`,borderRadius:4,minWidth:s.count>0?4:0}}/>
+              <span style={{width:54,fontSize:10,color:'#6B7280',textAlign:'right',flexShrink:0,fontFamily:FONT}}>{s.count.toLocaleString()}</span>
+              <div style={{background:'#F3F4F6',borderRadius:4,height:11,width:TRACK,position:'relative',overflow:'hidden'}}>
+                {tw > 0 && <div style={{background:color,height:11,width:tw,borderRadius:4}}/>}
               </div>
             </div>
-            {/* Last month */}
             <div style={{display:'flex',alignItems:'center',gap:8}}>
-              <div style={{width:80,fontSize:10,color:'#9CA3AF',textAlign:'right',flexShrink:0}}>{last?.count ?? 0}</div>
-              <div style={{flex:1,background:'#F3F4F6',borderRadius:4,height:10,overflow:'hidden'}}>
-                <div style={{background:'#D1D5DB',height:10,width:`${lastW}%`,borderRadius:4,minWidth:last?.count&&last.count>0?4:0}}/>
+              <span style={{width:54,fontSize:10,color:'#9CA3AF',textAlign:'right',flexShrink:0,fontFamily:FONT}}>{(last?.count ?? 0).toLocaleString()}</span>
+              <div style={{background:'#F3F4F6',borderRadius:4,height:11,width:TRACK,position:'relative',overflow:'hidden'}}>
+                {lw > 0 && <div style={{background:'#D1D5DB',height:11,width:lw,borderRadius:4}}/>}
               </div>
             </div>
           </div>
@@ -165,20 +172,20 @@ function PdfGroupedBars({ thisStages, lastStages }: { thisStages: FunnelStage[];
 }
 
 function PdfBarList({ items, useColors }: { items:{label:string;count:number}[]; useColors?: boolean }) {
-  const max = items[0]?.count ?? 1;
+  const max = Math.max(...items.map(i=>i.count), 1);
   return (
     <div>
       {items.map((item, i) => {
-        const w = Math.max(item.count > 0 ? (item.count/max)*100 : 0, item.count > 0 ? 2 : 0);
+        const w = sqrtW(item.count, max);
         const color = useColors ? C[i%C.length] : '#7C3AED';
         return (
           <div key={item.label} style={{marginBottom:10}}>
             <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
-              <span style={{fontSize:11,color:'#374151',fontWeight:500}}>{item.label}</span>
-              <span style={{fontSize:12,color:'#111827',fontWeight:700}}>{item.count}</span>
+              <span style={{fontSize:11,color:'#374151',fontWeight:500,fontFamily:FONT}}>{item.label}</span>
+              <span style={{fontSize:12,color:'#111827',fontWeight:700,fontFamily:FONT}}>{item.count.toLocaleString()}</span>
             </div>
-            <div style={{background:'#E5E7EB',borderRadius:5,height:10,overflow:'hidden'}}>
-              <div style={{background:color,height:10,width:`${w}%`,borderRadius:5,minWidth:item.count>0?4:0}}/>
+            <div style={{background:'#E5E7EB',borderRadius:5,height:11,width:TRACK,position:'relative',overflow:'hidden'}}>
+              {w > 0 && <div style={{background:color,height:11,width:w,borderRadius:5}}/>}
             </div>
           </div>
         );
@@ -193,7 +200,6 @@ const FONT = '-apple-system,Segoe UI,Arial,sans-serif';
 
 function PdfZone({ data, innerRef }: { data: ReportData; innerRef: React.RefObject<HTMLDivElement | null> }) {
   const generated = new Date().toLocaleDateString('en-ZA', { day:'numeric', month:'long', year:'numeric' });
-  const sharedMax  = Math.max(...data.thisMonth.funnel.map(s=>s.count), ...data.lastMonth.funnel.map(s=>s.count), 1);
 
   const card: React.CSSProperties = {
     background:'#ffffff',
@@ -276,18 +282,18 @@ function PdfZone({ data, innerRef }: { data: ReportData; innerRef: React.RefObje
       {/* ── Pipeline side-by-side ── */}
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:20}}>
         {[
-          { period: data.thisMonth, color:'#7C3AED', badgeBg:'#F5F3FF', badgeText:'#5B21B6', border:'#DDD6FE' },
-          { period: data.lastMonth, color:'#2563EB', badgeBg:'#EFF6FF', badgeText:'#1D4ED8', border:'#BFDBFE' },
-        ].map(({ period, color, badgeBg, badgeText, border }) => (
+          { period: data.thisMonth, badgeBg:'#F5F3FF', badgeText:'#5B21B6', border:'#DDD6FE' },
+          { period: data.lastMonth, badgeBg:'#EFF6FF', badgeText:'#1D4ED8', border:'#BFDBFE' },
+        ].map(({ period, badgeBg, badgeText, border }) => (
           <div key={period.label} style={card}>
-            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:16}}>
+            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
               <span style={{fontSize:13,fontWeight:700,color:'#111827',fontFamily:FONT}}>Pipeline</span>
               <span style={{fontSize:10,fontWeight:700,color:badgeText,background:badgeBg,
                 padding:'3px 10px',borderRadius:20,border:`1px solid ${border}`,fontFamily:FONT}}>
                 {period.label}
               </span>
             </div>
-            <PdfFunnelBars stages={period.funnel} maxOverride={sharedMax}/>
+            <PdfFunnelBars stages={period.funnel}/>
           </div>
         ))}
       </div>
