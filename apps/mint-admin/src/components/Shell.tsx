@@ -10,7 +10,7 @@ import {
   ToggleLeft, Activity, ShieldCheck, ArrowDownToLine, Users2, SlidersHorizontal,
   LogOut, Sun, Moon, Menu, X, Bell, Plus, UserPlus, ChevronDown, ChevronRight,
   Loader2, CheckCircle2, AlertTriangle, AlertCircle, Settings, Search, TrendingUp, ClipboardCheck,
-  BarChart3, DollarSign,
+  BarChart3, DollarSign, FileText,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { CommandPalette } from '@/components/CommandPalette';
@@ -25,10 +25,10 @@ type NavSection = { section: string };
 // Routes each role can access. super_admin gets everything.
 const ROLE_ROUTES: Record<string, string[]> = {
   super_admin:   ['*'],
-  admin:         ['/', '/clients', '/leads', '/sales', '/applications', '/pricing', '/quotes', '/invoices', '/billing', '/marketplace', '/features', '/usage', '/compliance', '/migration', '/payroll', '/approvals', '/telemarketer/team', '/telemarketer/commission'],
+  admin:         ['/', '/clients', '/leads', '/sales', '/applications', '/pricing', '/quotes', '/invoices', '/billing', '/marketplace', '/features', '/usage', '/compliance', '/migration', '/payroll', '/approvals', '/telemarketer/team', '/telemarketer/commission', '/reports'],
   finance:       ['/', '/pricing', '/quotes', '/invoices', '/billing', '/payroll'],
   support:       ['/', '/clients', '/leads', '/applications'],
-  manager:       ['/telemarketer', '/payroll', '/approvals'],
+  manager:       ['/telemarketer', '/payroll', '/approvals', '/reports'],
 };
 
 const ROLE_LABELS: Record<string, { label: string; color: string }> = {
@@ -49,6 +49,7 @@ function canAccess(href: string, role: string): boolean {
 const nav: (NavItem | NavGroup | NavSection)[] = [
   { section: 'Core' },
   { label: 'Dashboard',    href: '/',            icon: LayoutGrid     },
+  { label: 'Reports',      href: '/reports',     icon: FileText       },
   { label: 'Clients',      href: '/clients',     icon: Building2      },
   { label: 'Leads',        href: '/leads',        icon: Filter         },
   { label: 'Sales',        href: '/sales',        icon: TrendingUp     },
