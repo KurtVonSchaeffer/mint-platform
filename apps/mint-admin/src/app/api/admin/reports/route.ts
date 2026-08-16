@@ -187,7 +187,7 @@ export async function GET(req: NextRequest) {
       callOutcomes: buildCallOutcomes(thisCallsReal),
     },
     lastMonth: {
-      label:   monthLabel(year, month - 1 < 0 ? year - 1 : year, month - 1 < 0 ? 11 : month - 1),
+      label:   monthLabel(month - 1 < 0 ? year - 1 : year, month - 1 < 0 ? 11 : month - 1),
       kpis:    kpis(lastLeads, lastCallsReal),
       funnel:  buildFunnel(lastLeads),
       sources: buildSources(lastLeads),

@@ -315,7 +315,7 @@ function generatePrintHTML(data: ReportData): string {
 
 <!-- Footer -->
 <div style="border-top:1px solid #E2E8F0;padding-top:8px;display:flex;justify-content:space-between;">
-  <span style="font-size:10px;color:#94A3B8;">AlgoLend · mymint.co.za · Internal use only</span>
+  <span style="font-size:10px;color:#94A3B8;">AlgoLend · algolend.co.za · Internal use only</span>
   <span style="font-size:10px;color:#94A3B8;">${generated}</span>
 </div>
 
