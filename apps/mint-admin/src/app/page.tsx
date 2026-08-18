@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Shell } from '@/components/Shell';
 import { Toast, type ToastKind } from '@/components/Toast';
 import Link from 'next/link';
+import { TERMINAL_STATUSES } from '@/lib/lead-distribution';
 import {
   Users, DollarSign, Server, TrendingUp, AlertTriangle,
   Power, ExternalLink, Activity, CheckCircle2, AlertCircle,
   ChevronRight, Globe, FileText, UserPlus, Clock, Wifi, WifiOff,
   RefreshCw, ArrowUpRight, ArrowDownRight, CircleDot, ToggleLeft,
-  MousePointerClick, Share2, PenLine,
+  MousePointerClick, Share2, PenLine, Phone, Trophy,
 } from 'lucide-react';
 
 type Tier   = 'core' | 'growth' | 'enterprise';
@@ -377,11 +378,17 @@ export default function DashboardPage() {
   const [sources,     setSources]     = useState<SourceStat[]>([]);
   const [sourceTotal, setSourceTotal] = useState(0);
   const [health,      setHealth]      = useState<HealthCheck[]>([]);
-  const [loading,     setLoading]     = useState(true);
+  const [openLeadsCount,   setOpenLeadsCount]   = useState(0);
+  const [pendingApprovals, setPendingApprovals] = useState(0);
+  const [overdueFollowUps, setOverdueFollowUps] = useState(0);
+  const [loading,         setLoading]         = useState(true);
+  const [activityLoading, setActivityLoading] = useState(true);
   const [toast,       setToast]       = useState<{ kind: ToastKind; message: string } | null>(null);
   const [killLoading, setKillLoading] = useState<string | null>(null);
   const [hoveredPerf, setHoveredPerf] = useState<number | null>(null);
 
+  // Static-ish data — client roster, system health, source mix. Fetched once;
+  // these don't change minute-to-minute the way sales activity does.
   useEffect(() => {
     Promise.allSettled([
       fetch('/api/clients').then(r => r.json()).then(({ clients: raw }) => {
@@ -392,20 +399,86 @@ export default function DashboardPage() {
             mrr: Math.round(Number(c.monthly_fee_cents ?? 0) / 100),
           })));
       }),
-      fetch('/api/leads').then(r => r.json()).then(({ leads }) => {
-        if (Array.isArray(leads) && leads.length > 0)
-          setActivity(leads.slice(0, 5).map((l: Record<string, unknown>) => ({
-            icon: UserPlus, color: '#A78BFA', rgb: '167,139,250',
-            text: `New lead: ${String(l.company ?? l.name ?? 'Unknown')}`,
-            time: timeAgo(String(l.created_at ?? '')),
-          })));
-      }).catch(() => {}),
       fetch('/api/health').then(r => r.json()).then(({ checks }) => { if (Array.isArray(checks)) setHealth(checks); }).catch(() => {}),
       fetch('/api/admin/source-analytics').then(r => r.json()).then(({ sources: s, total }) => {
         if (Array.isArray(s)) { setSources(s); setSourceTotal(Number(total ?? 0)); }
       }).catch(() => {}),
     ]).finally(() => setLoading(false));
   }, []);
+
+  // Real activity feed — merges new leads, calls made, and deals won into one
+  // timeline instead of just "new lead" events, and refreshes on an interval
+  // (previously fetched once on mount and never updated). Endpoints below 401
+  // for roles outside their access list (e.g. support) — that's fine, those
+  // event types and the attention chips they feed just don't show.
+  const loadActivity = useCallback(async () => {
+    setActivityLoading(true);
+    try {
+      const [leadsRes, teamRes, commRes, apprRes] = await Promise.allSettled([
+        fetch('/api/leads').then(r => r.json()),
+        fetch('/api/admin/team').then(r => r.ok ? r.json() : null),
+        fetch('/api/admin/commissions').then(r => r.ok ? r.json() : null),
+        fetch('/api/admin/approvals').then(r => r.ok ? r.json() : null),
+      ]);
+
+      const events: { icon: typeof Users; color: string; rgb: string; text: string; ts: number }[] = [];
+
+      if (leadsRes.status === 'fulfilled' && Array.isArray(leadsRes.value?.leads)) {
+        const leads = leadsRes.value.leads as Record<string, unknown>[];
+        setOpenLeadsCount(leads.filter(l => !TERMINAL_STATUSES.includes(String(l.tm_status ?? ''))).length);
+        leads.slice(0, 5).forEach(l => {
+          events.push({
+            icon: UserPlus, color: '#A78BFA', rgb: '167,139,250',
+            text: `New lead: ${String(l.company ?? l.name ?? 'Unknown')}`,
+            ts: new Date(String(l.created_at ?? 0)).getTime(),
+          });
+        });
+      }
+
+      if (teamRes.status === 'fulfilled' && teamRes.value) {
+        const agents: { id: string; name: string; overdueFollowUps?: number }[] = teamRes.value.agents ?? [];
+        setOverdueFollowUps(agents.reduce((s, a) => s + (a.overdueFollowUps ?? 0), 0));
+        const names: Record<string, string> = {};
+        agents.forEach(a => { names[a.id] = a.name; });
+        const calls: { agent_id: string; outcome: string; called_at: string; leads: { name: string } | null }[] =
+          teamRes.value.recentActivity ?? [];
+        calls.slice(0, 5).forEach(c => {
+          events.push({
+            icon: Phone, color: '#60A5FA', rgb: '96,165,250',
+            text: `${names[c.agent_id] ?? 'Agent'} called ${c.leads?.name ?? 'a lead'} — ${c.outcome}`,
+            ts: new Date(c.called_at).getTime(),
+          });
+        });
+      }
+
+      if (commRes.status === 'fulfilled' && Array.isArray(commRes.value?.commissions)) {
+        const wins: { client_name: string; commission_amount: number; created_at: string; agentName?: string }[] =
+          commRes.value.commissions;
+        wins.slice(0, 5).forEach(w => {
+          events.push({
+            icon: Trophy, color: '#34D399', rgb: '52,211,153',
+            text: `${w.agentName ?? 'Agent'} won ${w.client_name} — R ${w.commission_amount.toLocaleString('en-ZA')}`,
+            ts: new Date(w.created_at).getTime(),
+          });
+        });
+      }
+
+      if (apprRes.status === 'fulfilled' && Array.isArray(apprRes.value?.approvals)) {
+        setPendingApprovals(apprRes.value.approvals.length);
+      }
+
+      events.sort((a, b) => b.ts - a.ts);
+      setActivity(events.slice(0, 6).map(e => ({ ...e, time: timeAgo(new Date(e.ts).toISOString()) })));
+    } finally {
+      setActivityLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadActivity();
+    const interval = setInterval(loadActivity, 60_000);
+    return () => clearInterval(interval);
+  }, [loadActivity]);
 
   async function toggleKill(c: ClientRow) {
     const next: Status = c.status === 'suspended' ? 'active' : 'suspended';
@@ -432,12 +505,20 @@ export default function DashboardPage() {
   const attentionItems = [
     ...suspended.map(c => ({ label: `${c.name} suspended`, color: '#F87171', rgb: '248,113,113', href: `/clients/${c.id}` })),
     ...noMrr.map(c => ({ label: `${c.name} (no MRR)`, color: '#FBBF24', rgb: '251,191,36', href: `/clients/${c.id}` })),
+    ...(pendingApprovals > 0 ? [{
+      label: `${pendingApprovals} quote${pendingApprovals > 1 ? 's' : ''} awaiting approval`,
+      color: '#FBBF24', rgb: '251,191,36', href: '/approvals',
+    }] : []),
+    ...(overdueFollowUps > 0 ? [{
+      label: `${overdueFollowUps} overdue follow-up${overdueFollowUps > 1 ? 's' : ''}`,
+      color: '#F87171', rgb: '248,113,113', href: '/telemarketer/team',
+    }] : []),
   ];
 
   const PERF = [
     { label: 'Active clients', value: activeClients, display: String(activeClients), sub: trialClients.length > 0 ? `+${trialClients.length} trial` : 'All paid', accent: '#A78BFA', rgb: '167,139,250', icon: Users, href: '/clients', trend: 'up' },
     { label: 'Monthly MRR', value: totalMRR, display: fmtK(totalMRR), sub: fmtK(totalARR) + ' ARR', accent: '#34D399', rgb: '52,211,153', icon: DollarSign, href: '/billing', trend: totalMRR > 0 ? 'up' : 'flat' },
-    { label: 'Leads', value: activity.length, display: String(activity.length), sub: 'Open enquiries', accent: '#FBBF24', rgb: '251,191,36', icon: TrendingUp, href: '/leads', trend: activity.length > 0 ? 'up' : 'flat' },
+    { label: 'Leads', value: openLeadsCount, display: String(openLeadsCount), sub: 'Open enquiries', accent: '#FBBF24', rgb: '251,191,36', icon: TrendingUp, href: '/leads', trend: openLeadsCount > 0 ? 'up' : 'flat' },
     { label: 'Deployments', value: clients.length, display: String(clients.length), sub: suspended.length > 0 ? `${suspended.length} suspended` : 'All operational', accent: '#60A5FA', rgb: '96,165,250', icon: Server, href: '/clients', trend: suspended.length > 0 ? 'down' : 'flat' },
   ] as const;
 
@@ -647,9 +728,19 @@ export default function DashboardPage() {
           <div className="lg:col-span-3 bento-card p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-semibold" style={{ color: 'var(--color-text2)' }}>Recent Activity</h2>
-              <Link href="/leads" className="text-xs" style={{ color: 'var(--color-violet)' }}>View leads →</Link>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={loadActivity}
+                  disabled={activityLoading}
+                  title="Refresh — auto-updates every minute"
+                  className="inline-flex items-center gap-1 text-xs transition-opacity hover:opacity-70 disabled:opacity-50"
+                  style={{ color: 'var(--color-text3)' }}>
+                  <RefreshCw size={11} className={activityLoading ? 'animate-spin' : ''} />
+                </button>
+                <Link href="/leads" className="text-xs" style={{ color: 'var(--color-violet)' }}>View leads →</Link>
+              </div>
             </div>
-            {loading && (
+            {activityLoading && activity.length === 0 && (
               <div className="space-y-3">
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="flex items-center gap-3">
@@ -662,13 +753,13 @@ export default function DashboardPage() {
                 ))}
               </div>
             )}
-            {!loading && activity.length === 0 && (
+            {!activityLoading && activity.length === 0 && (
               <p className="py-3 text-sm" style={{ color: 'var(--color-text3)' }}>
                 No recent activity.{' '}
                 <Link href="/leads?new=1" className="font-semibold" style={{ color: 'var(--color-violet)' }}>Add first lead →</Link>
               </p>
             )}
-            {!loading && activity.map((a, i) => (
+            {activity.map((a, i) => (
               <div key={i} className="flex items-center gap-3 py-2.5 px-3 rounded-xl transition-all duration-200"
                 style={{ borderBottom: i < activity.length - 1 ? '1px solid var(--color-row-border)' : 'none' }}
                 onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--color-card-hover)'; }}
