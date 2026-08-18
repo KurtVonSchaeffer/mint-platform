@@ -9,6 +9,8 @@ export async function GET(req: NextRequest) {
   const leadId  = searchParams.get('lead_id');
   const agentId = searchParams.get('agent_id');
   const today   = searchParams.get('today') === 'true';
+  const from    = searchParams.get('from'); // YYYY-MM-DD, inclusive
+  const to      = searchParams.get('to');   // YYYY-MM-DD, inclusive
 
   let query = supabaseAdmin
     .from('call_logs')
@@ -21,6 +23,8 @@ export async function GET(req: NextRequest) {
     const todayStr = new Date().toISOString().split('T')[0];
     query = query.gte('called_at', `${todayStr}T00:00:00`);
   }
+  if (from) query = query.gte('called_at', `${from}T00:00:00`);
+  if (to)   query = query.lte('called_at', `${to}T23:59:59.999`);
 
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

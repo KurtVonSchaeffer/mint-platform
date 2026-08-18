@@ -6,9 +6,10 @@ import {
   Users2, DollarSign, TrendingUp, Phone, AlertTriangle,
   Banknote, CheckCircle2, Loader2, RefreshCw, AlertCircle,
   Clock, Target, PhoneCall, ChevronRight, Activity,
-  ArrowUp, ArrowDown, ArrowRight,
+  ArrowUp, ArrowDown, ArrowRight, History,
 } from 'lucide-react';
 import { Sparkline } from '@/components/Sparkline';
+import { CallHistoryPanel } from '@/components/CallHistoryPanel';
 
 // Count-up animation — eases from 0 to target when value first becomes non-zero
 function AnimatedNumber({ value, formatter }: { value: number; formatter?: (n: number) => string }) {
@@ -130,6 +131,7 @@ export default function TeamPage() {
   const [error,          setError]          = useState<string | null>(null);
   const [sortBy,         setSortBy]         = useState<SortKey>('active_now');
   const [agentNames,     setAgentNames]     = useState<Record<string, string>>({});
+  const [historyAgent,   setHistoryAgent]   = useState<Agent | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -409,6 +411,15 @@ export default function TeamPage() {
                   <p className="text-[10px]" style={{ color: 'var(--color-text3)' }}>conversion</p>
                 </div>
 
+                <button
+                  onClick={() => setHistoryAgent(agent)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                  style={{ background: 'rgba(96,165,250,0.08)', color: '#60A5FA', border: '1px solid rgba(96,165,250,0.2)' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(96,165,250,0.15)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(96,165,250,0.08)'; }}>
+                  <History size={11} /> Calls
+                </button>
+
                 <Link
                   href={`/payroll?agent=${agent.id}`}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
@@ -539,6 +550,14 @@ export default function TeamPage() {
             })}
           </div>
         </div>
+      )}
+
+      {historyAgent && (
+        <CallHistoryPanel
+          agentId={historyAgent.id}
+          agentName={historyAgent.name}
+          onClose={() => setHistoryAgent(null)}
+        />
       )}
 
     </div>
