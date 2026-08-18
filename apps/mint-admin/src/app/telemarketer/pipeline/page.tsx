@@ -522,7 +522,10 @@ export default function PipelinePage() {
                           <ChevronRight size={8} /> View
                         </Link>
 
-                        {/* Quick-advance: move to next stage in one click */}
+                        {/* Quick-advance: move to next stage in one click.
+                            Labelled "Move to X" (not just "X") + dashed border so it
+                            can't be mistaken for the lead's current stage — TMs were
+                            reading it as a status badge instead of an action button. */}
                         {(() => {
                           const currentIdx = STAGES.findIndex(s => s.id === normalizeStatus(lead.tm_status));
                           const nextStage  = STAGES[currentIdx + 1];
@@ -530,11 +533,13 @@ export default function PipelinePage() {
                             <button
                               onClick={e => { e.stopPropagation(); moveToStage(lead.id, nextStage.id); }}
                               draggable={false}
-                              title={`Advance to: ${nextStage.id}`}
+                              title={`Move this lead to: ${nextStage.id}`}
                               className="ml-auto inline-flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-lg cursor-pointer transition-opacity hover:opacity-80"
-                              style={{ background: `rgba(${nextStage.rgb},0.13)`, color: nextStage.color }}
+                              style={{ background: `rgba(${nextStage.rgb},0.13)`, color: nextStage.color, border: `1px dashed rgba(${nextStage.rgb},0.5)` }}
                             >
-                              <ChevronsRight size={8} /> {nextStage.id}
+                              <span style={{ opacity: 0.75, fontWeight: 600 }}>Move</span>
+                              <ChevronsRight size={9} />
+                              {nextStage.id}
                             </button>
                           ) : null;
                         })()}
