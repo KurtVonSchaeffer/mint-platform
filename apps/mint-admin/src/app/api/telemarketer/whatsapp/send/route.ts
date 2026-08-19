@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import twilio from 'twilio';
+import { normalizePhoneSA } from '@/lib/phone';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -28,11 +29,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'TWILIO_WHATSAPP_NUMBER not configured' }, { status: 503 });
   }
 
-  // Normalise to E.164 — South African numbers default to +27 if no country code
-  let phone = to.replace(/\s+/g, '');
-  if (!phone.startsWith('+')) {
-    phone = phone.startsWith('0') ? `+27${phone.slice(1)}` : `+${phone}`;
-  }
+  const phone = normalizePhoneSA(to);
 
   const client = twilio(
     process.env.TWILIO_API_KEY!,

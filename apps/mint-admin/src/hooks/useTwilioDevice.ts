@@ -2,6 +2,8 @@
 
 import { useState, useRef, useCallback } from 'react';
 
+import { normalizePhoneSA, isValidE164 } from '@/lib/phone';
+
 type CallState = 'idle' | 'connecting' | 'ringing' | 'active' | 'ended';
 
 export interface TwilioCallControls {
@@ -39,6 +41,13 @@ export function useTwilioDevice(): TwilioCallControls {
 
   const makeCall = useCallback(async (to: string, leadId: string, agentId: string, identity: string) => {
     setError(null);
+
+    const normalized = normalizePhoneSA(to);
+    if (!isValidE164(normalized)) {
+      setError(`Invalid phone number: "${to}"`);
+      return;
+    }
+
     setCallState('connecting');
 
     try {
@@ -63,7 +72,7 @@ export function useTwilioDevice(): TwilioCallControls {
       // Place the call — custom params forwarded to TwiML webhook
       const call = await device.connect({
         params: {
-          To:       to,
+          To:       normalized,
           agent_id: agentId,
           lead_id:  leadId,
         },

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import twilio from 'twilio';
+import { normalizePhoneSA } from '@/lib/phone';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -24,11 +25,7 @@ export async function POST(req: NextRequest) {
   const { to, body } = await req.json() as { to?: string; body?: string };
   if (!to || !body) return NextResponse.json({ error: 'to and body required' }, { status: 422 });
 
-  // Normalise to E.164 — South African numbers default to +27 if no country code
-  let phone = to.replace(/\s+/g, '');
-  if (!phone.startsWith('+')) {
-    phone = phone.startsWith('0') ? `+27${phone.slice(1)}` : `+${phone}`;
-  }
+  const phone = normalizePhoneSA(to);
 
   // Use API key credentials (same as voice token route — no separate auth token needed)
   const client = twilio(
