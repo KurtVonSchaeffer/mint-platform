@@ -8,6 +8,7 @@ import {
   MessageSquare, Calendar, FileUp, RefreshCw, Search, Check, Download, PhoneCall,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { PowerDialerPanel, type DialerLead } from '@/components/PowerDialerPanel';
 
 const EASE: [number,number,number,number] = [0.16, 1, 0.3, 1];
 
@@ -486,6 +487,9 @@ export default function TelemarketerLeadsPage() {
   // Demo booking
   const [demoLead, setDemoLead] = useState<Lead | null>(null);
 
+  // Power dialer
+  const [dialerQueue, setDialerQueue] = useState<DialerLead[] | null>(null);
+
   // ── Data loading ────────────────────────────────────────────────────────────
 
   const load = useCallback(async () => {
@@ -645,6 +649,13 @@ export default function TelemarketerLeadsPage() {
       {addOpen      && <AddLeadModal onClose={() => setAddOpen(false)} onAdded={load} />}
       {callLogLead  && <CallLogModal lead={callLogLead} onClose={() => setCallLogLead(null)} />}
       {demoLead     && <DemoModal lead={demoLead} onClose={() => setDemoLead(null)} onBooked={load} />}
+      {dialerQueue  && (
+        <PowerDialerPanel
+          leads={dialerQueue}
+          onClose={() => setDialerQueue(null)}
+          onFinished={() => { setSelectedIds(new Set()); load(); }}
+        />
+      )}
 
       {/* Floating bulk action toolbar */}
       <AnimatePresence>
@@ -673,6 +684,19 @@ export default function TelemarketerLeadsPage() {
           >
             {bulkSaving ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />}
             Mark as Contacted
+          </button>
+          <button
+            onClick={() => {
+              const queue = displayed
+                .filter(l => selectedIds.has(l.id) && l.phone)
+                .map(l => ({ id: l.id, clientName: l.clientName, company: l.company, phone: l.phone }));
+              if (queue.length > 0) setDialerQueue(queue);
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap"
+            style={{ background: 'rgba(124,58,237,0.12)', color: 'var(--color-violet)', border: '1px solid rgba(124,58,237,0.25)' }}
+          >
+            <PhoneCall size={11} />
+            Start Power Dialer
           </button>
           <button
             onClick={() => setSelectedIds(new Set())}

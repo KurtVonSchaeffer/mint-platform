@@ -10,10 +10,17 @@ export interface TwilioCallControls {
   callState:  CallState;
   elapsed:    number;
   isMuted:    boolean;
+  callSid:    string | null;
   makeCall:   (to: string, leadId: string, agentId: string, identity: string) => Promise<void>;
   hangUp:     () => void;
   toggleMute: () => void;
   error:      string | null;
+}
+
+interface TwilioCall {
+  mute:       (m: boolean) => void;
+  disconnect: () => void;
+  parameters: Record<string, string>;
 }
 
 export function useTwilioDevice(): TwilioCallControls {
@@ -21,9 +28,10 @@ export function useTwilioDevice(): TwilioCallControls {
   const [elapsed,    setElapsed]    = useState(0);
   const [isMuted,    setIsMuted]    = useState(false);
   const [error,      setError]      = useState<string | null>(null);
+  const [callSid,    setCallSid]    = useState<string | null>(null);
 
   const deviceRef   = useRef<InstanceType<typeof import('@twilio/voice-sdk').Device> | null>(null);
-  const callRef     = useRef<{ mute: (m: boolean) => void; disconnect: () => void } | null>(null);
+  const callRef     = useRef<TwilioCall | null>(null);
   const timerRef    = useRef<ReturnType<typeof setInterval> | null>(null);
   const startRef    = useRef(0);
 
@@ -41,6 +49,7 @@ export function useTwilioDevice(): TwilioCallControls {
 
   const makeCall = useCallback(async (to: string, leadId: string, agentId: string, identity: string) => {
     setError(null);
+    setCallSid(null);
 
     const normalized = normalizePhoneSA(to);
     if (!isValidE164(normalized)) {
@@ -77,11 +86,15 @@ export function useTwilioDevice(): TwilioCallControls {
           lead_id:  leadId,
         },
       });
-      callRef.current = call as unknown as { mute: (m: boolean) => void; disconnect: () => void };
+      callRef.current = call as unknown as TwilioCall;
 
       setCallState('ringing');
 
-      call.on('accept', () => { setCallState('active'); startTimer(); });
+      call.on('accept', () => {
+        setCallState('active');
+        setCallSid((call as unknown as TwilioCall).parameters?.CallSid ?? null);
+        startTimer();
+      });
       call.on('disconnect', () => {
         stopTimer();
         setCallState('ended');
@@ -118,5 +131,5 @@ export function useTwilioDevice(): TwilioCallControls {
     setIsMuted(next);
   }, [isMuted]);
 
-  return { callState, elapsed, isMuted, makeCall, hangUp, toggleMute, error };
+  return { callState, elapsed, isMuted, callSid, makeCall, hangUp, toggleMute, error };
 }

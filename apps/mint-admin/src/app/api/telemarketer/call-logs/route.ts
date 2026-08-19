@@ -33,17 +33,41 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { lead_id, agent_id, outcome, duration, notes } = body;
+  const { lead_id, agent_id, outcome, duration, notes, twilio_call_sid } = body;
 
   if (!lead_id || !agent_id || !outcome) {
     return NextResponse.json({ error: 'lead_id, agent_id, outcome required' }, { status: 422 });
   }
 
-  const { data, error } = await supabaseAdmin
-    .from('call_logs')
-    .insert({ lead_id, agent_id, outcome, duration: duration || null, notes: notes || null })
-    .select()
-    .single();
+  // If this outcome is for a Twilio SDK call, the /status webhook has likely
+  // already auto-logged a row for it (crude guess: completed→Spoke,
+  // anything else→No Answer). Update that row with the TM's real outcome
+  // instead of inserting a second entry for the same call. Falls back to
+  // insert if the webhook hasn't landed yet (or never fires, e.g. call
+  // dropped before Twilio posts status).
+  let data = null;
+  let error = null;
+
+  if (twilio_call_sid) {
+    const upd = await supabaseAdmin
+      .from('call_logs')
+      .update({ outcome, notes: notes || null })
+      .eq('twilio_call_sid', twilio_call_sid)
+      .select()
+      .maybeSingle();
+    data = upd.data;
+    error = upd.error;
+  }
+
+  if (!error && !data) {
+    const ins = await supabaseAdmin
+      .from('call_logs')
+      .insert({ lead_id, agent_id, outcome, duration: duration || null, notes: notes || null, twilio_call_sid: twilio_call_sid || null })
+      .select()
+      .single();
+    data = ins.data;
+    error = ins.error;
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
