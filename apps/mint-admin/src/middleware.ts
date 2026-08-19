@@ -152,6 +152,9 @@ export async function middleware(request: NextRequest) {
     pathname === '/api/biztech/invoices/reminders-cron' || // same as above
     pathname === '/api/biztech/recurring-invoices/cron' || // same as above
     pathname.startsWith('/api/cron/') ||          // all Vercel cron jobs — verified by CRON_SECRET bearer token in-route
+    pathname === '/api/telemarketer/twilio/voice' ||      // Twilio calls this webhook directly — no staff session to carry
+    pathname === '/api/telemarketer/twilio/status' ||     // Twilio status-callback webhook — same as above
+    pathname === '/api/telemarketer/twilio/recording' ||  // Twilio recording-status webhook — same as above
     pathname.startsWith('/_next') ||
     pathname.startsWith('/favicon');
 
