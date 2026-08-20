@@ -383,7 +383,7 @@ export default function DashboardPage() {
   const [overdueFollowUps, setOverdueFollowUps] = useState(0);
   const [loading,         setLoading]         = useState(true);
   const [activityLoading, setActivityLoading] = useState(true);
-  const [toast,       setToast]       = useState<{ kind: ToastKind; message: string } | null>(null);
+  const [toast,       setToast]       = useState<{ kind: ToastKind; message: string; duration?: number } | null>(null);
   const [killLoading, setKillLoading] = useState<string | null>(null);
   const [hoveredPerf, setHoveredPerf] = useState<number | null>(null);
 
@@ -433,6 +433,31 @@ export default function DashboardPage() {
             ts: new Date(String(l.created_at ?? 0)).getTime(),
           });
         });
+
+        // Website leads are auto-assigned instantly on submission and need
+        // prioritizing — notify here the moment one arrives. Watermarked in
+        // localStorage (per-browser) rather than a DB flag, so this alerts
+        // whoever has the dashboard open, not a specific "seen" state shared
+        // across staff.
+        const websiteLeads = leads.filter(l => l.source === 'marketing-site');
+        if (websiteLeads.length > 0) {
+          const newest = Math.max(...websiteLeads.map(l => new Date(String(l.created_at ?? 0)).getTime()));
+          const stored = localStorage.getItem('lastSeenWebsiteLeadAt');
+          if (stored === null) {
+            localStorage.setItem('lastSeenWebsiteLeadAt', String(newest));
+          } else {
+            const lastSeen = Number(stored);
+            const newOnes = websiteLeads.filter(l => new Date(String(l.created_at ?? 0)).getTime() > lastSeen);
+            if (newOnes.length > 0) {
+              setToast({
+                kind: 'info',
+                message: `🌐 ${newOnes.length} new website lead${newOnes.length > 1 ? 's' : ''} — prioritize on My Leads`,
+                duration: 10000,
+              });
+              localStorage.setItem('lastSeenWebsiteLeadAt', String(newest));
+            }
+          }
+        }
       }
 
       if (teamRes.status === 'fulfilled' && teamRes.value) {
@@ -524,7 +549,7 @@ export default function DashboardPage() {
 
   return (
     <Shell>
-      {toast && <Toast kind={toast.kind} message={toast.message} onClose={() => setToast(null)} />}
+      {toast && <Toast kind={toast.kind} message={toast.message} duration={toast.duration} onClose={() => setToast(null)} />}
 
       <div className="space-y-5 page-enter">
 

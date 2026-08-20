@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import {
   Plus, Phone, ChevronDown, Loader2, X, Clock,
-  MessageSquare, Calendar, FileUp, RefreshCw, Search, Check, Download, PhoneCall,
+  MessageSquare, Calendar, FileUp, RefreshCw, Search, Check, Download, PhoneCall, Globe,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PowerDialerPanel, type DialerLead } from '@/components/PowerDialerPanel';
@@ -59,6 +59,7 @@ interface Lead {
   updatedAt: string;
   status: LeadStatus;
   nextFollowUp: string | null;
+  source: string;
 }
 
 const TERMINAL: LeadStatus[] = ['Won', 'Lost', 'Other', 'Converted', 'Not Interested'];
@@ -131,6 +132,10 @@ function priorityScore(l: Lead): number {
     'Unreachable':        5,
   };
   let score = STATUS_SCORE[l.status] ?? 10;
+
+  // Website leads jump the queue — always outrank any status-based score
+  // so they sort to the top of "⚡ Priority" regardless of pipeline stage.
+  if (l.source === 'marketing-site') score += 100;
 
   // Overdue follow-up = commit to this lead right now
   if (l.nextFollowUp) {
@@ -460,6 +465,7 @@ function mapLead(raw: Record<string, string>): Lead {
     status:       (raw.tm_status as LeadStatus) || 'Pending',
     nextFollowUp: raw.next_follow_up ?? null,
     updatedAt:    raw.updated_at     ?? '',
+    source:       raw.source        ?? '',
   };
 }
 
@@ -945,6 +951,12 @@ export default function TelemarketerLeadsPage() {
                         <div>
                           <p className="text-sm font-semibold group-hover:text-[var(--color-violet)] transition-colors" style={{ color: 'var(--color-text)' }}>{lead.clientName}</p>
                           <p className="text-xs" style={{ color: 'var(--color-text3)' }}>{lead.company}</p>
+                          {lead.source === 'marketing-site' && !TERMINAL.includes(lead.status) && (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full mt-0.5 mr-1"
+                              style={{ background: 'rgba(96,165,250,0.15)', color: '#60A5FA', border: '1px solid rgba(96,165,250,0.35)' }}>
+                              <Globe size={9} /> Website — Priority
+                            </span>
+                          )}
                           {(() => {
                             const score = priorityScore(lead);
                             if (score >= 70) return (
