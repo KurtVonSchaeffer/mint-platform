@@ -129,8 +129,9 @@ export async function GET(req: NextRequest) {
   const lastMonth = monthBounds(year, month - 1);
 
   const usersRes = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
+  const CALLER_ROLES = ['telemarketer', 'manager'];
   const agents = (usersRes.data?.users ?? [])
-    .filter(u => (u.user_metadata?.role as string | undefined) === 'telemarketer')
+    .filter(u => CALLER_ROLES.includes((u.user_metadata?.role as string | undefined) ?? ''))
     .filter(u => !TEST_EMAILS.some(ex => (u.email ?? '').toLowerCase().includes(ex)));
 
   const agentIds = new Set(agents.map(a => a.id));

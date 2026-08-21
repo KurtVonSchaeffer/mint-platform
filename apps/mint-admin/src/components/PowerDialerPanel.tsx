@@ -55,8 +55,10 @@ export function PowerDialerPanel({ leads, onClose, onFinished }: {
 
   async function call() {
     if (!current?.phone || !agentId) return;
-    setShowOutcomes(false);
-    await twilio.makeCall(current.phone, current.id, agentId, agentId.slice(0, 8));
+    // Open system dialer immediately, then show outcome picker so the TM can
+    // log the result regardless of whether Twilio is live.
+    window.open(`tel:${current.phone}`, '_self');
+    setShowOutcomes(true);
   }
 
   async function logOutcome(outcome: string) {
@@ -189,10 +191,10 @@ export function PowerDialerPanel({ leads, onClose, onFinished }: {
                 </div>
               ) : !callActive ? (
                 <div className="flex items-center gap-2">
-                  <button onClick={call} disabled={!current.phone || !agentId || twilio.callState === 'connecting'}
+                  <button onClick={call} disabled={!current.phone || !agentId}
                     className="btn-purple btn-shine flex-1 inline-flex items-center justify-center gap-1.5 !py-2.5 !text-sm disabled:opacity-50">
                     <Phone size={14} />
-                    {twilio.callState === 'connecting' ? 'Connecting…' : 'Call Now'}
+                    Call Now
                   </button>
                   <button onClick={skip}
                     className="inline-flex items-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all"

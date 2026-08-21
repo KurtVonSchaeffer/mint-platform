@@ -71,17 +71,28 @@ export async function POST(req: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Auto-advance tm_status based on outcome so KPI buckets stay accurate
-  const tmStatusUpdate: string | null =
-    outcome === 'Called Back Later' ? 'Call Back'         :
-    outcome === 'Not Interested'    ? 'Not Interested'    :
-    outcome === 'No Answer'         ? 'Attempted Contact' : null;
+  // Auto-advance tm_status based on outcome so KPI buckets stay accurate.
+  // For 'Spoke': only advance to 'Contacted' if still in an early stage — don't
+  // downgrade a lead that's already at Interested / Demo / Proposal / Won.
+  const EARLY_STAGES = new Set([
+    'New Lead', 'Attempted Contact', 'Pending', 'Unreachable', null, undefined,
+  ]);
 
-  if (tmStatusUpdate) {
-    await supabaseAdmin
-      .from('leads')
-      .update({ tm_status: tmStatusUpdate })
-      .eq('id', lead_id);
+  if (outcome === 'Spoke') {
+    const { data: lead } = await supabaseAdmin
+      .from('leads').select('tm_status').eq('id', lead_id).maybeSingle();
+    if (lead && EARLY_STAGES.has(lead.tm_status ?? undefined)) {
+      await supabaseAdmin.from('leads').update({ tm_status: 'Contacted' }).eq('id', lead_id);
+    }
+  } else {
+    const tmStatusUpdate: string | null =
+      outcome === 'Called Back Later' ? 'Call Back'         :
+      outcome === 'Not Interested'    ? 'Not Interested'    :
+      outcome === 'No Answer'         ? 'Attempted Contact' : null;
+
+    if (tmStatusUpdate) {
+      await supabaseAdmin.from('leads').update({ tm_status: tmStatusUpdate }).eq('id', lead_id);
+    }
   }
 
   return NextResponse.json({ call_log: data }, { status: 201 });

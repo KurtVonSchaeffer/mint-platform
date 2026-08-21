@@ -202,168 +202,166 @@ function PdfZone({ data, innerRef }: { data: ReportData; innerRef: React.RefObje
   const generated = new Date().toLocaleDateString('en-ZA', { day:'numeric', month:'long', year:'numeric' });
 
   const card: React.CSSProperties = {
-    background:'#ffffff',
-    border:'1.5px solid #E5E7EB',
-    borderRadius:14,
-    padding:'18px 20px',
-    boxShadow:'0 1px 4px rgba(0,0,0,0.06)',
+    background:'#ffffff', border:'1px solid #E5E7EB',
+    borderRadius:12, padding:'16px 18px',
   };
 
-  const sectionLabel = (text: string): React.CSSProperties => ({
-    fontSize:11, fontWeight:700, textTransform:'uppercase' as const,
-    letterSpacing:'0.08em', color:'#6B7280', marginBottom:12,
-    fontFamily: FONT,
-  });
-
   const kpis = [
-    { label:'Total Leads',  val:String(data.thisMonth.kpis.leadsTotal), curr:data.thisMonth.kpis.leadsTotal, prev:data.lastMonth.kpis.leadsTotal, accent:'#7C3AED', bg:'#F5F3FF', text:'#5B21B6' },
-    { label:'Calls Made',   val:String(data.thisMonth.kpis.callsTotal), curr:data.thisMonth.kpis.callsTotal, prev:data.lastMonth.kpis.callsTotal, accent:'#2563EB', bg:'#EFF6FF', text:'#1D4ED8' },
-    { label:'Won',          val:String(data.thisMonth.kpis.won),        curr:data.thisMonth.kpis.won,        prev:data.lastMonth.kpis.won,        accent:'#059669', bg:'#ECFDF5', text:'#065F46' },
-    { label:'Conv Rate',    val:`${data.thisMonth.kpis.convRate}%`,     curr:data.thisMonth.kpis.convRate,   prev:data.lastMonth.kpis.convRate,   accent:'#D97706', bg:'#FFFBEB', text:'#92400E' },
+    { label:'Total Leads', val:String(data.thisMonth.kpis.leadsTotal), curr:data.thisMonth.kpis.leadsTotal, prev:data.lastMonth.kpis.leadsTotal, accent:'#7C3AED' },
+    { label:'Calls Made',  val:String(data.thisMonth.kpis.callsTotal), curr:data.thisMonth.kpis.callsTotal, prev:data.lastMonth.kpis.callsTotal, accent:'#2563EB' },
+    { label:'Won',         val:String(data.thisMonth.kpis.won),        curr:data.thisMonth.kpis.won,        prev:data.lastMonth.kpis.won,        accent:'#059669' },
+    { label:'Conv Rate',   val:`${data.thisMonth.kpis.convRate}%`,     curr:data.thisMonth.kpis.convRate,   prev:data.lastMonth.kpis.convRate,   accent:'#D97706' },
   ];
 
   return (
     <div
       ref={innerRef}
-      style={{
-        position:'absolute', left:'-9999px', top:0,
-        width:1120, background:'#F9FAFB',
-        fontFamily: FONT,
-        padding:'32px 40px 40px',
-        boxSizing:'border-box',
-      }}
+      style={{ position:'absolute', left:'-9999px', top:0, width:1120,
+        background:'#F3F4F6', fontFamily:FONT, padding:'0 0 40px', boxSizing:'border-box' }}
     >
-      {/* ── Header ── */}
-      <div style={{background:'#ffffff',borderRadius:16,padding:'22px 28px',marginBottom:20,
-        border:'1.5px solid #E5E7EB',boxShadow:'0 1px 4px rgba(0,0,0,0.06)',
-        display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-        <div style={{display:'flex',alignItems:'center',gap:16}}>
-          <div style={{width:44,height:44,borderRadius:12,background:'#7C3AED',
-            display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-            <div style={{width:20,height:20,border:'2.5px solid white',borderRadius:3,
-              borderBottom:'none',transform:'rotate(-10deg)'}}/>
-          </div>
-          <div>
-            <div style={{fontSize:22,fontWeight:800,color:'#111827',letterSpacing:'-0.5px',lineHeight:1}}>AlgoLend</div>
-            <div style={{fontSize:10,fontWeight:600,textTransform:'uppercase',letterSpacing:'0.1em',color:'#9CA3AF',marginTop:3}}>Admin Console</div>
-          </div>
+      {/* ── Header banner ── */}
+      <div style={{ background:'#3B0764', padding:'26px 40px', marginBottom:24,
+        display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+        <div>
+          <div style={{ fontSize:28, fontWeight:900, color:'#ffffff', letterSpacing:'-0.5px', lineHeight:1 }}>AlgoLend</div>
+          <div style={{ fontSize:10, fontWeight:600, textTransform:'uppercase', letterSpacing:'0.14em', color:'#C4B5FD', marginTop:4 }}>Admin Console</div>
         </div>
-        <div style={{textAlign:'right'}}>
-          <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',color:'#7C3AED',marginBottom:4}}>Weekly Performance Report</div>
-          <div style={{fontSize:20,fontWeight:800,color:'#111827',lineHeight:1.2}}>{data.thisMonth.label}</div>
-          <div style={{fontSize:12,color:'#6B7280',marginTop:5}}>
+        <div style={{ textAlign:'right' }}>
+          <div style={{ fontSize:11, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.1em', color:'#A78BFA', marginBottom:5 }}>Weekly Performance Report</div>
+          <div style={{ fontSize:22, fontWeight:800, color:'#ffffff', lineHeight:1 }}>{data.thisMonth.label}</div>
+          <div style={{ fontSize:11, color:'#C4B5FD', marginTop:5 }}>
             vs {data.lastMonth.label} &nbsp;·&nbsp; {generated} &nbsp;·&nbsp; Confidential
           </div>
         </div>
       </div>
 
-      {/* ── KPIs ── */}
-      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:14,marginBottom:20}}>
-        {kpis.map(k => {
-          const d = k.prev > 0 ? Math.round((k.curr - k.prev)/k.prev*100) : null;
-          const dColor = d === null ? '#9CA3AF' : d > 0 ? '#059669' : d < 0 ? '#DC2626' : '#9CA3AF';
-          const arrow  = d === null ? '' : d > 0 ? '▲' : d < 0 ? '▼' : '→';
-          return (
-            <div key={k.label} style={{background:k.bg,borderRadius:14,padding:'20px 22px',
-              border:`1.5px solid ${k.accent}22`}}>
-              <div style={{fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em',
-                color:k.text,marginBottom:10,fontFamily:FONT}}>{k.label}</div>
-              <div style={{fontSize:34,fontWeight:900,color:k.text,lineHeight:1,letterSpacing:'-1px',fontFamily:FONT}}>{k.val}</div>
-              <div style={{marginTop:10,fontSize:11,color:dColor,fontWeight:700,fontFamily:FONT}}>
-                {d !== null
-                  ? <>{arrow} {Math.abs(d)}% <span style={{color:'#9CA3AF',fontWeight:400}}>vs last month</span></>
-                  : <span style={{color:'#9CA3AF'}}>No prior data</span>}
+      <div style={{ padding:'0 40px' }}>
+
+        {/* ── KPIs ── */}
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:14, marginBottom:20 }}>
+          {kpis.map(k => {
+            const d = k.prev > 0 ? Math.round((k.curr - k.prev)/k.prev*100) : null;
+            const dColor = d === null ? '#6B7280' : d > 0 ? '#15803D' : d < 0 ? '#B91C1C' : '#6B7280';
+            const arrow  = d === null ? '' : d > 0 ? '▲' : d < 0 ? '▼' : '→';
+            return (
+              <div key={k.label} style={{ background:'#ffffff', borderRadius:12, overflow:'hidden',
+                border:'1px solid #E5E7EB' }}>
+                <div style={{ background:k.accent, padding:'10px 16px' }}>
+                  <div style={{ fontSize:10, fontWeight:700, textTransform:'uppercase',
+                    letterSpacing:'0.1em', color:'rgba(255,255,255,0.85)', fontFamily:FONT }}>{k.label}</div>
+                </div>
+                <div style={{ padding:'14px 16px' }}>
+                  <div style={{ fontSize:38, fontWeight:900, color:'#111827', lineHeight:1,
+                    letterSpacing:'-1.5px', fontFamily:FONT }}>{k.val}</div>
+                  <div style={{ marginTop:8, fontSize:11, color:dColor, fontWeight:700, fontFamily:FONT }}>
+                    {d !== null
+                      ? `${arrow} ${Math.abs(d)}% vs last month`
+                      : <span style={{ color:'#9CA3AF' }}>No prior data</span>}
+                  </div>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
 
-      {/* ── Pipeline side-by-side ── */}
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:20}}>
-        {[
-          { period: data.thisMonth, badgeBg:'#F5F3FF', badgeText:'#5B21B6', border:'#DDD6FE' },
-          { period: data.lastMonth, badgeBg:'#EFF6FF', badgeText:'#1D4ED8', border:'#BFDBFE' },
-        ].map(({ period, badgeBg, badgeText, border }) => (
-          <div key={period.label} style={card}>
-            <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:14}}>
-              <span style={{fontSize:13,fontWeight:700,color:'#111827',fontFamily:FONT}}>Pipeline</span>
-              <span style={{fontSize:10,fontWeight:700,color:badgeText,background:badgeBg,
-                padding:'3px 10px',borderRadius:20,border:`1px solid ${border}`,fontFamily:FONT}}>
-                {period.label}
-              </span>
+        {/* ── Pipeline side-by-side ── */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:20 }}>
+          {[
+            { period:data.thisMonth, accent:'#7C3AED', badgeColor:'#EDE9FE', badgeText:'#5B21B6' },
+            { period:data.lastMonth, accent:'#1D4ED8', badgeColor:'#DBEAFE', badgeText:'#1E40AF' },
+          ].map(({ period, accent, badgeColor, badgeText }) => (
+            <div key={period.label} style={card}>
+              <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+                <div style={{ width:4, height:20, background:accent, borderRadius:2, flexShrink:0 }}/>
+                <span style={{ fontSize:13, fontWeight:700, color:'#111827', fontFamily:FONT }}>Pipeline</span>
+                <span style={{ fontSize:10, fontWeight:700, color:badgeText, background:badgeColor,
+                  padding:'3px 10px', borderRadius:20, fontFamily:FONT }}>{period.label}</span>
+              </div>
+              <PdfFunnelBars stages={period.funnel}/>
             </div>
-            <PdfFunnelBars stages={period.funnel}/>
+          ))}
+        </div>
+
+        {/* ── MoM comparison ── */}
+        <div style={{ ...card, marginBottom:20 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+            <div style={{ width:4, height:20, background:'#7C3AED', borderRadius:2 }}/>
+            <span style={{ fontSize:13, fontWeight:700, color:'#111827', fontFamily:FONT }}>Month-over-Month Comparison</span>
           </div>
-        ))}
-      </div>
-
-      {/* ── MoM comparison ── */}
-      <div style={{...card, marginBottom:20}}>
-        <div style={sectionLabel('Month-over-Month Comparison')}>Month-over-Month Comparison</div>
-        <PdfGroupedBars thisStages={data.thisMonth.funnel} lastStages={data.lastMonth.funnel}/>
-      </div>
-
-      {/* ── Team table ── */}
-      <div style={{...card, marginBottom:20}}>
-        <div style={sectionLabel(`Team Performance — ${data.thisMonth.label}`)}>Team Performance — {data.thisMonth.label}</div>
-        <table style={{width:'100%',borderCollapse:'collapse',fontFamily:FONT}}>
-          <thead>
-            <tr style={{background:'#F9FAFB'}}>
-              {[
-                {h:'Agent',color:'#374151'},
-                {h:'Calls Made',color:'#1D4ED8'},
-                {h:'Leads Assigned',color:'#374151'},
-                {h:'Won',color:'#065F46'},
-                {h:'Conv Rate',color:'#5B21B6'},
-              ].map(col => (
-                <th key={col.h} style={{fontSize:10,textTransform:'uppercase',letterSpacing:'0.06em',
-                  color:col.color,fontWeight:700,padding:'9px 14px 9px 0',textAlign:'left',
-                  borderBottom:'2px solid #E5E7EB',fontFamily:FONT}}>{col.h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.agents.length === 0
-              ? <tr><td colSpan={5} style={{textAlign:'center',color:'#9CA3AF',padding:'20px 0',fontSize:12,fontFamily:FONT}}>No agents found</td></tr>
-              : data.agents.map((a, i) => (
-                <tr key={a.id} style={{background: i%2===1 ? '#F9FAFB' : '#ffffff'}}>
-                  <td style={{padding:'11px 14px 11px 0',fontWeight:700,color:'#111827',fontSize:13,fontFamily:FONT,borderBottom:'1px solid #F3F4F6'}}>{a.name}</td>
-                  <td style={{padding:'11px 14px 11px 0',fontWeight:800,color:'#1D4ED8',fontSize:15,fontFamily:FONT,borderBottom:'1px solid #F3F4F6'}}>{a.callsThisMonth}</td>
-                  <td style={{padding:'11px 14px 11px 0',color:'#374151',fontSize:13,fontFamily:FONT,borderBottom:'1px solid #F3F4F6'}}>{a.leadsAssigned}</td>
-                  <td style={{padding:'11px 14px 11px 0',fontWeight:800,color:'#059669',fontSize:15,fontFamily:FONT,borderBottom:'1px solid #F3F4F6'}}>{a.won}</td>
-                  <td style={{padding:'11px 14px 11px 0',fontWeight:700,color:a.convRate>0?'#5B21B6':'#9CA3AF',fontSize:13,fontFamily:FONT,borderBottom:'1px solid #F3F4F6'}}>{a.convRate}%</td>
-                </tr>
-              ))
-            }
-          </tbody>
-        </table>
-      </div>
-
-      {/* ── Sources + Outcomes ── */}
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:20}}>
-        <div style={card}>
-          <div style={sectionLabel('Lead Sources')}>Lead Sources</div>
-          {data.thisMonth.sources.length === 0
-            ? <p style={{color:'#9CA3AF',fontSize:12,fontFamily:FONT}}>No data</p>
-            : <PdfBarList useColors items={data.thisMonth.sources.map(s=>({label:s.label,count:s.count}))}/>}
+          <PdfGroupedBars thisStages={data.thisMonth.funnel} lastStages={data.lastMonth.funnel}/>
         </div>
-        <div style={card}>
-          <div style={sectionLabel('Call Outcomes')}>Call Outcomes</div>
-          {data.thisMonth.callOutcomes.length === 0
-            ? <p style={{color:'#9CA3AF',fontSize:12,fontFamily:FONT}}>No calls this month</p>
-            : <PdfBarList items={data.thisMonth.callOutcomes.map(o=>({label:o.outcome,count:o.count}))}/>}
-        </div>
-      </div>
 
-      {/* ── Footer ── */}
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',
-        paddingTop:16,borderTop:'1.5px solid #E5E7EB'}}>
-        <div style={{display:'flex',alignItems:'center',gap:8}}>
-          <div style={{width:6,height:6,borderRadius:'50%',background:'#7C3AED'}}/>
-          <span style={{fontSize:11,color:'#9CA3AF',fontFamily:FONT}}>AlgoLend · algolend.co.za · Internal use only</span>
+        {/* ── Team table ── */}
+        <div style={{ ...card, marginBottom:20 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+            <div style={{ width:4, height:20, background:'#059669', borderRadius:2 }}/>
+            <span style={{ fontSize:13, fontWeight:700, color:'#111827', fontFamily:FONT }}>Team Performance — {data.thisMonth.label}</span>
+          </div>
+          <table style={{ width:'100%', borderCollapse:'collapse', fontFamily:FONT }}>
+            <thead>
+              <tr style={{ background:'#1E1B4B' }}>
+                {[
+                  { h:'Agent',          w:'30%' },
+                  { h:'Calls Made',     w:'17%' },
+                  { h:'Leads Assigned', w:'20%' },
+                  { h:'Won',            w:'13%' },
+                  { h:'Conv Rate',      w:'20%' },
+                ].map(col => (
+                  <th key={col.h} style={{ fontSize:10, textTransform:'uppercase', letterSpacing:'0.07em',
+                    color:'#C4B5FD', fontWeight:700, padding:'10px 14px', textAlign:'left',
+                    width:col.w, fontFamily:FONT }}>{col.h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {data.agents.length === 0
+                ? <tr><td colSpan={5} style={{ textAlign:'center', color:'#9CA3AF', padding:'20px', fontSize:12, fontFamily:FONT }}>No agents found</td></tr>
+                : data.agents.map((a, i) => (
+                  <tr key={a.id} style={{ background: i%2===0 ? '#ffffff' : '#F9FAFB' }}>
+                    <td style={{ padding:'10px 14px', fontWeight:700, color:'#111827', fontSize:13, fontFamily:FONT, borderBottom:'1px solid #F3F4F6' }}>{a.name}</td>
+                    <td style={{ padding:'10px 14px', fontWeight:800, color:'#1D4ED8', fontSize:16, fontFamily:FONT, borderBottom:'1px solid #F3F4F6' }}>{a.callsThisMonth}</td>
+                    <td style={{ padding:'10px 14px', color:'#374151', fontSize:13, fontFamily:FONT, borderBottom:'1px solid #F3F4F6' }}>{a.leadsAssigned}</td>
+                    <td style={{ padding:'10px 14px', fontWeight:800, color:'#059669', fontSize:16, fontFamily:FONT, borderBottom:'1px solid #F3F4F6' }}>{a.won}</td>
+                    <td style={{ padding:'10px 14px', fontWeight:700, color:a.convRate>0?'#6D28D9':'#9CA3AF', fontSize:13, fontFamily:FONT, borderBottom:'1px solid #F3F4F6' }}>{a.convRate}%</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
         </div>
-        <span style={{fontSize:11,color:'#9CA3AF',fontFamily:FONT}}>{generated}</span>
+
+        {/* ── Sources + Outcomes ── */}
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:14, marginBottom:20 }}>
+          <div style={card}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+              <div style={{ width:4, height:20, background:'#2563EB', borderRadius:2 }}/>
+              <span style={{ fontSize:13, fontWeight:700, color:'#111827', fontFamily:FONT }}>Lead Sources</span>
+            </div>
+            {data.thisMonth.sources.length === 0
+              ? <p style={{color:'#9CA3AF',fontSize:12,fontFamily:FONT}}>No data</p>
+              : <PdfBarList useColors items={data.thisMonth.sources.map(s=>({label:s.label,count:s.count}))}/>}
+          </div>
+          <div style={card}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+              <div style={{ width:4, height:20, background:'#D97706', borderRadius:2 }}/>
+              <span style={{ fontSize:13, fontWeight:700, color:'#111827', fontFamily:FONT }}>Call Outcomes</span>
+            </div>
+            {data.thisMonth.callOutcomes.length === 0
+              ? <p style={{color:'#9CA3AF',fontSize:12,fontFamily:FONT}}>No calls this month</p>
+              : <PdfBarList items={data.thisMonth.callOutcomes.map(o=>({label:o.outcome,count:o.count}))}/>}
+          </div>
+        </div>
+
+        {/* ── Footer ── */}
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center',
+          paddingTop:16, borderTop:'2px solid #DDD6FE' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+            <div style={{ width:8, height:8, borderRadius:'50%', background:'#7C3AED' }}/>
+            <span style={{ fontSize:11, color:'#6B7280', fontFamily:FONT }}>AlgoLend · algolend.co.za · Internal use only</span>
+          </div>
+          <span style={{ fontSize:11, color:'#6B7280', fontFamily:FONT }}>{generated}</span>
+        </div>
+
       </div>
     </div>
   );
