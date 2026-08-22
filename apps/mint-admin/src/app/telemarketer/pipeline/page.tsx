@@ -523,9 +523,11 @@ export default function PipelinePage() {
                         </Link>
 
                         {/* Quick-advance: move to next stage in one click.
-                            Labelled "Move to X" (not just "X") + dashed border so it
-                            can't be mistaken for the lead's current stage — TMs were
-                            reading it as a status badge instead of an action button. */}
+                            Labelled "Move to X" (not just "X") so it can't be mistaken
+                            for the lead's current stage — TMs were reading it as a
+                            status badge instead of an action button. (A dashed border
+                            was tried too but rendered as a messy double-outline at
+                            this size, so the label alone carries the distinction.) */}
                         {(() => {
                           const currentIdx = STAGES.findIndex(s => s.id === normalizeStatus(lead.tm_status));
                           const nextStage  = STAGES[currentIdx + 1];
@@ -535,7 +537,7 @@ export default function PipelinePage() {
                               draggable={false}
                               title={`Move this lead to: ${nextStage.id}`}
                               className="ml-auto inline-flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-lg cursor-pointer transition-opacity hover:opacity-80"
-                              style={{ background: `rgba(${nextStage.rgb},0.13)`, color: nextStage.color, border: `1px dashed rgba(${nextStage.rgb},0.5)` }}
+                              style={{ background: `rgba(${nextStage.rgb},0.13)`, color: nextStage.color }}
                             >
                               <span style={{ opacity: 0.75, fontWeight: 600 }}>Move</span>
                               <ChevronsRight size={9} />
