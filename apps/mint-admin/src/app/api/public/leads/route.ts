@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
-import { pickNextAgent, notifyAgentNewLead } from '@/lib/lead-distribution';
+import { pickNextAgent, notifyAgentNewLead, notifyAdminNewWebsiteLead } from '@/lib/lead-distribution';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -104,6 +104,19 @@ export async function POST(req: NextRequest) {
       message:  message?.trim() ?? null,
     }).catch(() => {/* swallow — email is best-effort */});
   }
+
+  // Also notify admin (Keri-Leigh) — separate from the TM's "assigned to you"
+  // email, so admin gets visibility on every website lead regardless of
+  // who it lands with.
+  notifyAdminNewWebsiteLead({
+    agentId:  assignedTo,
+    leadId:   data.id,
+    leadName: name.trim(),
+    company:  company?.trim() ?? '',
+    phone:    cleanPhone,
+    email:    cleanEmail,
+    message:  message?.trim() ?? null,
+  }).catch(() => {/* swallow — email is best-effort */});
 
   return NextResponse.json(
     { ok: true, id: data.id },

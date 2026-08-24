@@ -691,6 +691,53 @@ export function newLeadNotificationEmail(info: {
 </body></html>`;
 }
 
+export function newWebsiteLeadAdminEmail(info: {
+  agentName: string;
+  lead: {
+    id:      string;
+    name:    string;
+    company: string;
+    phone:   string | null;
+    email:   string | null;
+    message: string | null;
+  };
+  portalUrl: string;
+}) {
+  const leadUrl = `${info.portalUrl}/leads/${info.lead.id}`;
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:28px 32px">
+    <p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 4px">AlgoLend</p>
+    <p style="color:#fff;font-size:20px;font-weight:700;margin:0">New website lead</p>
+  </div>
+  <div style="padding:28px 32px">
+    <p style="color:#555;line-height:1.6;margin:0 0 24px">
+      A new lead came in through algolend.co.za and was auto-assigned to <strong>${info.agentName}</strong>.
+    </p>
+    <div style="background:#f9f7ff;border:1px solid #e5e0ff;border-radius:12px;padding:20px;margin-bottom:24px">
+      <table style="width:100%;border-collapse:collapse">
+        <tr><td style="padding:6px 0;color:#888;font-size:13px;width:90px">Name</td><td style="padding:6px 0;font-weight:600;font-size:15px;color:#1a1f36">${info.lead.name}</td></tr>
+        <tr><td style="padding:6px 0;color:#888;font-size:13px">Company</td><td style="padding:6px 0;color:#1a1f36">${info.lead.company}</td></tr>
+        ${info.lead.phone ? `<tr><td style="padding:6px 0;color:#888;font-size:13px">Phone</td><td style="padding:6px 0"><a href="tel:${info.lead.phone}" style="color:#7C3AED;font-weight:600">${info.lead.phone}</a></td></tr>` : ''}
+        <tr><td style="padding:6px 0;color:#888;font-size:13px">Email</td><td style="padding:6px 0"><a href="mailto:${info.lead.email}" style="color:#7C3AED">${info.lead.email}</a></td></tr>
+        <tr><td style="padding:6px 0;color:#888;font-size:13px">Assigned to</td><td style="padding:6px 0;color:#1a1f36">${info.agentName}</td></tr>
+        ${info.lead.message ? `<tr><td style="padding:6px 0;color:#888;font-size:13px;vertical-align:top">Message</td><td style="padding:6px 0;color:#555;font-style:italic">"${info.lead.message}"</td></tr>` : ''}
+      </table>
+    </div>
+    <div style="text-align:center">
+      <a href="${leadUrl}" style="background:#7C3AED;color:#fff;padding:13px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block">
+        Open lead →
+      </a>
+    </div>
+  </div>
+  <div style="background:#f5f6fa;padding:16px;text-align:center;font-size:11px;color:#aaa">
+    AlgoLend · MINT Platforms (Pty) Ltd — new website lead notification
+  </div>
+</div>
+</body></html>`;
+}
+
 export function demoConfirmationEmail(info: {
   leadName:    string;
   company:     string;

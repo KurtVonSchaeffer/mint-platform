@@ -4,10 +4,14 @@
  */
 
 import { supabaseAdmin } from '@/lib/supabase';
-import { sendEmail, newLeadNotificationEmail } from '@/lib/email';
+import { sendEmail, newLeadNotificationEmail, newWebsiteLeadAdminEmail } from '@/lib/email';
 
 export const TERMINAL_STATUSES = ['Won', 'Lost', 'Other', 'Not Qualified', 'Not Interested', 'Converted'];
 const PORTAL_URL        = process.env.NEXT_PUBLIC_APP_URL ?? 'https://admin.mintplatforms.co.za';
+// Keri-Leigh wants visibility the moment a lead comes through the website,
+// separately from the TM's own "assigned to you" email. Overridable via env
+// without a redeploy if the recipient ever needs to change.
+const WEBSITE_LEAD_NOTIFY_EMAIL = process.env.WEBSITE_LEAD_NOTIFY_EMAIL ?? 'keri.leigh@mymint.co.za';
 
 export async function pickNextAgent(): Promise<string | null> {
   // 1. List all active telemarketer accounts
@@ -73,6 +77,41 @@ export async function notifyAgentNewLead(opts: {
   await sendEmail({
     to:      user.email,
     subject: `New lead assigned: ${opts.leadName} — ${opts.company}`,
+    html,
+  });
+}
+
+export async function notifyAdminNewWebsiteLead(opts: {
+  agentId:  string | null;
+  leadId:   string;
+  leadName: string;
+  company:  string;
+  phone:    string | null;
+  email:    string | null;
+  message:  string | null;
+}) {
+  let agentName = 'Unassigned';
+  if (opts.agentId) {
+    const { data: { user } } = await supabaseAdmin.auth.admin.getUserById(opts.agentId);
+    if (user) agentName = (user.user_metadata?.full_name as string | undefined) ?? user.email?.split('@')[0] ?? 'Unassigned';
+  }
+
+  const html = newWebsiteLeadAdminEmail({
+    agentName,
+    lead: {
+      id:      opts.leadId,
+      name:    opts.leadName,
+      company: opts.company,
+      phone:   opts.phone,
+      email:   opts.email,
+      message: opts.message,
+    },
+    portalUrl: PORTAL_URL,
+  });
+
+  await sendEmail({
+    to:      WEBSITE_LEAD_NOTIFY_EMAIL,
+    subject: `New website lead: ${opts.leadName} — ${opts.company}`,
     html,
   });
 }
