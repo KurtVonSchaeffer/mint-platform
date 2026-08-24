@@ -59,6 +59,7 @@ interface Demo       { id: string; demo_date: string; demo_time: string | null; 
 interface Proposal   { id: string; title: string; amount_cents: number | null; status: string; notes: string | null; sent_at: string | null; expires_at: string | null; created_at: string }
 interface LeadData {
   id: string; ref_id: string | null; name: string; company: string; phone: string | null; email: string; tm_status: string | null;
+  message?: string | null;
   // Qualification fields
   trading_name?: string | null; contact_person?: string | null; position?: string | null; website?: string | null;
   industry?: string | null; province?: string | null; existing_platform?: string | null;
@@ -1067,6 +1068,16 @@ export default function LeadDetailPage() {
             </button>
           </div>
         </div>
+
+        {/* Client's original message — submitted via the website form. Was
+            stored on the lead all along but never rendered on this page. */}
+        {lead.message && (
+          <div className="mt-4 px-4 py-3 rounded-xl text-sm italic flex items-start gap-2"
+            style={{ background: 'var(--color-surface2)', color: 'var(--color-text2)', borderLeft: '2px solid var(--color-violet)' }}>
+            <MessageSquare size={14} className="mt-0.5 shrink-0" style={{ color: 'var(--color-violet)' }} />
+            <span>{lead.message}</span>
+          </div>
+        )}
       </div>
 
       {/* Timeline */}
