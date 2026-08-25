@@ -87,11 +87,11 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     }
 
     if (newStatus === 'accepted') {
-      // Commission = 25% of setup fee (what client pays on sign-up); fall back to monthly fee
-      const setupFee   = Number(existing?.setup_fee  ?? 0);
+      // Commission = 25% of the monthly plan fee — a one-time payout, not
+      // recurring — computed on monthly_fee specifically (not setup_fee,
+      // even though the two are now kept equal by the quote builder).
       const monthlyFee = Number(existing?.monthly_fee ?? 0);
-      const base       = setupFee > 0 ? setupFee : monthlyFee;
-      const commission = Math.round(base * 0.25 * 100) / 100;
+      const commission = Math.round(monthlyFee * 0.25 * 100) / 100;
 
       if (commission > 0) {
         await supabaseAdmin.from('commissions').insert({
@@ -99,7 +99,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
           quote_id:          id,
           commission_amount: commission,
           status:            'Pending Collection',
-          notes:             `Auto: 25% of R${base.toLocaleString('en-ZA')} sign-up fee for ${clientName}`,
+          notes:             `Auto: 25% of R${monthlyFee.toLocaleString('en-ZA')} monthly fee for ${clientName}`,
         });
       }
 

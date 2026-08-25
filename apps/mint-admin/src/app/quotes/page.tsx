@@ -125,12 +125,14 @@ export default function QuotesPage() {
 
   async function createQuote(prefill?: Partial<Quote> & { client?: string; contact?: string; email?: string }, existingQuotes?: Quote[]) {
     const quota = prefill?.quota ?? 50;
+    const initialMonthlyFee = prefill?.monthlyFee ?? computeMonthlyFee(['bureau', 'banking'], quota, 1);
     const payload = {
       client:         prefill?.client   ?? 'New Prospect (Pty) Ltd',
       contact:        prefill?.contact  ?? 'Contact name',
       email:          prefill?.email    ?? 'contact@example.co.za',
-      setupFee:       100000,
-      monthlyFee:     prefill?.monthlyFee ?? computeMonthlyFee(['bureau', 'banking'], quota, 1),
+      // Setup fee always equals monthly fee — client pays both at sign-up.
+      setupFee:       initialMonthlyFee,
+      monthlyFee:     initialMonthlyFee,
       selectedChecks: prefill?.selectedChecks ?? ['bureau', 'banking'],
       quota,
       branches:       prefill?.branches ?? 1,
@@ -171,16 +173,17 @@ export default function QuotesPage() {
   async function saveEdit(q: Quote) {
     if (!editState) return;
     const branches   = Math.max(1, parseInt(editState.branches, 10) || 1);
-    const setupFee   = Math.max(0, parseInt(editState.setupFee.replace(/\D/g, ''), 10) || 0);
     const flatFee    = Math.max(0, parseFloat(editState.monthlyFee) || 0);
     const branchExtra = branches > 1 ? (branches - 1) * BRANCH_RATE : 0;
     const customMo   = editState.customItems.filter((c) => c.recurring).reduce((s, c) => s + c.amount, 0);
+    // Setup fee always equals the final monthly fee (incl. branch/custom
+    // extras) — client pays both, in equal amounts, at sign-up.
     const monthly    = flatFee + branchExtra + customMo;
     const patch = {
       client:         editState.client.trim()   || q.client,
       contact:        editState.contact.trim()  || q.contact,
       email:          editState.email.trim()    || q.email,
-      setupFee, monthlyFee: monthly,
+      setupFee: monthly, monthlyFee: monthly,
       selectedChecks: editState.selectedChecks,
       quota:          Math.max(0, parseInt(editState.quota, 10) || 0),
       branches,

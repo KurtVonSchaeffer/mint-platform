@@ -190,13 +190,13 @@ export function QuoteEditPanel({ state, onChange, isSuperAdmin = false, email = 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label style={{ ...EYEBROW, display: 'block', marginBottom: 6 }}>Monthly fee (R)</label>
-              <input value={state.monthlyFee} onChange={(e) => onChange({ monthlyFee: e.target.value })} className="field-input w-full font-mono" placeholder="9500" inputMode="numeric" />
+              <input value={state.monthlyFee} onChange={(e) => onChange({ monthlyFee: e.target.value, setupFee: e.target.value })} className="field-input w-full font-mono" placeholder="9500" inputMode="numeric" />
               <p style={{ fontSize: 10, marginTop: 4, color: 'var(--color-text3)' }}>Client pays /mo</p>
             </div>
             <div>
               <label style={{ ...EYEBROW, display: 'block', marginBottom: 6 }}>Setup fee (R)</label>
-              <input value={state.setupFee} onChange={(e) => onChange({ setupFee: e.target.value })} className="field-input w-full font-mono" placeholder="100000" inputMode="numeric" />
-              <p style={{ fontSize: 10, marginTop: 4, color: 'var(--color-text3)' }}>One-off</p>
+              <input value={state.setupFee} readOnly disabled className="field-input w-full font-mono" style={{ opacity: 0.65, cursor: 'not-allowed' }} placeholder="9500" inputMode="numeric" />
+              <p style={{ fontSize: 10, marginTop: 4, color: 'var(--color-text3)' }}>One-off — always matches monthly fee</p>
             </div>
           </div>
 
