@@ -755,7 +755,8 @@ export default function LeadsPage() {
              l.id.toLowerCase().startsWith(q) ||
              l.name.toLowerCase().includes(q) ||
              l.company.toLowerCase().includes(q) ||
-             (l.email?.toLowerCase().includes(q) ?? false);
+             (l.email?.toLowerCase().includes(q) ?? false) ||
+             (l.phone?.toLowerCase().includes(q) ?? false);
     })
     .filter(l => !statusFilter || getEffectiveStatus(l) === statusFilter)
     .filter(l => !agentFilter  || (agentFilter === 'unassigned' ? !l.assignedTo : l.assignedTo === agentFilter))
@@ -872,7 +873,7 @@ export default function LeadsPage() {
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search by lead ID, name, company or email…"
+            placeholder="Search by name, company, email or phone…"
             className="field-input pl-8 pr-8 text-sm w-full"
           />
           {searchQuery && (
