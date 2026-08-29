@@ -10,6 +10,7 @@ import {
   EyeOff, MoreHorizontal,
 } from 'lucide-react';
 import { getAgentId } from '@/lib/telemarketer-agent';
+import { TwilioCallButton } from '@/components/TwilioCallButton';
 
 interface Lead {
   id: string;
@@ -502,15 +503,12 @@ export default function PipelinePage() {
                       {/* Actions row */}
                       <div className="flex items-center gap-1.5">
                         {lead.phone && (
-                          <a
-                            href={`tel:${lead.phone}`}
-                            onClick={e => e.stopPropagation()}
-                            draggable={false}
+                          <TwilioCallButton
+                            leadId={lead.id}
+                            phone={lead.phone}
                             className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-1 rounded-lg cursor-pointer transition-opacity hover:opacity-80"
                             style={{ background: `rgba(${stage.rgb},0.14)`, color: stage.color }}
-                          >
-                            <Phone size={8} /> Call
-                          </a>
+                          />
                         )}
                         <Link
                           href={`/telemarketer/leads/${lead.id}`}

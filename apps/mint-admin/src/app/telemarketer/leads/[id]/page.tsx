@@ -951,11 +951,12 @@ export default function LeadDetailPage() {
                   <Building2 size={12} /> {lead.company}
                 </span>
                 {lead.phone && (
-                  <a href={`tel:${lead.phone}`} className="flex items-center gap-1.5 text-sm transition-colors" style={{ color: 'var(--color-text3)' }}
+                  <button onClick={startTwilioCall} className="flex items-center gap-1.5 text-sm transition-colors" style={{ color: 'var(--color-text3)' }}
                     onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = '#34D399'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; }}>
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; }}
+                    title={`Call ${lead.phone} via Twilio`}>
                     <Phone size={12} /> {lead.phone}
-                  </a>
+                  </button>
                 )}
                 <a href={`mailto:${lead.email}`} className="flex items-center gap-1.5 text-sm transition-colors" style={{ color: 'var(--color-text3)' }}
                   onMouseEnter={e => { (e.currentTarget as HTMLElement).style.color = 'var(--color-violet)'; }}

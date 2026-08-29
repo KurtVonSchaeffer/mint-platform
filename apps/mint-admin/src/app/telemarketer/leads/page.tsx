@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PowerDialerPanel, type DialerLead } from '@/components/PowerDialerPanel';
+import { TwilioCallButton } from '@/components/TwilioCallButton';
 
 const EASE: [number,number,number,number] = [0.16, 1, 0.3, 1];
 
@@ -344,12 +345,14 @@ function CallLogModal({ lead, onClose }: { lead: Lead; onClose: () => void }) {
               : <p className="text-sm italic" style={{ color: 'var(--color-text3)' }}>No phone on file</p>}
           </div>
           {lead.phone && (
-            <a href={`tel:${lead.phone}`}
+            <TwilioCallButton
+              leadId={lead.id}
+              phone={lead.phone}
+              compact
+              iconSize={18}
               className="shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-all"
               style={{ background: 'rgba(52,211,153,0.15)', color: '#34D399', border: '1px solid rgba(52,211,153,0.3)' }}
-              title={`Call ${lead.phone}`}>
-              <PhoneCall size={18} />
-            </a>
+            />
           )}
         </div>
 
@@ -994,14 +997,14 @@ export default function TelemarketerLeadsPage() {
                     </td>
                     <td>
                       {lead.phone
-                        ? <a href={`tel:${lead.phone}`}
-                            className="inline-flex items-center gap-1.5 font-mono font-semibold transition-colors"
+                        ? <TwilioCallButton
+                            leadId={lead.id}
+                            phone={lead.phone}
+                            className="inline-flex items-center gap-1.5 font-mono font-semibold transition-opacity hover:opacity-75"
                             style={{ color: '#34D399', fontSize: 12 }}
-                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = '0.75'; }}
-                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
                           >
                             <Phone size={11} /> {lead.phone}
-                          </a>
+                          </TwilioCallButton>
                         : null
                       }
                     </td>

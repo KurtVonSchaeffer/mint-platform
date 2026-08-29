@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { ChevronLeft, CheckCircle2, Loader2, FileUp, Phone, Mail, Building2 } from 'lucide-react';
+import { TwilioCallButton } from '@/components/TwilioCallButton';
 
 type ClientStage =
   | 'Converted' | 'Documents Uploaded' | 'Compliance Review'
@@ -75,7 +76,11 @@ export default function ClientDetailPage() {
             <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--color-text)', letterSpacing: '-0.025em' }}>{lead.name}</h1>
             <div className="flex items-center gap-3 mt-1 flex-wrap">
               <span className="flex items-center gap-1.5 text-sm" style={{ color: 'var(--color-text3)' }}><Building2 size={12} /> {lead.company}</span>
-              {lead.phone && <a href={`tel:${lead.phone}`} className="flex items-center gap-1.5 text-sm" style={{ color: 'var(--color-text3)' }}><Phone size={12} /> {lead.phone}</a>}
+              {lead.phone && (
+                <TwilioCallButton leadId={lead.id} phone={lead.phone} className="flex items-center gap-1.5 text-sm" style={{ color: 'var(--color-text3)' }}>
+                  <Phone size={12} /> {lead.phone}
+                </TwilioCallButton>
+              )}
               <a href={`mailto:${lead.email}`} className="flex items-center gap-1.5 text-sm" style={{ color: 'var(--color-text3)' }}><Mail size={12} /> {lead.email}</a>
             </div>
           </div>

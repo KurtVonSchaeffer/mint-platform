@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { Phone, Calendar, Clock, AlertCircle, CheckCircle2, RefreshCw, Loader2, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { getAgentId } from '@/lib/telemarketer-agent';
+import { TwilioCallButton } from '@/components/TwilioCallButton';
 
 function hasRealTime(iso: string): boolean {
   const inSAST = new Date(new Date(iso).getTime() + 2 * 60 * 60 * 1000);
@@ -213,11 +214,14 @@ function FollowUpCard({ fu, section, onComplete, onReschedule }: {
 
         <div className="flex items-center gap-2 shrink-0 flex-wrap">
           {fu.phone && (
-            <a href={`tel:${fu.phone}`}
+            <TwilioCallButton
+              leadId={fu.leadId}
+              phone={fu.phone}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-              style={{ background: 'rgba(52,211,153,0.08)', color: '#34D399', border: '1px solid rgba(52,211,153,0.15)' }}>
+              style={{ background: 'rgba(52,211,153,0.08)', color: '#34D399', border: '1px solid rgba(52,211,153,0.15)' }}
+            >
               <Phone size={11} /> Call Now
-            </a>
+            </TwilioCallButton>
           )}
           <Link href={`/telemarketer/leads/${fu.leadId}`}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
