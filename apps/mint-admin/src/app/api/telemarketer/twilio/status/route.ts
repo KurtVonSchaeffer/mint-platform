@@ -5,11 +5,17 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 // Twilio posts here when a call ends. We log it to call_logs.
+//
+// This fires on the CHILD (dialed) call leg, which has its own CallSid
+// distinct from the PARENT (browser) leg — and Twilio never forwards the
+// custom agent_id/lead_id params from the original /voice request onto
+// this callback. voice/route.ts carries them (plus the parent CallSid,
+// which is what the recording callback and the client-side SDK both use)
+// through the callback URL's query string instead.
 export async function POST(req: NextRequest) {
   const body   = await req.text();
   const params = new URLSearchParams(body);
 
-  const callSid    = params.get('CallSid')    ?? '';
   const callStatus = params.get('CallStatus') ?? '';
   const duration   = params.get('CallDuration') ?? '0';
   const to         = params.get('To')         ?? '';
@@ -22,9 +28,10 @@ export async function POST(req: NextRequest) {
     callStatus === 'failed'    ? 'No Answer' :
     callStatus === 'canceled'  ? 'No Answer' : 'No Answer';
 
-  // agent_id is passed as a custom param from the browser SDK
-  const agentId = params.get('agent_id') ?? params.get('From') ?? '';
-  const leadId  = params.get('lead_id') ?? '';
+  const query = req.nextUrl.searchParams;
+  const agentId      = query.get('agent_id') ?? '';
+  const leadId       = query.get('lead_id') ?? '';
+  const parentCallSid = query.get('parent_call_sid') ?? '';
 
   if (!leadId || !agentId) {
     // Not enough info to log — Twilio still needs a 200
@@ -41,7 +48,7 @@ export async function POST(req: NextRequest) {
     agent_id:      agentId,
     outcome,
     duration:      durationFmt,
-    twilio_call_sid: callSid,
+    twilio_call_sid: parentCallSid,
     notes:         `Twilio call to ${to}`,
   });
 

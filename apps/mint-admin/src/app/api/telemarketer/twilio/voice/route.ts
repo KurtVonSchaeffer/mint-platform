@@ -14,6 +14,17 @@ export async function POST(req: NextRequest) {
   const to       = params.get('To');
   const callerId = process.env.TWILIO_PHONE_NUMBER!;
 
+  // CallSid on this request is the PARENT (browser) leg — the same SID the
+  // recording callback later reports, and the same one the Voice JS SDK
+  // exposes client-side via call.parameters.CallSid. The status callback
+  // below fires on the CHILD (dialed) leg, which has a different CallSid
+  // of its own and never forwards these custom params — so we carry
+  // agent_id/lead_id/the parent CallSid through the callback URL's query
+  // string instead of relying on Twilio to pass them through.
+  const parentCallSid = params.get('CallSid') ?? '';
+  const agentId = params.get('agent_id') ?? '';
+  const leadId  = params.get('lead_id') ?? '';
+
   const twiml = new VoiceResponse();
 
   if (!to) {
@@ -23,8 +34,9 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const statusCallback = `${process.env.NEXT_PUBLIC_APP_URL}/api/telemarketer/twilio/status`;
-  const recordingCallback = `${process.env.NEXT_PUBLIC_APP_URL}/api/telemarketer/twilio/recording`;
+  const callbackParams = new URLSearchParams({ agent_id: agentId, lead_id: leadId, parent_call_sid: parentCallSid });
+  const statusCallback = `${process.env.NEXT_PUBLIC_APP_URL}/api/telemarketer/twilio/status?${callbackParams}`;
+  const recordingCallback = `${process.env.NEXT_PUBLIC_APP_URL}/api/telemarketer/twilio/recording?${callbackParams}`;
 
   const dial = twiml.dial({
     callerId,
