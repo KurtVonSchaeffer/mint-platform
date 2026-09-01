@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { X, Download, Loader2, PhoneCall, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Download, Loader2, PhoneCall, Calendar, ChevronLeft, ChevronRight, Play } from 'lucide-react';
 
 interface CallLog {
   id: string;
@@ -10,6 +10,7 @@ interface CallLog {
   notes: string | null;
   called_at: string;
   lead_id: string | null;
+  recording_url?: string | null;
   leads: { id: string; name: string; company: string; phone: string } | null;
 }
 
@@ -334,6 +335,14 @@ export function CallHistoryPanel({ agentId, agentName, onClose }: {
                             </div>
                             {c.duration != null && (
                               <span className="text-[10px] tabular-nums shrink-0" style={{ color: 'var(--color-text3)' }}>{c.duration}m</span>
+                            )}
+                            {c.recording_url && (
+                              <a href={c.recording_url} target="_blank" rel="noopener noreferrer"
+                                title="Play recording"
+                                className="inline-flex items-center justify-center w-5 h-5 rounded-full shrink-0 transition-opacity hover:opacity-75"
+                                style={{ background: 'rgba(124,58,237,0.12)', color: 'var(--color-violet)' }}>
+                                <Play size={9} fill="currentColor" />
+                              </a>
                             )}
                             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0"
                               style={{ background: cfg.bg, color: cfg.color }}>
