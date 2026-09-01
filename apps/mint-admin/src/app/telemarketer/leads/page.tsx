@@ -484,6 +484,32 @@ export default function TelemarketerLeadsPage() {
   const [search,   setSearch]   = useState('');
   const [sortBy,   setSortBy]   = useState<SortOption>('priority');
   const [sortOpen, setSortOpen] = useState(false);
+  const [sortPos,  setSortPos]  = useState({ top: 0, left: 0 });
+  const sortBtnRef  = useRef<HTMLButtonElement>(null);
+  const sortDropRef = useRef<HTMLDivElement>(null);
+
+  function handleSortOpen() {
+    if (sortBtnRef.current) {
+      const r = sortBtnRef.current.getBoundingClientRect();
+      const left = Math.min(r.left, window.innerWidth - 168);
+      setSortPos({ top: r.bottom + 4, left });
+    }
+    setSortOpen(o => !o);
+  }
+
+  useEffect(() => {
+    if (!sortOpen) return;
+    function onDown(e: MouseEvent) {
+      if (
+        !sortBtnRef.current?.contains(e.target as Node) &&
+        !sortDropRef.current?.contains(e.target as Node)
+      ) {
+        setSortOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [sortOpen]);
 
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -790,38 +816,41 @@ export default function TelemarketerLeadsPage() {
           })}
         </div>
 
-        {/* Sort dropdown — anchored to the right */}
+        {/* Sort dropdown — anchored to the right. Portaled to document.body
+            (same pattern as StatusBadge above) so it always floats above
+            everything instead of getting clipped/overlapped by the
+            horizontally-scrolling tab row it sits next to. */}
         <div className="relative shrink-0">
           <button
-            onClick={() => setSortOpen(o => !o)}
+            ref={sortBtnRef}
+            onClick={handleSortOpen}
             className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap"
             style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)', background: 'var(--color-surface2)' }}
           >
             {SORT_LABELS[sortBy]}
             <ChevronDown size={11} />
           </button>
-          {sortOpen && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={() => setSortOpen(false)} />
-              <div
-                className="absolute right-0 top-full mt-1 z-20 rounded-xl overflow-hidden min-w-[160px]"
-                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)' }}
-              >
-                {(Object.entries(SORT_LABELS) as [SortOption, string][]).map(([key, label]) => (
-                  <button
-                    key={key}
-                    onClick={() => { setSortBy(key); setSortOpen(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors"
-                    style={{ color: sortBy === key ? 'var(--color-violet)' : 'var(--color-text2)' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: sortBy === key ? 'var(--color-violet)' : 'transparent' }} />
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </>
+          {sortOpen && createPortal(
+            <div
+              ref={sortDropRef}
+              className="fixed rounded-xl overflow-hidden min-w-[160px]"
+              style={{ top: sortPos.top, left: sortPos.left, zIndex: 9999, background: 'var(--color-surface)', border: '1px solid var(--color-border2)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)' }}
+            >
+              {(Object.entries(SORT_LABELS) as [SortOption, string][]).map(([key, label]) => (
+                <button
+                  key={key}
+                  onMouseDown={e => { e.preventDefault(); setSortBy(key); setSortOpen(false); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs text-left transition-colors"
+                  style={{ color: sortBy === key ? 'var(--color-violet)' : 'var(--color-text2)' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(124,58,237,0.06)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: sortBy === key ? 'var(--color-violet)' : 'transparent' }} />
+                  {label}
+                </button>
+              ))}
+            </div>,
+            document.body,
           )}
         </div>
       </motion.div>
