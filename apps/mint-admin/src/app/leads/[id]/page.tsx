@@ -34,7 +34,7 @@ interface LeadData {
 }
 
 interface Note      { id: string; content: string; agent_id: string; created_at: string }
-interface CallLog   { id: string; outcome: string; duration: string | null; notes: string | null; called_at: string }
+interface CallLog   { id: string; outcome: string; duration: string | null; notes: string | null; called_at: string; recording_url?: string | null }
 interface FollowUp  { id: string; follow_up_type: string; scheduled_at: string; note: string | null; completed: boolean }
 interface Demo      { id: string; demo_date: string; demo_time: string | null; platform: string | null; presenter: string | null; meeting_link: string | null; status: string; notes: string | null }
 interface Proposal  { id: string; title: string; amount_cents: number | null; status: string; notes: string | null; sent_at: string | null; created_at: string }
@@ -45,6 +45,7 @@ type TEvent = {
   icon: React.ReactNode; iconBg: string; iconColor: string;
   title: string; body?: string; sub?: string;
   badge?: { label: string; bg: string; color: string };
+  link?: { href: string; label: string };
 };
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -252,6 +253,7 @@ export default function AdminLeadDetailPage() {
         body: c.notes ?? undefined,
         sub: c.duration ? `Duration: ${c.duration}` : undefined,
         badge: { label: c.outcome, bg: spoke ? 'rgba(52,211,153,0.1)' : 'rgba(248,113,113,0.1)', color: spoke ? '#34D399' : '#F87171' },
+        link: c.recording_url ? { href: c.recording_url, label: '▶ Play recording' } : undefined,
       });
     }
     for (const f of followUps) {
@@ -653,6 +655,13 @@ export default function AdminLeadDetailPage() {
                         )}
                         {ev.sub && (
                           <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text3)' }}>{ev.sub}</p>
+                        )}
+                        {ev.link && (
+                          <a href={ev.link.href} target="_blank" rel="noopener noreferrer"
+                            className="text-[10px] font-semibold mt-1 inline-block transition-opacity hover:opacity-80"
+                            style={{ color: 'var(--color-violet)' }}>
+                            {ev.link.label}
+                          </a>
                         )}
                       </div>
                     </div>
