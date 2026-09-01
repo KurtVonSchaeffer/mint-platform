@@ -757,7 +757,7 @@ export default function TelemarketerLeadsPage() {
             {loading ? 'Loading…' : `${leads.length} leads total · ${leads.filter(l => l.status === 'Won' || l.status === 'Converted').length} won`}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={load}
             className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors"
@@ -787,8 +787,12 @@ export default function TelemarketerLeadsPage() {
       <motion.div className="flex items-center gap-2"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 0.12, ease: EASE }}>
-        {/* Scrollable pill row */}
-        <div className="flex gap-2 flex-1 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
+        {/* Scrollable pill row. min-width: 0 overrides flexbox's default
+            min-width: auto — without it, this row refuses to shrink below
+            its full unscrolled content width, and that overflow bubbles up
+            through ancestor flex containers, widening the whole page (which
+            is why unrelated elements like "Add Lead" were also clipping). */}
+        <div className="flex gap-2 flex-1 min-w-0 overflow-x-auto pb-0.5" style={{ scrollbarWidth: 'none' }}>
           <button
             onClick={() => setFilterStatus(null)}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0"
