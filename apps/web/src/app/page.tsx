@@ -186,7 +186,7 @@ export default function HomePage() {
 
                 <div className="flex items-center gap-3 flex-wrap">
                   <Link
-                    href="https://www.mymint.co.za"
+                    href="https://www.mintplatforms.com"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn-shine inline-flex items-center gap-2 text-white text-[13px] font-semibold px-6 py-3 rounded-full"
@@ -697,7 +697,7 @@ export default function HomePage() {
                 <span className="text-3xl font-semibold tracking-[-0.02em]">AlgoLend</span>
               </div>
               <p className="text-sm text-white/55 max-w-xs leading-relaxed mb-6">
-                The bespoke credit management platform for South African corporate lenders. A product of <a href="https://mymint.co.za" className="text-white hover:underline">MINT Platforms (Pty) Ltd</a>.
+                The bespoke credit management platform for South African corporate lenders. A product of <a href="https://www.mintplatforms.com" className="text-white hover:underline">MINT Platforms (Pty) Ltd</a>.
               </p>
 
               {/* Socials */}
@@ -789,7 +789,7 @@ export default function HomePage() {
                   <ArrowUpRight size={15} />
                 </Link>
                 <a
-                  href="https://mymint.co.za"
+                  href="https://www.mintplatforms.com"
                   target="_blank"
                   rel="noopener"
                   className="mt-3 inline-flex items-center justify-center gap-2 w-full text-white/55 hover:text-white text-xs font-medium px-5 py-2 rounded-full border border-white/10 hover:border-white/20 transition-all"
