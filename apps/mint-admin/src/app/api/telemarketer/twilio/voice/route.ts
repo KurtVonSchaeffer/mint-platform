@@ -38,13 +38,16 @@ export async function POST(req: NextRequest) {
   const statusCallback = `${process.env.NEXT_PUBLIC_APP_URL}/api/telemarketer/twilio/status?${callbackParams}`;
   const recordingCallback = `${process.env.NEXT_PUBLIC_APP_URL}/api/telemarketer/twilio/recording?${callbackParams}`;
 
+  // No `action`/`method` here: the <Number> below already posts every status
+  // event (including the terminal one) to `statusCallback`. Also pointing the
+  // <Dial>'s own action callback at the same URL used to double-fire it per
+  // call — and that action callback uses different param names (DialCallStatus,
+  // not CallStatus), so /status/route.ts couldn't even read it correctly.
   const dial = twiml.dial({
     callerId,
     record: 'record-from-answer',
     recordingStatusCallback: recordingCallback,
     recordingStatusCallbackMethod: 'POST',
-    action: statusCallback,
-    method: 'POST',
   });
 
   dial.number({
