@@ -26,7 +26,7 @@ const STARTER_FEATURES = [
 
 const ENTERPRISE_FEATURES = [
   'Everything in Starter',
-  '2,000 API checks / month included',
+  '1,000 API checks / month included',
   'Liveness + Home Affairs (DHA) verification',
   'Unlimited branches',
   'Priority onboarding & dedicated support',
@@ -143,7 +143,7 @@ export function PricingSection() {
                   <div className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full"
                     style={{ background: 'rgba(167,139,250,0.1)', color: '#C4B5FD', border: '1px solid rgba(167,139,250,0.2)' }}>
                     <Zap size={10} style={{ color: '#A78BFA' }} />
-                    2,000 checks / month included · then pay-as-you-use
+                    1,000 checks / month included · then pay-as-you-use
                   </div>
                 </div>
 
@@ -186,7 +186,7 @@ export function PricingSection() {
               {
                 label: 'ii. API checks',
                 title: 'Pay-as-you-use',
-                desc: 'Starter is billed from check one. Enterprise includes 2,000 checks/month. Additional checks at published rates.',
+                desc: 'Starter is billed from check one. Enterprise includes 1,000 checks/month. Additional checks at published rates.',
               },
               {
                 label: 'iii. Pass-through costs',
