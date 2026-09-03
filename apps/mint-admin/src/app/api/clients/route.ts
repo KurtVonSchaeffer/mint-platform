@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Included API calls per tier — enterprise gets overage billing beyond this
-  const TIER_QUOTAS: Record<string, number> = { core: 500, enterprise: 2000 };
+  const TIER_QUOTAS: Record<string, number> = { core: 500, enterprise: 1000 };
 
   // Insert client row
   const { data: client, error: clientErr } = await supabaseAdmin

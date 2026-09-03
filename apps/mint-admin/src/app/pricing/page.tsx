@@ -35,11 +35,12 @@ const CATEGORY_COLOR: Record<string, { bg: string; color: string; rgb: string }>
 };
 
 // Published tiers — must match algolend.co.za/pricing
-// Enterprise: R14,999/mo platform licence + 2,000 checks included, then PAYG
+// Enterprise: R14,999/mo platform licence + 1,000 checks included (credit bureau
+// checks excluded from this pool — billed separately at their own rate), then PAYG
 // Starter:    R1,999/mo platform licence, all checks PAYG from check 1
 const TIERS = [
   { id: 'starter',    label: 'Starter',    price: 199900,  includedChecks: 0,    badge: null,           branches: 'Up to 2 branches' },
-  { id: 'enterprise', label: 'Enterprise', price: 1499900, includedChecks: 2000, badge: 'Most Popular', branches: 'Unlimited branches' },
+  { id: 'enterprise', label: 'Enterprise', price: 1499900, includedChecks: 1000, badge: 'Most Popular', branches: 'Unlimited branches' },
 ] as const;
 
 type TierId = typeof TIERS[number]['id'];
@@ -143,21 +144,24 @@ export default function PricingPage() {
   const selected = SERVICE_RATES.filter(s => effectiveSelectedIds.has(s.id));
 
   // Margin model: uses estVolume per service type
-  // For Enterprise, first `includedChecks` total calls are absorbed into the platform fee
-  const perTypeIncluded = selected.length > 0 ? Math.round(includedChecks / selected.length) : 0;
-  const billableVolume  = (v: number) => Math.max(0, v - perTypeIncluded);
+  // For Enterprise, first `includedChecks` total calls are absorbed into the platform fee.
+  // Credit bureau checks don't share this pool — they're billed separately at their own
+  // rate regardless of tier, so they're excluded from both the split and the divisor.
+  const poolEligible     = selected.filter(s => s.category !== 'credit');
+  const perTypeIncluded  = poolEligible.length > 0 ? Math.round(includedChecks / poolEligible.length) : 0;
+  const billableVolume   = (v: number) => Math.max(0, v - perTypeIncluded);
 
   const serviceBreakdown = useMemo(() => selected.map(s => {
     const sell     = effectiveRate(s);  // published rate, respecting overrides
     const provider = s.providerCents;
-    const bVol     = Math.max(0, estVolume - Math.round(includedChecks / Math.max(selected.length, 1)));
+    const bVol     = s.category === 'credit' ? estVolume : Math.max(0, estVolume - perTypeIncluded);
     return {
       ...s,
       sellCents:      sell,
       bundleSell:     sell * bVol,
       bundleProvider: provider * estVolume,
     };
-  }), [selected, estVolume, includedChecks]);
+  }), [selected, estVolume, perTypeIncluded]);
 
   const totalProviderCost = serviceBreakdown.reduce((s, r) => s + r.bundleProvider, 0);
   const totalMarketValue  = serviceBreakdown.reduce((s, r) => s + r.bundleSell, 0);
