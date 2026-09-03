@@ -10,7 +10,7 @@ import {
   ToggleLeft, Activity, ShieldCheck, ArrowDownToLine, Users2, SlidersHorizontal,
   LogOut, Sun, Moon, Menu, X, Bell, Plus, UserPlus, ChevronDown, ChevronRight,
   Loader2, CheckCircle2, AlertTriangle, AlertCircle, Settings, Search, TrendingUp, ClipboardCheck,
-  BarChart3, DollarSign, FileText,
+  BarChart3, DollarSign, FileText, LifeBuoy,
 } from 'lucide-react';
 import { useTheme } from '@/components/ThemeProvider';
 import { CommandPalette } from '@/components/CommandPalette';
@@ -25,9 +25,9 @@ type NavSection = { section: string };
 // Routes each role can access. super_admin gets everything.
 const ROLE_ROUTES: Record<string, string[]> = {
   super_admin:   ['*'],
-  admin:         ['/', '/clients', '/leads', '/sales', '/applications', '/pricing', '/quotes', '/invoices', '/billing', '/marketplace', '/features', '/usage', '/compliance', '/migration', '/payroll', '/approvals', '/telemarketer/team', '/telemarketer/commission', '/reports'],
+  admin:         ['/', '/clients', '/leads', '/sales', '/applications', '/pricing', '/quotes', '/invoices', '/billing', '/marketplace', '/features', '/usage', '/compliance', '/migration', '/payroll', '/approvals', '/telemarketer/team', '/telemarketer/commission', '/reports', '/support'],
   finance:       ['/', '/pricing', '/quotes', '/invoices', '/billing', '/payroll'],
-  support:       ['/', '/clients', '/leads', '/applications'],
+  support:       ['/', '/clients', '/leads', '/applications', '/support'],
   manager:       ['/telemarketer', '/payroll', '/approvals', '/reports'],
 };
 
@@ -55,6 +55,7 @@ const nav: (NavItem | NavGroup | NavSection)[] = [
   { label: 'Sales',        href: '/sales',        icon: TrendingUp     },
   { label: 'Approvals',    href: '/approvals',    icon: ClipboardCheck },
   { label: 'Applications', href: '/applications', icon: Inbox          },
+  { label: 'Support',      href: '/support',      icon: LifeBuoy       },
   { section: 'Finance' },
   {
     group: 'Financials',
@@ -180,11 +181,31 @@ export function Shell({ children }: { children: React.ReactNode }) {
   }, []);
 
   async function loadNotifs(): Promise<NotifItem[]> {
-    const [clientsData, leadsData] = await Promise.all([
+    const [clientsData, leadsData, ticketsData] = await Promise.all([
       fetch('/api/clients').then(r => r.json()),
       fetch('/api/leads?tm_status=Demo%20Booked').then(r => r.json()).catch(() => ({ leads: [] })),
+      fetch('/api/admin/support-tickets?status=open').then(r => r.json()).catch(() => ({ tickets: [] })),
     ]);
     const items: NotifItem[] = [];
+    const openTickets = Array.isArray(ticketsData.tickets) ? ticketsData.tickets : [];
+    const urgentTickets = openTickets.filter((t: Record<string, unknown>) => t.priority === 'urgent');
+    if (urgentTickets.length > 0) {
+      items.push({
+        kind: 'warn',
+        text: `${urgentTickets.length} urgent support ticket${urgentTickets.length > 1 ? 's' : ''}`,
+        sub:  urgentTickets.length === 1
+          ? `${((urgentTickets[0] as Record<string, unknown>).clients as Record<string, unknown> | null)?.name ?? 'A client'} — needs attention`
+          : 'Open and awaiting a response',
+        href: '/support',
+      });
+    } else if (openTickets.length > 0) {
+      items.push({
+        kind: 'info',
+        text: `${openTickets.length} open support ticket${openTickets.length > 1 ? 's' : ''}`,
+        sub:  'Client-reported issues awaiting triage',
+        href: '/support',
+      });
+    }
     if (Array.isArray(clientsData.clients)) {
       const suspended = clientsData.clients.filter((c: Record<string, unknown>) => c.status === 'suspended');
       const trials    = clientsData.clients.filter((c: Record<string, unknown>) => c.status === 'trial');

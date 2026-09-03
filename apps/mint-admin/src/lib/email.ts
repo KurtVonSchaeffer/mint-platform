@@ -738,6 +738,82 @@ export function newWebsiteLeadAdminEmail(info: {
 </body></html>`;
 }
 
+export function newSupportTicketAdminEmail(info: {
+  clientName: string;
+  ticket: {
+    id:       string;
+    subject:  string;
+    message:  string;
+    category: string;
+    priority: string;
+    submittedByName?:  string | null;
+    submittedByEmail?: string | null;
+  };
+  portalUrl: string;
+}) {
+  const ticketUrl = `${info.portalUrl}/support/${info.ticket.id}`;
+  const priorityColor =
+    info.ticket.priority === 'urgent' ? '#dc2626' :
+    info.ticket.priority === 'high'   ? '#d97706' : '#7C3AED';
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:28px 32px">
+    <p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 4px">AlgoLend</p>
+    <p style="color:#fff;font-size:20px;font-weight:700;margin:0">New support ticket</p>
+  </div>
+  <div style="padding:28px 32px">
+    <p style="color:#555;line-height:1.6;margin:0 0 24px">
+      <strong>${info.clientName}</strong> submitted a new support ticket, marked
+      <span style="color:${priorityColor};font-weight:700;text-transform:capitalize">${info.ticket.priority}</span> priority.
+    </p>
+    <div style="background:#f9f7ff;border:1px solid #e5e0ff;border-radius:12px;padding:20px;margin-bottom:24px">
+      <table style="width:100%;border-collapse:collapse">
+        <tr><td style="padding:6px 0;color:#888;font-size:13px;width:90px">Client</td><td style="padding:6px 0;font-weight:600;font-size:15px;color:#1a1f36">${info.clientName}</td></tr>
+        <tr><td style="padding:6px 0;color:#888;font-size:13px">Subject</td><td style="padding:6px 0;color:#1a1f36;font-weight:600">${info.ticket.subject}</td></tr>
+        <tr><td style="padding:6px 0;color:#888;font-size:13px">Category</td><td style="padding:6px 0;color:#1a1f36;text-transform:capitalize">${info.ticket.category.replace(/_/g, ' ')}</td></tr>
+        ${info.ticket.submittedByName ? `<tr><td style="padding:6px 0;color:#888;font-size:13px">From</td><td style="padding:6px 0;color:#1a1f36">${info.ticket.submittedByName}${info.ticket.submittedByEmail ? ` (${info.ticket.submittedByEmail})` : ''}</td></tr>` : ''}
+        <tr><td style="padding:6px 0;color:#888;font-size:13px;vertical-align:top">Message</td><td style="padding:6px 0;color:#555;font-style:italic">"${info.ticket.message}"</td></tr>
+      </table>
+    </div>
+    <div style="text-align:center">
+      <a href="${ticketUrl}" style="background:#7C3AED;color:#fff;padding:13px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block">
+        Open ticket →
+      </a>
+    </div>
+  </div>
+  <div style="background:#f5f6fa;padding:16px;text-align:center;font-size:11px;color:#aaa">
+    AlgoLend · MINT Platforms (Pty) Ltd — new support ticket notification
+  </div>
+</div>
+</body></html>`;
+}
+
+export function supportTicketReplyEmail(info: {
+  recipientName: string;
+  subject:       string;
+  replyMessage:  string;
+  staffName:     string;
+}) {
+  return `<!DOCTYPE html>
+<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
+  <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:28px 32px">
+    <p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 4px">AlgoLend Support</p>
+    <p style="color:#fff;font-size:20px;font-weight:700;margin:0">Re: ${info.subject}</p>
+  </div>
+  <div style="padding:28px 32px">
+    <p style="font-size:15px">Hi ${info.recipientName},</p>
+    <p style="color:#333;line-height:1.7;white-space:pre-wrap">${info.replyMessage}</p>
+    <p style="color:#888;font-size:13px;margin-top:24px">— ${info.staffName}, AlgoLend Support</p>
+  </div>
+  <div style="background:#f5f6fa;padding:16px;text-align:center;font-size:11px;color:#aaa">
+    AlgoLend · MINT Platforms (Pty) Ltd — reply to this email to continue the conversation
+  </div>
+</div>
+</body></html>`;
+}
+
 export function demoConfirmationEmail(info: {
   leadName:    string;
   company:     string;
