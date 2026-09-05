@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Loader2, AlertCircle, Building2, Mail, User2, Send, Clock,
 } from 'lucide-react';
+import { Shell } from '@/components/Shell';
 
 interface Ticket {
   id:                 string;
@@ -92,23 +93,28 @@ export default function SupportTicketDetailPage({ params }: { params: Promise<{ 
 
   if (loading) {
     return (
+      <Shell>
       <div className="flex flex-col items-center justify-center py-24 gap-3">
         <Loader2 size={18} className="animate-spin" style={{ color: 'var(--color-violet)' }} />
         <p className="text-sm" style={{ color: 'var(--color-text3)' }}>Loading ticket…</p>
       </div>
+      </Shell>
     );
   }
 
   if (error || !ticket) {
     return (
+      <Shell>
       <div className="bento-card p-4 flex items-center gap-3 max-w-2xl" style={{ borderColor: 'rgba(248,113,113,0.25)', background: 'rgba(248,113,113,0.04)' }}>
         <AlertCircle size={15} style={{ color: '#F87171', flexShrink: 0 }} />
         <p className="text-sm" style={{ color: '#F87171' }}>{error ?? 'Ticket not found'}</p>
       </div>
+      </Shell>
     );
   }
 
   return (
+    <Shell>
     <div className="space-y-6 page-enter max-w-3xl">
 
       <div className="flex items-start gap-4">
@@ -259,5 +265,6 @@ export default function SupportTicketDetailPage({ params }: { params: Promise<{ 
         </div>
       </div>
     </div>
+    </Shell>
   );
 }

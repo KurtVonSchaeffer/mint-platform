@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
   LifeBuoy, Loader2, RefreshCw, AlertCircle, Building2, Clock, ChevronRight,
 } from 'lucide-react';
+import { Shell } from '@/components/Shell';
 
 interface Ticket {
   id:         string;
@@ -76,6 +77,7 @@ export default function SupportTicketsPage() {
   useEffect(() => { load(status); }, [load, status]);
 
   return (
+    <Shell>
     <div className="space-y-6 page-enter">
 
       <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -195,5 +197,6 @@ export default function SupportTicketsPage() {
         </div>
       )}
     </div>
+    </Shell>
   );
 }
