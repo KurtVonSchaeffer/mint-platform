@@ -29,6 +29,7 @@
       "cool-gray": { "role": "status", "displayName": "Cool Gray", "canonical": "#9CA3AF" },
       "pink": { "role": "identity", "displayName": "Pink", "canonical": "#F472B6" },
       "cobalt-violet": { "role": "primary", "displayName": "Cobalt Violet", "canonical": "#5C3BCF" },
+      "cobalt-violet-bright": { "role": "primary", "displayName": "Cobalt Violet Bright", "canonical": "#8b6ce8" },
       "bright-sky": { "role": "status", "displayName": "Bright Sky", "canonical": "#38BDF8" },
       "periwinkle": { "role": "status", "displayName": "Periwinkle", "canonical": "#818CF8" },
       "neutral-gray": { "role": "status", "displayName": "Neutral Gray", "canonical": "#6B7280" },
