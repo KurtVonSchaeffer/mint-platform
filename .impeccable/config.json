@@ -1,0 +1,32 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "apps/mint-admin/src/lib/email.ts"
+        ],
+        "createdAt": "2026-09-05T14:16:47.011Z",
+        "reason": "Agent: quote/rejection-note blockquote callouts in transactional email HTML — border-left is one of the few widely-supported ways to distinguish quoted text across Outlook/Gmail/Apple Mail, not a card-scaffold accent"
+      },
+      {
+        "rule": "overused-font",
+        "value": "helvetica",
+        "files": [
+          "apps/mint-admin/src/lib/email.ts"
+        ],
+        "createdAt": "2026-09-05T14:16:47.023Z",
+        "reason": "Agent: HTML email requires web-safe fonts; most clients (esp. Outlook desktop) don't support custom @font-face, so Helvetica/Arial is the deliberate cross-client-safe choice, not a generic default"
+      },
+      {
+        "rule": "bounce-easing",
+        "value": "var(--ease-spring)",
+        "createdAt": "2026-09-05T14:16:47.033Z",
+        "reason": "Agent: DESIGN.md documents ease-spring cubic-bezier(0.16,1,0.3,1) as the system's default easing for hovers/entrances/lifts, per the user-confirmed elevation philosophy (flat-until-hover, ambient glow)"
+      }
+    ]
+  }
+}
