@@ -28,7 +28,10 @@
       "rose": { "role": "status", "displayName": "Rose", "canonical": "#FB7185" },
       "cool-gray": { "role": "status", "displayName": "Cool Gray", "canonical": "#9CA3AF" },
       "pink": { "role": "identity", "displayName": "Pink", "canonical": "#F472B6" },
-      "cobalt-violet": { "role": "primary", "displayName": "Cobalt Violet", "canonical": "#5C3BCF" }
+      "cobalt-violet": { "role": "primary", "displayName": "Cobalt Violet", "canonical": "#5C3BCF" },
+      "bright-sky": { "role": "status", "displayName": "Bright Sky", "canonical": "#38BDF8" },
+      "periwinkle": { "role": "status", "displayName": "Periwinkle", "canonical": "#818CF8" },
+      "neutral-gray": { "role": "status", "displayName": "Neutral Gray", "canonical": "#6B7280" }
     },
     "typographyMeta": {
       "display": { "displayName": "Display / Headline", "purpose": "Page titles and hero KPI numbers. Tight line-height (0.96), negative tracking (-0.03em to -0.04em)." },

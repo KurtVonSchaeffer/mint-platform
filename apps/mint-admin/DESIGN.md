@@ -27,6 +27,9 @@ colors:
   cool-gray: "#9CA3AF"
   pink: "#F472B6"
   cobalt-violet: "#5C3BCF"
+  bright-sky: "#38BDF8"
+  periwinkle: "#818CF8"
+  neutral-gray: "#6B7280"
 typography:
   display:
     fontFamily: "Plus Jakarta Sans, Georgia, serif"
@@ -132,6 +135,14 @@ A second, wider status vocabulary exists specifically for lead and call-outcome 
 - **Indigo Violet** (`#8B5CF6`): "Call Back" — deliberately a colder, more saturated violet than the brand's Electric Violet, so a scheduled callback never gets mistaken for a primary call-to-action.
 - **Rose** (`#FB7185`): "Not Interested" — a softer, less alarming negative than Status Red, since this is a lead outcome, not a system error.
 - **Cool Gray** (`#9CA3AF`): "Other" / uncategorized — deliberately desaturated, the same "quietest option" role Slate Muted plays for client tiers.
+
+### Pipeline Stage Colors
+
+A third status vocabulary exists for the 12-stage TM pipeline (`STAGES` in `telemarketer/pipeline/page.tsx`) — mostly the same colors as Lead/Call-Outcome and Status reused by stage (New Lead→Violet Soft, Attempted Contact→Status Sky, Interested→Status Amber, Demo Scheduled→Warm Orange, Demo Completed→Pink, Negotiation→Status Green, Won→Status Green (dark step), Lost→Status Red, Not Interested→Rose), plus three colors unique to this vocabulary:
+
+- **Bright Sky** (`#38BDF8`): "Contacted" — a lighter, more saturated blue than Status Sky, marking the step immediately after first contact as distinct from the "attempted" state before it.
+- **Periwinkle** (`#818CF8`): "Proposal Sent" — a colder blue-violet than Indigo Violet, keeping this later-funnel stage visually distinct from the earlier "Call Back" state that already uses Indigo Violet.
+- **Neutral Gray** (`#6B7280`): "Other" — a slightly darker, more neutral gray than Cool Gray, used here instead of Cool Gray only because this vocabulary was built independently; both play the same "uncategorized" role.
 
 ### Agent Identity Colors
 
