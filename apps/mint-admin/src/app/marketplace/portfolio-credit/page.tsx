@@ -37,12 +37,12 @@ interface Facility {
   metadata:           Record<string, unknown>;
 }
 
-const STATUS: Record<FacilityStatus, { label: string; bg: string; text: string; border: string; icon: React.ReactNode }> = {
-  pending:     { label: 'Pending',     bg: 'bg-amber-50',   text: 'text-amber-700',  border: 'border-amber-200', icon: <Clock size={11} /> },
-  active:      { label: 'Active',      bg: 'bg-emerald-50', text: 'text-emerald-700',border: 'border-emerald-200',icon: <CheckCircle2 size={11} /> },
-  margin_call: { label: 'Margin call', bg: 'bg-red-50',     text: 'text-red-600',    border: 'border-red-200',   icon: <AlertTriangle size={11} /> },
-  repaid:      { label: 'Repaid',      bg: 'bg-slate-50',   text: 'text-slate-500',  border: 'border-slate-200', icon: <CheckCircle2 size={11} /> },
-  defaulted:   { label: 'Defaulted',   bg: 'bg-red-50',     text: 'text-red-700',    border: 'border-red-300',   icon: <XCircle size={11} /> },
+const STATUS: Record<FacilityStatus, { label: string; bg: string; color: string; border: string; icon: React.ReactNode }> = {
+  pending:     { label: 'Pending',     bg: 'rgba(251,191,36,0.1)',  color: 'var(--color-amber)', border: 'rgba(251,191,36,0.25)', icon: <Clock size={11} /> },
+  active:      { label: 'Active',      bg: 'rgba(52,211,153,0.1)',  color: 'var(--color-green)', border: 'rgba(52,211,153,0.25)', icon: <CheckCircle2 size={11} /> },
+  margin_call: { label: 'Margin call', bg: 'rgba(248,113,113,0.1)', color: 'var(--color-red)',   border: 'rgba(248,113,113,0.25)',icon: <AlertTriangle size={11} /> },
+  repaid:      { label: 'Repaid',      bg: 'rgba(155,159,184,0.15)',color: '#9B9FB8',            border: 'rgba(155,159,184,0.25)',icon: <CheckCircle2 size={11} /> },
+  defaulted:   { label: 'Defaulted',   bg: 'rgba(220,38,38,0.12)',  color: '#dc2626',             border: 'rgba(220,38,38,0.3)',   icon: <XCircle size={11} /> },
 };
 
 const COLLATERAL_LABELS: Record<string, string> = {
@@ -54,13 +54,13 @@ const COLLATERAL_LABELS: Record<string, string> = {
 
 function LtvBar({ ltv }: { ltv: number }) {
   const pctVal = Math.min(100, ltv * 100);
-  const color = pctVal >= 80 ? 'bg-red-500' : pctVal >= 65 ? 'bg-amber-400' : 'bg-emerald-500';
+  const color = pctVal >= 80 ? 'var(--color-red)' : pctVal >= 65 ? 'var(--color-amber)' : 'var(--color-green)';
   return (
     <div className="flex items-center gap-2">
-      <div className="h-1.5 w-20 overflow-hidden rounded-full bg-gray-100">
-        <div className={`h-full rounded-full ${color}`} style={{ width: `${pctVal}%` }} />
+      <div className="h-1.5 w-20 overflow-hidden rounded-full" style={{ background: 'var(--color-fill-subtle)' }}>
+        <div className="h-full rounded-full" style={{ width: `${pctVal}%`, background: color }} />
       </div>
-      <span className={`text-xs font-semibold ${pctVal >= 80 ? 'text-red-600' : pctVal >= 65 ? 'text-amber-600' : 'text-emerald-600'}`}>
+      <span className="text-xs font-semibold" style={{ color }}>
         {pct(ltv)}
       </span>
     </div>
@@ -116,42 +116,45 @@ export default function PortfolioCreditPage() {
 
   return (
     <Shell>
-      <div className="mx-auto max-w-6xl space-y-6 px-4 py-8">
+      <div className="mx-auto max-w-6xl space-y-6 px-4 py-8 page-enter">
 
         {/* Header */}
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-100 text-violet-600">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: 'rgba(124,58,237,0.12)', color: 'var(--color-violet)' }}>
               <Landmark size={20} />
             </div>
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">Portfolio-Backed Credit</h1>
-              <p className="text-sm text-gray-500">Credit facilities secured against MINT investment portfolios</p>
+              <h1 className="text-xl font-semibold" style={{ color: 'var(--color-text)' }}>Portfolio-Backed Credit</h1>
+              <p className="text-sm" style={{ color: 'var(--color-text3)' }}>Credit facilities secured against MINT investment portfolios</p>
             </div>
           </div>
           <button
             onClick={load}
-            className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors"
+            style={{ border: '1px solid var(--color-border2)', background: 'var(--color-surface)', color: 'var(--color-text3)' }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--color-card-hover)'; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'var(--color-surface)'; }}
           >
             <RefreshCw size={14} />Refresh
           </button>
         </div>
 
         {/* Active / History toggle */}
-        <div className="flex gap-1 rounded-xl border border-gray-100 bg-gray-50 p-1 w-fit">
+        <div className="flex gap-1 rounded-xl p-1 w-fit" style={{ border: '1px solid var(--color-border2)', background: 'var(--color-ink)' }}>
           {(['active', 'history'] as const).map((v) => (
             <button
               key={v}
               onClick={() => { setViewMode(v); setStatusFilter('all'); }}
               className="px-4 py-1.5 rounded-lg text-sm font-medium transition-all capitalize"
               style={viewMode === v
-                ? { background: '#fff', color: '#111', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
-                : { color: '#6b7280' }}
+                ? { background: 'var(--color-surface)', color: 'var(--color-text)', boxShadow: '0 1px 3px rgba(0,0,0,0.25)' }
+                : { color: 'var(--color-text3)' }}
             >
               {v === 'active' ? 'Active' : 'History'}
               <span className="ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{
-                background: viewMode === v ? (v === 'history' ? '#fee2e2' : '#ede9fe') : '#e5e7eb',
-                color: viewMode === v ? (v === 'history' ? '#b91c1c' : '#6d28d9') : '#9ca3af',
+                background: viewMode === v ? (v === 'history' ? 'rgba(248,113,113,0.15)' : 'rgba(124,58,237,0.15)') : 'var(--color-fill-subtle)',
+                color: viewMode === v ? (v === 'history' ? 'var(--color-red)' : 'var(--color-violet)') : 'var(--color-text3)',
               }}>
                 {v === 'active'
                   ? facilities.filter(f => ACTIVE_STATUSES.includes(f.status)).length
@@ -163,9 +166,9 @@ export default function PortfolioCreditPage() {
 
         {/* Margin call alert */}
         {marginCalls.length > 0 && (
-          <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-            <AlertTriangle size={18} className="flex-shrink-0 text-red-500" />
-            <p className="text-sm font-semibold text-red-700">
+          <div className="flex items-center gap-3 rounded-xl px-4 py-3" style={{ border: '1px solid rgba(248,113,113,0.25)', background: 'rgba(248,113,113,0.08)' }}>
+            <AlertTriangle size={18} className="flex-shrink-0" style={{ color: 'var(--color-red)' }} />
+            <p className="text-sm font-semibold" style={{ color: 'var(--color-red)' }}>
               {marginCalls.length} facility{marginCalls.length > 1 ? 'ies' : ''} in margin call —
               portfolio value has dropped below the minimum collateral threshold.
             </p>
@@ -180,10 +183,10 @@ export default function PortfolioCreditPage() {
             { label: 'Total collateral',  value: fmt(totalCollateral),          sub: 'portfolio value at origin' },
             { label: 'Avg LTV',           value: active.length ? pct(avgLtv) : '—', sub: 'loan-to-value ratio' },
           ].map((s) => (
-            <div key={s.label} className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
-              <p className="text-xs font-medium uppercase tracking-wide text-gray-400">{s.label}</p>
-              <p className="mt-1 text-2xl font-bold text-gray-900">{s.value}</p>
-              <p className="text-xs text-gray-400">{s.sub}</p>
+            <div key={s.label} className="bento-card p-4">
+              <p className="eyebrow mb-1">{s.label}</p>
+              <p className="mt-1 text-2xl font-bold" style={{ color: 'var(--color-text)' }}>{s.value}</p>
+              <p className="text-xs" style={{ color: 'var(--color-text3)' }}>{s.sub}</p>
             </div>
           ))}
         </div>
@@ -194,18 +197,17 @@ export default function PortfolioCreditPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name or email…"
-            className="flex-1 min-w-48 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-800 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100"
+            className="field-input flex-1 min-w-48"
           />
           <div className="flex gap-1.5">
             {(['all', ...(viewMode === 'active' ? ACTIVE_STATUSES : HISTORY_STATUSES)] as const).map((s) => (
               <button
                 key={s}
                 onClick={() => setStatusFilter(s as FacilityStatus | 'all')}
-                className={`rounded-lg px-3 py-2 text-xs font-medium capitalize transition ${
-                  statusFilter === s
-                    ? 'bg-violet-600 text-white'
-                    : 'border border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
-                }`}
+                className="rounded-lg px-3 py-2 text-xs font-medium capitalize transition-all"
+                style={statusFilter === s
+                  ? { background: 'var(--color-purple)', color: '#fff' }
+                  : { border: '1px solid var(--color-border2)', background: 'var(--color-surface)', color: 'var(--color-text3)' }}
               >
                 {s === 'all' ? 'All' : s === 'margin_call' ? 'Margin call' : s.charAt(0).toUpperCase() + s.slice(1)}
               </button>
@@ -214,13 +216,13 @@ export default function PortfolioCreditPage() {
         </div>
 
         {/* Table */}
-        <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm">
+        <div className="bento-card overflow-hidden p-0">
           {loading ? (
-            <div className="flex items-center justify-center py-20 text-gray-400">
+            <div className="flex items-center justify-center py-20" style={{ color: 'var(--color-text3)' }}>
               <Loader2 size={22} className="animate-spin" />
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-gray-400">
+            <div className="flex flex-col items-center justify-center py-20" style={{ color: 'var(--color-text3)' }}>
               <Landmark size={32} className="mb-3 opacity-30" />
               <p className="text-sm">
                 {search || statusFilter !== 'all'
@@ -232,8 +234,8 @@ export default function PortfolioCreditPage() {
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-100 bg-gray-50 text-xs font-medium uppercase tracking-wide text-gray-400">
-                <tr>
+              <thead style={{ borderBottom: '1px solid var(--color-border2)', background: 'var(--color-ink)' }}>
+                <tr className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--color-text3)' }}>
                   <th className="px-4 py-3 text-left">Borrower</th>
                   <th className="px-4 py-3 text-left">Collateral</th>
                   <th className="px-4 py-3 text-right">Facility</th>
@@ -245,31 +247,34 @@ export default function PortfolioCreditPage() {
                   <th className="px-4 py-3" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody>
                 {filtered.map((f) => {
                   const st   = STATUS[f.status] ?? STATUS.pending;
                   const open = expanded === f.id;
+                  const rowTint = f.status === 'margin_call' || f.status === 'defaulted'
+                    ? 'rgba(248,113,113,0.04)'
+                    : f.status === 'repaid' ? 'rgba(155,159,184,0.04)' : undefined;
                   return (
                     <>
-                      <tr key={f.id} className={`hover:bg-gray-50/60 ${f.status === 'margin_call' || f.status === 'defaulted' ? 'bg-red-50/40' : f.status === 'repaid' ? 'bg-slate-50/60' : ''}`}>
+                      <tr key={f.id} style={{ borderTop: '1px solid var(--color-row-border)', background: rowTint }}>
                         <td className="px-4 py-3">
-                          <p className="font-medium text-gray-900">{f.consumer_name || '—'}</p>
-                          <p className="text-xs text-gray-400">{f.consumer_email}</p>
+                          <p className="font-medium" style={{ color: 'var(--color-text)' }}>{f.consumer_name || '—'}</p>
+                          <p className="text-xs" style={{ color: 'var(--color-text3)' }}>{f.consumer_email}</p>
                         </td>
                         <td className="px-4 py-3">
-                          <p className="font-medium text-gray-800">{fmt(f.portfolio_value)}</p>
-                          <p className="text-xs text-gray-400">{COLLATERAL_LABELS[f.collateral_type] ?? f.collateral_type}</p>
+                          <p className="font-medium" style={{ color: 'var(--color-text2)' }}>{fmt(f.portfolio_value)}</p>
+                          <p className="text-xs" style={{ color: 'var(--color-text3)' }}>{COLLATERAL_LABELS[f.collateral_type] ?? f.collateral_type}</p>
                         </td>
-                        <td className="px-4 py-3 text-right font-semibold text-gray-900">{fmt(f.facility_amount)}</td>
-                        <td className="px-4 py-3 text-right text-gray-700">{fmt(f.drawn_amount)}</td>
+                        <td className="px-4 py-3 text-right font-semibold" style={{ color: 'var(--color-text)' }}>{fmt(f.facility_amount)}</td>
+                        <td className="px-4 py-3 text-right" style={{ color: 'var(--color-text2)' }}>{fmt(f.drawn_amount)}</td>
                         <td className="px-4 py-3"><LtvBar ltv={f.ltv_ratio} /></td>
-                        <td className="px-4 py-3 text-right text-gray-700">{f.interest_rate_pct?.toFixed(1)}%</td>
+                        <td className="px-4 py-3 text-right" style={{ color: 'var(--color-text2)' }}>{f.interest_rate_pct?.toFixed(1)}%</td>
                         <td className="px-4 py-3">
-                          <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${st.bg} ${st.text} ${st.border}`}>
+                          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold" style={{ background: st.bg, color: st.color, border: `1px solid ${st.border}` }}>
                             {st.icon}{st.label}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">
+                        <td className="px-4 py-3 text-xs" style={{ color: 'var(--color-text3)' }}>
                           {f.originated_at
                             ? formatDistanceToNow(new Date(f.originated_at), { addSuffix: true })
                             : '—'}
@@ -277,7 +282,10 @@ export default function PortfolioCreditPage() {
                         <td className="px-4 py-3">
                           <button
                             onClick={() => setExpanded(open ? null : f.id)}
-                            className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                            className="rounded-lg p-1 transition-colors"
+                            style={{ color: 'var(--color-text3)' }}
+                            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--color-fill-subtle)'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'; }}
+                            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; }}
                           >
                             {open ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                           </button>
@@ -286,7 +294,7 @@ export default function PortfolioCreditPage() {
 
                       {open && (
                         <tr key={`${f.id}-detail`}>
-                          <td colSpan={9} className="bg-gray-50/80 px-4 pb-5 pt-3">
+                          <td colSpan={9} className="px-4 pb-5 pt-3" style={{ background: 'var(--color-ink)' }}>
                             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                               {[
                                 { label: 'Full name',         value: f.consumer_name || '—' },
@@ -303,8 +311,8 @@ export default function PortfolioCreditPage() {
                                 { label: f.status === 'repaid' ? 'Repaid' : 'Status updated', value: (f.repaid_at ? new Date(f.repaid_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : null) ?? st.label },
                               ].map(({ label, value }) => (
                                 <div key={label}>
-                                  <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">{label}</p>
-                                  <p className="mt-0.5 text-sm font-medium text-gray-800 break-all">{value}</p>
+                                  <p className="text-[10px] font-medium uppercase tracking-wide" style={{ color: 'var(--color-text3)' }}>{label}</p>
+                                  <p className="mt-0.5 text-sm font-medium break-all" style={{ color: 'var(--color-text2)' }}>{value}</p>
                                 </div>
                               ))}
                             </div>
@@ -317,8 +325,8 @@ export default function PortfolioCreditPage() {
                               const firstDate = f.metadata?.first_repayment_date as string | undefined;
                               if (!symbols?.length && !repayable) return null;
                               return (
-                                <div className="mt-4 rounded-xl border border-gray-100 bg-white p-4 space-y-3">
-                                  <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                <div className="mt-4 rounded-xl p-4 space-y-3" style={{ border: '1px solid var(--color-border2)', background: 'var(--color-surface)' }}>
+                                  <p className="text-[10px] font-bold uppercase tracking-widest" style={{ color: 'var(--color-text3)' }}>
                                     Collateral basket{count ? ` — ${count} holding${count !== 1 ? 's' : ''}` : ''}
                                   </p>
                                   {symbols?.length ? (
@@ -327,21 +335,21 @@ export default function PortfolioCreditPage() {
                                         const assetValue  = f.portfolio_value / symbols.length;
                                         const assetLtv    = f.drawn_amount / f.portfolio_value;
                                         const ltvPct      = Math.min(100, assetLtv * 100);
-                                        const barColor    = ltvPct >= 80 ? '#ef4444' : ltvPct >= 65 ? '#f59e0b' : '#10b981';
+                                        const barColor    = ltvPct >= 80 ? 'var(--color-red)' : ltvPct >= 65 ? 'var(--color-amber)' : 'var(--color-green)';
                                         const sharePct    = (100 / symbols.length).toFixed(1);
                                         return (
-                                          <div key={sym} className="rounded-lg border border-gray-100 bg-white p-3 space-y-2">
+                                          <div key={sym} className="rounded-lg p-3 space-y-2" style={{ border: '1px solid var(--color-border2)', background: 'var(--color-surface2)' }}>
                                             <div className="flex items-center justify-between">
-                                              <span className="text-xs font-bold text-violet-700">{sym}</span>
-                                              <span className="text-[10px] text-gray-400">{sharePct}%</span>
+                                              <span className="text-xs font-bold" style={{ color: 'var(--color-violet)' }}>{sym}</span>
+                                              <span className="text-[10px]" style={{ color: 'var(--color-text3)' }}>{sharePct}%</span>
                                             </div>
-                                            <p className="text-sm font-semibold text-gray-800">{fmt(assetValue)}</p>
+                                            <p className="text-sm font-semibold" style={{ color: 'var(--color-text2)' }}>{fmt(assetValue)}</p>
                                             <div>
                                               <div className="flex items-center justify-between mb-1">
-                                                <span className="text-[10px] text-gray-400">LTV</span>
+                                                <span className="text-[10px]" style={{ color: 'var(--color-text3)' }}>LTV</span>
                                                 <span className="text-[10px] font-semibold" style={{ color: barColor }}>{ltvPct.toFixed(1)}%</span>
                                               </div>
-                                              <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-100">
+                                              <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: 'var(--color-fill-subtle)' }}>
                                                 <div className="h-full rounded-full transition-all" style={{ width: `${ltvPct}%`, background: barColor }} />
                                               </div>
                                             </div>
@@ -351,23 +359,23 @@ export default function PortfolioCreditPage() {
                                     </div>
                                   ) : null}
                                   {(repayable || monthly || firstDate) && (
-                                    <div className="grid grid-cols-3 gap-3 pt-1 border-t border-gray-100">
+                                    <div className="grid grid-cols-3 gap-3 pt-1" style={{ borderTop: '1px solid var(--color-border2)' }}>
                                       {repayable && (
                                         <div>
-                                          <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Total repayable</p>
-                                          <p className="mt-0.5 text-sm font-semibold text-gray-800">{fmt(repayable)}</p>
+                                          <p className="text-[10px] font-medium uppercase tracking-wide" style={{ color: 'var(--color-text3)' }}>Total repayable</p>
+                                          <p className="mt-0.5 text-sm font-semibold" style={{ color: 'var(--color-text2)' }}>{fmt(repayable)}</p>
                                         </div>
                                       )}
                                       {monthly && (
                                         <div>
-                                          <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">Monthly instalment</p>
-                                          <p className="mt-0.5 text-sm font-semibold text-gray-800">{fmt(monthly)}</p>
+                                          <p className="text-[10px] font-medium uppercase tracking-wide" style={{ color: 'var(--color-text3)' }}>Monthly instalment</p>
+                                          <p className="mt-0.5 text-sm font-semibold" style={{ color: 'var(--color-text2)' }}>{fmt(monthly)}</p>
                                         </div>
                                       )}
                                       {firstDate && (
                                         <div>
-                                          <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">First repayment</p>
-                                          <p className="mt-0.5 text-sm font-semibold text-gray-800">
+                                          <p className="text-[10px] font-medium uppercase tracking-wide" style={{ color: 'var(--color-text3)' }}>First repayment</p>
+                                          <p className="mt-0.5 text-sm font-semibold" style={{ color: 'var(--color-text2)' }}>
                                             {new Date(firstDate).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
                                           </p>
                                         </div>
@@ -389,11 +397,11 @@ export default function PortfolioCreditPage() {
         </div>
 
         {/* LTV legend */}
-        <div className="flex items-center gap-6 text-xs text-gray-400">
-          <span className="font-medium text-gray-500">LTV guide:</span>
-          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500" />Safe (&lt;65%)</span>
-          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-amber-400" />Watch (65–80%)</span>
-          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-red-500" />Margin call (&gt;80%)</span>
+        <div className="flex items-center gap-6 text-xs" style={{ color: 'var(--color-text3)' }}>
+          <span className="font-medium" style={{ color: 'var(--color-text2)' }}>LTV guide:</span>
+          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ background: 'var(--color-green)' }} />Safe (&lt;65%)</span>
+          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ background: 'var(--color-amber)' }} />Watch (65–80%)</span>
+          <span className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full" style={{ background: 'var(--color-red)' }} />Margin call (&gt;80%)</span>
         </div>
 
       </div>
