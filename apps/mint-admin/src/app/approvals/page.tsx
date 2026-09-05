@@ -173,14 +173,13 @@ export default function ApprovalsPage() {
 
       {/* ── Empty ───────────────────────────────────────────── */}
       {!loading && !error && approvals.length === 0 && (
-        <div className="bento-card flex flex-col items-center justify-center py-20 text-center gap-3">
-          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-1"
-            style={{ background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.15)' }}>
-            <CheckCircle2 size={24} style={{ color: '#34D399' }} />
+        <div className="bento-card p-6">
+          <div className="flex items-center gap-2.5 mb-2">
+            <CheckCircle2 size={16} style={{ color: 'var(--color-green)' }} />
+            <p className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Queue empty — 0 pending</p>
           </div>
-          <p className="text-base font-semibold" style={{ color: 'var(--color-text)' }}>All caught up</p>
-          <p className="text-sm max-w-xs" style={{ color: 'var(--color-text3)' }}>
-            No proposals pending. New platform proposals submitted by your team will appear here for sign-off.
+          <p className="text-sm" style={{ color: 'var(--color-text3)' }}>
+            New platform proposals submitted by your team will land here for sign-off.
           </p>
         </div>
       )}
