@@ -30,6 +30,8 @@ colors:
   bright-sky: "#38BDF8"
   periwinkle: "#818CF8"
   neutral-gray: "#6B7280"
+  mint-dark: "#10B981"
+  stale-orange: "#F97316"
 typography:
   display:
     fontFamily: "Plus Jakarta Sans, Georgia, serif"
@@ -143,6 +145,11 @@ A third status vocabulary exists for the 12-stage TM pipeline (`STAGES` in `tele
 - **Bright Sky** (`#38BDF8`): "Contacted" — a lighter, more saturated blue than Status Sky, marking the step immediately after first contact as distinct from the "attempted" state before it.
 - **Periwinkle** (`#818CF8`): "Proposal Sent" — a colder blue-violet than Indigo Violet, keeping this later-funnel stage visually distinct from the earlier "Call Back" state that already uses Indigo Violet.
 - **Neutral Gray** (`#6B7280`): "Other" — a slightly darker, more neutral gray than Cool Gray, used here instead of Cool Gray only because this vocabulary was built independently; both play the same "uncategorized" role.
+
+### Legacy / Escalation Colors
+
+- **Mint Dark** (`#10B981`): a darker step of Status Green, used for "Demo Completed"/"Quoted"-type stage states — a `--color-mint-dark` CSS variable already exists for this in `globals.css` (kept as a legacy compat alias) but was missing from this document.
+- **Stale Orange** (`#F97316`): used only as the border tint on the "stale lead" escalation badge's middle tier (7+ days, between the amber "just aging" tier and the red "critical" tier) — one step more saturated than Warm Orange, which remains the tier's text/icon color. The two oranges are deliberately close but not identical; don't consolidate them into one value without checking both tiers still read as distinct steps.
 
 ### Agent Identity Colors
 

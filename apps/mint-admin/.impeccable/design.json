@@ -31,7 +31,9 @@
       "cobalt-violet": { "role": "primary", "displayName": "Cobalt Violet", "canonical": "#5C3BCF" },
       "bright-sky": { "role": "status", "displayName": "Bright Sky", "canonical": "#38BDF8" },
       "periwinkle": { "role": "status", "displayName": "Periwinkle", "canonical": "#818CF8" },
-      "neutral-gray": { "role": "status", "displayName": "Neutral Gray", "canonical": "#6B7280" }
+      "neutral-gray": { "role": "status", "displayName": "Neutral Gray", "canonical": "#6B7280" },
+      "mint-dark": { "role": "success", "displayName": "Mint Dark", "canonical": "#10B981" },
+      "stale-orange": { "role": "warning", "displayName": "Stale Orange", "canonical": "#F97316" }
     },
     "typographyMeta": {
       "display": { "displayName": "Display / Headline", "purpose": "Page titles and hero KPI numbers. Tight line-height (0.96), negative tracking (-0.03em to -0.04em)." },
