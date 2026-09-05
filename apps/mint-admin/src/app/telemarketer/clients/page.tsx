@@ -91,7 +91,7 @@ export default function MyClientsPage() {
           <button key={label}
             onClick={() => setStageFilter(prev => prev === filter ? null : filter)}
             className="bento-card p-4 text-left transition-all cursor-pointer"
-            style={stageFilter === filter ? { borderLeft: `3px solid ${color}` } : {}}>
+            style={stageFilter === filter ? { background: `${color}0F`, borderColor: `${color}4D` } : {}}>
             <div className="flex items-center gap-2 mb-2">
               <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: `${color}18`, color }}>
                 <Icon size={12} />

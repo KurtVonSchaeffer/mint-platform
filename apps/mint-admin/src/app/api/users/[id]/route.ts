@@ -75,7 +75,7 @@ export async function POST(_req: NextRequest, { params }: Params) {
       to:      user.email,
       subject: 'Reset your AlgoLend password',
       html: `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:32px;text-align:center">
     <p style="color:#fff;font-size:22px;font-weight:700;margin:0">Reset your password</p>

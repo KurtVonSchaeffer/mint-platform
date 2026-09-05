@@ -401,7 +401,7 @@ export default function MintLoansPage() {
             { label: 'Total volume',   value: loading ? '—' : fmt(totalDisbursed),                             sub: 'across all lenders',      color: '#34D399', icon: TrendingUp },
             { label: 'Avg rate',       value: loading ? '—' : (loans.length ? `${avgRate.toFixed(1)}%` : '—'), sub: 'p.a. across portfolio',   color: '#FBBF24', icon: Percent    },
           ].map(({ label, value, sub, color, icon: Icon }) => (
-            <div key={label} className="bento-card p-5" style={{ borderLeft: `3px solid ${color}` }}>
+            <div key={label} className="bento-card p-5">
               <div className="w-8 h-8 rounded-xl flex items-center justify-center mb-3" style={{ background: `${color}18`, color }}>
                 <Icon size={15} />
               </div>

@@ -428,7 +428,6 @@ export default function TelemarketerHomePage() {
             ].map(item => (
               <Link key={item.label} href={item.href}
                 className="bento-card p-4 block group cursor-pointer transition-all hover:-translate-y-0.5"
-                style={{ borderLeft: `3px solid ${item.color}` }}
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center"

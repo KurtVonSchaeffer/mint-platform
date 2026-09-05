@@ -136,12 +136,10 @@ function buildStatementHTML(stmt: MonthlyStatement, agentName: string): string {
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Commission Statement: ${stmt.label}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: #ffffff;
     color: #0f172a;
     -webkit-print-color-adjust: exact;
@@ -935,7 +933,6 @@ export default function StatementsPage() {
               <motion.div key={card.label} variants={cardVariants}>
                 <motion.div
                   className="bento-card p-4 h-full"
-                  style={{ borderLeft: `3px solid ${card.color}` }}
                   animate={card.glow ? {
                     boxShadow: [
                       `0 0 0px ${card.color}00`,

@@ -724,7 +724,6 @@ export default function DashboardPage() {
                   ? `0 8px 32px -4px rgba(${s.rgb},0.28), 0 0 0 1px rgba(${s.rgb},0.16)`
                   : undefined,
                 transition: 'transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s ease, border-color 0.25s ease',
-                borderLeft: `3px solid rgba(${s.rgb},0.7)`,
               }}
             >
               <div className="flex items-start justify-between gap-2 mb-4">

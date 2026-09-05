@@ -142,7 +142,7 @@ export default function AnalyticsPage() {
       {/* KPI grid */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
         {kpis.map(({ label, value, sub, color, rgb, icon: Icon }) => (
-          <div key={label} className="bento-card p-5" style={{ borderLeft: `3px solid ${color}` }}>
+          <div key={label} className="bento-card p-5">
             <div className="flex items-start justify-between mb-3">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center"
                 style={{ background: `rgba(${rgb},0.12)`, color }}>

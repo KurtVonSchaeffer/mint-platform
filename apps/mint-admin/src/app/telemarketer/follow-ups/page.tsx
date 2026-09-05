@@ -150,7 +150,6 @@ function FollowUpCard({ fu, section, onComplete, onReschedule }: {
   onReschedule: (fu: FollowUp) => void;
 }) {
   const [completing, setCompleting] = useState(false);
-  const borderColor = section === 'overdue' ? '#F87171' : section === 'today' ? '#FBBF24' : 'var(--color-border2)';
   const bgColor     = section === 'overdue' ? 'rgba(248,113,113,0.04)' : section === 'today' ? 'rgba(251,191,36,0.04)' : 'transparent';
   const countdown   = timeUntil(fu.scheduledAt);
 
@@ -162,9 +161,7 @@ function FollowUpCard({ fu, section, onComplete, onReschedule }: {
 
   return (
     <div className="bento-card p-4 transition-all"
-      style={{ borderLeft: `3px solid ${borderColor}`, background: bgColor }}
-      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderLeftColor = fu.statusColor; }}
-      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderLeftColor = borderColor; }}>
+      style={{ background: bgColor }}>
       <div className="flex items-start gap-4 flex-wrap">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center text-[11px] font-bold text-white shrink-0"
@@ -300,7 +297,6 @@ function WeekCard({ fu, onComplete }: { fu: FollowUp; onComplete: (id: string) =
       style={{
         background: 'var(--color-surface2)',
         border: '1px solid var(--color-border2)',
-        borderLeft: `3px solid ${fu.statusColor}`,
       }}>
       <Link
         href={`/telemarketer/leads/${fu.leadId}`}
@@ -566,7 +562,7 @@ export default function FollowUpsPage() {
               { label: 'Overdue',   count: overdue.length,  color: '#F87171' },
               { label: 'Upcoming',  count: upcoming.length, color: '#60A5FA' },
             ].map(s => (
-              <div key={s.label} className="bento-card p-4" style={{ borderLeft: `3px solid ${s.color}` }}>
+              <div key={s.label} className="bento-card p-4">
                 <p className="text-2xl font-bold" style={{ color: s.color, fontFamily: 'var(--font-mono)' }}>{s.count}</p>
                 <p className="text-xs mt-1" style={{ color: 'var(--color-text3)' }}>{s.label}</p>
               </div>

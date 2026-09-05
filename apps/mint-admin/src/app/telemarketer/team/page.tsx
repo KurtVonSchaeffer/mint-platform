@@ -73,7 +73,7 @@ interface RecentCall {
 function DotGridCard({ color, rgb, children }: { color: string; rgb: string; children: React.ReactNode }) {
   const id = useId().replace(/:/g, '');
   return (
-    <div className="bento-card p-4 relative overflow-hidden" style={{ borderLeft: `3px solid ${color}` }}>
+    <div className="bento-card p-4 relative overflow-hidden">
       {/* color wash */}
       <div className="absolute inset-y-0 right-0 w-2/3 pointer-events-none"
         style={{ background: `linear-gradient(to left, rgba(${rgb},0.07), transparent)` }} />

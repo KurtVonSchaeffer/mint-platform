@@ -26,6 +26,24 @@
         "value": "var(--ease-spring)",
         "createdAt": "2026-09-05T14:16:47.033Z",
         "reason": "Agent: DESIGN.md documents ease-spring cubic-bezier(0.16,1,0.3,1) as the system's default easing for hovers/entrances/lifts, per the user-confirmed elevation philosophy (flat-until-hover, ambient glow)"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "apps/mint-admin/src/app/api/applications/[id]/request-info/route.ts"
+        ],
+        "createdAt": "2026-09-05T16:26:24.489Z",
+        "reason": "Agent: same pattern as lib/email.ts — a staff-authored custom message quoted in a transactional email, border-left is the cross-client-safe way to set off quoted text"
+      },
+      {
+        "rule": "overused-font",
+        "value": "helvetica",
+        "files": [
+          "apps/mint-admin/src/app/api/users/[id]/route.ts"
+        ],
+        "createdAt": "2026-09-05T16:27:22.370Z",
+        "reason": "Agent: same HTML-email web-safe-font reasoning as lib/email.ts"
       }
     ]
   }

@@ -323,7 +323,6 @@ function PayrollPageInner() {
               onClick={() => card.filter && setStatusFilter(prev => prev === card.filter ? '' : card.filter as CommissionStatus)}
               className="bento-card p-5 text-left transition-all hover:-translate-y-0.5"
               style={{
-                borderLeft: `3px solid ${card.color}`,
                 background: statusFilter === card.filter && card.filter ? `rgba(${card.rgb},0.06)` : undefined,
                 cursor: card.filter ? 'pointer' : 'default',
               }}>

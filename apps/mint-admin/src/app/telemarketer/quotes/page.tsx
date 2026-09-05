@@ -298,8 +298,7 @@ export default function TelemarketerQuotesPage() {
               },
             ].map(item => (
               <div key={item.label}
-                className="bento-card p-4 transition-all hover:-translate-y-0.5"
-                style={{ borderLeft: `3px solid ${item.color}` }}>
+                className="bento-card p-4 transition-all hover:-translate-y-0.5">
                 <div className="flex items-start justify-between mb-2">
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center"
                     style={{ background: `rgba(${item.rgb},0.12)`, color: item.color }}>
@@ -427,7 +426,7 @@ export default function TelemarketerQuotesPage() {
                         style={{
                           animation: `fade-up 0.4s cubic-bezier(0.16,1,0.3,1) both`,
                           animationDelay: `${i * 40}ms`,
-                          borderLeft: q.status === 'pending_approval' ? '3px solid #FBBF24' : undefined,
+                          background: q.status === 'pending_approval' ? 'rgba(251,191,36,0.05)' : undefined,
                         }}>
                         <td>
                           <p className="font-mono text-xs" style={{ color: 'var(--color-violet)' }}>{q.id}</p>
