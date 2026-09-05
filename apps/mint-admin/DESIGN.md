@@ -30,6 +30,7 @@ colors:
   cobalt-violet-bright: "#8b6ce8"
   biztech-gold: "#DDC357"
   amber-deep: "#F59E0B"
+  amber-text: "#d97706"
   bright-sky: "#38BDF8"
   periwinkle: "#818CF8"
   neutral-gray: "#6B7280"
@@ -132,6 +133,7 @@ The palette is almost monochrome by design: one hue family (violet) for emphasis
 - **Sky** (`#60A5FA`): informational, trial-status badge.
 - **Slate Muted** (`#9B9FB8` / `#A0A4C0`, base `rgb(75,80,128)`): the deliberately de-emphasized tier — churned clients and the entry-level "core" pricing tier both use this same muted slate-violet, distinct from every energetic status color, so a churned/base-tier badge reads as quieter, not just differently colored.
 - **Amber Deep** (`#F59E0B`): a step deeper than Status Amber, reused for "pending review" application status text and an agent-avatar gradient — Status Amber stays the lighter "trial/badge" tone, Amber Deep signals a more active caution state.
+- **Amber Text** (`#d97706`): a third, darkest amber step, used only as the text/icon color inside a Status-Amber-tinted badge (e.g. the "pending approval" pill in `approvals/page.tsx`) — the tint background stays Status Amber, but this darker step reads more clearly as foreground text against it than Status Amber itself would.
 
 Status colors always appear as a ~10% tint background with a ~20% tint border and the full-saturation color as text/icon (see `.badge-*` classes) — never as a solid fill. That keeps the status vocabulary readable without competing with the violet accent for visual weight.
 

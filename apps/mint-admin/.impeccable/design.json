@@ -32,6 +32,7 @@
       "cobalt-violet-bright": { "role": "primary", "displayName": "Cobalt Violet Bright", "canonical": "#8b6ce8" },
       "biztech-gold": { "role": "secondary", "displayName": "BizTech Gold", "canonical": "#DDC357" },
       "amber-deep": { "role": "warning", "displayName": "Amber Deep", "canonical": "#F59E0B" },
+      "amber-text": { "role": "warning", "displayName": "Amber Text", "canonical": "#d97706" },
       "bright-sky": { "role": "status", "displayName": "Bright Sky", "canonical": "#38BDF8" },
       "periwinkle": { "role": "status", "displayName": "Periwinkle", "canonical": "#818CF8" },
       "neutral-gray": { "role": "status", "displayName": "Neutral Gray", "canonical": "#6B7280" },
