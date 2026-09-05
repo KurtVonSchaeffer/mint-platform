@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { Shell } from '@/components/Shell';
 import * as XLSX from 'xlsx';
 import {
   ArrowLeft, Upload, FileSpreadsheet, ChevronRight,
@@ -165,6 +166,7 @@ export default function LeadImportPage() {
   /* ── Result screen ─────────────────────────────────────── */
   if (result) {
     return (
+      <Shell>
       <div className="space-y-6 page-enter max-w-lg">
         <div className="flex items-center gap-3">
           <button onClick={() => router.push('/leads')}
@@ -235,11 +237,13 @@ export default function LeadImportPage() {
           </button>
         </div>
       </div>
+      </Shell>
     );
   }
 
   /* ── Main import flow ──────────────────────────────────── */
   return (
+    <Shell>
     <div className="space-y-6 page-enter max-w-4xl">
 
       {/* Header */}
@@ -442,5 +446,6 @@ export default function LeadImportPage() {
         </>
       )}
     </div>
+    </Shell>
   );
 }

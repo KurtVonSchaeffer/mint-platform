@@ -7,6 +7,7 @@ import {
   TrendingUp, Clock, MessageSquare,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Shell } from '@/components/Shell';
 
 interface Approval {
   id:              string;
@@ -90,6 +91,7 @@ export default function ApprovalsPage() {
   const visible = approvals.filter(a => !done.has(a.id) || done.has(a.id));
 
   return (
+    <Shell>
     <div className="space-y-8 page-enter max-w-3xl">
 
       {/* ── Header ─────────────────────────────────────────── */}
@@ -368,5 +370,6 @@ export default function ApprovalsPage() {
         })}
       </div>
     </div>
+    </Shell>
   );
 }
