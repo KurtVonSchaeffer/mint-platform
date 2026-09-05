@@ -187,7 +187,7 @@ export default function InvoicesPage() {
             </p>
             {/* 1px progress track */}
             <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'var(--color-border2)' }}>
-              <div style={{ height: '100%', width: `${collectedPct}%`, background: 'linear-gradient(90deg,var(--color-purple),var(--color-green))', transition: 'width 1s ease-out' }} />
+              <div style={{ height: '100%', width: '100%', transformOrigin: 'left', transform: `scaleX(${collectedPct / 100})`, background: 'linear-gradient(90deg,var(--color-purple),var(--color-green))', transition: 'transform 1s ease-out' }} />
             </div>
           </div>
 
@@ -200,7 +200,7 @@ export default function InvoicesPage() {
             </p>
             {/* 1px progress track */}
             <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'var(--color-border2)' }}>
-              <div style={{ height: '100%', width: `${outstandingPct}%`, background: 'linear-gradient(90deg,var(--color-amber),rgba(251,191,36,0.4))', transition: 'width 1s ease-out' }} />
+              <div style={{ height: '100%', width: '100%', transformOrigin: 'left', transform: `scaleX(${outstandingPct / 100})`, background: 'linear-gradient(90deg,var(--color-amber),rgba(251,191,36,0.4))', transition: 'transform 1s ease-out' }} />
             </div>
           </div>
 

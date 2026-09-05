@@ -1,0 +1,143 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-05T00:00:00Z",
+  "title": "Design System: AlgoLend Admin Console",
+  "extensions": {
+    "colorMeta": {
+      "obsidian-void": { "role": "neutral", "displayName": "Obsidian Void", "canonical": "#06070D", "tonalRamp": ["#06070D", "#0B0D18", "#101525", "#161C30", "#1D243D", "#2A3350", "#454F70", "#8B90B4"] },
+      "obsidian-ink": { "role": "neutral", "displayName": "Obsidian Ink", "canonical": "#0B0D18" },
+      "obsidian-surface": { "role": "neutral", "displayName": "Obsidian Surface", "canonical": "#101525" },
+      "obsidian-surface-2": { "role": "neutral", "displayName": "Obsidian Surface 2", "canonical": "#161C30" },
+      "obsidian-surface-3": { "role": "neutral", "displayName": "Obsidian Surface 3", "canonical": "#1D243D" },
+      "electric-violet": { "role": "primary", "displayName": "Electric Violet Authority", "canonical": "#7C3AED", "tonalRamp": ["#2E1065", "#4C1D95", "#5B21B6", "#6D28D9", "#7C3AED", "#9B5CF6", "#A78BFA", "#C4B5FD"] },
+      "electric-violet-bright": { "role": "primary", "displayName": "Electric Violet Bright", "canonical": "#9B5CF6" },
+      "violet-soft": { "role": "primary", "displayName": "Violet Soft", "canonical": "#A78BFA" },
+      "violet-pale": { "role": "primary", "displayName": "Violet Pale", "canonical": "#C4B5FD" },
+      "text-primary": { "role": "neutral", "displayName": "Text Primary", "canonical": "#EEF0FF" },
+      "text-secondary": { "role": "neutral", "displayName": "Text Secondary", "canonical": "#8B90B4" },
+      "text-tertiary": { "role": "neutral", "displayName": "Text Tertiary", "canonical": "#6E74A4" },
+      "status-green": { "role": "success", "displayName": "Status Green", "canonical": "#34D399" },
+      "status-red": { "role": "error", "displayName": "Status Red", "canonical": "#F87171" },
+      "status-amber": { "role": "warning", "displayName": "Status Amber", "canonical": "#FBBF24" },
+      "status-sky": { "role": "info", "displayName": "Status Sky", "canonical": "#60A5FA" },
+      "slate-muted": { "role": "neutral", "displayName": "Slate Muted", "canonical": "#9B9FB8" },
+      "slate-muted-2": { "role": "neutral", "displayName": "Slate Muted 2", "canonical": "#A0A4C0" }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display / Headline", "purpose": "Page titles and hero KPI numbers. Tight line-height (0.96), negative tracking (-0.03em to -0.04em)." },
+      "body": { "displayName": "Body", "purpose": "Prose, table cells, descriptions, form labels." },
+      "label": { "displayName": "Eyebrow / Mono Label", "purpose": "Any numeric, tabular, or metadata value: currency, counts, IDs, timestamps, section kickers. Always mono, often uppercase." }
+    },
+    "shadows": [
+      { "name": "card-hover-dark", "value": "0 0 0 1px rgba(124,58,237,0.12), 0 16px 40px -8px rgba(0,0,0,0.6), 0 0 24px -4px rgba(124,58,237,0.12)", "purpose": "Bento card hover state in dark mode — violet ring + ambient shadow + soft glow." },
+      { "name": "card-hover-light", "value": "0 0 0 1px rgba(124,58,237,0.14), 0 8px 24px rgba(0,0,0,0.08), 0 0 20px -4px rgba(124,58,237,0.08)", "purpose": "Bento card hover state in light mode." },
+      { "name": "button-rest", "value": "0 4px 20px rgba(124,58,237,0.4)", "purpose": "Primary button resting shadow — violet, not neutral black." },
+      { "name": "button-hover", "value": "0 8px 30px rgba(124,58,237,0.5), 0 0 0 1px rgba(124,58,237,0.3)", "purpose": "Primary button hover shadow, intensified." },
+      { "name": "button-focus-ring", "value": "0 4px 20px rgba(124,58,237,0.4), 0 0 0 3px rgba(167,139,250,0.5)", "purpose": "Focus-visible ring for buttons whose overflow:hidden clips the default outline." },
+      { "name": "field-focus-ring", "value": "0 0 0 3px rgba(124,58,237,0.12)", "purpose": "Input focus glow, paired with a violet border-color shift." },
+      { "name": "slideover-panel", "value": "-20px 0 60px rgba(0,0,0,0.22), -1px 0 0 rgba(124,58,237,0.08)", "purpose": "Directional shadow for a panel sliding in from the right over content." }
+    ],
+    "motion": [
+      { "name": "ease-spring", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Default easing for hovers, entrances, and lifts — a slightly overshooting spring, not a linear/ease-out fade." },
+      { "name": "ease-out", "value": "cubic-bezier(0.0, 0, 0.2, 1)", "purpose": "Secondary easing for simple fades." },
+      { "name": "duration-fade-up", "value": "0.6s", "purpose": "Page-enter stagger — each direct child of a `.page-enter` container fades up with an increasing delay (0ms, 60ms, 120ms...)." },
+      { "name": "duration-shine-sweep", "value": "0.7s", "purpose": "The diagonal light-sweep across a primary button on hover (`.btn-shine`)." }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The only button that should draw the eye — gradient violet fill, shine sweep on hover.",
+      "html": "<button class=\"ds-btn-primary\">Save changes</button>",
+      "css": ".ds-btn-primary { position: relative; overflow: hidden; isolation: isolate; background: linear-gradient(135deg, #7C3AED 0%, #9B5CF6 100%); color: #fff; border: none; border-radius: 12px; font-weight: 600; font-size: 0.875rem; padding: 10px 20px; cursor: pointer; box-shadow: 0 4px 20px rgba(124,58,237,0.4); transition: transform 0.2s cubic-bezier(0.16,1,0.3,1), box-shadow 0.2s ease; } .ds-btn-primary::after { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.12) 50%, transparent 70%); transform: translateX(-100%); transition: transform 0.7s cubic-bezier(0.16,1,0.3,1); pointer-events: none; } .ds-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(124,58,237,0.5), 0 0 0 1px rgba(124,58,237,0.3); } .ds-btn-primary:hover::after { transform: translateX(100%); } .ds-btn-primary:focus-visible { outline: none; box-shadow: 0 4px 20px rgba(124,58,237,0.4), 0 0 0 3px rgba(167,139,250,0.5); }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Secondary action — transparent, quiet until hovered.",
+      "html": "<button class=\"ds-btn-ghost\">Cancel</button>",
+      "css": ".ds-btn-ghost { background: transparent; color: #6E74A4; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; font-weight: 500; font-size: 0.875rem; padding: 8px 16px; cursor: pointer; transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease; } .ds-btn-ghost:hover { color: #A78BFA; border-color: rgba(124,58,237,0.3); background: rgba(124,58,237,0.06); }"
+    },
+    {
+      "name": "Bento Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "The base card/panel used throughout the app — flat at rest, lifts and glows on hover.",
+      "html": "<div class=\"ds-card\"><p class=\"ds-eyebrow\">Section</p><p class=\"ds-card-title\">Card title</p></div>",
+      "css": ".ds-card { position: relative; background: #101525; border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 20px; overflow: hidden; transition: transform 0.35s cubic-bezier(0.16,1,0.3,1), box-shadow 0.35s ease, border-color 0.25s ease; } .ds-card:hover { transform: translateY(-3px); border-color: rgba(124,58,237,0.12); box-shadow: 0 0 0 1px rgba(124,58,237,0.12), 0 16px 40px -8px rgba(0,0,0,0.6), 0 0 24px -4px rgba(124,58,237,0.12); } .ds-eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: #6E74A4; margin: 0 0 6px; } .ds-card-title { font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 700; font-size: 1.1rem; color: #EEF0FF; margin: 0; }"
+    },
+    {
+      "name": "Text Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Standard form field — subtle border, violet glow on focus.",
+      "html": "<input class=\"ds-input\" placeholder=\"Enter a value\" />",
+      "css": ".ds-input { display: block; width: 100%; padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); background: #161C30; color: #EEF0FF; font-size: 0.875rem; font-family: 'Plus Jakarta Sans', sans-serif; outline: none; transition: border-color 0.15s ease, box-shadow 0.15s ease; } .ds-input::placeholder { color: #6E74A4; } .ds-input:focus { border-color: rgba(124,58,237,0.5); box-shadow: 0 0 0 3px rgba(124,58,237,0.12); }"
+    },
+    {
+      "name": "Status Badge — Success",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "The tint/border/text formula every status badge follows — this is the 'active' variant.",
+      "html": "<span class=\"ds-badge ds-badge-success\">Active</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 9999px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid transparent; font-family: 'Plus Jakarta Sans', sans-serif; } .ds-badge-success { background: rgba(52,211,153,0.1); border-color: rgba(52,211,153,0.2); color: #34D399; }"
+    },
+    {
+      "name": "Status Badge — Muted",
+      "kind": "chip",
+      "refersTo": "badge",
+      "description": "The deliberately de-emphasized variant — churned clients and the entry-level pricing tier, same formula but slate-muted instead of a status hue.",
+      "html": "<span class=\"ds-badge ds-badge-muted\">Churned</span>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 9999px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; border: 1px solid transparent; font-family: 'Plus Jakarta Sans', sans-serif; } .ds-badge-muted { background: rgba(75,80,128,0.2); border-color: rgba(75,80,128,0.3); color: #9B9FB8; }"
+    },
+    {
+      "name": "Data Table Row",
+      "kind": "custom",
+      "refersTo": "data-table",
+      "description": "Table row hover behavior — the quietest interaction in the system, a faint violet wash rather than a lift.",
+      "html": "<table class=\"ds-table\"><tbody><tr class=\"ds-table-row\"><td>Row content</td><td>Value</td></tr></tbody></table>",
+      "css": ".ds-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; font-family: 'Plus Jakarta Sans', sans-serif; } .ds-table-row { border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.15s ease; } .ds-table-row:hover { background: rgba(124,58,237,0.04); } .ds-table-row td { padding: 14px 20px; color: #8B90B4; }"
+    },
+    {
+      "name": "Sidebar Nav Item",
+      "kind": "nav",
+      "refersTo": "sidebar",
+      "description": "Left sidebar navigation link — quiet at rest, violet accent when active.",
+      "html": "<a class=\"ds-nav-item ds-nav-item-active\" href=\"#\">Dashboard</a>",
+      "css": ".ds-nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 10px; font-size: 0.875rem; font-weight: 500; color: #8B90B4; text-decoration: none; transition: color 0.15s ease, background 0.15s ease; } .ds-nav-item:hover { color: #EEF0FF; background: rgba(255,255,255,0.04); } .ds-nav-item-active { color: #A78BFA; background: rgba(124,58,237,0.1); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Obsidian Command",
+    "overview": "This is an internal operations tool, not a marketing surface. The visual language reflects that: a near-black, layered navy void that recedes rather than competes for attention, with a single electric-violet accent doing all the emphasis work. Everything else stays deliberately quiet so the violet reads as authority rather than decoration. The system is unapologetically dense: tables, KPI tiles, and status badges dominate, because the job is scanning numbers and pipeline state quickly, not being persuaded.",
+    "keyCharacteristics": [
+      "Obsidian-void surfaces (near-black, layered #06070D → #1D243D) that recede",
+      "One accent color (electric violet) carries all emphasis; nothing else competes with it",
+      "Flat at rest, glow and lift only on interaction — depth is earned, not default",
+      "Full light/dark theming via CSS custom property overrides, not a separate light design",
+      "Mono type (JetBrains Mono) marks anything numeric, tabular, or metadata"
+    ],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "Violet is the only hue used for emphasis. Status colors communicate state, never \"act here.\"", "section": "colors" },
+      { "name": "The Mono-For-Data Rule", "body": "Any numeric, tabular, or identifier value renders in JetBrains Mono. Prose never does.", "section": "typography" },
+      { "name": "The Earned-Depth Rule", "body": "Nothing gets a shadow just for existing. A shadow always means this is currently being interacted with, or deliberately floating above the base layer.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep violet as the only accent hue anywhere in the product.",
+      "Do render numeric/tabular/ID content in JetBrains Mono; render prose in Plus Jakarta Sans.",
+      "Do keep cards, buttons, and rows flat at rest — shadows and glows only on interaction.",
+      "Do pair every status badge with the tint/border/text formula rather than a solid fill.",
+      "Do check text-tertiary against its background before reusing it — its values were deliberately raised to clear WCAG AA."
+    ],
+    "donts": [
+      "Don't introduce a second accent hue for emphasis.",
+      "Don't give a card or button a resting drop shadow \"for depth.\"",
+      "Don't use all-caps body text or oversized eyebrow-style labels outside the established .eyebrow pattern.",
+      "Don't treat scripts/zwane-invoice.html or the email templates in lib/email.ts as the design reference — they predate this system and carry known contrast/font-overuse issues."
+    ]
+  }
+}

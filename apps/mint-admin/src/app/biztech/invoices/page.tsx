@@ -152,7 +152,7 @@ export default function BizTechInvoicesPage() {
             {invoices.filter(i => i.status === 'paid').length} invoices paid
           </p>
           <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'var(--color-border2)' }}>
-            <div style={{ height: '100%', width: `${collectedPct}%`, background: 'linear-gradient(90deg,#5C3BCF,var(--color-green))', transition: 'width 1s ease-out' }} />
+            <div style={{ height: '100%', width: '100%', transformOrigin: 'left', transform: `scaleX(${collectedPct / 100})`, background: 'linear-gradient(90deg,#5C3BCF,var(--color-green))', transition: 'transform 1s ease-out' }} />
           </div>
         </div>
         <div className="bento-card p-5 overflow-hidden">
@@ -162,7 +162,7 @@ export default function BizTechInvoicesPage() {
             {invoices.filter(i => ['sent', 'overdue'].includes(i.status)).length} invoices unpaid
           </p>
           <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'var(--color-border2)' }}>
-            <div style={{ height: '100%', width: `${outstandingPct}%`, background: 'linear-gradient(90deg,var(--color-amber),rgba(251,191,36,0.4))', transition: 'width 1s ease-out' }} />
+            <div style={{ height: '100%', width: '100%', transformOrigin: 'left', transform: `scaleX(${outstandingPct / 100})`, background: 'linear-gradient(90deg,var(--color-amber),rgba(251,191,36,0.4))', transition: 'transform 1s ease-out' }} />
           </div>
         </div>
         <div

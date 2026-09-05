@@ -45,7 +45,7 @@ export function quoteEmail(q: {
   const year1 = q.setupFee + q.monthlyFee * 12;
 
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:32px;text-align:center">
     <p style="color:#fff;font-size:24px;font-weight:700;margin:0">AlgoLend</p>
@@ -88,7 +88,7 @@ export function invoiceReminderEmail(inv: {
   const paymentUrl = inv.invoiceId ? `https://algolend.co.za/pay/${inv.invoiceId}` : null;
 
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:${isOverdue ? '#dc2626' : '#7C3AED'};padding:24px 32px">
     <p style="color:#fff;font-size:18px;font-weight:700;margin:0">${isOverdue ? `⚠ Invoice Overdue — ${inv.daysOverdue} days` : 'Invoice Payment Reminder'}</p>
@@ -131,7 +131,7 @@ export function quotaWarningEmail(q: {
   used: number; limit: number; pct: number;
 }) {
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:#d97706;padding:28px 32px">
     <p style="color:#fff;font-size:20px;font-weight:700;margin:0">⚠️ API Quota Warning</p>
@@ -163,7 +163,7 @@ export function quotaExceededEmail(q: {
   used: number; limit: number;
 }) {
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:#dc2626;padding:28px 32px">
     <p style="color:#fff;font-size:20px;font-weight:700;margin:0">🚨 API Quota Exhausted — Service Paused</p>
@@ -207,7 +207,7 @@ export function invoiceReadyEmail(inv: {
     new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 2 }).format(c / 100);
   const paymentUrl = inv.invoiceId ? `https://algolend.co.za/pay/${inv.invoiceId}` : null;
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:32px;text-align:center">
     <p style="color:#fff;font-size:24px;font-weight:700;margin:0">AlgoLend</p>
@@ -259,7 +259,7 @@ export function upgradeRequestEmail(req: {
     : `Feature request: <strong>${req.feature}</strong>`;
 
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:#7C3AED;padding:28px 32px">
     <p style="color:#fff;font-size:20px;font-weight:700;margin:0">Upgrade Request</p>
@@ -295,7 +295,7 @@ export function userInviteEmail(inv: {
     viewer:       'Viewer',
   };
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:40px 32px;text-align:center">
     <p style="color:#fff;font-size:26px;font-weight:700;margin:0">You're invited to AlgoLend</p>
@@ -332,7 +332,7 @@ export function welcomeClientEmail(client: {
   name: string; contact: string; slug: string; portalUrl: string;
 }) {
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:40px 32px;text-align:center">
     <p style="color:#fff;font-size:28px;font-weight:700;margin:0">Welcome to AlgoLend!</p>
@@ -371,7 +371,7 @@ export function biztechInvoiceReminderEmail(inv: {
   const payUrl = inv.invoiceId ? `https://algolend.co.za/biztech-invoice/${inv.invoiceId}` : null;
 
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:${isOverdue ? '#dc2626' : '#5C3BCF'};padding:24px 32px">
     <p style="color:#fff;font-size:18px;font-weight:700;margin:0">${isOverdue ? `⚠ Invoice Overdue — ${inv.daysOverdue} days` : 'Invoice Payment Reminder'}</p>
@@ -416,7 +416,7 @@ export function biztechInvoiceReadyEmail(inv: {
   const payUrl = `https://algolend.co.za/biztech-invoice/${inv.invoiceId}`;
 
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:linear-gradient(135deg,#31005E,#5C3BCF);padding:32px;text-align:center">
     <p style="color:#fff;font-size:24px;font-weight:700;margin:0">MINT<span style="color:#DDC357">BizTech</span></p>
@@ -486,7 +486,7 @@ export function commissionStatementEmail(stmt: {
     </tr>`).join('');
 
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:640px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
 
   <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:36px 32px">
@@ -568,7 +568,7 @@ export function demoBookingEmail(info: {
   agentName: string;
 }) {
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:28px 32px">
     <p style="color:#fff;font-size:20px;font-weight:700;margin:0">Demo Booked</p>
@@ -611,7 +611,7 @@ export function commissionUpdateEmail(info: {
   const isPaid = info.status === 'Paid';
 
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:${isPaid ? 'linear-gradient(135deg,#059669,#34D399)' : 'linear-gradient(135deg,#7C3AED,#9B5CF6)'};padding:28px 32px">
     <p style="color:#fff;font-size:20px;font-weight:700;margin:0">${isPaid ? 'Commission Paid' : 'Commission Approved for Payroll'}</p>
@@ -655,7 +655,7 @@ export function newLeadNotificationEmail(info: {
 }) {
   const leadUrl = `${info.portalUrl}/telemarketer/leads/${info.lead.id}`;
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:28px 32px">
     <p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 4px">AlgoLend</p>
@@ -705,7 +705,7 @@ export function newWebsiteLeadAdminEmail(info: {
 }) {
   const leadUrl = `${info.portalUrl}/leads/${info.lead.id}`;
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:28px 32px">
     <p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 4px">AlgoLend</p>
@@ -756,7 +756,7 @@ export function newSupportTicketAdminEmail(info: {
     info.ticket.priority === 'urgent' ? '#dc2626' :
     info.ticket.priority === 'high'   ? '#d97706' : '#7C3AED';
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:28px 32px">
     <p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 4px">AlgoLend</p>
@@ -796,7 +796,7 @@ export function supportTicketReplyEmail(info: {
   staffName:     string;
 }) {
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:28px 32px">
     <p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 4px">AlgoLend Support</p>
@@ -828,7 +828,7 @@ export function demoConfirmationEmail(info: {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   });
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:32px;text-align:center">
     <p style="color:#fff;font-size:24px;font-weight:700;margin:0">AlgoLend</p>
@@ -886,7 +886,7 @@ export function staleLeadDigestEmail(info: {
     </tr>`).join('');
 
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:620px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:#d97706;padding:24px 32px">
     <p style="color:#fff;font-size:18px;font-weight:700;margin:0">Stale lead alert — ${info.leads.length} lead${info.leads.length !== 1 ? 's' : ''} need attention</p>
@@ -933,7 +933,7 @@ export function managerApprovalRequestEmail(info: {
     new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 0 }).format(c / 100);
   const approvalUrl = `${info.adminUrl}/approvals`;
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:580px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:linear-gradient(135deg,#0369a1,#0ea5e9);padding:28px 32px">
     <p style="color:#fff;font-size:20px;font-weight:700;margin:0">Proposal approval required</p>
@@ -976,7 +976,7 @@ export function proposalApprovalResultEmail(info: {
   const fmt = (c: number) =>
     new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR', minimumFractionDigits: 0 }).format(c / 100);
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:560px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:${info.approved ? 'linear-gradient(135deg,#059669,#34D399)' : '#dc2626'};padding:28px 32px">
     <p style="color:#fff;font-size:20px;font-weight:700;margin:0">
@@ -1051,7 +1051,7 @@ export function followUpReminderEmail(info: {
   const todayCount   = info.followUps.length - overdueCount;
 
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:660px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:linear-gradient(135deg,#7C3AED,#9B5CF6);padding:28px 32px">
     <p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:3px;text-transform:uppercase;margin:0 0 4px">AlgoLend</p>
@@ -1106,7 +1106,7 @@ export function biztechQuoteEmail(q: {
   const viewUrl = `https://algolend.co.za/biztech-quote/${q.quoteId}`;
 
   return `<!DOCTYPE html>
-<html><body style="font-family:Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
+<html><body style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#1a1f36;background:#f5f6fa;margin:0;padding:24px">
 <div style="max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 16px rgba(0,0,0,0.08)">
   <div style="background:linear-gradient(135deg,#31005E,#5C3BCF);padding:32px;text-align:center">
     <p style="color:#fff;font-size:24px;font-weight:700;margin:0">MINT<span style="color:#DDC357">BizTech</span></p>
