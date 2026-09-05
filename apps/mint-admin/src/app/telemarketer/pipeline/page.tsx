@@ -285,8 +285,8 @@ export default function PipelinePage() {
             icon: TrendingUp,
           },
           {
-            label: overdueAll > 0 ? `${overdueAll} Overdue` : 'Follow-ups Due',
-            value: dueToday,
+            label: overdueAll > 0 ? 'Overdue' : 'Follow-ups Due',
+            value: overdueAll > 0 ? overdueAll : dueToday,
             sub: overdueAll > 0 ? 'Needs attention now' : 'Due today',
             color: overdueAll > 0 ? '#F87171' : '#60A5FA',
             rgb:   overdueAll > 0 ? '248,113,113' : '96,165,250',
@@ -298,7 +298,6 @@ export default function PipelinePage() {
             <div
               key={s.label}
               className="bento-card p-4 relative overflow-hidden"
-              style={{ borderTop: `3px solid ${s.color}` }}
             >
               <div className="absolute -top-6 -right-4 w-16 h-16 rounded-full pointer-events-none"
                 style={{ background: `radial-gradient(circle, rgba(${s.rgb},0.15) 0%, transparent 70%)` }} />
