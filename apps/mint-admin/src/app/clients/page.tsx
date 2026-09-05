@@ -688,7 +688,7 @@ export default function ClientsPage() {
                       role="switch"
                       aria-checked={enabled}
                       className="relative w-10 h-5 rounded-full transition-colors shrink-0"
-                      style={{ background: enabled ? 'var(--color-purple)' : 'rgba(255,255,255,0.1)' }}
+                      style={{ background: enabled ? 'var(--color-purple)' : 'var(--color-track-off)' }}
                     >
                       <div
                         className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${

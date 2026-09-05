@@ -260,7 +260,7 @@ export default function MarketplacePage() {
                       role="switch" aria-checked={draft.require_id_verified}
                       onClick={() => setDraft(d => ({ ...d, require_id_verified: !d.require_id_verified }))}
                       className="relative w-10 h-5 rounded-full transition-colors cursor-pointer"
-                      style={{ background: draft.require_id_verified ? 'var(--color-purple)' : 'rgba(255,255,255,0.1)' }}
+                      style={{ background: draft.require_id_verified ? 'var(--color-purple)' : 'var(--color-track-off)' }}
                     >
                       <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${draft.require_id_verified ? 'translate-x-5' : 'translate-x-0.5'}`} />
                     </button>
@@ -344,7 +344,7 @@ export default function MarketplacePage() {
                   role="switch" aria-checked={draft.active}
                   onClick={() => setDraft(d => ({ ...d, active: !d.active }))}
                   className="relative w-10 h-5 rounded-full transition-colors cursor-pointer shrink-0"
-                  style={{ background: draft.active ? 'var(--color-green)' : 'rgba(255,255,255,0.1)' }}
+                  style={{ background: draft.active ? 'var(--color-green)' : 'var(--color-track-off)' }}
                 >
                   <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${draft.active ? 'translate-x-5' : 'translate-x-0.5'}`} />
                 </button>

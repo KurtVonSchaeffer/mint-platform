@@ -61,6 +61,7 @@
   --color-faint-bg:     rgba(255, 255, 255, 0.03);/* subtle card inner bg */
   --color-icon-bg:      rgba(255, 255, 255, 0.04);/* icon container bg   */
   --color-fill-subtle:  rgba(255, 255, 255, 0.06);/* hover fill, code/pill chip bg */
+  --color-track-off:    rgba(255, 255, 255, 0.1); /* toggle-switch off-state track */
 
   /* ── Motion ── */
   --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
@@ -105,6 +106,7 @@ html[data-theme="light"] {
   --color-faint-bg:     rgba(0, 0, 0, 0.02);
   --color-icon-bg:      rgba(0, 0, 0, 0.04);
   --color-fill-subtle:  rgba(0, 0, 0, 0.05);
+  --color-track-off:    rgba(0, 0, 0, 0.12);
 }
 
 /* ─── Reset & Base ─────────────────────────────────────────────── */

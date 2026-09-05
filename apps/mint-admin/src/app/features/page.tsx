@@ -318,7 +318,7 @@ export default function FeaturesPage() {
                             aria-checked={enabled}
                             aria-label={`${enabled ? 'Disable' : 'Enable'} ${FEATURE_LABELS[feat]}`}
                             className="relative w-10 h-5 rounded-full transition-colors shrink-0"
-                            style={{ background: enabled ? 'var(--color-purple)' : 'rgba(255,255,255,0.1)' }}
+                            style={{ background: enabled ? 'var(--color-purple)' : 'var(--color-track-off)' }}
                           >
                             <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${enabled ? 'translate-x-5' : 'translate-x-0.5'}`} />
                           </button>

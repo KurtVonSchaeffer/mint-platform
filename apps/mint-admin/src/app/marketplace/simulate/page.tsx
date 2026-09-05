@@ -162,7 +162,7 @@ export default function SimulatePage() {
                 <button role="switch" aria-checked={form.idVerified}
                   onClick={() => set('idVerified', !form.idVerified)}
                   className="relative w-10 h-5 rounded-full transition-colors cursor-pointer"
-                  style={{ background: form.idVerified ? 'var(--color-purple)' : 'rgba(255,255,255,0.1)' }}>
+                  style={{ background: form.idVerified ? 'var(--color-purple)' : 'var(--color-track-off)' }}>
                   <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.idVerified ? 'translate-x-5' : 'translate-x-0.5'}`} />
                 </button>
               </div>

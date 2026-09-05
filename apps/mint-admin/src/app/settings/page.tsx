@@ -122,7 +122,7 @@ export default function SettingsPage() {
                   role="switch"
                   aria-checked={enabled}
                   className="relative w-10 h-5 rounded-full transition-colors"
-                  style={{ background: enabled ? 'var(--color-purple)' : 'rgba(255,255,255,0.1)' }}
+                  style={{ background: enabled ? 'var(--color-purple)' : 'var(--color-track-off)' }}
                   onClick={() => toggleNotification(label)}
                 >
                   <span

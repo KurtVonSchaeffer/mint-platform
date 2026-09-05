@@ -1147,7 +1147,7 @@ await fetch('https://admin.mintplatforms.co.za/api/usage/log', {
                     </Link>
                     <button onClick={toggleMpActive} disabled={mpSaving} role="switch" aria-checked={mpPolicy.active}
                       className="relative w-10 h-5 rounded-full transition-colors cursor-pointer shrink-0 disabled:opacity-50"
-                      style={{ background: mpPolicy.active ? 'var(--color-green)' : 'rgba(255,255,255,0.1)' }}>
+                      style={{ background: mpPolicy.active ? 'var(--color-green)' : 'var(--color-track-off)' }}>
                       {mpSaving
                         ? <Loader2 size={11} className="absolute inset-0 m-auto animate-spin text-white" />
                         : <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${mpPolicy.active ? 'translate-x-5' : 'translate-x-0.5'}`} />}
