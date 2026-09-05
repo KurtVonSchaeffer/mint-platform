@@ -32,6 +32,9 @@ colors:
   neutral-gray: "#6B7280"
   mint-dark: "#10B981"
   stale-orange: "#F97316"
+  destructive-deep: "#dc2626"
+  destructive-bright: "#ef4444"
+  restore-deep: "#059669"
 typography:
   display:
     fontFamily: "Plus Jakarta Sans, Georgia, serif"
@@ -150,6 +153,14 @@ A third status vocabulary exists for the 12-stage TM pipeline (`STAGES` in `tele
 
 - **Mint Dark** (`#10B981`): a darker step of Status Green, used for "Demo Completed"/"Quoted"-type stage states — a `--color-mint-dark` CSS variable already exists for this in `globals.css` (kept as a legacy compat alias) but was missing from this document.
 - **Stale Orange** (`#F97316`): used only as the border tint on the "stale lead" escalation badge's middle tier (7+ days, between the amber "just aging" tier and the red "critical" tier) — one step more saturated than Warm Orange, which remains the tier's text/icon color. The two oranges are deliberately close but not identical; don't consolidate them into one value without checking both tiers still read as distinct steps.
+
+### Destructive Action Colors
+
+Suspending or reactivating a client (`confirmKill` in `clients/page.tsx`) is the single most severe, confirmation-gated action in the app, so its confirm button uses its own deeper gradient rather than the standard Status Red/Green: **Destructive Deep** (`#dc2626`) → **Destructive Bright** (`#ef4444`) for suspend, **Restore Deep** (`#059669`) → Status Green for reactivate. Reserve this pair for irreversible/high-consequence confirmations — everyday errors and success states stay on Status Red/Green.
+
+### Third-Party Brand Colors (excluded from this system)
+
+Some integrations render with the third party's own brand color instead of AlgoLend's, so the button/badge is recognizable as connecting to that specific service — e.g. PayFast's blue (`#0a6ee0`/`#34a7ff`) on the "Set up recurring payment" button in `clients/[id]/page.tsx`. These are deliberately excluded from the token list above: they belong to the provider, not to Obsidian Command, and must not be renamed into this system's palette or swapped for an AlgoLend color.
 
 ### Agent Identity Colors
 
