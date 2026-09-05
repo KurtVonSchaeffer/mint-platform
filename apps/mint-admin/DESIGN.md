@@ -29,6 +29,7 @@ colors:
   cobalt-violet: "#5C3BCF"
   cobalt-violet-bright: "#8b6ce8"
   biztech-gold: "#DDC357"
+  amber-deep: "#F59E0B"
   bright-sky: "#38BDF8"
   periwinkle: "#818CF8"
   neutral-gray: "#6B7280"
@@ -130,8 +131,11 @@ The palette is almost monochrome by design: one hue family (violet) for emphasis
 - **Amber** (`#FBBF24`): trial, pending, enterprise-tier badge.
 - **Sky** (`#60A5FA`): informational, trial-status badge.
 - **Slate Muted** (`#9B9FB8` / `#A0A4C0`, base `rgb(75,80,128)`): the deliberately de-emphasized tier — churned clients and the entry-level "core" pricing tier both use this same muted slate-violet, distinct from every energetic status color, so a churned/base-tier badge reads as quieter, not just differently colored.
+- **Amber Deep** (`#F59E0B`): a step deeper than Status Amber, reused for "pending review" application status text and an agent-avatar gradient — Status Amber stays the lighter "trial/badge" tone, Amber Deep signals a more active caution state.
 
 Status colors always appear as a ~10% tint background with a ~20% tint border and the full-saturation color as text/icon (see `.badge-*` classes) — never as a solid fill. That keeps the status vocabulary readable without competing with the violet accent for visual weight.
+
+`reports/page.tsx` also cycles a 7-color array (`C`) through chart series — a categorical data-viz palette, a different job from the semantic status colors above. It reuses Electric Violet, Mint Dark, Amber Deep, Stale Orange, and a value close to `#94A3B8` alongside two colors used only there: a plain chart blue (`#3B82F6`) and magenta (`#EC4899`), neither tied to any semantic meaning elsewhere.
 
 ### Lead / Call-Outcome Colors
 
