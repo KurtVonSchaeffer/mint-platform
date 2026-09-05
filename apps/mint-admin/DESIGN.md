@@ -28,6 +28,7 @@ colors:
   pink: "#F472B6"
   cobalt-violet: "#5C3BCF"
   cobalt-violet-bright: "#8b6ce8"
+  biztech-gold: "#DDC357"
   bright-sky: "#38BDF8"
   periwinkle: "#818CF8"
   neutral-gray: "#6B7280"
@@ -169,7 +170,7 @@ Telemarketers are each assigned a color (`AGENT_COLORS`) purely to make their ac
 
 ### Sub-Brand Accent (BizTech)
 
-The BizTech module (`/biztech/*`, `BizTechShell.tsx`) is a distinct internal tool sharing every other token in this system, but swaps the primary accent from Electric Violet (`#7C3AED`) to **Cobalt Violet** (`#5C3BCF`) as its own identity — a deliberate sub-brand distinction, not drift. Cobalt Violet has its own gradient partner, **Cobalt Violet Bright** (`#8b6ce8`), mirroring how Electric Violet pairs with Electric Violet Bright in the main console (active-tab gradients, loading-spinner accents). Everything else (surfaces, text, status colors) is shared with the main console.
+The BizTech module (`/biztech/*`, `BizTechShell.tsx`) is a distinct internal tool sharing every other token in this system, but swaps the primary accent from Electric Violet (`#7C3AED`) to **Cobalt Violet** (`#5C3BCF`) as its own identity — a deliberate sub-brand distinction, not drift. Cobalt Violet has its own gradient partner, **Cobalt Violet Bright** (`#8b6ce8`), mirroring how Electric Violet pairs with Electric Violet Bright in the main console (active-tab gradients, loading-spinner accents). BizTech also has a second, distinct accent — **BizTech Gold** (`#DDC357`) — reused across 10 files (client/quote/invoice/service pages, detail panels, avatars, and one email template) almost always as the second stop in a `Cobalt Violet → BizTech Gold` gradient (e.g. a modal's top accent bar). Everything else (surfaces, text, status colors) is shared with the main console.
 
 ### Email & PDF Template Colors
 

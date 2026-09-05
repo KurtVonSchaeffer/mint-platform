@@ -326,7 +326,7 @@ export default function BizTechQuotesPage() {
             {quotes.filter(q => q.status === 'accepted').length} accepted
           </p>
           <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'var(--color-border2)' }}>
-            <div style={{ height: '100%', width: `${acceptedPct}%`, background: 'linear-gradient(90deg,#5C3BCF,#8b6ce8)', transition: 'width 1s ease-out' }} />
+            <div style={{ height: '100%', width: '100%', transformOrigin: 'left', transform: `scaleX(${acceptedPct / 100})`, background: 'linear-gradient(90deg,#5C3BCF,#8b6ce8)', transition: 'transform 1s ease-out' }} />
           </div>
         </div>
         <div className="bento-card p-5 overflow-hidden">
@@ -336,7 +336,7 @@ export default function BizTechQuotesPage() {
             {quotes.filter(q => q.status === 'sent').length} sent
           </p>
           <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: 'var(--color-border2)' }}>
-            <div style={{ height: '100%', width: `${pendingPct}%`, background: 'linear-gradient(90deg,var(--color-sky),rgba(56,189,248,0.4))', transition: 'width 1s ease-out' }} />
+            <div style={{ height: '100%', width: '100%', transformOrigin: 'left', transform: `scaleX(${pendingPct / 100})`, background: 'linear-gradient(90deg,var(--color-sky),rgba(56,189,248,0.4))', transition: 'transform 1s ease-out' }} />
           </div>
         </div>
       </div>
