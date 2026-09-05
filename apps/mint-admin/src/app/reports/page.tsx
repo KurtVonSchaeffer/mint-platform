@@ -5,6 +5,7 @@ import {
   ChevronLeft, ChevronRight, Download, TrendingUp, TrendingDown, Minus,
   Phone, Users, Trophy, BarChart2, ArrowRight, Loader2,
 } from 'lucide-react';
+import { Shell } from '@/components/Shell';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -465,6 +466,7 @@ export default function ReportsPage() {
   useEffect(() => { load(); }, [load]);
 
   return (
+    <Shell>
     <div className="space-y-6 page-enter">
 
       {/* Hidden PDF render zone */}
@@ -659,5 +661,6 @@ export default function ReportsPage() {
         </>
       )}
     </div>
+    </Shell>
   );
 }
