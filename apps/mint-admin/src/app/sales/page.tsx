@@ -344,7 +344,7 @@ export default function SalesDashboardPage() {
                                   <span className="font-mono font-bold text-sm" style={{ color }}>{agent.callsToday}</span>
                                   <span className="font-mono text-[9px]" style={{ color: 'var(--color-text3)' }}>/ 80</span>
                                 </div>
-                                <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 4, width: 72, height: 4, overflow: 'hidden' }}>
+                                <div style={{ background: 'var(--color-fill-subtle)', borderRadius: 4, width: 72, height: 4, overflow: 'hidden' }}>
                                   <div style={{ width: `${Math.max(pct, pct > 0 ? 4 : 0)}%`, height: '100%', borderRadius: 4, background: color }} />
                                 </div>
                               </div>
