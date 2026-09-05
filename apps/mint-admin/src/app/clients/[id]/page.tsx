@@ -450,7 +450,7 @@ export default function ClientDetailPage() {
             <p className="text-2xl font-bold tracking-tight stat-value" style={{ color: 'var(--color-text)' }}>
               {currentMonthCalls.toLocaleString()}
             </p>
-            <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <div className="mt-2 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--color-fill-subtle)' }}>
               <div className="h-full rounded-full transition-all duration-700" style={{ width: `${quotaPct}%`, background: quotaColor, boxShadow: `0 0 6px ${quotaColor}` }} />
             </div>
             <p className="text-[10px] mt-1.5 font-mono" style={{ color: 'var(--color-text3)' }}>
@@ -489,7 +489,7 @@ export default function ClientDetailPage() {
               <tab.icon size={13} />
               {tab.label}
               {tab.count !== null && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-mono" style={{ background: activeTab === tab.id ? 'rgba(124,58,237,0.12)' : 'rgba(255,255,255,0.06)', color: activeTab === tab.id ? 'var(--color-violet)' : 'var(--color-text3)' }}>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-mono" style={{ background: activeTab === tab.id ? 'rgba(124,58,237,0.12)' : 'var(--color-fill-subtle)', color: activeTab === tab.id ? 'var(--color-violet)' : 'var(--color-text3)' }}>
                   {tab.count}
                 </span>
               )}
@@ -554,7 +554,7 @@ export default function ClientDetailPage() {
             <div>
               <p className="eyebrow mb-0.5">Integration API</p>
               <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
-                The lender uses this key as <code className="font-mono text-[11px] px-1 rounded" style={{ background: 'rgba(255,255,255,0.06)' }}>INTEGRATION_API_KEY</code> on their server. MINT calls their API with it to push loan applications.
+                The lender uses this key as <code className="font-mono text-[11px] px-1 rounded" style={{ background: 'var(--color-fill-subtle)' }}>INTEGRATION_API_KEY</code> on their server. MINT calls their API with it to push loan applications.
               </p>
             </div>
 
@@ -959,8 +959,8 @@ export default function ClientDetailPage() {
                   <p className="eyebrow mb-0.5">Client API Keys</p>
                   <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
                     Bearer tokens that authenticate this client&apos;s deployment when calling MINT&apos;s{' '}
-                    <code className="font-mono text-[11px] px-1 rounded" style={{ background: 'rgba(255,255,255,0.06)' }}>POST /api/usage/log</code>.
-                    Keys begin with <code className="font-mono text-[11px] px-1 rounded" style={{ background: 'rgba(255,255,255,0.06)' }}>alg_</code> and are stored as SHA-256 hashes — shown once on creation.
+                    <code className="font-mono text-[11px] px-1 rounded" style={{ background: 'var(--color-fill-subtle)' }}>POST /api/usage/log</code>.
+                    Keys begin with <code className="font-mono text-[11px] px-1 rounded" style={{ background: 'var(--color-fill-subtle)' }}>alg_</code> and are stored as SHA-256 hashes — shown once on creation.
                   </p>
                 </div>
                 {apiKeys.some(k => !k.revoked_at) && (
@@ -1053,7 +1053,7 @@ export default function ClientDetailPage() {
             <div className="bento-card p-5 space-y-3">
               <p className="eyebrow">Integration guide</p>
               <p className="text-xs" style={{ color: 'var(--color-text3)' }}>
-                Add this to the client&apos;s Vercel project as <code className="font-mono text-[11px] px-1 rounded" style={{ background: 'rgba(255,255,255,0.06)' }}>MINT_API_KEY</code>, then call the endpoint from their server for each billable event.
+                Add this to the client&apos;s Vercel project as <code className="font-mono text-[11px] px-1 rounded" style={{ background: 'var(--color-fill-subtle)' }}>MINT_API_KEY</code>, then call the endpoint from their server for each billable event.
               </p>
               <pre className="text-xs leading-relaxed p-4 rounded-xl overflow-x-auto font-mono" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}>{`// server-side — never expose MINT_API_KEY client-side
 await fetch('https://admin.mintplatforms.co.za/api/usage/log', {

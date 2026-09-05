@@ -487,7 +487,7 @@ export default function TelemarketerQuotesPage() {
                 </div>
                 <button onClick={resetForm} className="p-1.5 rounded-lg transition-colors"
                   style={{ color: 'var(--color-text3)' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--color-fill-subtle)'; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}>
                   <X size={16} />
                 </button>

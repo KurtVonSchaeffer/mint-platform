@@ -20,6 +20,13 @@ colors:
   status-sky: "#60A5FA"
   slate-muted: "#9B9FB8"
   slate-muted-2: "#A0A4C0"
+  warm-orange: "#FB923C"
+  cyan: "#06B6D4"
+  indigo-violet: "#8B5CF6"
+  rose: "#FB7185"
+  cool-gray: "#9CA3AF"
+  pink: "#F472B6"
+  cobalt-violet: "#5C3BCF"
 typography:
   display:
     fontFamily: "Plus Jakarta Sans, Georgia, serif"
@@ -29,15 +36,30 @@ typography:
   body:
     fontFamily: "Plus Jakarta Sans, ui-sans-serif, system-ui, sans-serif"
     fontWeight: 400
+    fontSize: "14px"
     lineHeight: 1.5
+  caption:
+    fontFamily: "Plus Jakarta Sans, ui-sans-serif, system-ui, sans-serif"
+    fontWeight: 500
+    fontSize: "13px"
+    lineHeight: 1.4
+  micro:
+    fontFamily: "Plus Jakarta Sans, ui-sans-serif, system-ui, sans-serif"
+    fontWeight: 500
+    fontSize: "11px"
+    lineHeight: 1.3
   label:
     fontFamily: "JetBrains Mono, ui-monospace, monospace"
     fontSize: "10px"
     letterSpacing: "0.18em"
 rounded:
+  2xs: "6px"
+  xs: "8px"
   sm: "10px"
   md: "12px"
   lg: "14px"
+  xl: "16px"
+  2xl: "20px"
   full: "9999px"
 components:
   button-primary:
@@ -101,6 +123,28 @@ The palette is almost monochrome by design: one hue family (violet) for emphasis
 
 Status colors always appear as a ~10% tint background with a ~20% tint border and the full-saturation color as text/icon (see `.badge-*` classes) — never as a solid fill. That keeps the status vocabulary readable without competing with the violet accent for visual weight.
 
+### Lead / Call-Outcome Colors
+
+A second, wider status vocabulary exists specifically for lead and call-outcome states (`STATUS_CONFIG` in `leads/page.tsx` and its siblings) — it reuses the core status colors where they already fit (new→amber, contacted→sky, qualified→violet, won→green, lost→red) and adds five colors that don't belong to any other role:
+
+- **Warm Orange** (`#FB923C`): "Attempted" contact, and the "stale lead" warning treatment — distinct from Status Amber so a stale/attempted lead never reads as the same urgency as a trial-tier client badge.
+- **Cyan** (`#06B6D4`): "Call Again" — a follow-up state that is neither positive nor negative.
+- **Indigo Violet** (`#8B5CF6`): "Call Back" — deliberately a colder, more saturated violet than the brand's Electric Violet, so a scheduled callback never gets mistaken for a primary call-to-action.
+- **Rose** (`#FB7185`): "Not Interested" — a softer, less alarming negative than Status Red, since this is a lead outcome, not a system error.
+- **Cool Gray** (`#9CA3AF`): "Other" / uncategorized — deliberately desaturated, the same "quietest option" role Slate Muted plays for client tiers.
+
+### Agent Identity Colors
+
+Telemarketers are each assigned a color (`AGENT_COLORS`) purely to make their activity visually scannable in shared views (who called whom) — not a status or brand signal. The set is Violet Soft, Status Green, Status Sky, Warm Orange, **Pink** (`#F472B6`), and Status Amber, cycling in that order. Do not reuse this array's ordering or colors to mean anything other than "which agent."
+
+### Sub-Brand Accent (BizTech)
+
+The BizTech module (`/biztech/*`, `BizTechShell.tsx`) is a distinct internal tool sharing every other token in this system, but swaps the primary accent from Electric Violet (`#7C3AED`) to **Cobalt Violet** (`#5C3BCF`) as its own identity — a deliberate sub-brand distinction, not drift. Everything else (surfaces, text, status colors) is shared with the main console.
+
+### Email & PDF Template Colors
+
+Transactional emails (`lib/email.ts`) and generated PDF/print documents use their own light-mode-only, literal-hex palette (grays like `#555`/`#888`/`#aaa` for text, `#f5f6fa` page background, pastel-tinted alert boxes) instead of referencing the tokens above. This is intentional, not undocumented drift: HTML email clients render in light mode regardless of the recipient's system theme, most cannot read CSS custom properties at all, and Outlook in particular has no reliable dark-mode story. Don't try to make an email look like the dark Obsidian Command shell — match its own established light, letter-like convention instead.
+
 ### Named Rules
 **The One Accent Rule.** Violet is the only hue used for emphasis. Status colors communicate state, never "act here." A second accent hue anywhere in the product would break the "authority through rarity" premise the whole system depends on.
 
@@ -113,9 +157,13 @@ Status colors always appear as a ~10% tint background with a ~20% tint border an
 **Character:** One typeface family for prose, deliberately switched to mono whenever the content is data rather than language — the font change itself is the signal that "this is a number/code/ID, read it differently than the sentence next to it."
 
 ### Hierarchy
-- **Display/Headline** (700, `text-xl`–`text-2xl` typical, line-height 0.96, letter-spacing -0.03em): page titles (`<h1>`), hero KPI numbers.
-- **Body** (400–600, 0.8125rem–0.875rem, line-height 1.5): table cells, descriptions, form labels.
+- **Display/Headline** (700, 24–48px depending on prominence, line-height 0.96, letter-spacing -0.03em): page titles (`<h1>`), hero KPI numbers, ARR/revenue hero figures at the largest end.
+- **Body** (400–600, 14px typical): table cells, descriptions, form labels — the default text size for anything meant to be read at normal pace.
+- **Caption** (500, 13px): secondary/supporting text sitting next to body content — sub-labels, helper text, timestamps in prose form.
+- **Micro** (500, 11px): the densest tier — compact table meta, inline counts, small pill/chip text that isn't a full Eyebrow/Label.
 - **Eyebrow / Label** (mono, 10px, letter-spacing 0.18em, uppercase, text-tertiary color): section kickers, breadcrumb segments, category tags — always mono, always uppercase, always the quietest text color.
+
+This codebase's real type scale is wider than a clean 5-step hierarchy — sizes from 8px up to 48px appear throughout (9–13px for the densest UI chrome, 14–20px for body/title text, 24–48px for hero/display numbers), reflecting organic growth across many pages rather than a strictly enforced scale. Preserve this as incumbent behavior; consolidating it into fewer steps is a deliberate design decision for a future pass, not something to silently redesign here.
 
 ### Named Rules
 **The Mono-For-Data Rule.** Any numeric, tabular, or identifier value (currency, counts, IDs, timestamps) renders in JetBrains Mono. Prose never does. This is the system's primary way of visually separating "read this" from "scan this."
@@ -147,6 +195,8 @@ Radius scales with the size and importance of the container: small controls get 
 - **Buttons** — 12px radius.
 - **Cards / panels** — 14px radius, always with a 1px border-subtle edge even on a filled background (the border, not the shadow, is what defines a flat card's boundary at rest).
 - **Badges / status chips / pills** — fully rounded (9999px), always paired with a matching-hue 1px border at ~20% opacity.
+- **Small chips, tags, and code snippets** — 6px (`{rounded.2xs}`) or 8px (`{rounded.xs}`), one step below inputs, for compact inline elements that shouldn't compete visually with a full card or button.
+- **Modals, slide-overs, and larger surfaces** — 16px (`{rounded.xl}`) or 20px (`{rounded.2xl}`), one step above cards, for containers that hold a card-based layout inside them.
 
 ## Components
 

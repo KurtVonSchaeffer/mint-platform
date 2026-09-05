@@ -435,7 +435,7 @@ export default function QuotesPage() {
                     <Pencil size={12} /> Edit
                   </button>
                 ) : null}
-                <button onClick={() => { setSelected(null); setEditState(null); }} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--color-text3)' }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}><X size={16} /></button>
+                <button onClick={() => { setSelected(null); setEditState(null); }} className="p-1.5 rounded-lg transition-colors" style={{ color: 'var(--color-text3)' }} onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'; (e.currentTarget as HTMLElement).style.background = 'var(--color-fill-subtle)'; }} onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}><X size={16} /></button>
               </div>
             </div>
 

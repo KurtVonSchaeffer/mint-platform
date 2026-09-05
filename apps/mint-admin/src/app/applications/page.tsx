@@ -151,7 +151,7 @@ function DocumentRow({ doc }: { doc: Doc }) {
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-lg shrink-0 transition-colors"
           style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text2)' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'var(--color-fill-subtle)'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
         >
           <Download size={10} /> View
@@ -466,7 +466,7 @@ export default function ApplicationsPage() {
                 {cfg.label}
                 <span
                   className="px-1.5 py-0.5 rounded-full text-[10px] font-bold"
-                  style={isActive ? { background: cfg.border, color: cfg.color } : { background: 'rgba(255,255,255,0.06)', color: 'var(--color-text3)' }}
+                  style={isActive ? { background: cfg.border, color: cfg.color } : { background: 'var(--color-fill-subtle)', color: 'var(--color-text3)' }}
                 >
                   {count}
                 </span>

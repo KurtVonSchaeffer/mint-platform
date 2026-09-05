@@ -222,7 +222,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues, leadId }: 
           style={{
             width: 220,
             background: 'rgba(0,0,0,0.25)',
-            borderRight: '1px solid rgba(255,255,255,0.06)',
+            borderRight: '1px solid var(--color-border2)',
           }}
         >
           {/* Logo / brand */}
@@ -246,7 +246,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues, leadId }: 
                     {/* Connecting line */}
                     {i < STEPS.length - 1 && (
                       <div className="absolute left-[15px] top-[32px] w-px h-[calc(100%-4px)]"
-                        style={{ background: done ? 'rgba(52,211,153,0.3)' : 'rgba(255,255,255,0.06)' }} />
+                        style={{ background: done ? 'rgba(52,211,153,0.3)' : 'var(--color-border2)' }} />
                     )}
                     <button
                       className="relative w-full flex items-center gap-3 px-2 py-2 rounded-xl text-left transition-all"
@@ -294,7 +294,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues, leadId }: 
 
           {/* Company preview at bottom */}
           {name && step !== 'done' && (
-            <div className="mt-6 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="mt-6 pt-4" style={{ borderTop: '1px solid var(--color-border2)' }}>
               <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-bold mb-2"
                 style={{ background: primaryColor, color: '#fff' }}>
                 {name[0]?.toUpperCase()}
@@ -343,7 +343,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues, leadId }: 
 
           {/* Thin progress bar */}
           {step !== 'done' && (
-            <div className="mx-8 mb-5 h-px rounded-full shrink-0" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <div className="mx-8 mb-5 h-px rounded-full shrink-0" style={{ background: 'var(--color-border2)' }}>
               <div
                 className="h-px rounded-full transition-all duration-500"
                 style={{ width: `${((stepIndex + 1) / STEPS.length) * 100}%`, background: 'linear-gradient(90deg,#7C3AED,#A78BFA)' }}
@@ -543,7 +543,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues, leadId }: 
             {/* ── Step 4: Features ── */}
             {step === 'features' && (
               <div className="space-y-1">
-                <p className="text-xs mb-4 pb-4" style={{ color: 'var(--color-text3)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <p className="text-xs mb-4 pb-4" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>
                   Pre-populated from the {tier === 'core' ? 'Starter' : 'Enterprise'} tier. Toggle to customise.
                   <span className="ml-2 font-semibold" style={{ color: 'var(--color-violet)' }}>
                     {ALL_FEATURES.filter((f) => features[f]).length}/{ALL_FEATURES.length} enabled
@@ -590,9 +590,9 @@ export function OnboardingWizard({ onClose, onCreated, initialValues, leadId }: 
                         ? (opt
                           ? { background: 'rgba(124,58,237,0.1)', border: '1.5px solid rgba(124,58,237,0.4)' }
                           : { background: 'var(--color-card-hover)', border: '1.5px solid var(--color-border)' })
-                        : { background: 'rgba(255,255,255,0.02)', border: '1.5px solid rgba(255,255,255,0.06)' }}
+                        : { background: 'rgba(255,255,255,0.02)', border: '1.5px solid var(--color-border2)' }}
                       onMouseEnter={(e) => { if (mpOptIn !== opt) (e.currentTarget as HTMLElement).style.borderColor = 'rgba(124,58,237,0.2)'; }}
-                      onMouseLeave={(e) => { if (mpOptIn !== opt) (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)'; }}
+                      onMouseLeave={(e) => { if (mpOptIn !== opt) (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border2)'; }}
                     >
                       <div className="flex items-center gap-2 mb-1.5">
                         <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all"
@@ -639,7 +639,7 @@ export function OnboardingWizard({ onClose, onCreated, initialValues, leadId }: 
             {/* ── Step 6: Documents ── */}
             {step === 'documents' && (
               <div className="space-y-3">
-                <p className="text-xs pb-4 leading-relaxed" style={{ color: 'var(--color-text3)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                <p className="text-xs pb-4 leading-relaxed" style={{ color: 'var(--color-text3)', borderBottom: '1px solid var(--color-border2)' }}>
                   Required documents must be uploaded before the client can be activated. All files are stored securely.
                 </p>
                 {REQUIRED_DOCS.map((doc) => {

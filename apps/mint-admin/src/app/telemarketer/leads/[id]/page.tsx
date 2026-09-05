@@ -940,7 +940,7 @@ export default function LeadDetailPage() {
                   className="inline-flex items-center gap-1 text-[9px] font-mono px-1.5 py-0.5 rounded-md transition-all"
                   title="Copy lead ID"
                   style={{
-                    background: copiedLeadId ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.06)',
+                    background: copiedLeadId ? 'rgba(52,211,153,0.1)' : 'var(--color-fill-subtle)',
                     color:      copiedLeadId ? '#34D399' : 'var(--color-text3)',
                     border:     `1px solid ${copiedLeadId ? 'rgba(52,211,153,0.25)' : 'var(--color-border2)'}`,
                   }}>

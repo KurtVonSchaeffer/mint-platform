@@ -57,7 +57,7 @@ function CallRing({ calls, goal }: { calls: number; goal: number }) {
     <div className="relative flex items-center justify-center">
       <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
         {/* Track */}
-        <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="9" />
+        <circle cx="60" cy="60" r={r} fill="none" stroke="var(--color-fill-subtle)" strokeWidth="9" />
         {/* Fill */}
         <circle
           cx="60" cy="60" r={r}
@@ -345,7 +345,7 @@ export default function TelemarketerHomePage() {
                         {Math.min(Math.round((s.earnings.commissionEarned / s.earnings.expectedPayroll) * 100), 100)}%
                       </p>
                     </div>
-                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--color-fill-subtle)' }}>
                       <div
                         className="h-full rounded-full"
                         style={{
@@ -482,7 +482,7 @@ export default function TelemarketerHomePage() {
               </p>
             </div>
 
-            <div className="h-2 rounded-full overflow-hidden mb-2.5" style={{ background: 'rgba(255,255,255,0.06)' }}>
+            <div className="h-2 rounded-full overflow-hidden mb-2.5" style={{ background: 'var(--color-fill-subtle)' }}>
               <div
                 className="h-full rounded-full"
                 style={{

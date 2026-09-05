@@ -618,7 +618,7 @@ export default function AdminLeadDetailPage() {
             <h2 className="text-sm font-bold mb-5" style={{ color: 'var(--color-text)' }}>
               Activity Timeline
               <span className="ml-2 text-[10px] font-normal px-1.5 py-0.5 rounded-full"
-                style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--color-text3)' }}>
+                style={{ background: 'var(--color-fill-subtle)', color: 'var(--color-text3)' }}>
                 {timeline.length} events
               </span>
             </h2>
@@ -636,7 +636,7 @@ export default function AdminLeadDetailPage() {
                     <div key={ev.id} className="flex gap-4"
                       style={{ animation: 'fade-up 0.4s cubic-bezier(0.16,1,0.3,1) both', animationDelay: `${Math.min(idx * 50, 400)}ms` }}>
                       <div className="relative z-10 w-8 h-8 rounded-full flex items-center justify-center shrink-0"
-                        style={{ background: ev.iconBg, color: ev.iconColor, border: '1px solid rgba(255,255,255,0.06)' }}>
+                        style={{ background: ev.iconBg, color: ev.iconColor, border: '1px solid var(--color-border2)' }}>
                         {ev.icon}
                       </div>
                       <div className="min-w-0 pt-1 pb-2">

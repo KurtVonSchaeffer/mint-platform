@@ -21,14 +21,14 @@ function ShimmerRow() {
           <motion.div
             style={{
               height: 12, width: w, borderRadius: 6,
-              background: 'rgba(255,255,255,0.06)',
+              background: 'var(--color-fill-subtle)',
               overflow: 'hidden', position: 'relative',
             }}
           >
             <motion.div
               style={{
                 position: 'absolute', inset: 0,
-                background: 'linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.06) 50%,transparent 100%)',
+                background: 'linear-gradient(90deg,transparent 0%,var(--color-fill-subtle) 50%,transparent 100%)',
               }}
               animate={{ x: ['-100%', '200%'] }}
               transition={{ duration: 1.2, repeat: Infinity, ease: 'linear', delay: i * 0.05 }}

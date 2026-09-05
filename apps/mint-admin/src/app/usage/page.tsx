@@ -209,7 +209,7 @@ export default function UsagePage() {
                           <td className="font-mono" style={{ color: 'var(--color-amber)' }}>{fmt(v.cost)}</td>
                           <td>
                             <div className="flex items-center gap-2">
-                              <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)', minWidth: 60 }}>
+                              <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--color-fill-subtle)', minWidth: 60 }}>
                                 <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--color-violet)' }} />
                               </div>
                               <span className="text-xs font-mono shrink-0" style={{ color: 'var(--color-text3)' }}>{pct}%</span>
@@ -239,7 +239,7 @@ export default function UsagePage() {
                             {c.calls.toLocaleString()} / {c.quota.toLocaleString()} · {fmt(c.cost)}
                           </span>
                         </div>
-                        <div className="h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                        <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--color-fill-subtle)' }}>
                           <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: barColor, boxShadow: `0 0 8px ${barColor}` }} />
                         </div>
                       </div>

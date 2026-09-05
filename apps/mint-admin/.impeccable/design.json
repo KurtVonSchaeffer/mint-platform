@@ -21,11 +21,20 @@
       "status-amber": { "role": "warning", "displayName": "Status Amber", "canonical": "#FBBF24" },
       "status-sky": { "role": "info", "displayName": "Status Sky", "canonical": "#60A5FA" },
       "slate-muted": { "role": "neutral", "displayName": "Slate Muted", "canonical": "#9B9FB8" },
-      "slate-muted-2": { "role": "neutral", "displayName": "Slate Muted 2", "canonical": "#A0A4C0" }
+      "slate-muted-2": { "role": "neutral", "displayName": "Slate Muted 2", "canonical": "#A0A4C0" },
+      "warm-orange": { "role": "status", "displayName": "Warm Orange", "canonical": "#FB923C" },
+      "cyan": { "role": "status", "displayName": "Cyan", "canonical": "#06B6D4" },
+      "indigo-violet": { "role": "status", "displayName": "Indigo Violet", "canonical": "#8B5CF6" },
+      "rose": { "role": "status", "displayName": "Rose", "canonical": "#FB7185" },
+      "cool-gray": { "role": "status", "displayName": "Cool Gray", "canonical": "#9CA3AF" },
+      "pink": { "role": "identity", "displayName": "Pink", "canonical": "#F472B6" },
+      "cobalt-violet": { "role": "primary", "displayName": "Cobalt Violet", "canonical": "#5C3BCF" }
     },
     "typographyMeta": {
       "display": { "displayName": "Display / Headline", "purpose": "Page titles and hero KPI numbers. Tight line-height (0.96), negative tracking (-0.03em to -0.04em)." },
-      "body": { "displayName": "Body", "purpose": "Prose, table cells, descriptions, form labels." },
+      "body": { "displayName": "Body", "purpose": "Prose, table cells, descriptions, form labels. Default reading size at 14px." },
+      "caption": { "displayName": "Caption", "purpose": "Secondary/supporting text next to body content — sub-labels, helper text, timestamps in prose form. 13px." },
+      "micro": { "displayName": "Micro", "purpose": "The densest tier — compact table meta, inline counts, small pill/chip text. 11px." },
       "label": { "displayName": "Eyebrow / Mono Label", "purpose": "Any numeric, tabular, or metadata value: currency, counts, IDs, timestamps, section kickers. Always mono, often uppercase." }
     },
     "shadows": [

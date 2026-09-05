@@ -94,7 +94,7 @@ function CopyButton({ text }: { text: string }) {
   }
   return (
     <button onClick={copy} className="p-1.5 rounded-lg transition-colors"
-      style={{ color: copied ? 'var(--color-green)' : 'var(--color-text3)', background: 'rgba(255,255,255,0.06)' }}
+      style={{ color: copied ? 'var(--color-green)' : 'var(--color-text3)', background: 'var(--color-fill-subtle)' }}
       title="Copy to clipboard">
       {copied ? <Check size={13} /> : <Copy size={13} />}
     </button>

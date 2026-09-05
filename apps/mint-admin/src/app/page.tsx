@@ -324,7 +324,7 @@ function SourceAnalytics({ sources, total, loading }: { sources: SourceStat[]; t
                 {loading ? (
                   <div className="h-1.5 rounded-full animate-pulse" style={{ background: 'var(--color-surface3)', width: '60%' }} />
                 ) : (
-                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--color-fill-subtle)' }}>
                     <div
                       className="h-full rounded-full transition-all duration-700"
                       style={{

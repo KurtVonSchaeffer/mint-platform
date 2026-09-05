@@ -77,7 +77,7 @@ export function InvoiceDetailPanel({ inv, actioning, onClose, onAction, onRemind
             className="p-1.5 rounded-lg transition-colors"
             aria-label="Close"
             style={{ color: 'var(--color-text3)' }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'; (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text)'; (e.currentTarget as HTMLElement).style.background = 'var(--color-fill-subtle)'; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = 'var(--color-text3)'; (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
           >
             <X size={16} />

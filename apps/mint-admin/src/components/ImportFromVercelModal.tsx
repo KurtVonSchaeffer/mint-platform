@@ -149,7 +149,7 @@ export function ImportFromVercelModal({ onClose, onImported }: Props) {
             onClick={onClose}
             className="p-2 rounded-xl transition-colors cursor-pointer"
             style={{ color: 'var(--color-text3)' }}
-            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)'; }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--color-fill-subtle)'; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
           >
             <X size={18} />

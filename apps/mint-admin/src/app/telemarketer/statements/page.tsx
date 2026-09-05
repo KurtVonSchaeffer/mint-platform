@@ -617,7 +617,7 @@ function CountUp({
 function ShimmerCard() {
   return (
     <div className="bento-card p-4" style={{ position: 'relative', overflow: 'hidden', minHeight: 96 }}>
-      <div style={{ height: 12, width: '50%', borderRadius: 6, background: 'rgba(255,255,255,0.06)', marginBottom: 14, marginTop: 4 }} />
+      <div style={{ height: 12, width: '50%', borderRadius: 6, background: 'var(--color-fill-subtle)', marginBottom: 14, marginTop: 4 }} />
       <div style={{ height: 10, width: '35%', borderRadius: 4, background: 'rgba(255,255,255,0.04)', marginBottom: 8 }} />
       <div style={{ height: 22, width: '55%', borderRadius: 6, background: 'rgba(255,255,255,0.08)' }} />
       <motion.div

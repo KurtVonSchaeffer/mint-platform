@@ -360,7 +360,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
         >
           <Search size={13} style={{ flexShrink: 0 }} />
           <span className="flex-1">Search pages, features…</span>
-          <kbd className="text-[10px] px-1.5 py-0.5 rounded font-mono" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <kbd className="text-[10px] px-1.5 py-0.5 rounded font-mono" style={{ background: 'var(--color-fill-subtle)', border: '1px solid rgba(255,255,255,0.08)' }}>
             ⌘K
           </kbd>
         </button>

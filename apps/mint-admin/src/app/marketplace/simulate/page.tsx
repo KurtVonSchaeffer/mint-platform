@@ -140,7 +140,7 @@ export default function SimulatePage() {
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="text-xs font-medium" style={{ color: 'var(--color-text3)' }}>{label}</label>
                     {key === 'existingMonthlyObligations' && (
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: dsr > 45 ? 'rgba(248,113,113,0.12)' : 'rgba(255,255,255,0.06)', color: dsr > 45 ? 'var(--color-red)' : 'var(--color-text3)' }}>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: dsr > 45 ? 'rgba(248,113,113,0.12)' : 'var(--color-fill-subtle)', color: dsr > 45 ? 'var(--color-red)' : 'var(--color-text3)' }}>
                         DSR {dsr}%
                       </span>
                     )}
@@ -246,7 +246,7 @@ export default function SimulatePage() {
                             <div>
                               <div className="flex items-center gap-2">
                                 <span className="w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center shrink-0"
-                                  style={{ background: i === 0 ? 'rgba(52,211,153,0.15)' : 'rgba(255,255,255,0.06)', color: i === 0 ? 'var(--color-green)' : 'var(--color-text3)' }}>
+                                  style={{ background: i === 0 ? 'rgba(52,211,153,0.15)' : 'var(--color-fill-subtle)', color: i === 0 ? 'var(--color-green)' : 'var(--color-text3)' }}>
                                   {i + 1}
                                 </span>
                                 <p className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{o.lenderName}</p>
