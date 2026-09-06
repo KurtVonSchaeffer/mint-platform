@@ -7,7 +7,7 @@ import {
   TrendingUp, Trophy, Target, Clock, Sparkles, MessageSquare,
   Star, CalendarClock, CalendarCheck2, FileText, Scale, XCircle,
   PhoneOutgoing, ArrowRight, ChevronRight, ChevronDown, ChevronsRight,
-  EyeOff, MoreHorizontal,
+  EyeOff, MoreHorizontal, Search, X,
 } from 'lucide-react';
 import { getAgentId } from '@/lib/telemarketer-agent';
 import { TwilioCallButton } from '@/components/TwilioCallButton';
@@ -151,6 +151,7 @@ export default function PipelinePage() {
   const [dragOver,       setDragOver]       = useState<string | null>(null);
   const [stagePicker,    setStagePicker]    = useState<string | null>(null);
   const [hideEmpty,      setHideEmpty]      = useState(true);
+  const [companyFilter,  setCompanyFilter]  = useState('');
   const agentIdRef = useRef<string>('');
 
   // Close stage picker on outside click
@@ -198,15 +199,19 @@ export default function PipelinePage() {
     }
   }
 
+  const filteredLeads = companyFilter.trim()
+    ? leads.filter(l => l.company.toLowerCase().includes(companyFilter.trim().toLowerCase()))
+    : leads;
+
   function getLeadsForStage(stageId: string) {
-    return leads.filter(l => normalizeStatus(l.tm_status) === stageId);
+    return filteredLeads.filter(l => normalizeStatus(l.tm_status) === stageId);
   }
 
-  const totalLeads = leads.length;
-  const wonLeads   = leads.filter(l => normalizeStatus(l.tm_status) === 'Won').length;
+  const totalLeads = filteredLeads.length;
+  const wonLeads   = filteredLeads.filter(l => normalizeStatus(l.tm_status) === 'Won').length;
   const convRate   = totalLeads > 0 ? Math.round((wonLeads / totalLeads) * 100) : 0;
-  const overdueAll = leads.filter(l => isOverdue(l.next_follow_up)).length;
-  const dueToday   = leads.filter(l => isDueToday(l.next_follow_up)).length;
+  const overdueAll = filteredLeads.filter(l => isOverdue(l.next_follow_up)).length;
+  const dueToday   = filteredLeads.filter(l => isDueToday(l.next_follow_up)).length;
 
   if (loading) {
     return (
@@ -315,8 +320,41 @@ export default function PipelinePage() {
         })}
       </div>
 
+      {/* ── Company filter ───────────────────────────────── */}
+      {leads.length > 0 && (
+        <div className="relative">
+          <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--color-text3)' }} />
+          <input
+            type="text"
+            placeholder="Filter by company…"
+            className="field-input w-full"
+            style={{ paddingLeft: 32 }}
+            value={companyFilter}
+            onChange={e => setCompanyFilter(e.target.value)}
+          />
+          {companyFilter && (
+            <button
+              onClick={() => setCompanyFilter('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+              style={{ color: 'var(--color-text3)' }}
+              title="Clear filter"
+            >
+              <X size={12} />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* ── Pipeline funnel ──────────────────────────────── */}
-      {leads.length > 0 && <PipelineFunnel leads={leads} />}
+      {filteredLeads.length > 0 && <PipelineFunnel leads={filteredLeads} />}
+
+      {leads.length > 0 && filteredLeads.length === 0 && (
+        <div className="bento-card p-6 text-center">
+          <p className="text-sm" style={{ color: 'var(--color-text3)' }}>
+            No leads match company “{companyFilter.trim()}”.
+          </p>
+        </div>
+      )}
 
       {/* ── Kanban Board ─────────────────────────────────── */}
       <div
