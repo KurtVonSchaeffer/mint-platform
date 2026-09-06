@@ -79,6 +79,19 @@ export const API_USAGE_SERVICES = new Set([
   'sure_systems_pull','sms_outbound','email_outbound','api_call',
 ]);
 
+// The "check" catalog shares the client's included-checks quota
+// (client.api_quota), split evenly across whichever of these types the
+// client actually used that month. Credit-bureau checks ('bureau',
+// 'experian_score') are deliberately excluded — they're billed in full from
+// the first check every month, same as SMS/email/loan events. Mirrors the
+// pool split in app/pricing/page.tsx.
+const POOL_SERVICES = new Set([
+  'banking', 'trueid_lookup', 'sure_systems_pull',
+  'contracts', 'docuseal_envelope',
+  'liveness', 'homeaff', 'address',
+  'watchlist', 'sacrra_submission',
+]);
+
 const VAT_RATE = 0.15;
 
 /* ─── Date helpers ──────────────────────────────────────────────────── */
@@ -114,7 +127,7 @@ export async function generateMonthlyInvoices(yearMonth: string, clientId?: stri
   // 1. Fetch active + trial clients (optionally filtered to one client)
   let query = supabaseAdmin
     .from('clients')
-    .select('id, name, slug, monthly_fee_cents, status, activated_at, tier')
+    .select('id, name, slug, monthly_fee_cents, status, activated_at, tier, api_quota')
     .in('status', ['active', 'trial'])
     .is('deleted_at', null);
   if (clientId) query = query.eq('id', clientId);
@@ -197,17 +210,24 @@ export async function generateMonthlyInvoices(yearMonth: string, clientId?: stri
         .eq('month', monthStart.toISOString().slice(0, 10));
 
       if (usageRows && usageRows.length > 0) {
+        const quota          = client.api_quota ?? 0;
+        const poolRowCount   = usageRows.filter((r) => POOL_SERVICES.has(r.service)).length;
+        const perTypeIncluded = poolRowCount > 0 ? Math.round(quota / poolRowCount) : 0;
+
         for (const row of usageRows) {
-          const rate       = SERVICE_RATES[row.service] ?? 0;
-          const totalCents = rate > 0
-            ? row.total_quantity * rate
+          const rate        = SERVICE_RATES[row.service] ?? 0;
+          const billableQty = POOL_SERVICES.has(row.service)
+            ? Math.max(0, row.total_quantity - perTypeIncluded)
+            : row.total_quantity;
+          const totalCents  = rate > 0
+            ? billableQty * rate
             : row.total_cost_cents;      // use recorded cost for zero-rate services with override
 
           if (totalCents <= 0) continue;
 
           lineItems.push({
             description:      SERVICE_LABELS[row.service] ?? row.service,
-            quantity:         row.total_quantity,
+            quantity:         billableQty,
             unit_price_cents: rate,
             total_cents:      totalCents,
             service:          row.service,

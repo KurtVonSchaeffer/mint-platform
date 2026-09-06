@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
   // Fetch client
   const { data: client, error: clientErr } = await supabaseAdmin
     .from('clients')
-    .select('id, name, slug, contact_email, contact_name, api_quota, status, tier')
+    .select('id, name, slug, contact_email, contact_name, api_quota, status, tier, marketplace_opt_in')
     .eq('id', client_id)
     .is('deleted_at', null)
     .single();
@@ -119,7 +119,25 @@ export async function POST(req: NextRequest) {
       html: quotaExceededEmail({ clientName: client.name, contact: client.contact_name ?? client.contact_email.split('@')[0], slug: client.slug, used: usedThisMonth, limit: quota }) }).catch(() => {});
   }
 
-  const computedCost = cost_cents ?? (SERVICE_RATES[service] ?? 0) * quantity;
+  let computedCost = cost_cents ?? (SERVICE_RATES[service] ?? 0) * quantity;
+
+  // The MINT-origination fee only applies to clients who actually joined the
+  // marketplace, and only for loans that were actually sourced through it —
+  // never trust a client-supplied cost_cents for this on its own.
+  if (service === 'loan_disbursed' && computedCost > 0) {
+    let eligible = client.marketplace_opt_in === true;
+
+    if (eligible && application_id) {
+      const { data: application } = await supabaseAdmin
+        .from('loan_applications')
+        .select('source')
+        .eq('id', application_id)
+        .single();
+      eligible = application?.source === 'mint_marketplace';
+    }
+
+    if (!eligible) computedCost = 0;
+  }
 
   const { error: insertErr } = await supabaseAdmin.from('usage_logs').insert({
     client_id, service, quantity, cost_cents: computedCost,

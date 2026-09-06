@@ -19,7 +19,7 @@ const LEGACY_VOLUME_TIERS = [
 // nearest-label badge in the quote builder.
 export const PUBLISHED_PACKAGES = [
   { id: 'starter',    label: 'Starter',    volume: 0    },
-  { id: 'enterprise', label: 'Enterprise', volume: 2000 },
+  { id: 'enterprise', label: 'Enterprise', volume: 1000 },
 ] as const;
 
 export function parseQuota(raw: string | number | null | undefined): number {
