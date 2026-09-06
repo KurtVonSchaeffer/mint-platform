@@ -18,11 +18,13 @@ async function getSessionUser() {
 }
 
 // GET — list tickets, newest first. ?status=open filters (omit or 'all' for everything).
+// ?client_id=<uuid> narrows to one client (omit or 'all' for every client).
 export async function GET(req: NextRequest) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const status = req.nextUrl.searchParams.get('status');
+  const status   = req.nextUrl.searchParams.get('status');
+  const clientId = req.nextUrl.searchParams.get('client_id');
 
   let query = supabaseAdmin
     .from('client_support_tickets')
@@ -30,6 +32,7 @@ export async function GET(req: NextRequest) {
     .order('created_at', { ascending: false });
 
   if (status && status !== 'all') query = query.eq('status', status);
+  if (clientId && clientId !== 'all') query = query.eq('client_id', clientId);
 
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

@@ -17,6 +17,11 @@ interface Ticket {
   clients:    { id: string; name: string } | null;
 }
 
+interface ClientOption {
+  id:   string;
+  name: string;
+}
+
 const STATUS_TABS = [
   { id: 'open',        label: 'Open' },
   { id: 'in_progress', label: 'In Progress' },
@@ -63,18 +68,27 @@ export default function SupportTicketsPage() {
   const router = useRouter();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [status,  setStatus]  = useState('open');
+  const [clientFilter, setClientFilter] = useState('all');
+  const [clients, setClients] = useState<ClientOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState<string | null>(null);
 
-  const load = useCallback(async (s: string) => {
+  const load = useCallback(async (s: string, clientId: string) => {
     setLoading(true); setError(null);
-    const res = await fetch(`/api/admin/support-tickets?status=${s}`);
+    const res = await fetch(`/api/admin/support-tickets?status=${s}&client_id=${clientId}`);
     if (res.ok) setTickets((await res.json()).tickets ?? []);
     else setError('Failed to load support tickets');
     setLoading(false);
   }, []);
 
-  useEffect(() => { load(status); }, [load, status]);
+  useEffect(() => { load(status, clientFilter); }, [load, status, clientFilter]);
+
+  useEffect(() => {
+    fetch('/api/clients')
+      .then(r => r.json())
+      .then(d => setClients((d.clients ?? []).map((c: { id: string; name: string }) => ({ id: c.id, name: c.name }))))
+      .catch(() => {/* dropdown just stays empty */});
+  }, []);
 
   return (
     <Shell>
@@ -91,7 +105,7 @@ export default function SupportTicketsPage() {
           </p>
         </div>
         <button
-          onClick={() => load(status)}
+          onClick={() => load(status, clientFilter)}
           disabled={loading}
           className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-xl transition-all"
           style={{ border: '1px solid var(--color-border2)', color: 'var(--color-text3)', background: 'var(--color-surface)' }}
@@ -101,22 +115,34 @@ export default function SupportTicketsPage() {
         </button>
       </div>
 
-      {/* Status tabs */}
-      <div className="flex gap-2 flex-wrap">
-        {STATUS_TABS.map(t => (
-          <button
-            key={t.id}
-            onClick={() => setStatus(t.id)}
-            className="text-xs font-semibold px-3 py-1.5 rounded-full transition-all"
-            style={{
-              background: status === t.id ? 'var(--color-violet)' : 'var(--color-surface)',
-              color:      status === t.id ? '#fff' : 'var(--color-text3)',
-              border:     status === t.id ? '1px solid var(--color-violet)' : '1px solid var(--color-border2)',
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
+      {/* Status tabs + client filter */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex gap-2 flex-wrap">
+          {STATUS_TABS.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setStatus(t.id)}
+              className="text-xs font-semibold px-3 py-1.5 rounded-full transition-all"
+              style={{
+                background: status === t.id ? 'var(--color-violet)' : 'var(--color-surface)',
+                color:      status === t.id ? '#fff' : 'var(--color-text3)',
+                border:     status === t.id ? '1px solid var(--color-violet)' : '1px solid var(--color-border2)',
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <select
+          value={clientFilter}
+          onChange={e => setClientFilter(e.target.value)}
+          className="field-input w-auto cursor-pointer text-xs"
+        >
+          <option value="all">All clients</option>
+          {clients.map(c => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
       </div>
 
       {error && (
