@@ -25,6 +25,10 @@
       "schedule": "0 5 * * *"
     },
     {
+      "path": "/api/invoices/reminders-cron",
+      "schedule": "15 5 * * *"
+    },
+    {
       "path": "/api/biztech/recurring-invoices/cron",
       "schedule": "0 6 * * *"
     }
